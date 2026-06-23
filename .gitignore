@@ -20,3 +20,6 @@ output/*.png
 
 # video clips are fetched fresh at runtime, never committed
 videos/
+
+# quarantined audio (verify license before use)
+music/*.bak
