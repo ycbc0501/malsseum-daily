@@ -15,3 +15,5 @@ output/_caption.txt
 
 # loose preview renders (the real posts live in output/posts/)
 output/_*.png
+output/*.png
+!output/posts/
