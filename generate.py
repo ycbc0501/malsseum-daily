@@ -32,7 +32,7 @@ SERIF = "/System/Library/Fonts/AppleMyungjo.ttf"
 SANS = "/System/Library/Fonts/AppleSDGothicNeo.ttc"
 
 W, H = 1080, 1350
-MARGIN = 135
+MARGIN = 95
 
 THEMES = {
     "ivory": {"top": (247, 243, 235), "bot": (240, 234, 222), "fg": (44, 40, 35),  "muted": (160, 148, 130)},
@@ -130,15 +130,38 @@ def wrap(draw, text, font, max_w):
     return lines
 
 
-def fit_verse(draw, text, max_w, max_h, line_ratio=1.6):
-    for size in range(76, 33, -2):
+def split_two_lines(text):
+    """Always split a verse into exactly TWO lines.
+    If there's a comma, break there (text before comma = line 1, after = line 2;
+    with multiple commas pick the one nearest the middle). Otherwise break at the
+    space nearest the middle."""
+    text = " ".join(text.split())
+    commas = [i for i, c in enumerate(text) if c in ",，"]
+    if commas:
+        mid = len(text) / 2
+        i = min(commas, key=lambda x: abs(x - mid))
+        a, b = text[:i + 1].strip(), text[i + 1:].strip()
+    else:
+        spaces = [i for i, c in enumerate(text) if c == " "]
+        if spaces:
+            mid = len(text) / 2
+            i = min(spaces, key=lambda x: abs(x - mid))
+            a, b = text[:i].strip(), text[i:].strip()
+        else:
+            a, b = text, ""
+    return [x for x in (a, b) if x]
+
+
+def fit_verse(draw, text, max_w, max_h, line_ratio=1.62):
+    """Largest serif size at which both lines fit on a single line each."""
+    lines = split_two_lines(text)
+    for size in range(86, 21, -2):
         font = load_font(SERIF, size)
-        lines = wrap(draw, text, font, max_w)
         line_h = int(size * line_ratio)
-        if len(lines) * line_h <= max_h:
+        if all(text_w(draw, ln, font) <= max_w for ln in lines) and len(lines) * line_h <= max_h:
             return font, lines, line_h
-    font = load_font(SERIF, 34)
-    return font, wrap(draw, text, font, max_w), int(34 * line_ratio)
+    font = load_font(SERIF, 22)
+    return font, lines, int(22 * line_ratio)
 
 
 def paint_text(draw, verse, fg, muted, layout):
@@ -206,7 +229,7 @@ def main():
     ap.add_argument("--theme", default="ivory", choices=list(THEMES))
     ap.add_argument("--photo", help="render over a specific photo file")
     ap.add_argument("--photos", action="store_true", help="auto-pick a photo from photos/ per verse")
-    ap.add_argument("--handle", default="@daily.malsseum")
+    ap.add_argument("--handle", default="")
     args = ap.parse_args()
 
     with open(os.path.join(HERE, "verses.json"), encoding="utf-8") as f:

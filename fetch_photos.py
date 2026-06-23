@@ -32,13 +32,26 @@ PHOTO_DIR = os.path.join(HERE, "photos")
 CREDITS = os.path.join(PHOTO_DIR, "credits.json")
 
 # soft, feminine nature — flowers, sunsets, fields, woods, soft light
-DEFAULT_QUERIES = [
+SOFT_QUERIES = [
     "flower field", "wildflowers", "spring flowers", "lavender field",
     "cherry blossom", "soft sunset", "golden hour field", "meadow",
     "misty forest", "pink flowers", "rose garden", "peony",
     "tulip field", "daisy field", "sunflower field", "autumn forest light",
     "ocean sunset", "morning grass dew", "pastel sky clouds", "magnolia",
 ]
+
+# solemn, weighty, reverent — traditional religious gravitas
+SOLEMN_QUERIES = [
+    "cathedral interior", "stained glass window", "old church interior",
+    "candlelight church", "gothic cathedral", "light rays cathedral",
+    "monastery", "dramatic storm clouds", "sunbeam through clouds",
+    "majestic mountains clouds", "misty dark mountains", "dramatic sky light",
+    "ancient stone ruins", "foggy mountain peak", "dark ocean waves",
+    "starry night sky", "desert dunes dusk", "cross silhouette sunset",
+    "dramatic dark forest", "golden light through trees",
+]
+
+DEFAULT_QUERIES = SOFT_QUERIES + SOLEMN_QUERIES
 
 
 def get_key(provider):
@@ -119,11 +132,19 @@ def main():
     ap.add_argument("--provider", default="unsplash", choices=["unsplash", "pexels"])
     ap.add_argument("--per-query", type=int, default=2)
     ap.add_argument("--queries")
+    ap.add_argument("--mood", default="all", choices=["soft", "solemn", "all"])
     args = ap.parse_args()
 
     key = get_key(args.provider)
     fetch = {"unsplash": fetch_unsplash, "pexels": fetch_pexels}[args.provider]
-    queries = [q.strip() for q in args.queries.split(",")] if args.queries else DEFAULT_QUERIES
+    if args.queries:
+        queries = [q.strip() for q in args.queries.split(",")]
+    elif args.mood == "soft":
+        queries = SOFT_QUERIES
+    elif args.mood == "solemn":
+        queries = SOLEMN_QUERIES
+    else:
+        queries = DEFAULT_QUERIES
 
     os.makedirs(PHOTO_DIR, exist_ok=True)
     credits = {}

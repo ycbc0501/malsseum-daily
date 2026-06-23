@@ -89,7 +89,7 @@ def main():
     ap.add_argument("--emit", action="store_true",
                     help="wait+render+write metadata, no publish (for GitHub Actions)")
     ap.add_argument("--jitter", type=int, default=600, help="+/- seconds of randomness")
-    ap.add_argument("--handle", default="@to_light_bible")
+    ap.add_argument("--handle", default="")
     args = ap.parse_args()
 
     if not args.now:
