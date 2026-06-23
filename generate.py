@@ -114,15 +114,36 @@ def lines_for(draw, text, font, max_w):
     return lines
 
 
+def two_line_split(text):
+    """Always exactly TWO lines: split at the comma nearest the middle if there is one,
+    otherwise at the space nearest the middle."""
+    text = " ".join(text.split())
+    commas = [i for i, c in enumerate(text) if c in ",，"]
+    if commas:
+        mid = len(text) / 2
+        i = min(commas, key=lambda x: abs(x - mid))
+        a, b = text[:i + 1].strip(), text[i + 1:].strip()
+    else:
+        spaces = [i for i, c in enumerate(text) if c == " "]
+        if spaces:
+            mid = len(text) / 2
+            i = min(spaces, key=lambda x: abs(x - mid))
+            a, b = text[:i].strip(), text[i:].strip()
+        else:
+            a, b = text, ""
+    return [x for x in (a, b) if x]
+
+
 def fit_verse(draw, text, max_w, max_h, max_size):
-    for size in range(max_size, 27, -2):
+    """Force the verse onto 2 lines; shrink the font until both lines fit the width."""
+    lines = two_line_split(text)
+    for size in range(max_size, 17, -2):
         font = load_font(SERIF, size)
-        lines = lines_for(draw, text, font, max_w)
         line_h = int(size * 1.6)
         if all(text_w(draw, ln, font) <= max_w for ln in lines) and len(lines) * line_h <= max_h:
             return font, lines, line_h, size
-    font = load_font(SERIF, 28)
-    return font, lines_for(draw, text, font, max_w), int(28 * 1.6), 28
+    font = load_font(SERIF, 18)
+    return font, lines, int(18 * 1.6), 18
 
 
 # ----- adaptive color & placement ----------------------------------------------
