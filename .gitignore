@@ -2,6 +2,8 @@
 pexels_key.txt
 unsplash_key.txt
 *_key.txt
+meta_secrets.txt
+.secrets
 
 # python
 __pycache__/
