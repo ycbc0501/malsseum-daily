@@ -28,7 +28,9 @@ jobs:
       - name: Ensure ffmpeg
         run: ffmpeg -version >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y ffmpeg)
 
-      - name: Wait for 05:00 KST ±10, render + build the still-card Reel
+      - name: Wait for 05:00 KST ±10, render + build the Reel
+        env:
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: python daily_post.py --emit --jitter 600
 
       - name: Commit the post (gives it a public URL)

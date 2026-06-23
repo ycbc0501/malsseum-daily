@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """
-Daily 말씀 post — the hands-off orchestrator.
+Daily 말씀 Reel — the hands-off orchestrator.
 
-Each day: waits for 05:00 KST ±10 min, picks the next verse + photo + hymn track
-(sequentially, each used once before repeating), renders the 4:5 card, turns it into
-a still-card Reel with music (shows in the feed via share_to_feed), and publishes.
-No music yet → posts a plain 4:5 photo so the run never breaks.
+Each day: waits for 05:00 KST ±10 min, picks the next verse + hymn track + sky/cloud
+clip (sequential rotation, each used once before repeating), makes the ~15s clip into
+a seamless ~60s boomerang (forward+reverse), overlays the verse (always centered),
+adds the hymn music, and publishes a Reel (shows in feed via share_to_feed).
 
-    python3 daily_post.py --now --dry-run   # build, don't publish
-    python3 daily_post.py --emit            # wait → build, no publish (CI)
+Fallbacks keep it alive: no clip → still 4:5 card + music; no music → plain 4:5 photo.
+
+    python3 daily_post.py --now --dry-run
+    python3 daily_post.py --emit
     python3 daily_post.py --jitter 600
 """
 
@@ -23,10 +25,13 @@ from datetime import datetime, timedelta, timezone
 import generate
 import make_video
 import post_instagram
+import fetch_videos
 
 KST = timezone(timedelta(hours=9))
 MUSIC_DIR = os.path.join(generate.HERE, "music")
+VIDEO_DIR = os.path.join(generate.HERE, "videos")
 STATE = os.path.join(generate.HERE, "state.json")
+CLIPS = os.path.join(generate.HERE, "clips.json")  # human-approved Pexels video ids
 HASHTAGS = "#말씀 #오늘의말씀 #성경말씀 #큐티 #묵상 #기독교 #신앙 #찬양 #하나님 #은혜"
 
 
@@ -58,6 +63,27 @@ def music_tracks():
                   if f.lower().endswith((".mp3", ".m4a", ".wav", ".ogg")))
 
 
+def approved_ids():
+    try:
+        return json.load(open(CLIPS)).get("ids", [])
+    except Exception:
+        return []
+
+
+def fetch_clip(i, query):
+    """Prefer the next human-approved clip (clips.json); else keyword fallback."""
+    os.makedirs(VIDEO_DIR, exist_ok=True)
+    dest = os.path.join(VIDEO_DIR, "today.mp4")
+    ids = approved_ids()
+    try:
+        if ids:
+            return fetch_videos.fetch_by_id(ids[i % len(ids)], dest)
+        return fetch_videos.fetch_one(query, dest)
+    except Exception as e:
+        print(f"video fetch failed ({e}) → fallback")
+        return None
+
+
 def build_caption(verse, translation):
     return f"\"{verse['text']}\"\n\n— {verse['ref']} ({translation})\n\n{HASHTAGS}"
 
@@ -79,26 +105,41 @@ def main():
     photos = generate.pick_photos()
     tracks = music_tracks()
 
-    # sequential rotation — everything cycles once before repeating
     i = load_count()
     verse = verses[i % len(verses)]
     photo = photos[i % len(photos)] if photos else None
     audio = tracks[i % len(tracks)] if tracks else None
+    query = fetch_videos.QUERIES[i % len(fetch_videos.QUERIES)]
 
     date_str = datetime.now(KST).strftime("%Y-%m-%d")
     posts = os.path.join(generate.HERE, "output", "posts")
     os.makedirs(posts, exist_ok=True)
-    img = os.path.join(posts, f"{date_str}.png")
-    generate.render(verse, "ivory", "", img, photo=photo, canvas=generate.FEED)
+    clip = fetch_clip(i, query) if audio else None
 
-    if audio:
-        # still-card Reel with music (shows in feed via share_to_feed)
+    if clip and audio:
+        # video reel: cloud/sky clip → boomerang ~60s → centered verse + music
+        boom = os.path.join(generate.OUT_DIR, "_boom.mp4")
+        frame = os.path.join(generate.OUT_DIR, "_frame.png")
+        overlay = os.path.join(generate.OUT_DIR, "_overlay.png")
+        make_video.make_boomerang(clip, boom)
+        make_video.extract_frame(boom, frame)
+        generate.render_overlay(verse, overlay, frame, canvas=generate.REEL)
+        rel_path = f"output/posts/{date_str}.mp4"
+        make_video.build_reel(boom, overlay, audio, os.path.join(generate.HERE, rel_path), duration=60)
+        print(f"reel(video): {verse['ref']}  [{query} + {os.path.basename(audio)}]")
+    elif audio:
+        # still 4:5 card + music
+        img = os.path.join(posts, f"{date_str}.png")
+        generate.render(verse, "ivory", "", img, photo=photo, canvas=generate.FEED)
         rel_path = f"output/posts/{date_str}.mp4"
         make_video.make_video(img, audio, os.path.join(generate.HERE, rel_path), size=generate.FEED)
-        print(f"reel: {verse['ref']}  [{os.path.basename(photo)} + {os.path.basename(audio)}]")
+        print(f"reel(still): {verse['ref']}  [{os.path.basename(audio)}]")
     else:
+        # no music → plain 4:5 feed photo
         rel_path = f"output/posts/{date_str}.png"
-        print(f"photo (no music yet): {verse['ref']}  [{os.path.basename(photo) if photo else 'solid'}]")
+        generate.render(verse, "ivory", "", os.path.join(generate.HERE, rel_path),
+                        photo=photo, canvas=generate.FEED)
+        print(f"photo (no music yet): {verse['ref']}")
 
     caption = build_caption(verse, data.get("translation", ""))
     save_count(i + 1)

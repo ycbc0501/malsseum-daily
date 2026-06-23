@@ -17,12 +17,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 VIDEO_DIR = os.path.join(HERE, "videos")
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) malsseum-bot/1.0"
 
-# solemn, reverent, gentle motion
-QUERIES = [
-    "ocean waves", "mountain clouds", "wheat field wind", "forest sunlight",
-    "river stream", "calm sea sunset", "meadow wind", "sheep grazing",
-    "snow mountain", "sunrise sky", "clouds moving", "light rays forest",
-]
+# allowed keywords (pure nature, no people/animals/structures)
+QUERIES = ["waves", "cloud", "sun", "field", "flower field"]
 
 
 def get_key():
@@ -57,7 +53,7 @@ def best_portrait_file(video_files):
 
 
 def fetch_one(query, dest, key=None):
-    """Fetch a single portrait clip for `query` to `dest`. Used at runtime."""
+    """Fetch a single portrait clip for `query` to `dest`. Keyword fallback."""
     key = key or get_key()
     params = urllib.parse.urlencode({"query": query, "orientation": "portrait",
                                      "per_page": 8, "size": "medium"})
@@ -67,6 +63,17 @@ def fetch_one(query, dest, key=None):
         if link:
             _download(link, dest)
             return dest
+    return None
+
+
+def fetch_by_id(vid_id, dest, key=None):
+    """Fetch a specific (human-approved) Pexels clip by id."""
+    key = key or get_key()
+    data = _get(f"https://api.pexels.com/videos/videos/{vid_id}", key)
+    link = best_portrait_file(data.get("video_files", []))
+    if link:
+        _download(link, dest)
+        return dest
     return None
 
 
