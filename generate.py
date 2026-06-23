@@ -141,7 +141,7 @@ def band_color(img, top, block_h, cw, col_left, col_w):
     return fg, shadow, busy
 
 
-def soft_scrim(cw, ch, col_left, col_w, top_y, block_h, line_h, color, alpha=105):
+def soft_scrim(cw, ch, col_left, col_w, top_y, block_h, line_h, color, alpha=120):
     """A soft, feathered darkening/brightening behind the text block so it stays
     legible over busy backgrounds (no hard box — just a gentle glow)."""
     s = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
@@ -207,7 +207,7 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED):
     if photo:
         base = Image.alpha_composite(base, soft_scrim(cw, ch, col_left, col_w, top_y, block_h, line_h, shadow_c))
         shadow = Image.new("RGBA", (cw, ch), shadow_c + (0,))
-        shadow.putalpha(txt.getchannel("A").point(lambda a: int(a * 0.7)))
+        shadow.putalpha(txt.getchannel("A").point(lambda a: int(a * 0.8)))
         shadow = shadow.filter(ImageFilter.GaussianBlur(6))
         base = Image.alpha_composite(base, shadow)
 
@@ -248,7 +248,7 @@ def render_overlay(verse, out_path, frame_path, handle="", canvas=REEL):
     # soft scrim behind the text → legible even over busy footage
     scrim = soft_scrim(cw, ch, col_left, col_w, top_y, block_h, line_h, shadow_c)
     shadow = Image.new("RGBA", (cw, ch), shadow_c + (0,))
-    shadow.putalpha(txt.getchannel("A").point(lambda a: int(a * 0.7)))
+    shadow.putalpha(txt.getchannel("A").point(lambda a: int(a * 0.8)))
     shadow = shadow.filter(ImageFilter.GaussianBlur(6))
     out = Image.alpha_composite(scrim, shadow)
     out = Image.alpha_composite(out, txt)
