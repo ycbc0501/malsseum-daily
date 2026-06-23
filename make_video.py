@@ -40,8 +40,9 @@ def build_reel(video, overlay_png, audio, out, duration=14):
     return out
 
 
-# fallback: still image + music → MP4 (used if no video clip is available)
-def make_video(image, audio, out, duration=14):
+# still image + music → MP4 (the still-card Reel). size defaults to the 4:5 card.
+def make_video(image, audio, out, duration=14, size=(1080, 1350)):
+    w, h = size
     subprocess.run([
         "ffmpeg", "-y",
         "-loop", "1", "-i", image,
@@ -49,7 +50,7 @@ def make_video(image, audio, out, duration=14):
         "-c:v", "libx264", "-tune", "stillimage", "-pix_fmt", "yuv420p", "-r", "30",
         "-c:a", "aac", "-b:a", "192k",
         "-t", str(duration),
-        "-vf", f"scale={W}:{H},setsar=1",
+        "-vf", f"scale={w}:{h},setsar=1",
         "-af", f"afade=t=in:st=0:d=1.5,afade=t=out:st={duration - 2}:d=2",
         "-movflags", "+faststart",
         out,

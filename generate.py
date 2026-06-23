@@ -127,28 +127,18 @@ def fit_verse(draw, text, max_w, max_h, max_size):
 
 # ----- adaptive color & placement ----------------------------------------------
 
-def choose_placement(img, block_h, cw, ch, col_left, col_w):
+def band_color(img, top, block_h, cw, col_left, col_w):
+    """Pick text color from the brightness of the (centered) text band: dark text on
+    light areas, light text on dark areas."""
     gray = img.convert("L")
-    sf = 8
-    small = gray.resize((cw // sf, ch // sf))
-    cl, cr = col_left // sf, (col_left + col_w) // sf
-    bh = max(1, block_h // sf)
-    top_min = int(0.10 * ch / sf)
-    top_max = int((ch - block_h) / sf) - int(0.06 * ch / sf)
-    best = None
-    for top in range(top_min, max(top_min + 1, top_max), 2):
-        region = small.crop((cl, top, cr, top + bh))
-        st = ImageStat.Stat(region)
-        busy, mean = st.stddev[0], st.mean[0]
-        center_pen = abs((top + bh / 2) - (ch / sf / 2)) * 0.04
-        score = busy + center_pen
-        if best is None or score < best[0]:
-            best = (score, top * sf, mean, busy)
-    _, top_full, mean, busy = best
+    region = gray.crop((col_left, max(0, top), col_left + col_w,
+                        min(img.height, top + block_h)))
+    st = ImageStat.Stat(region)
+    mean, busy = st.mean[0], st.stddev[0]
     light_bg = mean > 150
     fg = (44, 40, 36) if light_bg else (250, 248, 244)
     shadow = (255, 255, 255) if light_bg else (0, 0, 0)
-    return top_full, fg, shadow, busy
+    return fg, shadow, busy
 
 
 def render_italic(text, font, fill):
@@ -180,15 +170,15 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED):
     gap = int(line_h * 0.85)
     block_h = len(lines) * line_h + gap + src_h
 
+    top_y = (ch - block_h) // 2     # text always vertically centered
     if photo:
         base = cover_crop(Image.open(photo), cw, ch).filter(ImageFilter.GaussianBlur(1.2))
-        top_y, fg, shadow_c, busy = choose_placement(base, block_h, cw, ch, col_left, col_w)
+        fg, shadow_c, busy = band_color(base, top_y, block_h, cw, col_left, col_w)
     else:
         theme = THEMES.get(theme_name, THEMES["ivory"])
         base = Image.new("RGB", (cw, ch), theme["bg"])
         fg = theme["fg"]
         shadow_c = (255, 255, 255) if sum(theme["bg"]) > 380 else (0, 0, 0)
-        top_y = (ch - block_h) // 2
         busy = 0
 
     base = base.convert("RGBA")
@@ -231,7 +221,8 @@ def render_overlay(verse, out_path, frame_path, handle="", canvas=REEL):
     block_h = len(lines) * line_h + gap + src_h
 
     frame = cover_crop(Image.open(frame_path), cw, ch)
-    top_y, fg, shadow_c, busy = choose_placement(frame, block_h, cw, ch, col_left, col_w)
+    top_y = (ch - block_h) // 2
+    fg, shadow_c, busy = band_color(frame, top_y, block_h, cw, col_left, col_w)
 
     txt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
     td = ImageDraw.Draw(txt)
