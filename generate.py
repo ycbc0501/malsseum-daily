@@ -216,6 +216,42 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED):
     return out_path
 
 
+def render_overlay(verse, out_path, frame_path, handle="", canvas=REEL):
+    """Transparent text overlay (verse + italic source) for compositing over video.
+    Color/placement chosen from `frame_path` (a representative frame); a soft shadow
+    is baked in so the text stays legible over the moving footage."""
+    cw, ch = canvas
+    col_w = int(cw * 0.70)
+    col_left = (cw - col_w) // 2
+    probe = ImageDraw.Draw(Image.new("RGB", (cw, ch)))
+    font, lines, line_h, size = fit_verse(probe, verse["text"], col_w, int(ch * 0.34), 52)
+    src_font = load_font(SERIF, max(22, int(size * 0.62)))
+    src_h = sum(src_font.getmetrics())
+    gap = int(line_h * 0.85)
+    block_h = len(lines) * line_h + gap + src_h
+
+    frame = cover_crop(Image.open(frame_path), cw, ch)
+    top_y, fg, shadow_c, busy = choose_placement(frame, block_h, cw, ch, col_left, col_w)
+
+    txt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
+    td = ImageDraw.Draw(txt)
+    y = top_y
+    for ln in lines:
+        lw = text_w(td, ln, font)
+        td.text(((cw - lw) // 2, y), ln, font=font, fill=fg + (255,))
+        y += line_h
+    src_fill = tuple(int(c * 0.55 + (255 if fg[0] > 128 else 0) * 0.45) for c in fg)
+    src_img = render_italic(verse["ref"], src_font, src_fill + (255,))
+    txt.alpha_composite(src_img, ((cw - src_img.width) // 2, y + gap - src_h // 4))
+
+    # bake a soft shadow into the overlay (video moves → keep text legible)
+    shadow = Image.new("RGBA", (cw, ch), shadow_c + (0,))
+    shadow.putalpha(txt.getchannel("A").point(lambda a: int(a * 0.6)))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(6))
+    Image.alpha_composite(shadow, txt).save(out_path, "PNG")
+    return out_path
+
+
 # ----- cli ---------------------------------------------------------------------
 
 def slug(ref):

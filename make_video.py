@@ -1,22 +1,38 @@
 #!/usr/bin/env python3
 """
-Turn a still image + audio into a Reel-ready MP4 (a still-image video with music).
+Build a Reel MP4 from a background video clip + a transparent text overlay + music.
 Requires ffmpeg (preinstalled on GitHub Actions ubuntu runners).
 """
 
 import subprocess
 
+W, H = 1080, 1920
+_COVER = f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},setsar=1"
 
-def make_video(image, audio, out, duration=14, size="1080:1920"):
+
+def extract_frame(video, out_png, at=0.8):
+    """Grab one representative frame (cropped to 9:16) for color/placement analysis."""
+    subprocess.run([
+        "ffmpeg", "-y", "-ss", str(at), "-i", video,
+        "-vf", _COVER, "-frames:v", "1", out_png,
+    ], check=True, capture_output=True)
+    return out_png
+
+
+def build_reel(video, overlay_png, audio, out, duration=14):
+    """Background video (looped/cropped to 9:16) + text overlay + looped music → MP4."""
     cmd = [
         "ffmpeg", "-y",
-        "-loop", "1", "-i", image,            # still image, looped
-        "-stream_loop", "-1", "-i", audio,    # loop audio to fill the duration
-        "-c:v", "libx264", "-tune", "stillimage", "-pix_fmt", "yuv420p", "-r", "30",
+        "-stream_loop", "-1", "-i", video,        # 0: bg video (loop to fill)
+        "-i", overlay_png,                         # 1: text overlay (static)
+        "-stream_loop", "-1", "-i", audio,         # 2: music (loop to fill)
+        "-filter_complex",
+        f"[0:v]{_COVER}[bg];[bg][1:v]overlay=0:0[v]",
+        "-map", "[v]", "-map", "2:a",
+        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
         "-c:a", "aac", "-b:a", "192k",
         "-t", str(duration),
-        "-vf", f"scale={size},setsar=1",
-        "-af", "afade=t=in:st=0:d=1.5,afade=t=out:st=" + str(duration - 2) + ":d=2",
+        "-af", f"afade=t=in:st=0:d=1.5,afade=t=out:st={duration - 2}:d=2",
         "-movflags", "+faststart",
         out,
     ]
@@ -24,12 +40,18 @@ def make_video(image, audio, out, duration=14, size="1080:1920"):
     return out
 
 
-if __name__ == "__main__":
-    import argparse
-    ap = argparse.ArgumentParser()
-    ap.add_argument("image")
-    ap.add_argument("audio")
-    ap.add_argument("out")
-    ap.add_argument("--duration", type=int, default=14)
-    args = ap.parse_args()
-    print(make_video(args.image, args.audio, args.out, args.duration))
+# fallback: still image + music → MP4 (used if no video clip is available)
+def make_video(image, audio, out, duration=14):
+    subprocess.run([
+        "ffmpeg", "-y",
+        "-loop", "1", "-i", image,
+        "-stream_loop", "-1", "-i", audio,
+        "-c:v", "libx264", "-tune", "stillimage", "-pix_fmt", "yuv420p", "-r", "30",
+        "-c:a", "aac", "-b:a", "192k",
+        "-t", str(duration),
+        "-vf", f"scale={W}:{H},setsar=1",
+        "-af", f"afade=t=in:st=0:d=1.5,afade=t=out:st={duration - 2}:d=2",
+        "-movflags", "+faststart",
+        out,
+    ], check=True, capture_output=True)
+    return out

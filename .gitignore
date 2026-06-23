@@ -17,3 +17,6 @@ output/_caption.txt
 output/_*.png
 output/*.png
 !output/posts/
+
+# video clips are fetched fresh at runtime, never committed
+videos/
