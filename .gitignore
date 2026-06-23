@@ -1,0 +1,15 @@
+# secrets — NEVER commit
+pexels_key.txt
+unsplash_key.txt
+*_key.txt
+
+# python
+__pycache__/
+*.pyc
+
+# transient render metadata (regenerated each run)
+output/_path.txt
+output/_caption.txt
+
+# loose preview renders (the real posts live in output/posts/)
+output/_*.png

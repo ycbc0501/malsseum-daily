@@ -1,0 +1,47 @@
+name: Daily 말씀 post
+
+# Fires at 04:40 KST (19:40 UTC). daily_post.py then waits until a random
+# moment in 05:00 ± 10 min KST and renders. We commit the image (so it has a
+# public raw URL) and publish it to Instagram via the Graph API.
+on:
+  schedule:
+    - cron: "40 19 * * *"
+  workflow_dispatch:        # lets you trigger a test run manually from the Actions tab
+
+permissions:
+  contents: write           # to commit the rendered image back to the repo
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60     # the in-job wait can be up to ~30 min
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install pillow
+
+      - name: Wait for 05:00 KST ±10 and render today's verse
+        run: python daily_post.py --emit --jitter 600
+
+      - name: Commit the rendered image (gives it a public URL)
+        run: |
+          git config user.name "malsseum-bot"
+          git config user.email "malsseum-bot@users.noreply.github.com"
+          git add output/posts
+          git commit -m "post: $(cat output/_path.txt)" || { echo "nothing to commit"; exit 0; }
+          git push
+
+      - name: Publish to Instagram
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: |
+          REL="$(cat output/_path.txt)"
+          URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/${REL}"
+          echo "Image URL: $URL"
+          python post_instagram.py "$URL" "$(cat output/_caption.txt)"
