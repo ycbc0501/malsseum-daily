@@ -141,6 +141,17 @@ def band_color(img, top, block_h, cw, col_left, col_w):
     return fg, shadow, busy
 
 
+def soft_scrim(cw, ch, col_left, col_w, top_y, block_h, line_h, color, alpha=105):
+    """A soft, feathered darkening/brightening behind the text block so it stays
+    legible over busy backgrounds (no hard box — just a gentle glow)."""
+    s = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
+    sx, sy = int(col_w * 0.14), int(line_h * 1.3)
+    ImageDraw.Draw(s).ellipse(
+        [col_left - sx, top_y - sy, col_left + col_w + sx, top_y + block_h + sy],
+        fill=color + (alpha,))
+    return s.filter(ImageFilter.GaussianBlur(80))
+
+
 def render_italic(text, font, fill):
     asc, desc = font.getmetrics()
     h = asc + desc
@@ -194,11 +205,10 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED):
     txt.alpha_composite(src_img, ((cw - src_img.width) // 2, y + gap - src_h // 4))
 
     if photo:
-        alpha = txt.getchannel("A")
-        strength = 0.5 if busy > 16 else 0.3
+        base = Image.alpha_composite(base, soft_scrim(cw, ch, col_left, col_w, top_y, block_h, line_h, shadow_c))
         shadow = Image.new("RGBA", (cw, ch), shadow_c + (0,))
-        shadow.putalpha(alpha.point(lambda a: int(a * strength)))
-        shadow = shadow.filter(ImageFilter.GaussianBlur(5))
+        shadow.putalpha(txt.getchannel("A").point(lambda a: int(a * 0.7)))
+        shadow = shadow.filter(ImageFilter.GaussianBlur(6))
         base = Image.alpha_composite(base, shadow)
 
     base = Image.alpha_composite(base, txt)
@@ -235,11 +245,14 @@ def render_overlay(verse, out_path, frame_path, handle="", canvas=REEL):
     src_img = render_italic(verse["ref"], src_font, src_fill + (255,))
     txt.alpha_composite(src_img, ((cw - src_img.width) // 2, y + gap - src_h // 4))
 
-    # bake a soft shadow into the overlay (video moves → keep text legible)
+    # soft scrim behind the text → legible even over busy footage
+    scrim = soft_scrim(cw, ch, col_left, col_w, top_y, block_h, line_h, shadow_c)
     shadow = Image.new("RGBA", (cw, ch), shadow_c + (0,))
-    shadow.putalpha(txt.getchannel("A").point(lambda a: int(a * 0.6)))
+    shadow.putalpha(txt.getchannel("A").point(lambda a: int(a * 0.7)))
     shadow = shadow.filter(ImageFilter.GaussianBlur(6))
-    Image.alpha_composite(shadow, txt).save(out_path, "PNG")
+    out = Image.alpha_composite(scrim, shadow)
+    out = Image.alpha_composite(out, txt)
+    out.save(out_path, "PNG")
     return out_path
 
 
