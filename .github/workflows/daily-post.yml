@@ -1,20 +1,20 @@
-name: Daily 말씀 post
+name: Daily 말씀 Reel
 
 # Fires at 04:40 KST (19:40 UTC). daily_post.py then waits until a random
-# moment in 05:00 ± 10 min KST and renders. We commit the image (so it has a
-# public raw URL) and publish it to Instagram via the Graph API.
+# moment in 05:00 ± 10 min KST, renders a 9:16 still, builds a still-image Reel
+# (image + hymn music) and publishes it to Instagram as a Reel.
 on:
   schedule:
     - cron: "40 19 * * *"
-  workflow_dispatch:        # lets you trigger a test run manually from the Actions tab
+  workflow_dispatch:
 
 permissions:
-  contents: write           # to commit the rendered image back to the repo
+  contents: write
 
 jobs:
   post:
     runs-on: ubuntu-latest
-    timeout-minutes: 60     # the in-job wait can be up to ~30 min
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -25,10 +25,13 @@ jobs:
       - name: Install deps
         run: pip install pillow
 
-      - name: Wait for 05:00 KST ±10 and render today's verse
+      - name: Ensure ffmpeg
+        run: ffmpeg -version >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y ffmpeg)
+
+      - name: Wait for 05:00 KST ±10, render + build the Reel
         run: python daily_post.py --emit --jitter 600
 
-      - name: Commit the rendered image (gives it a public URL)
+      - name: Commit the Reel (gives it a public URL)
         run: |
           git config user.name "malsseum-bot"
           git config user.email "malsseum-bot@users.noreply.github.com"
@@ -36,12 +39,17 @@ jobs:
           git commit -m "post: $(cat output/_path.txt)" || { echo "nothing to commit"; exit 0; }
           git push
 
-      - name: Publish to Instagram
+      - name: Publish Reel to Instagram
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
         run: |
           REL="$(cat output/_path.txt)"
-          URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/${REL}"
-          echo "Image URL: $URL"
-          python post_instagram.py "$URL" "$(cat output/_caption.txt)"
+          # jsDelivr serves the file from GitHub with correct content-type (video/mp4 or image/png)
+          URL="https://cdn.jsdelivr.net/gh/${GITHUB_REPOSITORY}@${GITHUB_REF_NAME}/${REL}"
+          echo "URL: $URL"
+          if [[ "$REL" == *.mp4 ]]; then
+            python post_instagram.py "$URL" "$(cat output/_caption.txt)" --reel
+          else
+            python post_instagram.py "$URL" "$(cat output/_caption.txt)"
+          fi

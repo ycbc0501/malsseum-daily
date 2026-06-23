@@ -1,42 +1,36 @@
 #!/usr/bin/env python3
 """
-Daily 말씀 post — the hands-off orchestrator.
+Daily 말씀 Reel — the hands-off orchestrator.
 
-Run once per day (by cron / GitHub Actions / launchd). It:
+Run once per day (GitHub Actions). It:
   1. waits to hit 05:00 KST ± up to 10 min of random jitter,
-  2. picks today's verse + a soft nature photo,
-  3. renders the image,
-  4. (optionally) hosts it at a public URL and publishes to Instagram.
+  2. picks today's verse + a photo + a hymn track,
+  3. renders a 9:16 image and turns it into a still-image Reel (MP4) with music,
+  4. (optionally) publishes it to Instagram as a Reel.
 
-Timing: schedule the runner to fire a little BEFORE 04:50 KST. This script then
-sleeps until a random target in [04:50, 05:10] KST, so the actual post time is
-5:00 ± 10 min each day. If the runner fires after the target, it posts immediately.
-
-    python3 daily_post.py                 # full run: wait → render → publish
-    python3 daily_post.py --now           # skip the wait (post right away)
-    python3 daily_post.py --now --dry-run # render only, don't publish (for testing)
-    python3 daily_post.py --emit          # wait → render → write metadata, NO publish
-                                          #   (used by GitHub Actions: commit then publish)
-    python3 daily_post.py --jitter 600    # +/- seconds of randomness (default 600 = 10min)
+    python3 daily_post.py --now --dry-run   # render image + build mp4, don't publish
+    python3 daily_post.py --emit            # wait → render → build mp4, no publish (CI)
+    python3 daily_post.py --jitter 600      # +/- seconds of randomness (default 600)
 """
 
 import argparse
+import glob
+import json
 import os
 import random
 import time
 from datetime import datetime, timedelta, timezone
 
 import generate
+import make_video
 import post_instagram
 
 KST = timezone(timedelta(hours=9))
-
-# default hashtags appended to every caption
-HASHTAGS = "#말씀 #오늘의말씀 #성경말씀 #큐티 #묵상 #기독교 #신앙 #하나님 #은혜 #성경"
+MUSIC_DIR = os.path.join(generate.HERE, "music")
+HASHTAGS = "#말씀 #오늘의말씀 #성경말씀 #큐티 #묵상 #기독교 #신앙 #찬양 #하나님 #은혜"
 
 
 def wait_until_target(jitter_s):
-    """Sleep until 05:00 KST shifted by a uniform random offset in [-jitter, +jitter]."""
     now = datetime.now(KST)
     target = now.replace(hour=5, minute=0, second=0, microsecond=0)
     target += timedelta(seconds=random.randint(-jitter_s, jitter_s))
@@ -49,68 +43,61 @@ def wait_until_target(jitter_s):
 
 
 def todays_verse(verses):
-    # deterministic rotation by KST date so a given day always maps to the same verse
     return verses[datetime.now(KST).toordinal() % len(verses)]
 
 
 def pick_photo():
     pool = generate.pick_photos()
-    if not pool:
-        return None
-    # vary by day without repeating too soon
-    return pool[datetime.now(KST).toordinal() % len(pool)]
+    return pool[datetime.now(KST).toordinal() % len(pool)] if pool else None
+
+
+def pick_audio():
+    pool = sorted(f for f in glob.glob(os.path.join(MUSIC_DIR, "*"))
+                  if f.lower().endswith((".mp3", ".m4a", ".wav", ".ogg")))
+    return pool[datetime.now(KST).toordinal() % len(pool)] if pool else None
 
 
 def build_caption(verse, translation):
     return f"\"{verse['text']}\"\n\n— {verse['ref']} ({translation})\n\n{HASHTAGS}"
 
 
-def host_image(path):
-    """
-    Return a PUBLIC URL for the rendered image (Graph API requires a fetchable URL).
-    Configured via env PUBLIC_IMAGE_BASE — e.g. the raw GitHub / Pages / R2 base where
-    this file will be reachable. The actual upload is handled by the runner (see
-    the GitHub Actions workflow, which commits the image and serves it via raw URL).
-    """
-    base = os.environ.get("PUBLIC_IMAGE_BASE")
-    if not base:
-        raise SystemExit(
-            "No PUBLIC_IMAGE_BASE set — can't give Instagram a public image URL.\n"
-            "This is wired up by the runner (e.g. GitHub Actions). For a local dry run "
-            "use --dry-run."
-        )
-    return base.rstrip("/") + "/" + os.path.basename(path)
-
-
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--now", action="store_true", help="skip the timed wait")
-    ap.add_argument("--dry-run", action="store_true", help="render only, do not publish")
+    ap.add_argument("--dry-run", action="store_true", help="render+build, do not publish")
     ap.add_argument("--emit", action="store_true",
-                    help="wait+render+write metadata, no publish (for GitHub Actions)")
-    ap.add_argument("--jitter", type=int, default=600, help="+/- seconds of randomness")
+                    help="wait+render+build mp4, no publish (for GitHub Actions)")
+    ap.add_argument("--jitter", type=int, default=600)
     ap.add_argument("--handle", default="")
     args = ap.parse_args()
 
     if not args.now:
         wait_until_target(args.jitter)
 
-    import json
     with open(os.path.join(generate.HERE, "verses.json"), encoding="utf-8") as f:
         data = json.load(f)
     verse = todays_verse(data["verses"])
     photo = pick_photo()
+    audio = pick_audio()
 
-    # render to a date-stamped path → stable, unique public URL (avoids CDN staleness)
     date_str = datetime.now(KST).strftime("%Y-%m-%d")
-    rel_path = f"output/posts/{date_str}.png"
-    out = os.path.join(generate.HERE, rel_path)
-    os.makedirs(os.path.dirname(out), exist_ok=True)
-    generate.render(verse, "ivory", args.handle, out, photo=photo)
-    print(f"rendered: {verse['ref']}  →  {rel_path}" + (f"  [{os.path.basename(photo)}]" if photo else "  [solid]"))
+    posts = os.path.join(generate.HERE, "output", "posts")
+    os.makedirs(posts, exist_ok=True)
+    img = os.path.join(posts, f"{date_str}.png")
+
+    if audio:
+        # Reel: 9:16 still → still-image video with hymn music
+        generate.render(verse, "ivory", args.handle, img, photo=photo, canvas=generate.REEL)
+        rel_path = f"output/posts/{date_str}.mp4"
+        make_video.make_video(img, audio, os.path.join(generate.HERE, rel_path))
+        print(f"reel: {verse['ref']}  →  {rel_path}  [{os.path.basename(photo)} + {os.path.basename(audio)}]")
+    else:
+        # fallback: no music yet → post a normal 4:5 feed photo so the daily run never breaks
+        generate.render(verse, "ivory", args.handle, img, photo=photo, canvas=generate.FEED)
+        rel_path = f"output/posts/{date_str}.png"
+        print(f"photo (no music yet): {verse['ref']}  →  {rel_path}  [{os.path.basename(photo)}]")
 
     caption = build_caption(verse, data.get("translation", ""))
-    # write metadata the runner consumes (relative path + caption)
     with open(os.path.join(generate.OUT_DIR, "_path.txt"), "w") as f:
         f.write(rel_path)
     with open(os.path.join(generate.OUT_DIR, "_caption.txt"), "w", encoding="utf-8") as f:
@@ -118,12 +105,17 @@ def main():
 
     if args.dry_run or args.emit:
         print("\n--- caption ---\n" + caption)
-        print("\n--- (not publishing here) ---" if args.emit else "\n--- (dry run) ---")
+        print("\n--- (not publishing here) ---")
         return
 
-    url = host_image(out)
-    result = post_instagram.publish(url, caption)
-    print(f"published: {result}")
+    base = os.environ.get("PUBLIC_IMAGE_BASE")
+    if not base:
+        raise SystemExit("set PUBLIC_IMAGE_BASE or use --emit (publish handled by runner)")
+    url = base.rstrip("/") + "/" + rel_path
+    if rel_path.endswith(".mp4"):
+        print(f"published reel: {post_instagram.publish_reel(url, caption)}")
+    else:
+        print(f"published photo: {post_instagram.publish(url, caption)}")
 
 
 if __name__ == "__main__":

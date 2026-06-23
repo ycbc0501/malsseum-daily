@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """
-말씀 이미지 생성기  —  verse → styled Instagram image (dailymayim/Alabaster style).
+말씀 이미지 생성기  —  verse → styled image (dailymayim/Alabaster style).
 
-Design:
-  • soft nature OR solemn photo background, kept bright & natural (no heavy scrim)
-  • text placed in the calmest/emptiest region of the photo
-  • ADAPTIVE color: dark text on light areas, light text on dark areas
-  • small, elegant 명조(serif) type; comma-aware line breaks
-  • source reference in *italic*, same serif, smaller, no divider line
+Supports two canvas sizes:
+  • feed  : 1080×1350 (4:5)
+  • reel  : 1080×1920 (9:16, full-screen, for Reels with music)
+
+Design: bright natural photo, text in the calmest region, ADAPTIVE color
+(dark text on light areas / light on dark), small serif, comma-aware balanced
+wrap, italic source reference, no divider, no handle.
 
 Usage:
-    python3 generate.py --ref "시편 23:1" --photo photos/x.jpg
-    python3 generate.py --all --photos
-    python3 generate.py --photos
+    python3 generate.py --ref "시편 23:1" --photo photos/x.jpg          # feed 4:5
+    python3 generate.py --ref "시편 23:1" --photo photos/x.jpg --reel    # 9:16
+    python3 generate.py --all --photos --reel
 """
 
 import argparse
@@ -28,9 +29,8 @@ OUT_DIR = os.path.join(HERE, "output")
 PHOTO_DIR = os.path.join(HERE, "photos")
 FONTS_DIR = os.path.join(HERE, "fonts")
 
-W, H = 1080, 1350
-TEXT_W = 720          # text column width (narrow → small, elegant lines like the reference)
-COL_LEFT = (W - TEXT_W) // 2
+FEED = (1080, 1350)
+REEL = (1080, 1920)
 
 
 def _resolve_font(candidates):
@@ -45,7 +45,6 @@ SERIF = _resolve_font([
     "/System/Library/Fonts/AppleMyungjo.ttf",
 ])
 
-# solid-color fallback themes (used only when no photo is given)
 THEMES = {
     "ivory": {"bg": (244, 240, 232), "fg": (54, 48, 42)},
     "ink":   {"bg": (26, 25, 24),    "fg": (236, 230, 220)},
@@ -59,13 +58,13 @@ def load_font(path, size):
         return ImageFont.truetype(SERIF, size)
 
 
-def cover_crop(img):
+def cover_crop(img, cw, ch):
     img = img.convert("RGB")
-    scale = max(W / img.width, H / img.height)
+    scale = max(cw / img.width, ch / img.height)
     img = img.resize((round(img.width * scale), round(img.height * scale)), Image.LANCZOS)
-    left = (img.width - W) // 2
-    top = (img.height - H) // 2
-    return img.crop((left, top, left + W, top + H))
+    left = (img.width - cw) // 2
+    top = (img.height - ch) // 2
+    return img.crop((left, top, left + cw, top + ch))
 
 
 # ----- text layout -------------------------------------------------------------
@@ -90,13 +89,12 @@ def _greedy(draw, words, font, max_w):
 
 
 def _wrap_balanced(draw, clause, font, max_w):
-    """Wrap a clause into the fewest lines, then even them out (no orphan words)."""
     words = clause.split(" ")
     target = len(_greedy(draw, words, font, max_w))
     if target <= 1:
         return [clause]
     lo, hi, best = 0, max_w, None
-    for _ in range(14):  # binary-search the narrowest width that still gives `target` lines
+    for _ in range(14):
         mid = (lo + hi) / 2
         w = _greedy(draw, words, font, mid)
         if len(w) <= target:
@@ -107,7 +105,6 @@ def _wrap_balanced(draw, clause, font, max_w):
 
 
 def lines_for(draw, text, font, max_w):
-    """Comma-aware word wrap: break after commas, then balance-wrap each clause."""
     text = " ".join(text.split())
     clauses = [c.strip() for c in re.split(r",", text) if c.strip()]
     clauses = [c + ("," if i < len(clauses) - 1 else "") for i, c in enumerate(clauses)]
@@ -117,9 +114,8 @@ def lines_for(draw, text, font, max_w):
     return lines
 
 
-def fit_verse(draw, text, max_w, max_h):
-    """Small, refined serif sized to fit — reference uses delicate type."""
-    for size in range(48, 27, -2):
+def fit_verse(draw, text, max_w, max_h, max_size):
+    for size in range(max_size, 27, -2):
         font = load_font(SERIF, size)
         lines = lines_for(draw, text, font, max_w)
         line_h = int(size * 1.6)
@@ -131,21 +127,20 @@ def fit_verse(draw, text, max_w, max_h):
 
 # ----- adaptive color & placement ----------------------------------------------
 
-def choose_placement(img, block_h):
-    """Find the calmest vertical band for the text block; pick text color by its brightness."""
+def choose_placement(img, block_h, cw, ch, col_left, col_w):
     gray = img.convert("L")
     sf = 8
-    small = gray.resize((W // sf, H // sf))
-    cl, cr = COL_LEFT // sf, (COL_LEFT + TEXT_W) // sf
+    small = gray.resize((cw // sf, ch // sf))
+    cl, cr = col_left // sf, (col_left + col_w) // sf
     bh = max(1, block_h // sf)
-    top_min, top_max = int(0.10 * H / sf), int((H - block_h) / sf) - int(0.06 * H / sf)
+    top_min = int(0.10 * ch / sf)
+    top_max = int((ch - block_h) / sf) - int(0.06 * ch / sf)
     best = None
     for top in range(top_min, max(top_min + 1, top_max), 2):
         region = small.crop((cl, top, cr, top + bh))
         st = ImageStat.Stat(region)
         busy, mean = st.stddev[0], st.mean[0]
-        # prefer calm regions, slight nudge toward vertical center
-        center_pen = abs((top + bh / 2) - (H / sf / 2)) * 0.04
+        center_pen = abs((top + bh / 2) - (ch / sf / 2)) * 0.04
         score = busy + center_pen
         if best is None or score < best[0]:
             best = (score, top * sf, mean, busy)
@@ -156,10 +151,7 @@ def choose_placement(img, block_h):
     return top_full, fg, shadow, busy
 
 
-# ----- italic (faux) for the source reference ----------------------------------
-
 def render_italic(text, font, fill):
-    """Render text slanted (faux-italic) → RGBA image; Korean serif has no true italic."""
     asc, desc = font.getmetrics()
     h = asc + desc
     shear = 0.20
@@ -172,9 +164,15 @@ def render_italic(text, font, fill):
 
 # ----- compose -----------------------------------------------------------------
 
-def render(verse, theme_name, handle, out_path, photo=None):
-    probe = ImageDraw.Draw(Image.new("RGB", (W, H)))
-    font, lines, line_h, size = fit_verse(probe, verse["text"], TEXT_W, 560)
+def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED):
+    cw, ch = canvas
+    col_w = int(cw * (0.70 if canvas == REEL else 0.67))
+    col_left = (cw - col_w) // 2
+    max_size = 52 if canvas == REEL else 48
+    max_text_h = int(ch * (0.34 if canvas == REEL else 0.42))
+
+    probe = ImageDraw.Draw(Image.new("RGB", (cw, ch)))
+    font, lines, line_h, size = fit_verse(probe, verse["text"], col_w, max_text_h, max_size)
 
     src_font = load_font(SERIF, max(22, int(size * 0.62)))
     src_asc, src_desc = src_font.getmetrics()
@@ -183,36 +181,32 @@ def render(verse, theme_name, handle, out_path, photo=None):
     block_h = len(lines) * line_h + gap + src_h
 
     if photo:
-        base = cover_crop(Image.open(photo)).filter(ImageFilter.GaussianBlur(1.2))
-        top_y, fg, shadow_c, busy = choose_placement(base, block_h)
+        base = cover_crop(Image.open(photo), cw, ch).filter(ImageFilter.GaussianBlur(1.2))
+        top_y, fg, shadow_c, busy = choose_placement(base, block_h, cw, ch, col_left, col_w)
     else:
         theme = THEMES.get(theme_name, THEMES["ivory"])
-        base = Image.new("RGB", (W, H), theme["bg"])
+        base = Image.new("RGB", (cw, ch), theme["bg"])
         fg = theme["fg"]
         shadow_c = (255, 255, 255) if sum(theme["bg"]) > 380 else (0, 0, 0)
-        top_y = (H - block_h) // 2
+        top_y = (ch - block_h) // 2
         busy = 0
 
     base = base.convert("RGBA")
-
-    # draw all text onto a transparent layer
-    txt = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    txt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
     td = ImageDraw.Draw(txt)
     y = top_y
     for ln in lines:
         lw = text_w(td, ln, font)
-        td.text(((W - lw) // 2, y), ln, font=font, fill=fg + (255,))
+        td.text(((cw - lw) // 2, y), ln, font=font, fill=fg + (255,))
         y += line_h
-    # source reference, italic, same serif, smaller, muted — no divider line
     src_fill = tuple(int(c * 0.55 + (255 if fg[0] > 128 else 0) * 0.45) for c in fg)
     src_img = render_italic(verse["ref"], src_font, src_fill + (255,))
-    txt.alpha_composite(src_img, ((W - src_img.width) // 2, y + gap - src_h // 4))
+    txt.alpha_composite(src_img, ((cw - src_img.width) // 2, y + gap - src_h // 4))
 
-    # subtle shadow only as needed for legibility (busy area → a touch more)
     if photo:
         alpha = txt.getchannel("A")
         strength = 0.5 if busy > 16 else 0.3
-        shadow = Image.new("RGBA", (W, H), shadow_c + (0,))
+        shadow = Image.new("RGBA", (cw, ch), shadow_c + (0,))
         shadow.putalpha(alpha.point(lambda a: int(a * strength)))
         shadow = shadow.filter(ImageFilter.GaussianBlur(5))
         base = Image.alpha_composite(base, shadow)
@@ -240,9 +234,11 @@ def main():
     ap.add_argument("--theme", default="ivory", choices=list(THEMES))
     ap.add_argument("--photo")
     ap.add_argument("--photos", action="store_true")
+    ap.add_argument("--reel", action="store_true", help="9:16 canvas (for Reels)")
     ap.add_argument("--handle", default="")
     args = ap.parse_args()
 
+    canvas = REEL if args.reel else FEED
     with open(os.path.join(HERE, "verses.json"), encoding="utf-8") as f:
         data = json.load(f)
     verses = data["verses"]
@@ -261,7 +257,7 @@ def main():
     for i, v in enumerate(targets):
         photo = args.photo or (pool[i % len(pool)] if (args.photos and pool) else None)
         out = os.path.join(OUT_DIR, f"{slug(v['ref'])}.png")
-        render(v, args.theme, args.handle, out, photo=photo)
+        render(v, args.theme, args.handle, out, photo=photo, canvas=canvas)
         print(f"✓ {v['ref']}" + (f"  [{os.path.basename(photo)}]" if photo else "  [solid]"))
 
 
