@@ -26,7 +26,7 @@ def make_boomerang(clip, out):
         "-filter_complex", "[0:v]split[a][b];[b]reverse[r];[a][r]concat=n=2:v=1[v]",
         "-map", "[v]", "-an",
         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
-        "-preset", "ultrafast", "-crf", "28",
+        "-preset", "fast", "-crf", "16",
         out,
     ], check=True, capture_output=True)
     return out
@@ -42,9 +42,9 @@ def build_reel(video, overlay_png, audio, out, duration=60):
         "-filter_complex",
         f"[0:v]{_COVER}[bg];[bg][1:v]overlay=0:0[v]",
         "-map", "[v]", "-map", "2:a",
-        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "24",
-        "-preset", "veryfast", "-crf", "28", "-maxrate", "3M", "-bufsize", "6M",
-        "-c:a", "aac", "-b:a", "160k",
+        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
+        "-preset", "medium", "-crf", "19",
+        "-c:a", "aac", "-b:a", "192k",
         "-t", str(duration),
         "-af", f"afade=t=in:st=0:d=1.5,afade=t=out:st={duration - 2}:d=2",
         "-movflags", "+faststart",
