@@ -13,10 +13,8 @@ __pycache__/
 output/_path.txt
 output/_caption.txt
 
-# loose preview renders (the real posts live in output/posts/)
-output/_*.png
-output/*.png
-!output/posts/
+# rendered media is hosted via GitHub Releases, never committed to git
+output/
 
 # video clips are fetched fresh at runtime, never committed
 videos/
