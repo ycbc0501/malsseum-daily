@@ -28,8 +28,25 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.join(HERE, "output")
 PHOTO_DIR = os.path.join(HERE, "photos")
 
-SERIF = "/System/Library/Fonts/AppleMyungjo.ttf"
-SANS = "/System/Library/Fonts/AppleSDGothicNeo.ttc"
+FONTS_DIR = os.path.join(HERE, "fonts")
+
+
+def _resolve_font(candidates):
+    for p in candidates:
+        if os.path.exists(p):
+            return p
+    return candidates[0]
+
+
+# Bundled Korean fonts (work on any OS incl. the Linux CI runner); macOS fallback.
+SERIF = _resolve_font([
+    os.path.join(FONTS_DIR, "NanumMyeongjo-Regular.ttf"),
+    "/System/Library/Fonts/AppleMyungjo.ttf",
+])
+SANS = _resolve_font([
+    os.path.join(FONTS_DIR, "NanumGothic-Regular.ttf"),
+    "/System/Library/Fonts/AppleSDGothicNeo.ttc",
+])
 
 W, H = 1080, 1350
 MARGIN = 95
