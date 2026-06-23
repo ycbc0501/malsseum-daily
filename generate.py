@@ -1,34 +1,36 @@
 #!/usr/bin/env python3
 """
-말씀 이미지 생성기  —  verse → styled Instagram image.
+말씀 이미지 생성기  —  verse → styled Instagram image (dailymayim/Alabaster style).
 
-Reads verses.json, renders a clean, Alabaster/dailymayim-style 1080×1350 PNG
-for each verse into output/. Supports solid muted themes OR soft nature photo
-backgrounds (flowers, sunsets, meadows...) with a legibility scrim + soft text shadow.
+Design:
+  • soft nature OR solemn photo background, kept bright & natural (no heavy scrim)
+  • text placed in the calmest/emptiest region of the photo
+  • ADAPTIVE color: dark text on light areas, light text on dark areas
+  • small, elegant 명조(serif) type; comma-aware line breaks
+  • source reference in *italic*, same serif, smaller, no divider line
 
 Usage:
-    python3 generate.py                      # today's verse (rotates by date)
-    python3 generate.py --all                # render every verse
-    python3 generate.py --ref "시편 23:1"      # one specific verse
-    python3 generate.py --theme ink          # ivory | ink | sage | clay | mist | stone
-    python3 generate.py --compare "시편 23:1"  # one verse across all solid themes
-    python3 generate.py --photo photos/x.jpg # render over a specific photo
-    python3 generate.py --photos             # auto-pick a random photo from photos/ per verse
-    python3 generate.py --handle @daily.malsseum
+    python3 generate.py --ref "시편 23:1" --photo photos/x.jpg
+    python3 generate.py --all --photos
+    python3 generate.py --photos
 """
 
 import argparse
 import glob
 import json
 import os
+import re
 from datetime import date
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageStat
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.join(HERE, "output")
 PHOTO_DIR = os.path.join(HERE, "photos")
-
 FONTS_DIR = os.path.join(HERE, "fonts")
+
+W, H = 1080, 1350
+TEXT_W = 720          # text column width (narrow → small, elegant lines like the reference)
+COL_LEFT = (W - TEXT_W) // 2
 
 
 def _resolve_font(candidates):
@@ -38,31 +40,16 @@ def _resolve_font(candidates):
     return candidates[0]
 
 
-# Bundled Korean fonts (work on any OS incl. the Linux CI runner); macOS fallback.
 SERIF = _resolve_font([
     os.path.join(FONTS_DIR, "NanumMyeongjo-Regular.ttf"),
     "/System/Library/Fonts/AppleMyungjo.ttf",
 ])
-SANS = _resolve_font([
-    os.path.join(FONTS_DIR, "NanumGothic-Regular.ttf"),
-    "/System/Library/Fonts/AppleSDGothicNeo.ttc",
-])
 
-W, H = 1080, 1350
-MARGIN = 95
-
+# solid-color fallback themes (used only when no photo is given)
 THEMES = {
-    "ivory": {"top": (247, 243, 235), "bot": (240, 234, 222), "fg": (44, 40, 35),  "muted": (160, 148, 130)},
-    "ink":   {"top": (33, 32, 30),    "bot": (22, 21, 20),    "fg": (236, 230, 220), "muted": (140, 132, 120)},
-    "sage":  {"top": (221, 225, 213), "bot": (209, 215, 201), "fg": (46, 52, 42),   "muted": (120, 130, 106)},
-    "clay":  {"top": (227, 211, 199), "bot": (216, 197, 183), "fg": (66, 48, 40),   "muted": (160, 128, 110)},
-    "mist":  {"top": (217, 223, 227), "bot": (203, 211, 217), "fg": (40, 48, 54),   "muted": (122, 136, 144)},
-    "stone": {"top": (225, 220, 211), "bot": (213, 207, 196), "fg": (54, 49, 42),   "muted": (150, 140, 126)},
+    "ivory": {"bg": (244, 240, 232), "fg": (54, 48, 42)},
+    "ink":   {"bg": (26, 25, 24),    "fg": (236, 230, 220)},
 }
-
-# text colors when over a photo
-PHOTO_FG = (252, 250, 246)
-PHOTO_MUTED = (244, 240, 233)
 
 
 def load_font(path, size):
@@ -72,180 +59,187 @@ def load_font(path, size):
         return ImageFont.truetype(SERIF, size)
 
 
-def solid_bg(theme):
-    """Vertical gradient + faint grain for tactile depth."""
-    top, bot = theme["top"], theme["bot"]
-    img = Image.new("RGB", (W, H), top)
-    px = img.load()
-    for y in range(H):
-        t = y / (H - 1)
-        px_row = (round(top[0] + (bot[0] - top[0]) * t),
-                  round(top[1] + (bot[1] - top[1]) * t),
-                  round(top[2] + (bot[2] - top[2]) * t))
-        for x in range(W):
-            px[x, y] = px_row
-    grain = Image.effect_noise((W, H), 14).convert("RGB")
-    return Image.blend(img, grain, 0.035)
-
-
-def photo_bg(path):
-    """Cover-crop a photo to WxH, soft dreamy blur, gentle scrim for legibility."""
-    img = Image.open(path).convert("RGB")
-    # cover-crop
+def cover_crop(img):
+    img = img.convert("RGB")
     scale = max(W / img.width, H / img.height)
     img = img.resize((round(img.width * scale), round(img.height * scale)), Image.LANCZOS)
     left = (img.width - W) // 2
     top = (img.height - H) // 2
-    img = img.crop((left, top, left + W, top + H))
-    # soft, dreamy
-    img = img.filter(ImageFilter.GaussianBlur(2.5))
-    # scrim: overall gentle darken so light/pastel photos still hold white text
-    scrim = Image.new("RGB", (W, H), (0, 0, 0))
-    img = Image.blend(img, scrim, 0.30)
-    return img
+    return img.crop((left, top, left + W, top + H))
 
+
+# ----- text layout -------------------------------------------------------------
 
 def text_w(draw, s, font):
-    l, _, r, _ = draw.textbbox((0, 0), s, font=font)
-    return r - l
+    return draw.textlength(s, font=font)
 
 
-def tracked_w(draw, s, font, tracking):
-    return sum(text_w(draw, ch, font) + tracking for ch in s) - tracking if s else 0
-
-
-def draw_tracked(draw, xy, s, font, fill, tracking):
-    x, y = xy
-    for ch in s:
-        draw.text((x, y), ch, font=font, fill=fill)
-        x += text_w(draw, ch, font) + tracking
-
-
-def wrap(draw, text, font, max_w):
-    lines = []
-    for paragraph in text.split("\n"):
-        line = ""
-        for word in paragraph.split(" "):
-            trial = word if not line else line + " " + word
-            if text_w(draw, trial, font) <= max_w:
-                line = trial
-            else:
-                if line:
-                    lines.append(line)
-                if text_w(draw, word, font) > max_w:
-                    chunk = ""
-                    for ch in word:
-                        if text_w(draw, chunk + ch, font) <= max_w:
-                            chunk += ch
-                        else:
-                            lines.append(chunk)
-                            chunk = ch
-                    line = chunk
-                else:
-                    line = word
-        lines.append(line)
+def _greedy(draw, words, font, max_w):
+    lines, cur = [], ""
+    for word in words:
+        trial = word if not cur else cur + " " + word
+        if text_w(draw, trial, font) <= max_w:
+            cur = trial
+        else:
+            if cur:
+                lines.append(cur)
+            cur = word
+    if cur:
+        lines.append(cur)
     return lines
 
 
-def split_two_lines(text):
-    """Always split a verse into exactly TWO lines.
-    If there's a comma, break there (text before comma = line 1, after = line 2;
-    with multiple commas pick the one nearest the middle). Otherwise break at the
-    space nearest the middle."""
-    text = " ".join(text.split())
-    commas = [i for i, c in enumerate(text) if c in ",，"]
-    if commas:
-        mid = len(text) / 2
-        i = min(commas, key=lambda x: abs(x - mid))
-        a, b = text[:i + 1].strip(), text[i + 1:].strip()
-    else:
-        spaces = [i for i, c in enumerate(text) if c == " "]
-        if spaces:
-            mid = len(text) / 2
-            i = min(spaces, key=lambda x: abs(x - mid))
-            a, b = text[:i].strip(), text[i:].strip()
+def _wrap_balanced(draw, clause, font, max_w):
+    """Wrap a clause into the fewest lines, then even them out (no orphan words)."""
+    words = clause.split(" ")
+    target = len(_greedy(draw, words, font, max_w))
+    if target <= 1:
+        return [clause]
+    lo, hi, best = 0, max_w, None
+    for _ in range(14):  # binary-search the narrowest width that still gives `target` lines
+        mid = (lo + hi) / 2
+        w = _greedy(draw, words, font, mid)
+        if len(w) <= target:
+            best, hi = w, mid
         else:
-            a, b = text, ""
-    return [x for x in (a, b) if x]
+            lo = mid
+    return best or _greedy(draw, words, font, max_w)
 
 
-def fit_verse(draw, text, max_w, max_h, line_ratio=1.62):
-    """Largest serif size at which both lines fit on a single line each."""
-    lines = split_two_lines(text)
-    for size in range(86, 21, -2):
+def lines_for(draw, text, font, max_w):
+    """Comma-aware word wrap: break after commas, then balance-wrap each clause."""
+    text = " ".join(text.split())
+    clauses = [c.strip() for c in re.split(r",", text) if c.strip()]
+    clauses = [c + ("," if i < len(clauses) - 1 else "") for i, c in enumerate(clauses)]
+    lines = []
+    for clause in clauses:
+        lines.extend(_wrap_balanced(draw, clause, font, max_w))
+    return lines
+
+
+def fit_verse(draw, text, max_w, max_h):
+    """Small, refined serif sized to fit — reference uses delicate type."""
+    for size in range(48, 27, -2):
         font = load_font(SERIF, size)
-        line_h = int(size * line_ratio)
+        lines = lines_for(draw, text, font, max_w)
+        line_h = int(size * 1.6)
         if all(text_w(draw, ln, font) <= max_w for ln in lines) and len(lines) * line_h <= max_h:
-            return font, lines, line_h
-    font = load_font(SERIF, 22)
-    return font, lines, int(22 * line_ratio)
+            return font, lines, line_h, size
+    font = load_font(SERIF, 28)
+    return font, lines_for(draw, text, font, max_w), int(28 * 1.6), 28
 
 
-def paint_text(draw, verse, fg, muted, layout):
-    """Draw verse block + divider + reference + handle using a precomputed layout."""
-    font, lines, line_h, start_y, handle = layout
-    y = start_y
-    for line in lines:
-        lw = text_w(draw, line, font)
-        draw.text(((W - lw) // 2, y), line, font=font, fill=fg)
-        y += line_h
-    div_y = y + 44
-    draw.line([(W // 2 - 22, div_y), (W // 2 + 22, div_y)], fill=muted, width=1)
-    ref_font = load_font(SANS, 33)
-    rw = tracked_w(draw, verse["ref"], ref_font, 7)
-    draw_tracked(draw, ((W - rw) // 2, div_y + 32), verse["ref"], ref_font, muted, 7)
-    if handle:
-        h_font = load_font(SANS, 25)
-        hw = tracked_w(draw, handle, h_font, 3)
-        draw_tracked(draw, ((W - hw) // 2, H - 80), handle, h_font, muted, 3)
+# ----- adaptive color & placement ----------------------------------------------
 
+def choose_placement(img, block_h):
+    """Find the calmest vertical band for the text block; pick text color by its brightness."""
+    gray = img.convert("L")
+    sf = 8
+    small = gray.resize((W // sf, H // sf))
+    cl, cr = COL_LEFT // sf, (COL_LEFT + TEXT_W) // sf
+    bh = max(1, block_h // sf)
+    top_min, top_max = int(0.10 * H / sf), int((H - block_h) / sf) - int(0.06 * H / sf)
+    best = None
+    for top in range(top_min, max(top_min + 1, top_max), 2):
+        region = small.crop((cl, top, cr, top + bh))
+        st = ImageStat.Stat(region)
+        busy, mean = st.stddev[0], st.mean[0]
+        # prefer calm regions, slight nudge toward vertical center
+        center_pen = abs((top + bh / 2) - (H / sf / 2)) * 0.04
+        score = busy + center_pen
+        if best is None or score < best[0]:
+            best = (score, top * sf, mean, busy)
+    _, top_full, mean, busy = best
+    light_bg = mean > 150
+    fg = (44, 40, 36) if light_bg else (250, 248, 244)
+    shadow = (255, 255, 255) if light_bg else (0, 0, 0)
+    return top_full, fg, shadow, busy
+
+
+# ----- italic (faux) for the source reference ----------------------------------
+
+def render_italic(text, font, fill):
+    """Render text slanted (faux-italic) → RGBA image; Korean serif has no true italic."""
+    asc, desc = font.getmetrics()
+    h = asc + desc
+    shear = 0.20
+    pad = int(shear * h) + 8
+    tw = int(font.getlength(text))
+    base = Image.new("RGBA", (tw + 2 * pad, h), (0, 0, 0, 0))
+    ImageDraw.Draw(base).text((pad, 0), text, font=font, fill=fill)
+    return base.transform(base.size, Image.AFFINE, (1, shear, 0, 0, 1, 0), resample=Image.BICUBIC)
+
+
+# ----- compose -----------------------------------------------------------------
 
 def render(verse, theme_name, handle, out_path, photo=None):
-    # measure with a throwaway draw context
     probe = ImageDraw.Draw(Image.new("RGB", (W, H)))
-    font, lines, line_h = fit_verse(probe, verse["text"], W - 2 * MARGIN, 720)
-    start_y = (H - len(lines) * line_h) // 2 - 50
-    layout = (font, lines, line_h, start_y, handle)
+    font, lines, line_h, size = fit_verse(probe, verse["text"], TEXT_W, 560)
+
+    src_font = load_font(SERIF, max(22, int(size * 0.62)))
+    src_asc, src_desc = src_font.getmetrics()
+    src_h = src_asc + src_desc
+    gap = int(line_h * 0.85)
+    block_h = len(lines) * line_h + gap + src_h
 
     if photo:
-        base = photo_bg(photo).convert("RGBA")
-        # draw text on its own layer so we can build a soft shadow from it
-        txt = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        paint_text(ImageDraw.Draw(txt), verse, PHOTO_FG + (255,), PHOTO_MUTED + (255,), layout)
-        shadow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        shadow.putalpha(txt.getchannel("A"))            # black silhouette of the text
-        shadow = shadow.filter(ImageFilter.GaussianBlur(7))
-        base = Image.alpha_composite(base, shadow)       # soft dark halo
-        base = Image.alpha_composite(base, shadow)       # doubled = a touch stronger
-        base = Image.alpha_composite(base, txt)
-        base.convert("RGB").save(out_path, "PNG")
+        base = cover_crop(Image.open(photo)).filter(ImageFilter.GaussianBlur(1.2))
+        top_y, fg, shadow_c, busy = choose_placement(base, block_h)
     else:
-        theme = THEMES.get(verse.get("theme", theme_name), THEMES["ivory"])
-        img = solid_bg(theme)
-        paint_text(ImageDraw.Draw(img), verse, theme["fg"], theme["muted"], layout)
-        img.save(out_path, "PNG")
+        theme = THEMES.get(theme_name, THEMES["ivory"])
+        base = Image.new("RGB", (W, H), theme["bg"])
+        fg = theme["fg"]
+        shadow_c = (255, 255, 255) if sum(theme["bg"]) > 380 else (0, 0, 0)
+        top_y = (H - block_h) // 2
+        busy = 0
+
+    base = base.convert("RGBA")
+
+    # draw all text onto a transparent layer
+    txt = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    td = ImageDraw.Draw(txt)
+    y = top_y
+    for ln in lines:
+        lw = text_w(td, ln, font)
+        td.text(((W - lw) // 2, y), ln, font=font, fill=fg + (255,))
+        y += line_h
+    # source reference, italic, same serif, smaller, muted — no divider line
+    src_fill = tuple(int(c * 0.55 + (255 if fg[0] > 128 else 0) * 0.45) for c in fg)
+    src_img = render_italic(verse["ref"], src_font, src_fill + (255,))
+    txt.alpha_composite(src_img, ((W - src_img.width) // 2, y + gap - src_h // 4))
+
+    # subtle shadow only as needed for legibility (busy area → a touch more)
+    if photo:
+        alpha = txt.getchannel("A")
+        strength = 0.5 if busy > 16 else 0.3
+        shadow = Image.new("RGBA", (W, H), shadow_c + (0,))
+        shadow.putalpha(alpha.point(lambda a: int(a * strength)))
+        shadow = shadow.filter(ImageFilter.GaussianBlur(5))
+        base = Image.alpha_composite(base, shadow)
+
+    base = Image.alpha_composite(base, txt)
+    base.convert("RGB").save(out_path, "PNG")
     return out_path
 
+
+# ----- cli ---------------------------------------------------------------------
 
 def slug(ref):
     return ref.replace(" ", "_").replace(":", "-")
 
 
 def pick_photos():
-    files = sorted(f for f in glob.glob(os.path.join(PHOTO_DIR, "*"))
-                   if f.lower().endswith((".jpg", ".jpeg", ".png")) and "_placeholder" not in f
-                   and "_demo" not in f)
-    return files
+    return sorted(f for f in glob.glob(os.path.join(PHOTO_DIR, "*"))
+                  if f.lower().endswith((".jpg", ".jpeg", ".png")))
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--all", action="store_true")
     ap.add_argument("--ref")
-    ap.add_argument("--compare")
     ap.add_argument("--theme", default="ivory", choices=list(THEMES))
-    ap.add_argument("--photo", help="render over a specific photo file")
-    ap.add_argument("--photos", action="store_true", help="auto-pick a photo from photos/ per verse")
+    ap.add_argument("--photo")
+    ap.add_argument("--photos", action="store_true")
     ap.add_argument("--handle", default="")
     args = ap.parse_args()
 
@@ -253,16 +247,6 @@ def main():
         data = json.load(f)
     verses = data["verses"]
     os.makedirs(OUT_DIR, exist_ok=True)
-
-    if args.compare:
-        v = next((x for x in verses if x["ref"] == args.compare), None)
-        if not v:
-            raise SystemExit(f"verse not found: {args.compare}")
-        for name in THEMES:
-            vv = dict(v); vv.pop("theme", None)
-            render(vv, name, args.handle, os.path.join(OUT_DIR, f"_compare_{name}.png"))
-            print(f"✓ [{name}] {v['ref']}")
-        return
 
     if args.all:
         targets = verses
@@ -273,16 +257,12 @@ def main():
     else:
         targets = [verses[date.today().toordinal() % len(verses)]]
 
-    photo_pool = pick_photos() if (args.photos or not args.photo) else []
+    pool = pick_photos()
     for i, v in enumerate(targets):
-        photo = args.photo
-        if args.photos:
-            if not photo_pool:
-                raise SystemExit("no photos in photos/ — run fetch_photos.py first")
-            photo = photo_pool[i % len(photo_pool)]
+        photo = args.photo or (pool[i % len(pool)] if (args.photos and pool) else None)
         out = os.path.join(OUT_DIR, f"{slug(v['ref'])}.png")
         render(v, args.theme, args.handle, out, photo=photo)
-        print(f"✓ {v['ref']}  →  {out}" + (f"  [{os.path.basename(photo)}]" if photo else ""))
+        print(f"✓ {v['ref']}" + (f"  [{os.path.basename(photo)}]" if photo else "  [solid]"))
 
 
 if __name__ == "__main__":
