@@ -32,7 +32,7 @@ MUSIC_DIR = os.path.join(generate.HERE, "music")
 VIDEO_DIR = os.path.join(generate.HERE, "videos")
 STATE = os.path.join(generate.HERE, "state.json")
 CLIPS = os.path.join(generate.HERE, "clips.json")  # human-approved Pexels video ids
-HASHTAGS = "#말씀 #오늘의말씀 #성경말씀 #큐티 #묵상 #기독교 #신앙 #찬양 #하나님 #은혜"
+HASHTAGS = "#성경 #말씀 #오늘의말씀 #말씀묵상 #큐티 #말씀스타그램 #빛으로"
 
 
 def wait_until_target(jitter_s):
