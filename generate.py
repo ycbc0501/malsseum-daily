@@ -274,9 +274,9 @@ def render_overlay(verse, out_path, frame_path, handle="", canvas=REEL):
     gap = int(line_h * 0.85)
     block_h = len(lines) * line_h + gap + src_h
 
-    frame = cover_crop(Image.open(frame_path), cw, ch)
     top_y = (ch - block_h) // 2
-    fg, shadow_c, busy = band_color(frame, top_y, block_h, cw, col_left, col_w)
+    # white text + dark scrim → reliable legibility over ANY moving footage
+    fg, shadow_c = (252, 250, 246), (0, 0, 0)
 
     txt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
     td = ImageDraw.Draw(txt)
@@ -285,12 +285,12 @@ def render_overlay(verse, out_path, frame_path, handle="", canvas=REEL):
         lw = text_w(td, ln, font)
         td.text(((cw - lw) // 2, y), ln, font=font, fill=fg + (255,))
         y += line_h
-    src_fill = tuple(int(c * 0.55 + (255 if fg[0] > 128 else 0) * 0.45) for c in fg)
+    src_fill = (228, 225, 219)
     src_img = render_italic(verse["ref"], src_font, src_fill + (255,))
     txt.alpha_composite(src_img, ((cw - src_img.width) // 2, y + gap - src_h // 4))
 
-    # soft scrim behind the text → legible even over busy footage
-    scrim = soft_scrim(cw, ch, col_left, col_w, top_y, block_h, line_h, shadow_c)
+    # strong soft dark scrim behind the text → legible even over busy/bright footage
+    scrim = soft_scrim(cw, ch, col_left, col_w, top_y, block_h, line_h, shadow_c, alpha=160)
     shadow = Image.new("RGBA", (cw, ch), shadow_c + (0,))
     shadow.putalpha(txt.getchannel("A").point(lambda a: int(a * 0.8)))
     shadow = shadow.filter(ImageFilter.GaussianBlur(6))
