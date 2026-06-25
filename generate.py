@@ -114,24 +114,39 @@ def lines_for(draw, text, font, max_w):
     return lines
 
 
+# Korean clause endings — break here so lines fall on natural phrase boundaries
+_ENDERS = ("요", "고", "며", "니", "라", "면", "나", "사", "다", "야", "여")
+
+
 def two_line_split(text):
-    """Always exactly TWO lines: split at the comma nearest the middle if there is one,
-    otherwise at the space nearest the middle."""
+    """Always exactly TWO lines. Comma → split there. Otherwise split at a word
+    boundary near the middle, PREFERRING one right after a Korean clause ending
+    (요/고/며/니/라…) so the break lands on a natural phrase."""
     text = " ".join(text.split())
     commas = [i for i, c in enumerate(text) if c in ",，"]
     if commas:
         mid = len(text) / 2
         i = min(commas, key=lambda x: abs(x - mid))
-        a, b = text[:i + 1].strip(), text[i + 1:].strip()
-    else:
-        spaces = [i for i, c in enumerate(text) if c == " "]
-        if spaces:
-            mid = len(text) / 2
-            i = min(spaces, key=lambda x: abs(x - mid))
-            a, b = text[:i].strip(), text[i:].strip()
-        else:
-            a, b = text, ""
-    return [x for x in (a, b) if x]
+        return [s for s in (text[:i + 1].strip(), text[i + 1:].strip()) if s]
+
+    words = text.split(" ")
+    if len(words) < 2:
+        return [text]
+    mid = len(text) / 2
+    nearest = None          # closest word-boundary to the middle (fallback)
+    clause = None           # closest boundary right after a clause ending
+    line1 = ""
+    for k in range(len(words) - 1):
+        line1 = words[k] if not line1 else line1 + " " + words[k]
+        dist = abs(len(line1) - mid)
+        if nearest is None or dist < nearest[0]:
+            nearest = (dist, k + 1)
+        if len(words[k]) >= 2 and words[k].endswith(_ENDERS) and (clause is None or dist < clause[0]):
+            clause = (dist, k + 1)
+    # use the clause break if it's reasonably balanced, else nearest-middle
+    choice = clause if (clause and clause[0] <= len(text) * 0.32) else nearest
+    k = choice[1]
+    return [s for s in (" ".join(words[:k]), " ".join(words[k:])) if s]
 
 
 def fit_verse(draw, text, max_w, max_h, max_size):
