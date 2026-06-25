@@ -86,7 +86,7 @@ def fetch_clip(i, query):
 
 
 def build_caption(verse, translation):
-    return f"\"{verse['text']}\"\n\n— {verse['ref']} ({translation})\n\n{HASHTAGS}"
+    return f"\"{verse['text']}\"\n\n{verse['ref']} ({translation})\n\n{HASHTAGS}"
 
 
 def main():
