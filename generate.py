@@ -150,15 +150,23 @@ def two_line_split(text):
 
 
 def fit_verse(draw, text, max_w, max_h, max_size):
-    """Force the verse onto 2 lines; shrink the font until both lines fit the width."""
-    lines = two_line_split(text)
-    for size in range(max_size, 17, -2):
+    """Lay out the verse on 2 or 3 lines. Prefer a clean clause-aware 2-line split when
+    it renders at a comfortable size; otherwise wrap onto up to 3 lines and shrink to fit."""
+    two = two_line_split(text)
+    if len(two) <= 2:
+        for size in range(max_size, 37, -2):   # 2 lines only if it stays big (>=38px)
+            font = load_font(SERIF, size)
+            line_h = int(size * 1.6)
+            if all(text_w(draw, ln, font) <= max_w for ln in two) and len(two) * line_h <= max_h:
+                return font, two, line_h, size
+    for size in range(max_size, 23, -2):        # otherwise up to 3 lines, largest that fits
         font = load_font(SERIF, size)
         line_h = int(size * 1.6)
-        if all(text_w(draw, ln, font) <= max_w for ln in lines) and len(lines) * line_h <= max_h:
+        lines = lines_for(draw, text, font, max_w)
+        if len(lines) <= 3 and len(lines) * line_h <= max_h:
             return font, lines, line_h, size
-    font = load_font(SERIF, 18)
-    return font, lines, int(18 * 1.6), 18
+    font = load_font(SERIF, 24)
+    return font, lines_for(draw, text, font, max_w)[:3], int(24 * 1.6), 24
 
 
 # ----- adaptive color & placement ----------------------------------------------
