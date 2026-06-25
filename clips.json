@@ -1,6 +1,4 @@
 {
-  "_comment": "Human-approved Pexels video ids (pure nature, no people/animals/structures). The daily reel rotates through these one at a time. Add more ids anytime.",
-  "ids": [
-    36702177
-  ]
+  "_comment": "Optional: pin specific approved Pexels video ids here to use ONLY those. Leave ids empty to fetch fresh clips by keyword (waves/cloud/sun/field/flower field) with the auto-filter for people/animals/structures.",
+  "ids": []
 }

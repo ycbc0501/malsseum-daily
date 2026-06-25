@@ -76,9 +76,10 @@ def fetch_clip(i, query):
     dest = os.path.join(VIDEO_DIR, "today.mp4")
     ids = approved_ids()
     try:
-        if ids:
+        if ids:  # optional: pin specific approved clips via clips.json
             return fetch_videos.fetch_by_id(ids[i % len(ids)], dest)
-        return fetch_videos.fetch_one(query, dest)
+        # otherwise pull fresh by keyword (rotates keyword + result for variety)
+        return fetch_videos.fetch_one(query, dest, pick=i // len(fetch_videos.QUERIES))
     except Exception as e:
         print(f"video fetch failed ({e}) → fallback")
         return None

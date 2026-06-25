@@ -20,6 +20,16 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) malsseum-bot/1.0"
 # allowed keywords (pure nature, no people/animals/structures)
 QUERIES = ["waves", "cloud", "sun", "field", "flower field"]
 
+# skip clips whose URL slug hints at a human / animal / man-made thing
+BLOCK_SLUG = (
+    "road", "street", "car", "truck", "vehicle", "traffic", "building", "city",
+    "house", "home", "bridge", "boat", "ship", "train", "plane", "airport",
+    "person", "people", "man", "woman", "girl", "boy", "child", "kid", "baby",
+    "crowd", "hand", "face", "portrait", "dog", "cat", "bird", "horse", "cow",
+    "sheep", "animal", "fish", "deer", "duck", "wedding", "couple", "window",
+    "phone", "tower", "wind-turbine", "windmill", "farmer", "worker",
+)
+
 
 def get_key():
     key = os.environ.get("PEXELS_API_KEY")
@@ -52,13 +62,21 @@ def best_portrait_file(video_files):
     return pool[0]["link"] if pool else None
 
 
-def fetch_one(query, dest, key=None):
-    """Fetch a single portrait clip for `query` to `dest`. Keyword fallback."""
+def fetch_one(query, dest, pick=0, key=None):
+    """Fetch a portrait clip for `query` to `dest`, skipping human/animal/man-made
+    clips (by URL slug). `pick` rotates which result is chosen for day-to-day variety."""
     key = key or get_key()
     params = urllib.parse.urlencode({"query": query, "orientation": "portrait",
-                                     "per_page": 8, "size": "medium"})
+                                     "per_page": 15, "size": "medium"})
     data = _get(f"https://api.pexels.com/videos/search?{params}", key)
-    for vid in data.get("videos", []):
+    vids = [v for v in data.get("videos", [])
+            if not any(b in v.get("url", "").lower() for b in BLOCK_SLUG)]
+    if not vids:
+        vids = data.get("videos", [])
+    if not vids:
+        return None
+    for off in range(len(vids)):
+        vid = vids[(pick + off) % len(vids)]
         link = best_portrait_file(vid.get("video_files", []))
         if link:
             _download(link, dest)
