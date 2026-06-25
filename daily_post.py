@@ -34,6 +34,9 @@ STATE = os.path.join(generate.HERE, "state.json")
 CLIPS = os.path.join(generate.HERE, "clips.json")  # human-approved Pexels video ids
 HASHTAGS = "#성경 #말씀 #오늘의말씀 #말씀묵상 #큐티 #말씀스타그램 #빛으로"
 
+# never post a verse that ends mid-clause (reads incomplete as a standalone card)
+INCOMPLETE_ENDINGS = ("고", "며", "매", "이요", "으며", "하며")
+
 
 def wait_until_target(jitter_s):
     now = datetime.now(KST)
@@ -102,7 +105,9 @@ def main():
 
     with open(os.path.join(generate.HERE, "verses.json"), encoding="utf-8") as f:
         data = json.load(f)
-    verses = data["verses"]
+    # safety: drop any verse that ends mid-clause so it can never be posted
+    verses = [v for v in data["verses"]
+              if not v["text"].rstrip().rstrip(".").endswith(INCOMPLETE_ENDINGS)]
     photos = generate.pick_photos()
     tracks = music_tracks()
 
