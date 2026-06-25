@@ -1,11 +1,11 @@
 name: Daily 말씀 Reel
 
-# Fires at 04:40 KST (19:40 UTC). daily_post.py then waits until a random
-# moment in 05:00 ± 10 min KST, renders a 9:16 still, builds a still-image Reel
-# (image + hymn music) and publishes it to Instagram as a Reel.
+# Fires at 03:00 KST (18:00 UTC) — early on purpose: GitHub's scheduler is often
+# 1-2h late, so we start early and daily_post.py then WAITS until 05:00 ±10 min KST.
+# This absorbs GitHub's delay so the post still lands ~5 AM. (Wait time is free on a public repo.)
 on:
   schedule:
-    - cron: "40 19 * * *"
+    - cron: "0 18 * * *"
   workflow_dispatch:
 
 permissions:
