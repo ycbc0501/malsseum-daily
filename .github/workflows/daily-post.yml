@@ -53,10 +53,11 @@ jobs:
         run: |
           URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/media/${FILE}"
           echo "URL: $URL"
+          CMT="$(cat output/_comment.txt)"
           if [[ "$FILE" == *.mp4 ]]; then
-            python post_instagram.py "$URL" "$(cat output/_caption.txt)" --reel
+            python post_instagram.py "$URL" "$(cat output/_caption.txt)" --reel --comment "$CMT"
           else
-            python post_instagram.py "$URL" "$(cat output/_caption.txt)"
+            python post_instagram.py "$URL" "$(cat output/_caption.txt)" --comment "$CMT"
           fi
 
       - name: Save rotation counter

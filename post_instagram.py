@@ -95,14 +95,22 @@ def publish_reel(video_url, caption, ig_user_id=None, token=None):
     })
 
 
+def comment(media_id, message, ig_user_id=None, token=None):
+    """Post a comment on a published media (used for the hashtag first-comment).
+    Needs the instagram_manage_comments permission on the token."""
+    token = token or os.environ.get("IG_ACCESS_TOKEN")
+    return _post(f"{GRAPH}/{media_id}/comments", {"message": message, "access_token": token})
+
+
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("url", help="public image URL (or video URL with --reel)")
     ap.add_argument("caption")
     ap.add_argument("--reel", action="store_true", help="publish as a Reel (video)")
+    ap.add_argument("--comment", default="", help="post this as a first comment (hashtags)")
     args = ap.parse_args()
-    if args.reel:
-        print(publish_reel(args.url, args.caption))
-    else:
-        print(publish(args.url, args.caption))
+    result = publish_reel(args.url, args.caption) if args.reel else publish(args.url, args.caption)
+    print(result)
+    if args.comment and isinstance(result, dict) and result.get("id"):
+        print("comment:", comment(result["id"], args.comment))

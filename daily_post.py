@@ -86,7 +86,7 @@ def fetch_clip(i, query):
 
 
 def build_caption(verse, translation):
-    return f"\"{verse['text']}\"\n\n{verse['ref']} ({translation})\n\n{HASHTAGS}"
+    return f"\"{verse['text']}\"\n\n{verse['ref']} ({translation})"
 
 
 def main():
@@ -148,19 +148,21 @@ def main():
         f.write(rel_path)
     with open(os.path.join(generate.OUT_DIR, "_caption.txt"), "w", encoding="utf-8") as f:
         f.write(caption)
+    with open(os.path.join(generate.OUT_DIR, "_comment.txt"), "w", encoding="utf-8") as f:
+        f.write(HASHTAGS)  # hashtags go in the first comment, not the caption
 
     if args.dry_run or args.emit:
-        print("\n--- caption ---\n" + caption + "\n--- (not publishing here) ---")
+        print("\n--- caption ---\n" + caption + "\n--- comment ---\n" + HASHTAGS)
         return
 
     base = os.environ.get("PUBLIC_IMAGE_BASE")
     if not base:
         raise SystemExit("set PUBLIC_IMAGE_BASE or use --emit")
     url = base.rstrip("/") + "/" + rel_path
-    if rel_path.endswith(".mp4"):
-        print(f"published reel: {post_instagram.publish_reel(url, caption)}")
-    else:
-        print(f"published photo: {post_instagram.publish(url, caption)}")
+    result = (post_instagram.publish_reel if rel_path.endswith(".mp4") else post_instagram.publish)(url, caption)
+    print("published:", result)
+    if isinstance(result, dict) and result.get("id"):
+        print("comment:", post_instagram.comment(result["id"], HASHTAGS))
 
 
 if __name__ == "__main__":
