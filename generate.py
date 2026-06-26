@@ -149,24 +149,15 @@ def two_line_split(text):
     return [s for s in (" ".join(words[:k]), " ".join(words[k:])) if s]
 
 
-def fit_verse(draw, text, max_w, max_h, max_size):
-    """Lay out the verse on 2 or 3 lines. Prefer a clean clause-aware 2-line split when
-    it renders at a comfortable size; otherwise wrap onto up to 3 lines and shrink to fit."""
+def fit_verse(draw, text, max_w, size):
+    """FIXED font size for every verse (consistent look). Use a clean clause-aware
+    2-line split when it fits; otherwise wrap onto more lines — size never changes."""
+    font = load_font(SERIF, size)
+    line_h = int(size * 1.6)
     two = two_line_split(text)
-    if len(two) <= 2:
-        for size in range(max_size, 37, -2):   # 2 lines only if it stays big (>=38px)
-            font = load_font(SERIF, size)
-            line_h = int(size * 1.6)
-            if all(text_w(draw, ln, font) <= max_w for ln in two) and len(two) * line_h <= max_h:
-                return font, two, line_h, size
-    for size in range(max_size, 23, -2):        # otherwise up to 3 lines, largest that fits
-        font = load_font(SERIF, size)
-        line_h = int(size * 1.6)
-        lines = lines_for(draw, text, font, max_w)
-        if len(lines) <= 3 and len(lines) * line_h <= max_h:
-            return font, lines, line_h, size
-    font = load_font(SERIF, 24)
-    return font, lines_for(draw, text, font, max_w)[:3], int(24 * 1.6), 24
+    if len(two) <= 2 and all(text_w(draw, ln, font) <= max_w for ln in two):
+        return font, two, line_h, size
+    return font, lines_for(draw, text, font, max_w), line_h, size
 
 
 # ----- adaptive color & placement ----------------------------------------------
@@ -213,19 +204,18 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED):
     cw, ch = canvas
     col_w = int(cw * (0.70 if canvas == REEL else 0.67))
     col_left = (cw - col_w) // 2
-    max_size = 52 if canvas == REEL else 48
-    max_text_h = int(ch * (0.34 if canvas == REEL else 0.42))
+    verse_size = 44 if canvas == REEL else 40
 
     probe = ImageDraw.Draw(Image.new("RGB", (cw, ch)))
-    font, lines, line_h, size = fit_verse(probe, verse["text"], col_w, max_text_h, max_size)
+    font, lines, line_h, size = fit_verse(probe, verse["text"], col_w, verse_size)
 
     src_font = load_font(SERIF, max(22, int(size * 0.62)))
     src_asc, src_desc = src_font.getmetrics()
     src_h = src_asc + src_desc
     gap = int(line_h * 0.85)
-    block_h = len(lines) * line_h + gap + src_h
-
-    top_y = (ch - block_h) // 2     # text always vertically centered
+    verse_h = len(lines) * line_h
+    block_h = verse_h + gap + src_h
+    top_y = int(ch * 0.45) - verse_h // 2     # verse centered on a FIXED anchor → consistent position
     if photo:
         base = cover_crop(Image.open(photo), cw, ch).filter(ImageFilter.GaussianBlur(1.2))
         fg, shadow_c, busy = band_color(base, top_y, block_h, cw, col_left, col_w)
@@ -268,13 +258,13 @@ def render_overlay(verse, out_path, frame_path, handle="", canvas=REEL):
     col_w = int(cw * 0.70)
     col_left = (cw - col_w) // 2
     probe = ImageDraw.Draw(Image.new("RGB", (cw, ch)))
-    font, lines, line_h, size = fit_verse(probe, verse["text"], col_w, int(ch * 0.34), 52)
+    font, lines, line_h, size = fit_verse(probe, verse["text"], col_w, 44)
     src_font = load_font(SERIF, max(22, int(size * 0.62)))
     src_h = sum(src_font.getmetrics())
     gap = int(line_h * 0.85)
-    block_h = len(lines) * line_h + gap + src_h
-
-    top_y = (ch - block_h) // 2
+    verse_h = len(lines) * line_h
+    block_h = verse_h + gap + src_h
+    top_y = int(ch * 0.45) - verse_h // 2     # verse centered on a FIXED anchor → consistent position
     # white text + dark scrim → reliable legibility over ANY moving footage
     fg, shadow_c = (252, 250, 246), (0, 0, 0)
 
