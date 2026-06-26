@@ -215,7 +215,7 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED):
     gap = int(line_h * 0.85)
     verse_h = len(lines) * line_h
     block_h = verse_h + gap + src_h
-    top_y = int(ch * 0.45) - verse_h // 2     # verse centered on a FIXED anchor → consistent position
+    top_y = ch // 2 - verse_h // 2            # verse's vertical center = image center (same for 2 or 3 lines)
     if photo:
         base = cover_crop(Image.open(photo), cw, ch).filter(ImageFilter.GaussianBlur(1.2))
         fg, shadow_c, busy = band_color(base, top_y, block_h, cw, col_left, col_w)
@@ -264,7 +264,7 @@ def render_overlay(verse, out_path, frame_path, handle="", canvas=REEL):
     gap = int(line_h * 0.85)
     verse_h = len(lines) * line_h
     block_h = verse_h + gap + src_h
-    top_y = int(ch * 0.45) - verse_h // 2     # verse centered on a FIXED anchor → consistent position
+    top_y = ch // 2 - verse_h // 2            # verse's vertical center = image center (same for 2 or 3 lines)
     # white text + dark scrim → reliable legibility over ANY moving footage
     fg, shadow_c = (252, 250, 246), (0, 0, 0)
 
