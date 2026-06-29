@@ -25,8 +25,9 @@ jobs:
       - name: Install deps
         run: pip install pillow higgsfield-client
 
-      - name: Wait for 05:00 KST ±10, then render the image (Higgsfield background)
+      - name: Wait for 05:00 KST ±10, then render the image (Nano Banana Pro background)
         env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
           HF_API_SECRET: ${{ secrets.HF_API_SECRET }}
         run: python daily_post.py --emit --jitter 600

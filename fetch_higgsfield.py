@@ -6,14 +6,17 @@ Each call returns a unique image — so backgrounds never repeat, no licensing, 
 Credentials: env HF_API_KEY + HF_API_SECRET, or a local higgsfield_key.txt with those lines.
 """
 
+import base64
+import json
 import os
 import time
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-FLUX = "flux-pro/kontext/max/text-to-image"
-MODEL = FLUX            # default: cleanest model (Soul/Reve bake fake text into empty areas)
-SOUL_APP = "v1/text2image/soul"   # flagship, photoreal, but risks baked text → manual use only
+MODEL = "gemini"        # default backend: Nano Banana Pro (photoreal, clean, respects "no text")
+GEMINI_MODEL = "gemini-3-pro-image"
+FLUX = "flux-pro/kontext/max/text-to-image"   # Higgsfield fallback options
+SOUL_APP = "v1/text2image/soul"
 SOUL_BASE = "https://platform.higgsfield.ai"
 
 # diverse, sublime nature — each has a CALM EMPTY ZONE (not only sky: also water, field,
@@ -86,11 +89,9 @@ def _credentials():
 
 
 def generate_background(dest, index=0, placement=("center", "middle"), full_scene=False, model=MODEL):
-    """Generate one sublime nature background → save to `dest`, return the path.
-    Default (~80%): a calm empty area where the text sits (per `placement`).
-    full_scene (~20%): a fuller, dramatic, well-composed scene (legible via the scrim)."""
-    import higgsfield_client as h
-    client = h.SyncClient(api_key=_credentials())
+    """Generate one sublime background → save to `dest`, return the path.
+    Default: Nano Banana Pro (model='gemini'). Higgsfield flux/soul/reve also supported.
+    ~80%: a calm empty area where the text sits; ~20% (full_scene): a fuller dramatic scene."""
     TONE = (", the calm empty area is deeply and richly toned — deep saturated sky or rich "
             "calm tones, NOT pale or washed out — so white text stands out clearly")
     if full_scene:
@@ -101,6 +102,12 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
         comp = COMP.get(tuple(placement), COMP[("center", "middle")])
         prompt = (SCENES[index % len(SCENES)] + MOOD + ", " + comp + TONE
                   + ", generous text-safe negative space, unobstructed, minimal" + NEGATIVE)
+
+    if model == "gemini":
+        return _gemini(prompt, dest)
+
+    import higgsfield_client as h
+    client = h.SyncClient(api_key=_credentials())
     if model == "soul":
         url = _soul(client, prompt)
     else:
@@ -110,6 +117,35 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
         url = client.subscribe(model, args)["images"][0]["url"]
     urllib.request.urlretrieve(url, dest)
     return dest
+
+
+def _gemini_key():
+    key = os.environ.get("GEMINI_API_KEY")
+    kf = os.path.join(HERE, "gemini_key.txt")
+    if not key and os.path.exists(kf):
+        for line in open(kf):
+            if line.startswith("GEMINI_API_KEY="):
+                key = line.split("=", 1)[1].strip()
+    if not key:
+        raise SystemExit("Missing GEMINI_API_KEY")
+    return key
+
+
+def _gemini(prompt, dest, aspect="3:4"):
+    """Nano Banana Pro (Gemini 3 Pro Image) → save image to dest."""
+    body = {"contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"imageConfig": {"aspectRatio": aspect}}}
+    url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+           f"{GEMINI_MODEL}:generateContent?key={_gemini_key()}")
+    req = urllib.request.Request(url, data=json.dumps(body).encode(),
+                                 headers={"Content-Type": "application/json"}, method="POST")
+    data = json.load(urllib.request.urlopen(req, timeout=180))
+    for part in data["candidates"][0]["content"]["parts"]:
+        if "inlineData" in part:
+            with open(dest, "wb") as f:
+                f.write(base64.b64decode(part["inlineData"]["data"]))
+            return dest
+    raise RuntimeError("gemini: no image in response")
 
 
 def _soul(client, prompt, wh="1536x2048"):
