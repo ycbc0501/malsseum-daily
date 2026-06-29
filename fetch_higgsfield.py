@@ -14,23 +14,25 @@ MODEL = "flux-pro/kontext/max/text-to-image"
 
 # diverse, sublime nature — each has a CALM EMPTY ZONE (not only sky: also water, field,
 # mist, snow, smooth ground) where the verse text sits. Vast, majestic, sacred. No people/text.
+# grandeur comes from the VAST SKY + distant majestic subject kept LOW on the horizon,
+# so the vertically-centered text always sits on clear open sky.
 SCENES = [
-    "immense towering snow mountains low on the horizon beneath a vast deep sky",
-    "a colossal mountain range along a low horizon under an enormous deep sky",
-    "a vast sea of clouds with towering peaks rising along a low horizon",
-    "endless plains to a low horizon under a colossal dramatic deep sky",
-    "a vast deep ocean to a very low horizon under an immense sky",
-    "an immense glacier and peaks low on the horizon under a vast deep sky",
-    "towering dunes low in the frame under an enormous deep sky",
-    "a giant still lake below towering distant mountains, very low horizon",
-    "vast misty valleys far below under an immense deep sky",
-    "vast dramatic storm clouds over distant plains at a low horizon",
-    "immense rolling hills to a low horizon under a vast deep sky",
-    "a grand coastline low in the frame under an enormous deep sky",
-    "vast golden grasslands to a low horizon under a colossal sky",
-    "immense layered mountains low under a vast deep dawn sky",
-    "a vast deep twilight sky over towering peaks on a low horizon",
-    "an immense canyon rim low in the frame under a vast deep sky",
+    "majestic snow mountains along a very low horizon, a vast deep sky filling the frame",
+    "distant grand peaks low on the horizon under a colossal dramatic sky",
+    "a calm vast sea meeting a very low horizon under an immense deep sky",
+    "endless plains along a very low horizon under a colossal deep sky",
+    "a serene lake with distant mountains low on the horizon, a huge open sky",
+    "soft rolling hills along a very low horizon under a vast deep sky",
+    "a quiet coastline low on the horizon under an enormous open sky",
+    "golden fields along a very low horizon under a vast luminous sky",
+    "distant misty mountains low on the horizon under a vast hazy sky",
+    "vast dramatic storm clouds over distant plains at a very low horizon",
+    "soft clouds drifting in a vast deep sky over a low distant landscape",
+    "a wide calm river valley low under a vast open sky",
+    "distant glaciers low on the horizon under a vast pale sky",
+    "a vast lavender field low under an immense luminous sky",
+    "a gentle sea at golden hour, very low horizon, a huge open sky",
+    "vast grasslands along a low horizon under a dramatic deep sky",
 ]
 DRAMATIC = [   # the ~20%: full, grand, well-composed sublime scenes (legible via the scrim)
     "colossal sunbeams pouring through a vast misty ancient forest",
@@ -50,20 +52,18 @@ NEGATIVE = (", no people, no person, no text, no words, no letters, no watermark
             "not CGI, not a 3d render, not an illustration, not a painting, not surreal, "
             "no fake plastic artificial look")
 
-# composition per placement: leave a CALM EMPTY area (any smooth surface) where text sits
+# text is ALWAYS vertically centered; only the horizontal side of the empty area changes.
+# Landscape is pushed to the very bottom so the centered text (verse + source) sits on clear sky.
 COMP = {
-    ("center", "middle"): "a vast open sky fills the upper two-thirds for the text, with the grand "
-                          "landscape kept low along the bottom third (very low horizon)",
-    ("center", "top"): "the ENTIRE UPPER HALF of the image is clear, open, empty sky (enough room "
-                       "for two lines of text AND a small caption line below it); the grand landscape "
-                       "sits entirely in the LOWER HALF, well below the text",
-    ("center", "bottom"): "with a calm smooth empty area across the lower portion for text, detail kept higher",
-    ("left", "middle"): "with a calm smooth empty area on the left for text, detail only on the right",
-    ("right", "middle"): "with a calm smooth empty area on the right for text, detail only on the left",
-    ("left", "top"): "with a calm smooth empty area in the upper left for text, detail lower right",
-    ("right", "top"): "with a calm smooth empty area in the upper right for text, detail lower left",
-    ("left", "bottom"): "with a calm smooth empty area in the lower left for text, detail upper right",
-    ("right", "bottom"): "with a calm smooth empty area in the lower right for text, detail upper left",
+    ("center", "middle"): "the middle of the frame is a vast open empty sky where the centered text "
+                          "sits (room for two lines and a small caption below); keep the grand landscape "
+                          "very low, only along the very bottom edge, far below the text",
+    ("left", "middle"): "the left and center, vertically centered, is open empty sky where the text sits "
+                        "(room for two lines and a caption below); keep the landscape to the right and the "
+                        "very bottom edge, away from the text",
+    ("right", "middle"): "the right and center, vertically centered, is open empty sky where the text sits "
+                         "(room for two lines and a caption below); keep the landscape to the left and the "
+                         "very bottom edge, away from the text",
 }
 
 

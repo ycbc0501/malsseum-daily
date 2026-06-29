@@ -51,7 +51,7 @@ def main():
     ap.add_argument("--ref", required=True)
     ap.add_argument("--scene", type=int, default=0)
     ap.add_argument("--halign", default="center")
-    ap.add_argument("--valign", default="top")
+    ap.add_argument("--valign", default="middle")
     ap.add_argument("--full", action="store_true")
     a = ap.parse_args()
 

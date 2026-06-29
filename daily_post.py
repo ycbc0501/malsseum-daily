@@ -108,12 +108,11 @@ def main():
 
     # ~80% leave a calm empty area where the text sits (placement varies a little);
     # ~20% a fuller dramatic scene, centered, legible via the scrim
-    OFFSETS = [("left", "middle"), ("right", "middle"), ("center", "top"),
-               ("center", "bottom"), ("right", "top"), ("left", "bottom")]
+    OFFSETS = [("left", "middle"), ("right", "middle")]   # vary only horizontal alignment
     full_scene = (n % 5 == 4)
-    placement = ("center", "top")          # text block (verse + source) sits in the upper open sky
+    placement = ("center", "middle")       # text ALWAYS vertically centered
     if not full_scene and len(verse["text"]) <= 28 and n % 5 == 2:
-        placement = OFFSETS[(n // 5) % len(OFFSETS)]
+        placement = OFFSETS[(n // 2) % len(OFFSETS)]
 
     # background: generate a fresh, unique image via Higgsfield; fall back to the photo pool
     photo = None
