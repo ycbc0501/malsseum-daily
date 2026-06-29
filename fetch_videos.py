@@ -84,6 +84,22 @@ def fetch_one(query, dest, pick=0, key=None):
     return None
 
 
+def candidates(query, key=None):
+    """Return [(video_id, portrait_link)] for a query, filtered for people/animals/structures."""
+    key = key or get_key()
+    params = urllib.parse.urlencode({"query": query, "orientation": "portrait",
+                                     "per_page": 30, "size": "medium"})
+    data = _get(f"https://api.pexels.com/videos/search?{params}", key)
+    out = []
+    for vid in data.get("videos", []):
+        if any(b in vid.get("url", "").lower() for b in BLOCK_SLUG):
+            continue
+        link = best_portrait_file(vid.get("video_files", []))
+        if link:
+            out.append((vid["id"], link))
+    return out
+
+
 def fetch_by_id(vid_id, dest, key=None):
     """Fetch a specific (human-approved) Pexels clip by id."""
     key = key or get_key()

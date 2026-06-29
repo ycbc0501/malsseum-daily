@@ -202,7 +202,7 @@ def render_italic(text, font, fill):
 
 def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED):
     cw, ch = canvas
-    col_w = int(cw * (0.70 if canvas == REEL else 0.67))
+    col_w = int(cw * (0.85 if canvas == REEL else 0.80))
     col_left = (cw - col_w) // 2
     verse_size = 44 if canvas == REEL else 40
 
@@ -235,7 +235,7 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED):
         td.text(((cw - lw) // 2, y), ln, font=font, fill=fg + (255,))
         y += line_h
     src_fill = tuple(int(c * 0.55 + (255 if fg[0] > 128 else 0) * 0.45) for c in fg)
-    src_img = render_italic(verse["ref"], src_font, src_fill + (255,))
+    src_img = render_italic(f"[{verse['ref']}]", src_font, src_fill + (255,))
     txt.alpha_composite(src_img, ((cw - src_img.width) // 2, y + gap - src_h // 4))
 
     if photo:
@@ -255,7 +255,7 @@ def render_overlay(verse, out_path, frame_path, handle="", canvas=REEL):
     Color/placement chosen from `frame_path` (a representative frame); a soft shadow
     is baked in so the text stays legible over the moving footage."""
     cw, ch = canvas
-    col_w = int(cw * 0.70)
+    col_w = int(cw * 0.85)
     col_left = (cw - col_w) // 2
     probe = ImageDraw.Draw(Image.new("RGB", (cw, ch)))
     font, lines, line_h, size = fit_verse(probe, verse["text"], col_w, 44)
@@ -276,7 +276,7 @@ def render_overlay(verse, out_path, frame_path, handle="", canvas=REEL):
         td.text(((cw - lw) // 2, y), ln, font=font, fill=fg + (255,))
         y += line_h
     src_fill = (228, 225, 219)
-    src_img = render_italic(verse["ref"], src_font, src_fill + (255,))
+    src_img = render_italic(f"[{verse['ref']}]", src_font, src_fill + (255,))
     txt.alpha_composite(src_img, ((cw - src_img.width) // 2, y + gap - src_h // 4))
 
     # strong soft dark scrim behind the text → legible even over busy/bright footage

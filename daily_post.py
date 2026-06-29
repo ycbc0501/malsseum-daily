@@ -50,15 +50,18 @@ def wait_until_target(jitter_s):
         print(f"target {target:%H:%M:%S} KST already passed → posting now")
 
 
-def load_count():
+def load_state():
     try:
-        return json.load(open(STATE)).get("i", 0)
+        s = json.load(open(STATE))
     except Exception:
-        return 0
+        s = {}
+    s.setdefault("used_verses", [])   # verse refs already posted (never repeat)
+    s.setdefault("used_clips", [])    # Pexels video ids already used (never repeat)
+    return s
 
 
-def save_count(i):
-    json.dump({"i": i}, open(STATE, "w"))
+def save_state(s):
+    json.dump(s, open(STATE, "w"))
 
 
 def music_tracks():
@@ -66,30 +69,35 @@ def music_tracks():
                   if f.lower().endswith((".mp3", ".m4a", ".wav", ".ogg")))
 
 
-def approved_ids():
-    try:
-        return json.load(open(CLIPS)).get("ids", [])
-    except Exception:
-        return []
-
-
-def fetch_clip(i, query):
-    """Prefer the next human-approved clip (clips.json); else keyword fallback."""
+def pick_clip(used_clips, start):
+    """Fetch a portrait clip that has NEVER been used. Rotates keywords from `start`.
+    Returns (path, video_id). Resets the ledger only if every candidate is exhausted."""
     os.makedirs(VIDEO_DIR, exist_ok=True)
     dest = os.path.join(VIDEO_DIR, "today.mp4")
-    ids = approved_ids()
-    try:
-        if ids:  # optional: pin specific approved clips via clips.json
-            return fetch_videos.fetch_by_id(ids[i % len(ids)], dest)
-        # otherwise pull fresh by keyword (rotates keyword + result for variety)
-        return fetch_videos.fetch_one(query, dest, pick=i // len(fetch_videos.QUERIES))
-    except Exception as e:
-        print(f"video fetch failed ({e}) → fallback")
-        return None
+    Q = fetch_videos.QUERIES
+    order = [Q[(start + k) % len(Q)] for k in range(len(Q))]
+    for reset in (False, True):
+        if reset:
+            used_clips.clear()        # exhausted all keywords → start a fresh cycle
+        for kw in order:
+            try:
+                cands = fetch_videos.candidates(kw)
+            except Exception as e:
+                print(f"  candidates({kw}) failed: {e}")
+                continue
+            for vid, link in cands:
+                if vid in used_clips:
+                    continue
+                try:
+                    fetch_videos._download(link, dest)
+                    return dest, vid
+                except Exception as e:
+                    print(f"  download {vid} failed: {e}")
+    return None, None
 
 
 def build_caption(verse, translation):
-    return f"\"{verse['text']}\"\n\n{verse['ref']} ({translation})"
+    return f"\"{verse['text']}\"\n\n[{verse['ref']}]"
 
 
 def main():
@@ -111,16 +119,20 @@ def main():
     photos = generate.pick_photos()
     tracks = music_tracks()
 
-    i = load_count()
-    verse = verses[i % len(verses)]
-    photo = photos[i % len(photos)] if photos else None
-    audio = tracks[i % len(tracks)] if tracks else None
-    query = fetch_videos.QUERIES[i % len(fetch_videos.QUERIES)]
+    state = load_state()
+    unused = [v for v in verses if v["ref"] not in state["used_verses"]]
+    if not unused:                       # whole pool shown → start a new cycle
+        state["used_verses"] = []
+        unused = verses
+    verse = unused[0]
+    n = len(state["used_verses"])        # rotation index for music + photo
+    photo = photos[n % len(photos)] if photos else None
+    audio = tracks[n % len(tracks)] if tracks else None
 
     date_str = datetime.now(KST).strftime("%Y-%m-%d")
     posts = os.path.join(generate.HERE, "output", "posts")
     os.makedirs(posts, exist_ok=True)
-    clip = fetch_clip(i, query) if audio else None
+    clip, clip_id = pick_clip(state["used_clips"], n) if audio else (None, None)
 
     if clip and audio:
         # video reel: cloud/sky clip → boomerang ~60s → centered verse + music
@@ -132,7 +144,7 @@ def main():
         generate.render_overlay(verse, overlay, frame, canvas=generate.REEL)
         rel_path = f"output/posts/{date_str}.mp4"
         make_video.build_reel(boom, overlay, audio, os.path.join(generate.HERE, rel_path), duration=60)
-        print(f"reel(video): {verse['ref']}  [{query} + {os.path.basename(audio)}]")
+        print(f"reel(video): {verse['ref']}  [clip {clip_id} + {os.path.basename(audio)}]")
     elif audio:
         # still 4:5 card + music
         img = os.path.join(posts, f"{date_str}.png")
@@ -148,7 +160,11 @@ def main():
         print(f"photo (no music yet): {verse['ref']}")
 
     caption = build_caption(verse, data.get("translation", ""))
-    save_count(i + 1)
+    # record what we used so it NEVER repeats
+    state["used_verses"].append(verse["ref"])
+    if clip_id:
+        state["used_clips"].append(clip_id)
+    save_state(state)
     with open(os.path.join(generate.OUT_DIR, "_path.txt"), "w") as f:
         f.write(rel_path)
     with open(os.path.join(generate.OUT_DIR, "_caption.txt"), "w", encoding="utf-8") as f:
