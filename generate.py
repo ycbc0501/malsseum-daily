@@ -249,21 +249,25 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
     base = base.convert("RGBA")
     txt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
     td = ImageDraw.Draw(txt)
+    stroke = 2 if photo else 0          # thin dark outline → crisp & legible on ANY background
     y = top_y
     for ln in lines:
         lw = text_w(td, ln, font)
-        td.text((line_x(lw), y), ln, font=font, fill=fg + (255,))
+        td.text((line_x(lw), y), ln, font=font, fill=fg + (255,),
+                stroke_width=stroke, stroke_fill=(0, 0, 0, 150))
         y += line_h
     src_fill = (228, 225, 219) if photo else tuple(int(c * 0.55 + (255 if fg[0] > 128 else 0) * 0.45) for c in fg)
     src_img = render_italic(f"[{verse['ref']}]", src_font, src_fill + (255,))
     txt.alpha_composite(src_img, (line_x(src_img.width), y + gap - src_h // 4))
 
     if photo:
-        base = Image.alpha_composite(base, soft_scrim(cw, ch, col_left, col_w, top_y, block_h, line_h, shadow_c, alpha=160))
-        shadow = Image.new("RGBA", (cw, ch), shadow_c + (0,))
-        shadow.putalpha(txt.getchannel("A").point(lambda a: int(a * 0.8)))
-        shadow = shadow.filter(ImageFilter.GaussianBlur(6))
-        base = Image.alpha_composite(base, shadow)
+        # a soft shadow that HUGS the letters (no big halo over the sky) — built up in a few
+        # passes so the text stays legible even on bright skies, while empty areas stay clean
+        glow = Image.new("RGBA", (cw, ch), shadow_c + (0,))
+        glow.putalpha(txt.getchannel("A").point(lambda a: int(a * 0.9)))
+        glow = glow.filter(ImageFilter.GaussianBlur(5))
+        for _ in range(3):
+            base = Image.alpha_composite(base, glow)
 
     base = Image.alpha_composite(base, txt)
     base.convert("RGB").save(out_path, "PNG")

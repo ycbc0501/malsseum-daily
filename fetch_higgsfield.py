@@ -15,41 +15,42 @@ MODEL = "flux-pro/kontext/max/text-to-image"
 # diverse, sublime nature — each has a CALM EMPTY ZONE (not only sky: also water, field,
 # mist, snow, smooth ground) where the verse text sits. Vast, majestic, sacred. No people/text.
 SCENES = [
-    "a vast calm ocean meeting a low horizon",
-    "endless plains rolling to a low far horizon",
-    "soft morning fog drifting over a quiet valley",
-    "a smooth wide snowfield under gentle soft light",
-    "smooth sculpted golden sand dunes in soft light",
-    "a still mirror-calm lake at dawn",
-    "a quiet wildflower meadow in soft focus",
-    "distant misty layered mountains fading into haze",
-    "a calm coastline with a low horizon and smooth water",
-    "soft rolling green hills under gentle light",
-    "a gentle sea at golden hour, very low horizon",
-    "a vast lavender field under soft luminous light",
-    "soft clouds drifting over a far low landscape",
-    "soft pampas grass swaying in warm golden light",
-    "a serene riverbank with smooth still water",
-    "a tranquil tea field in soft morning mist",
+    "immense towering snow mountains low on the horizon beneath a vast deep sky",
+    "a colossal mountain range along a low horizon under an enormous deep sky",
+    "a vast sea of clouds with towering peaks rising along a low horizon",
+    "endless plains to a low horizon under a colossal dramatic deep sky",
+    "a vast deep ocean to a very low horizon under an immense sky",
+    "an immense glacier and peaks low on the horizon under a vast deep sky",
+    "towering dunes low in the frame under an enormous deep sky",
+    "a giant still lake below towering distant mountains, very low horizon",
+    "vast misty valleys far below under an immense deep sky",
+    "a colossal cloudscape filling a vast sky over a low far landscape",
+    "immense rolling hills to a low horizon under a vast deep sky",
+    "a grand coastline low in the frame under an enormous deep sky",
+    "vast golden grasslands to a low horizon under a colossal sky",
+    "immense layered mountains low under a vast deep dawn sky",
+    "a vast deep twilight sky over towering peaks on a low horizon",
+    "an immense canyon rim low in the frame under a vast deep sky",
 ]
-DRAMATIC = [   # the ~20%: full, well-composed sublime scenes (legible via the scrim)
-    "sunbeams streaming through a misty ancient forest",
-    "a powerful waterfall in a lush green canyon",
-    "aurora borealis over snow-capped peaks at night",
-    "god-rays bursting through dramatic clouds over the sea",
-    "a deep canyon glowing warm at golden hour",
-    "the milky way over a silent mountain range",
-    "misty mountain peaks at a dramatic sunrise",
-    "a field of wildflowers glowing in golden backlight",
+DRAMATIC = [   # the ~20%: full, grand, well-composed sublime scenes (legible via the scrim)
+    "colossal sunbeams pouring through a vast misty ancient forest",
+    "an immense thundering waterfall in a giant green canyon",
+    "vast aurora borealis blazing over towering snow peaks at night",
+    "enormous god-rays bursting through dramatic clouds over a vast sea",
+    "an immense deep canyon glowing at golden hour",
+    "the vast milky way arching over a colossal mountain range",
+    "towering mountain peaks ablaze at a dramatic sunrise",
+    "an endless field of wildflowers under a towering golden sky",
 ]
-MOOD = (", sublime, vast, majestic, awe-inspiring, sacred and reverent atmosphere, "
-        "cinematic, soft natural light, rich depth, ultra detailed, photographic")
+MOOD = (", sublime, vast, immense, majestic, monumental, epic grand scale, breathtaking, "
+        "awe-inspiring, sacred and reverent atmosphere, cinematic, soft natural light, "
+        "rich depth, ultra detailed, photographic")
 NEGATIVE = (", no people, no person, no text, no words, no letters, no watermark, no buildings")
 
 # composition per placement: leave a CALM EMPTY area (any smooth surface) where text sits
 COMP = {
-    ("center", "middle"): "with a large calm, smooth, uncluttered empty area filling the center "
-                          "(open sky, calm water, mist, snow, or soft ground) for text, detail kept to the edges",
+    ("center", "middle"): "a vast open sky fills the upper two-thirds for the text, with the grand "
+                          "landscape kept low along the bottom third (very low horizon)",
     ("center", "top"): "with a calm smooth empty area across the upper portion for text, detail kept lower",
     ("center", "bottom"): "with a calm smooth empty area across the lower portion for text, detail kept higher",
     ("left", "middle"): "with a calm smooth empty area on the left for text, detail only on the right",
@@ -81,13 +82,15 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
     full_scene (~20%): a fuller, dramatic, well-composed scene (legible via the scrim)."""
     import higgsfield_client as h
     client = h.SyncClient(api_key=_credentials())
+    TONE = (", the calm empty area is deeply and richly toned — deep saturated sky or rich "
+            "calm tones, NOT pale or washed out — so white text stands out clearly")
     if full_scene:
         prompt = (DRAMATIC[index % len(DRAMATIC)] + MOOD
-                  + ", epic full cinematic composition with a gently softer, less busy area "
-                    "where centered text stays readable" + NEGATIVE)
+                  + ", epic full cinematic composition with a gently softer, richly toned area "
+                    "where centered white text stays readable" + NEGATIVE)
     else:
         comp = COMP.get(tuple(placement), COMP[("center", "middle")])
-        prompt = (SCENES[index % len(SCENES)] + MOOD + ", " + comp
+        prompt = (SCENES[index % len(SCENES)] + MOOD + ", " + comp + TONE
                   + ", generous text-safe negative space, unobstructed, minimal" + NEGATIVE)
     result = client.subscribe(MODEL, {
         "prompt": prompt, "aspect_ratio": "3:4", "safety_tolerance": 2})
