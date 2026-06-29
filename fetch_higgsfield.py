@@ -14,43 +14,43 @@ MODEL = "flux-pro/kontext/max/text-to-image"
 
 # diverse, sublime nature — each has a CALM EMPTY ZONE (not only sky: also water, field,
 # mist, snow, smooth ground) where the verse text sits. Vast, majestic, sacred. No people/text.
-# grandeur comes from the VAST SKY + distant majestic subject kept LOW on the horizon,
-# so the vertically-centered text always sits on clear open sky.
+# grandeur from a VAST SKY / open area + the subject kept LOW or to one side, so the
+# vertically-centered text always sits on a clear area. Diverse, beautiful, dignified.
 SCENES = [
-    "majestic snow mountains along a very low horizon, a vast deep sky filling the frame",
-    "distant grand peaks low on the horizon under a colossal dramatic sky",
     "a calm vast sea meeting a very low horizon under an immense deep sky",
-    "endless plains along a very low horizon under a colossal deep sky",
-    "a serene lake with distant mountains low on the horizon, a huge open sky",
-    "soft rolling hills along a very low horizon under a vast deep sky",
-    "a quiet coastline low on the horizon under an enormous open sky",
-    "golden fields along a very low horizon under a vast luminous sky",
-    "distant misty mountains low on the horizon under a vast hazy sky",
-    "vast dramatic storm clouds over distant plains at a very low horizon",
-    "soft clouds drifting in a vast deep sky over a low distant landscape",
-    "a wide calm river valley low under a vast open sky",
-    "distant glaciers low on the horizon under a vast pale sky",
-    "a vast lavender field low under an immense luminous sky",
-    "a gentle sea at golden hour, very low horizon, a huge open sky",
-    "vast grasslands along a low horizon under a dramatic deep sky",
+    "majestic distant mountains low on the horizon under a vast deep sky",
+    "endless golden wheat fields along a very low horizon under a colossal sky",
+    "a vast field of blooming wildflowers low under a huge soft pastel sky",
+    "an immense lavender field low on the horizon under a vast luminous sky",
+    "soft morning fog over a low valley under a vast pale sky",
+    "vast desert dunes along a low horizon under an enormous glowing sky",
+    "a serene snow plain along a low horizon under a vast pastel sky",
+    "a calm mirror lake with distant low mountains under a huge open sky",
+    "a vast sea of soft clouds seen from above under an open sky",
+    "a starry night sky and milky way over a low dark horizon",
+    "golden god-rays streaming through soft clouds in a vast open sky",
+    "rolling autumn hills low on the horizon under a vast deep sky",
+    "soft pastel sunrise clouds filling a vast open sky over a low calm sea",
+    "delicate cherry blossom branches framing a vast open pastel sky",
+    "vast green rolling meadows along a very low horizon under a deep sky",
 ]
-DRAMATIC = [   # the ~20%: full, grand, well-composed sublime scenes (legible via the scrim)
-    "colossal sunbeams pouring through a vast misty ancient forest",
-    "an immense thundering waterfall in a giant green canyon",
-    "vast aurora borealis blazing over towering snow peaks at night",
-    "enormous god-rays bursting through dramatic clouds over a vast sea",
-    "an immense deep canyon glowing at golden hour",
-    "the vast milky way arching over a colossal mountain range",
-    "towering mountain peaks ablaze at a dramatic sunrise",
-    "an endless field of wildflowers under a towering golden sky",
+DRAMATIC = [   # the ~20%: full, grand scenes (incl. sacred architecture) — legible via the outline
+    "the vast light-filled nave of a grand cathedral, sunbeams through tall windows",
+    "towering ancient stone arches and columns in soft golden light",
+    "an immense grand canyon glowing at golden hour",
+    "a thundering waterfall in a vast lush green canyon",
+    "brilliant aurora borealis over towering snow peaks at night",
+    "the milky way arching over a colossal mountain range",
+    "god-rays bursting through dramatic storm clouds over a vast sea",
+    "towering misty mountain peaks ablaze at a dramatic sunrise",
 ]
 MOOD = (", sublime, vast, immense, majestic, monumental, epic grand scale, breathtaking, "
-        "awe-inspiring, sacred and reverent atmosphere, REALISTIC PHOTOGRAPH, photorealistic, "
-        "shot on a DSLR, natural authentic detail and texture, true-to-life colors, "
+        "awe-inspiring, sacred and reverent atmosphere, elegant and beautiful, REALISTIC PHOTOGRAPH, "
+        "photorealistic, shot on a DSLR, natural authentic detail and texture, true-to-life colors, "
         "soft natural light, rich depth, ultra detailed")
-NEGATIVE = (", no people, no person, no text, no words, no letters, no watermark, no buildings, "
-            "not CGI, not a 3d render, not an illustration, not a painting, not surreal, "
-            "no fake plastic artificial look")
+NEGATIVE = (", no people, no person, no text, no words, no letters, no watermark, no modern buildings, "
+            "no city, no cars, not CGI, not a 3d render, not an illustration, not a painting, "
+            "not surreal, no fake plastic artificial look, not tacky, not cheesy")
 
 # text is ALWAYS vertically centered; only the horizontal side of the empty area changes.
 # Landscape is pushed to the very bottom so the centered text (verse + source) sits on clear sky.

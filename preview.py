@@ -27,7 +27,7 @@ def next_idx():
 
 
 def build_html():
-    files = sorted(glob.glob(IMG + "/*.png"), key=lambda f: os.path.basename(f))
+    files = sorted(glob.glob(IMG + "/*.png"), key=lambda f: os.path.basename(f), reverse=True)
     cards = "\n".join(
         f'<figure><img src="img/{os.path.basename(f)}" loading="lazy">'
         f'<figcaption>{os.path.basename(f)[:-4]}</figcaption></figure>' for f in files)
@@ -40,7 +40,7 @@ def build_html():
         'p.sub{color:#888;padding:0 12px 12px;margin:0;font-size:13px}'
         'figure{margin:0 0 26px}img{width:100%;display:block}'
         'figcaption{color:#888;font-size:12px;padding:6px 12px}</style>'
-        '<h2>빛으로 · 미리보기</h2><p class="sub">아래로 스크롤할수록 최신 ↓</p>'
+        '<h2>빛으로 · 미리보기</h2><p class="sub">맨 위가 최신 ↑</p>'
         + cards)
     with open(os.path.join(DOCS, "index.html"), "w", encoding="utf-8") as f:
         f.write(html)
