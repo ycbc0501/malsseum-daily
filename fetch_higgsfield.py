@@ -12,44 +12,44 @@ import urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL = "flux-pro/kontext/max/text-to-image"
 
-# diverse, sublime nature — vast, majestic, sacred. No people, no text.
+# diverse, sublime nature with a big OPEN SKY (so text sits on clean sky, not crossed
+# by the landscape). Vast, majestic, sacred. No people, no text.
 SCENES = [
-    "vast mountain range rising above a sea of clouds at dawn",
-    "endless desert dunes under an immense glowing sky",
-    "a towering waterfall plunging into a misty canyon",
-    "aurora borealis shimmering over snow-capped peaks",
-    "a starry night sky over a silent mountain valley",
-    "dramatic sea cliffs with waves crashing at golden hour",
-    "an ancient forest of giant trees pierced by god rays",
-    "a vast green valley with a winding river beneath towering clouds",
-    "a glacier and icy fjord under a soft polar sky",
-    "rolling golden plains stretching to the far horizon at sunset",
-    "layered blue misty mountains receding to infinity at dawn",
-    "a single tree standing alone on a vast windswept plain",
-    "sunbeams breaking through storm clouds over the open sea",
-    "alpine peaks glowing rose and gold at sunrise",
-    "a vast lavender field beneath a wide luminous sky",
-    "a deep canyon carved in warm light and long shadows",
-    "a still mirror lake reflecting immense snow mountains",
-    "a heavenly cloudscape seen from above, bathed in golden light",
-    "terraced rice fields under soft morning mist and warm light",
-    "a vast salt flat mirroring a pastel twilight sky",
+    "a vast calm ocean meeting the sky at a low horizon",
+    "endless plains stretching to a low horizon under an immense sky",
+    "a distant mountain range low on the horizon under a vast open sky",
+    "a serene sea with gentle waves under a boundless clear sky",
+    "soft rolling hills low on the horizon beneath an endless sky",
+    "a tranquil lake and a low far shore under a vast reflected sky",
+    "golden wheat fields low in the frame under a wide open sky",
+    "a misty layered mountain horizon under a luminous open sky",
+    "a quiet coastline with a low horizon under a soft open sky",
+    "distant snow mountains low on the horizon under a pastel sky",
+    "a wide desert of low dunes under an immense glowing sky",
+    "a calm meadow stretching to a low horizon under a vast sky",
+    "gentle sea and sky at golden hour with a very low horizon",
+    "a vast lavender field low in the frame under a wide luminous sky",
+    "layered distant blue mountains low under a soft dawn sky",
+    "soft clouds drifting across a vast sky over a far low landscape",
 ]
 MOOD = (", sublime, vast, majestic, awe-inspiring, sacred and reverent atmosphere, "
         "cinematic, soft natural light, rich depth, ultra detailed, photographic")
-NEGATIVE = ", no people, no person, no text, no words, no letters, no watermark, no buildings"
+NEGATIVE = (", no people, no person, no text, no words, no letters, no watermark, "
+            "no buildings, nothing crossing the sky")
 
-# where to leave empty/calm space so the verse text can sit there
-SPACE = {
-    ("center", "middle"): "in the center",
-    ("left", "middle"): "on the left side",
-    ("right", "middle"): "on the right side",
-    ("center", "top"): "across the upper area",
-    ("center", "bottom"): "across the lower area",
-    ("left", "top"): "in the upper left",
-    ("right", "top"): "in the upper right",
-    ("left", "bottom"): "in the lower left",
-    ("right", "bottom"): "in the lower right",
+# composition per placement: keep the TEXT area clean empty sky, push scenery away from it
+COMP = {
+    ("center", "middle"): "a vast expanse of clean empty open sky fills the upper and central "
+                          "area for text, with a very low horizon and all landscape kept in the lower third",
+    ("center", "top"): "clean empty open sky across the upper area for text, landscape kept low",
+    ("center", "bottom"): "a calm smooth empty foreground across the lower area for text, "
+                          "with the open sky and horizon in the upper portion",
+    ("left", "middle"): "clean empty open sky on the left side for text, scenery only on the right",
+    ("right", "middle"): "clean empty open sky on the right side for text, scenery only on the left",
+    ("left", "top"): "clean empty open sky in the upper left for text, scenery low on the right",
+    ("right", "top"): "clean empty open sky in the upper right for text, scenery low on the left",
+    ("left", "bottom"): "a calm smooth empty area in the lower left for text, scenery in the upper right",
+    ("right", "bottom"): "a calm smooth empty area in the lower right for text, scenery in the upper left",
 }
 
 
@@ -72,9 +72,9 @@ def generate_background(dest, index=0, placement=("center", "middle")):
     will sit (per `placement`) → save to `dest`, return the path."""
     import higgsfield_client as h
     client = h.SyncClient(api_key=_credentials())
-    space = SPACE.get(tuple(placement), "in the center")
-    prompt = (SCENES[index % len(SCENES)] + MOOD
-              + f", with calm uncluttered empty negative space {space} for text" + NEGATIVE)
+    comp = COMP.get(tuple(placement), COMP[("center", "middle")])
+    prompt = (SCENES[index % len(SCENES)] + MOOD + ", " + comp
+              + ", generous text-safe negative space, unobstructed, minimal" + NEGATIVE)
     result = client.subscribe(MODEL, {
         "prompt": prompt, "aspect_ratio": "3:4", "safety_tolerance": 2})
     url = result["images"][0]["url"]
