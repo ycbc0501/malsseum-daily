@@ -54,12 +54,13 @@ def _download(url, dest):
 
 
 def best_portrait_file(video_files):
-    """Pick the SMALLEST portrait file that's still ≥1080 tall (keeps downloads small)."""
-    portrait = [v for v in video_files if v.get("height", 0) >= v.get("width", 1)
-                and v.get("height", 0) >= 1080]
-    pool = portrait or [v for v in video_files if v.get("height", 0) >= v.get("width", 1)] or video_files
-    pool = sorted(pool, key=lambda v: v.get("height", 99999))  # smallest first
-    return pool[0]["link"] if pool else None
+    """Pick a crisp portrait file: at least 1920 tall (so we never upscale to the
+    1080×1920 reel), the smallest such to avoid 4K bloat; else the largest available."""
+    portrait = [v for v in video_files if v.get("height", 0) >= v.get("width", 1)] or video_files
+    big = sorted([v for v in portrait if v.get("height", 0) >= 1920], key=lambda v: v.get("height", 0))
+    if big:
+        return big[0]["link"]
+    return sorted(portrait, key=lambda v: v.get("height", 0), reverse=True)[0]["link"] if portrait else None
 
 
 def fetch_one(query, dest, pick=0, key=None):

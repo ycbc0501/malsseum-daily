@@ -212,7 +212,7 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED):
     src_font = load_font(SERIF, max(22, int(size * 0.62)))
     src_asc, src_desc = src_font.getmetrics()
     src_h = src_asc + src_desc
-    gap = int(line_h * 0.85)
+    gap = int(line_h * 0.45)
     verse_h = len(lines) * line_h
     block_h = verse_h + gap + src_h
     top_y = ch // 2 - verse_h // 2            # verse's vertical center = image center (same for 2 or 3 lines)
@@ -261,7 +261,7 @@ def render_overlay(verse, out_path, frame_path, handle="", canvas=REEL):
     font, lines, line_h, size = fit_verse(probe, verse["text"], col_w, 44)
     src_font = load_font(SERIF, max(22, int(size * 0.62)))
     src_h = sum(src_font.getmetrics())
-    gap = int(line_h * 0.85)
+    gap = int(line_h * 0.45)
     verse_h = len(lines) * line_h
     block_h = verse_h + gap + src_h
     top_y = ch // 2 - verse_h // 2            # verse's vertical center = image center (same for 2 or 3 lines)

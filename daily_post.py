@@ -97,7 +97,7 @@ def pick_clip(used_clips, start):
 
 
 def build_caption(verse, translation):
-    return f"\"{verse['text']}\"\n\n[{verse['ref']}]"
+    return f"{verse['text']}\n[{verse['ref']}]"
 
 
 def main():
