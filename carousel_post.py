@@ -48,7 +48,7 @@ def main():
     print(f"carousel: [{theme}] {verse['ref']}  ({len(rels)} slides)")
 
     with open(os.path.join(generate.OUT_DIR, "_carousel.txt"), "w") as f:
-        f.write("\n".join(rels))
+        f.write("\n".join(rels) + "\n")   # trailing newline so `while read` gets every line
     with open(os.path.join(generate.OUT_DIR, "_caption.txt"), "w", encoding="utf-8") as f:
         f.write(caption)
     with open(os.path.join(generate.OUT_DIR, "_comment.txt"), "w", encoding="utf-8") as f:

@@ -41,6 +41,7 @@ def _resolve_font(candidates):
 
 
 SERIF = _resolve_font([
+    os.path.join(FONTS_DIR, "NanumMyeongjo-Bold.ttf"),     # sturdier strokes (won't break)
     os.path.join(FONTS_DIR, "NanumMyeongjo-Regular.ttf"),
     "/System/Library/Fonts/AppleMyungjo.ttf",
 ])

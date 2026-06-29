@@ -69,4 +69,5 @@ def build_slides(verse, photo, prefix):
     generate.render(verse, "ivory", "", s1, photo=photo, canvas=generate.FEED)
     render_text_slide(s2, REFLECT.get(theme, REFLECT["믿음"]), header="묵상")
     render_text_slide(s3, PRAYER.get(theme, PRAYER["믿음"]), header="오늘의 기도")
-    return [s1, s2, s3]
+    # flow: 묵상(마음) → 말씀(치유) → 기도
+    return [s2, s1, s3]

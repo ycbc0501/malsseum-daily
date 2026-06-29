@@ -135,45 +135,25 @@ def main():
     book = lambda r: r.rsplit(" ", 1)[0]
     used_books = Counter(book(r) for r in state["used_verses"])
     verse = min(pool, key=lambda v: (used_books[book(v["ref"])], verses.index(v)))
-    n = len(state["used_verses"])        # rotation index for music + photo
-    photo = photos[n % len(photos)] if photos else None
-    audio = tracks[n % len(tracks)] if tracks else None
+    n = len(state["used_verses"])
+    # background photo, no repeat (swap to Higgsfield-generated once its MCP is connected)
+    used_photos = state.setdefault("used_photos", [])
+    pool_p = [p for p in photos if os.path.basename(p) not in used_photos] or photos
+    photo = pool_p[n % len(pool_p)] if pool_p else None
 
     date_str = datetime.now(KST).strftime("%Y-%m-%d")
     posts = os.path.join(generate.HERE, "output", "posts")
     os.makedirs(posts, exist_ok=True)
-    clip, clip_id = pick_clip(state["used_clips"], n) if audio else (None, None)
-
-    if clip and audio:
-        # video reel: cloud/sky clip → boomerang ~60s → centered verse + music
-        boom = os.path.join(generate.OUT_DIR, "_boom.mp4")
-        frame = os.path.join(generate.OUT_DIR, "_frame.png")
-        overlay = os.path.join(generate.OUT_DIR, "_overlay.png")
-        make_video.make_slowmo(clip, boom)
-        make_video.extract_frame(boom, frame)
-        generate.render_overlay(verse, overlay, frame, canvas=generate.REEL)
-        rel_path = f"output/posts/{date_str}.mp4"
-        make_video.build_reel(boom, overlay, audio, os.path.join(generate.HERE, rel_path), duration=60)
-        print(f"reel(video): {verse['ref']}  [clip {clip_id} + {os.path.basename(audio)}]")
-    elif audio:
-        # still 4:5 card + music
-        img = os.path.join(posts, f"{date_str}.png")
-        generate.render(verse, "ivory", "", img, photo=photo, canvas=generate.FEED)
-        rel_path = f"output/posts/{date_str}.mp4"
-        make_video.make_video(img, audio, os.path.join(generate.HERE, rel_path), size=generate.FEED)
-        print(f"reel(still): {verse['ref']}  [{os.path.basename(audio)}]")
-    else:
-        # no music → plain 4:5 feed photo
-        rel_path = f"output/posts/{date_str}.png"
-        generate.render(verse, "ivory", "", os.path.join(generate.HERE, rel_path),
-                        photo=photo, canvas=generate.FEED)
-        print(f"photo (no music yet): {verse['ref']}")
+    rel_path = f"output/posts/{date_str}.png"
+    generate.render(verse, "ivory", "", os.path.join(generate.HERE, rel_path),
+                    photo=photo, canvas=generate.FEED)
+    print(f"image: {verse['ref']}  [{os.path.basename(photo) if photo else 'solid'}]")
 
     caption = build_caption(verse, data.get("translation", ""))
     # record what we used so it NEVER repeats
     state["used_verses"].append(verse["ref"])
-    if clip_id:
-        state["used_clips"].append(clip_id)
+    if photo:
+        used_photos.append(os.path.basename(photo))
     save_state(state)
     with open(os.path.join(generate.OUT_DIR, "_path.txt"), "w") as f:
         f.write(rel_path)
