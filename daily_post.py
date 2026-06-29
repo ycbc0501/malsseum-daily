@@ -106,20 +106,18 @@ def main():
     posts = os.path.join(generate.HERE, "output", "posts")
     os.makedirs(posts, exist_ok=True)
 
-    # ~80% leave a calm empty area where the text sits (placement varies a little);
-    # ~20% a fuller dramatic scene, centered, legible via the scrim
-    OFFSETS = [("left", "middle"), ("right", "middle")]   # vary only horizontal alignment
-    full_scene = (n % 5 == 4)
-    placement = ("center", "middle")       # text ALWAYS vertically centered
-    if not full_scene and len(verse["text"]) <= 28 and n % 5 == 2:
+    # text ALWAYS vertically centered; vary only the horizontal alignment now and then
+    OFFSETS = [("left", "middle"), ("right", "middle")]
+    placement = ("center", "middle")
+    if len(verse["text"]) <= 28 and n % 5 == 2:
         placement = OFFSETS[(n // 2) % len(OFFSETS)]
 
-    # background: generate a fresh, unique image via Higgsfield; fall back to the photo pool
+    # background: generate a fresh, unique image (Nano Banana Pro); fall back to the photo pool
     photo = None
     try:
         photo = fetch_higgsfield.generate_background(
-            os.path.join(generate.OUT_DIR, "_bg.png"), n, placement, full_scene=full_scene)
-        print(f"background: higgsfield ({'full' if full_scene else 'empty-space'})  placement={placement}")
+            os.path.join(generate.OUT_DIR, "_bg.png"), n, placement)
+        print(f"background: nano-banana  placement={placement}")
     except Exception as e:
         print(f"higgsfield failed ({e}) → photo pool fallback")
         used_photos = state.setdefault("used_photos", [])

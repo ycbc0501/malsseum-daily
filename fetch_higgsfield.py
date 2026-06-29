@@ -19,74 +19,49 @@ FLUX = "flux-pro/kontext/max/text-to-image"   # Higgsfield fallback options
 SOUL_APP = "v1/text2image/soul"
 SOUL_BASE = "https://platform.higgsfield.ai"
 
-# diverse, sublime nature — each has a CALM EMPTY ZONE (not only sky: also water, field,
-# mist, snow, smooth ground) where the verse text sits. Vast, majestic, sacred. No people/text.
-# grandeur from a VAST SKY / open area + the subject kept LOW or to one side, so the
-# vertically-centered text always sits on a clear area. Diverse, beautiful, dignified.
+# Plain, natural-language scenes (Gemini follows prose, NOT keyword soup). Each can keep a
+# clear calm area for the text. Diverse, beautiful, dignified — no hype words.
 SCENES = [
-    "a calm vast sea meeting a very low horizon under an immense deep sky",
-    "majestic distant mountains low on the horizon under a vast deep sky",
-    "endless golden wheat fields along a very low horizon under a colossal sky",
-    "a vast field of blooming wildflowers low under a huge soft pastel sky",
-    "an immense lavender field low on the horizon under a vast luminous sky",
-    "soft morning fog over a low valley under a vast pale sky",
-    "vast desert dunes along a low horizon under an enormous glowing sky",
-    "a serene snow plain along a low horizon under a vast pastel sky",
-    "a calm mirror lake with distant low mountains under a huge open sky",
-    "a vast sea of soft clouds seen from above under an open sky",
-    "a starry night sky and milky way over a low dark horizon",
-    "golden god-rays streaming through soft clouds in a vast open sky",
-    "rolling autumn hills low on the horizon under a vast deep sky",
-    "soft pastel sunrise clouds filling a vast open sky over a low calm sea",
-    "delicate cherry blossom branches framing a vast open pastel sky",
-    "vast green rolling meadows along a very low horizon under a deep sky",
-    "a vast tulip field in soft rows along a very low horizon under a pastel sky",
-    "a wide calm river winding through a low valley under a vast sky",
-    "terraced green tea fields in soft morning mist under an open sky",
-    "soft golden pampas grass swaying low under a vast warm sky",
-    "a tranquil olive grove on a low hillside under a soft Mediterranean sky",
-    "a serene rice paddy mirroring a vast pastel dawn sky, very low horizon",
-    "gentle ocean waves rolling onto a smooth empty shore under a soft sky",
-    "a single graceful tree alone on a vast plain under an enormous sky",
-    "soft pink and lavender twilight clouds over a calm low sea",
-    "a quiet pine forest edge under soft drifting mist and open sky",
-    "rolling sand dunes at golden hour with soft shadows, low horizon",
-    "a calm alpine lake reflecting a vast clear sky, low far shore",
+    "a calm sea under a soft open sky, very low horizon",
+    "distant mountains low on the horizon under a wide open sky",
+    "a golden wheat field under a soft open sky, low horizon",
+    "a field of wildflowers under a soft pastel sky, low horizon",
+    "a lavender field under a wide soft sky, low horizon",
+    "morning mist over a quiet valley under a pale open sky",
+    "smooth desert dunes under a wide soft sky, low horizon",
+    "a snowy plain under a soft pastel sky, low horizon",
+    "a calm lake reflecting distant low mountains under a wide sky",
+    "a soft layer of clouds seen from above under an open sky",
+    "the milky way and stars over a dark low horizon",
+    "soft sunbeams through gentle clouds in a wide open sky",
+    "rolling autumn hills under a wide open sky, low horizon",
+    "soft pastel sunrise clouds over a calm sea, low horizon",
+    "cherry blossom branches against a soft open sky",
+    "green rolling meadows under a wide open sky, low horizon",
+    "rows of tulips under a soft pastel sky, low horizon",
+    "a wide calm river through a low valley under an open sky",
+    "terraced green tea fields in soft morning mist",
+    "soft golden pampas grass under a wide warm sky, low horizon",
+    "an olive grove on a low hillside under a soft sky",
+    "the inside of an old stone cathedral looking down the long central aisle, "
+        "soft daylight from tall windows, the central aisle empty and open",
+    "a wide canyon seen from the rim with open sky above",
+    "a gentle aurora over low snowy hills under a starry sky",
+    "a quiet stone courtyard with an open empty center and soft daylight",
+    "a calm alpine lake reflecting a wide clear sky, low far shore",
+    "soft pink twilight clouds over calm water, low horizon",
+    "a single tree on a wide plain under a big open sky",
 ]
-DRAMATIC = [   # the ~20%: fuller hyperreal scenes (incl. sacred architecture) — legible via the outline
-    "the vast light-filled nave of a real Gothic stone cathedral, sunbeams through stained glass, architectural photography",
-    "an ancient stone monastery cloister with soft daylight, architectural photography",
-    "towering weathered marble columns of an ancient temple in warm golden light",
-    "an immense real grand canyon glowing at golden hour, landscape photography",
-    "a thundering waterfall in a vast lush green canyon, fine mist",
-    "brilliant aurora borealis over real snow-capped peaks at night, long exposure photo",
-    "the milky way arching over a vast silent mountain range, astrophotography",
-    "god-rays bursting through dramatic storm clouds over a vast sea",
-    "towering misty mountain peaks ablaze at a real dramatic sunrise",
-    "a vast field of sunflowers under a dramatic late-afternoon sky",
-    "a serene reflecting pool in a quiet stone courtyard, soft light",
-    "sunlight streaming through a misty ancient redwood forest, god-rays",
-]
-MOOD = (", sublime, vast, majestic, awe-inspiring, sacred and reverent, elegant and beautiful, "
-        "HYPERREALISTIC PHOTOGRAPH, ultra-realistic, shot on a full-frame DSLR with a prime lens, "
-        "8k, sharp natural focus, true-to-life detail and lighting, natural soft light, rich depth")
-NEGATIVE = (", no people, no person, no text, no words, no letters, no watermark, no modern buildings, "
-            "no city, no cars, NOT CGI, not a 3d render, not a video game, not an illustration, "
-            "not a painting, not surreal, no fake plastic artificial look, not tacky, not cheesy")
-
-# text is ALWAYS vertically centered; only the horizontal side of the empty area changes.
-# Landscape is pushed to the very bottom so the centered text (verse + source) sits on clear sky.
-COMP = {
-    ("center", "middle"): "the middle of the frame is a vast open empty sky where the centered text "
-                          "sits (room for two lines and a small caption below); keep the grand landscape "
-                          "very low, only along the very bottom edge, far below the text",
-    ("left", "middle"): "the left and center, vertically centered, is open empty sky where the text sits "
-                        "(room for two lines and a caption below); keep the landscape to the right and the "
-                        "very bottom edge, away from the text",
-    ("right", "middle"): "the right and center, vertically centered, is open empty sky where the text sits "
-                         "(room for two lines and a caption below); keep the landscape to the left and the "
-                         "very bottom edge, away from the text",
+REGION = {
+    ("center", "middle"): "the central area",
+    ("left", "middle"): "the left side",
+    ("right", "middle"): "the right side",
 }
+QUALITY = ("Shot as a real photograph on a full-frame camera with natural light — candid and "
+           "true to life, with natural colours, fine grain and natural depth of field. It looks "
+           "like a genuine photo, not a render or illustration.")
+NOTEXT = ("There are no people anywhere. The image contains absolutely no text, letters, words, "
+          "captions, numbers, signs, watermark or logo of any kind.")
 
 
 def _credentials():
@@ -104,19 +79,17 @@ def _credentials():
 
 
 def generate_background(dest, index=0, placement=("center", "middle"), full_scene=False, model=MODEL):
-    """Generate one sublime background → save to `dest`, return the path.
-    Default: Nano Banana Pro (model='gemini'). Higgsfield flux/soul/reve also supported.
-    ~80%: a calm empty area where the text sits; ~20% (full_scene): a fuller dramatic scene."""
-    TONE = (", the calm empty area is deeply and richly toned — deep saturated sky or rich "
-            "calm tones, NOT pale or washed out — so white text stands out clearly")
-    if full_scene:
-        prompt = (DRAMATIC[index % len(DRAMATIC)] + MOOD
-                  + ", epic full cinematic composition with a gently softer, richly toned area "
-                    "where centered white text stays readable" + NEGATIVE)
-    else:
-        comp = COMP.get(tuple(placement), COMP[("center", "middle")])
-        prompt = (SCENES[index % len(SCENES)] + MOOD + ", " + comp + TONE
-                  + ", generous text-safe negative space, unobstructed, minimal" + NEGATIVE)
+    """Generate one background → save to `dest`. Clean natural-language prompt (Gemini follows
+    prose); the text area is kept clear per `placement`. `full_scene` kept for compatibility."""
+    scene = SCENES[index % len(SCENES)]
+    region = REGION.get(tuple(placement), REGION[("center", "middle")])
+    prompt = (
+        f"A real, natural photograph of {scene}. "
+        f"Composition: keep {region} of the frame calm, open and uncluttered — clear sky or smooth "
+        f"empty space with generous room for two lines of text and a small line below; keep the main "
+        f"subject and all detail away from that area, low and toward the edges. "
+        f"{QUALITY} {NOTEXT}"
+    )
 
     if model == "gemini":
         return _gemini(prompt, dest)
