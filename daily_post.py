@@ -38,6 +38,9 @@ HASHTAGS = "#성경 #말씀 #오늘의말씀 #말씀묵상 #큐티 #말씀스타
 # never post a verse that ends mid-clause (reads incomplete as a standalone card)
 INCOMPLETE_ENDINGS = ("고", "며", "매", "이요", "으며", "하며")
 
+# weekly themed series — each week's posts are drawn from one theme (meaningful flow)
+THEME_ORDER = ["위로", "평안", "담대", "믿음", "감사", "사랑", "인도", "은혜", "지혜"]
+
 
 def wait_until_target(jitter_s):
     now = datetime.now(KST)
@@ -125,10 +128,13 @@ def main():
     if not unused:                       # whole pool shown → start a new cycle
         state["used_verses"] = []
         unused = verses
-    # spread across books: pick a verse from the least-posted book (ties → file order)
+    # this week's theme → draw from it (fall back to any unused if its verses run out)
+    theme = THEME_ORDER[datetime.now(KST).isocalendar()[1] % len(THEME_ORDER)]
+    pool = [v for v in unused if v.get("theme") == theme] or unused
+    # within the theme, spread across books (least-posted book first)
     book = lambda r: r.rsplit(" ", 1)[0]
     used_books = Counter(book(r) for r in state["used_verses"])
-    verse = min(unused, key=lambda v: (used_books[book(v["ref"])], verses.index(v)))
+    verse = min(pool, key=lambda v: (used_books[book(v["ref"])], verses.index(v)))
     n = len(state["used_verses"])        # rotation index for music + photo
     photo = photos[n % len(photos)] if photos else None
     audio = tracks[n % len(tracks)] if tracks else None
