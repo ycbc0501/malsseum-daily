@@ -95,6 +95,31 @@ def publish_reel(video_url, caption, ig_user_id=None, token=None):
     })
 
 
+def publish_carousel(image_urls, caption, ig_user_id=None, token=None):
+    """Publish a multi-image carousel post."""
+    ig_user_id = ig_user_id or os.environ.get("IG_USER_ID")
+    token = token or os.environ.get("IG_ACCESS_TOKEN")
+    if not (ig_user_id and token):
+        raise SystemExit("Set IG_USER_ID and IG_ACCESS_TOKEN (env or args).")
+    children = []
+    for u in image_urls:
+        c = _post(f"{GRAPH}/{ig_user_id}/media", {
+            "image_url": u, "is_carousel_item": "true", "access_token": token})
+        children.append(c["id"])
+    container = _post(f"{GRAPH}/{ig_user_id}/media", {
+        "media_type": "CAROUSEL", "children": ",".join(children),
+        "caption": caption, "access_token": token})
+    for _ in range(20):
+        status = _get(f"{GRAPH}/{container['id']}?fields=status_code&access_token={token}")
+        if status.get("status_code") == "FINISHED":
+            break
+        if status.get("status_code") == "ERROR":
+            raise SystemExit(f"carousel processing error: {status}")
+        time.sleep(3)
+    return _post(f"{GRAPH}/{ig_user_id}/media_publish", {
+        "creation_id": container["id"], "access_token": token})
+
+
 def comment(media_id, message, ig_user_id=None, token=None):
     """Post a comment on a published media (used for the hashtag first-comment).
     Needs the instagram_manage_comments permission on the token."""
@@ -105,12 +130,20 @@ def comment(media_id, message, ig_user_id=None, token=None):
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser()
-    ap.add_argument("url", help="public image URL (or video URL with --reel)")
-    ap.add_argument("caption")
+    ap.add_argument("url", nargs="?", default="", help="public image/video URL")
+    ap.add_argument("caption", nargs="?", default="")
     ap.add_argument("--reel", action="store_true", help="publish as a Reel (video)")
+    ap.add_argument("--carousel", default="", help="comma-separated image URLs for a carousel")
+    ap.add_argument("--caption-text", default="", help="caption when using --carousel")
     ap.add_argument("--comment", default="", help="post this as a first comment (hashtags)")
     args = ap.parse_args()
-    result = publish_reel(args.url, args.caption) if args.reel else publish(args.url, args.caption)
+    if args.carousel:
+        urls = [u for u in args.carousel.split(",") if u]
+        result = publish_carousel(urls, args.caption_text or args.url)
+    elif args.reel:
+        result = publish_reel(args.url, args.caption)
+    else:
+        result = publish(args.url, args.caption)
     print(result)
     if args.comment and isinstance(result, dict) and result.get("id"):
         print("comment:", comment(result["id"], args.comment))

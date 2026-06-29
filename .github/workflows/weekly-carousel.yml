@@ -1,0 +1,47 @@
+name: Weekly 말씀 carousel
+
+# Sunday ~04:00 KST (Sat 19:00 UTC). A 3-slide carousel: 말씀 → 묵상 → 기도.
+on:
+  schedule:
+    - cron: "0 19 * * 6"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  carousel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps
+        run: pip install pillow
+
+      - name: Build the 3 slides
+        run: python carousel_post.py --emit
+
+      - name: Host slides on a GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view media >/dev/null 2>&1 || gh release create media --title media --notes "hosted media"
+          URLS=""
+          while read -r rel; do
+            [ -z "$rel" ] && continue
+            gh release upload media "$rel" --clobber
+            URLS="$URLS,https://github.com/${GITHUB_REPOSITORY}/releases/download/media/$(basename "$rel")"
+          done < output/_carousel.txt
+          echo "URLS=${URLS#,}" >> "$GITHUB_ENV"
+
+      - name: Publish carousel to Instagram
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: |
+          echo "URLS: $URLS"
+          python post_instagram.py --carousel "$URLS" \
+            --caption-text "$(cat output/_caption.txt)" --comment "$(cat output/_comment.txt)"
