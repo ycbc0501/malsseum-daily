@@ -20,6 +20,7 @@ import json
 import os
 import random
 import time
+from collections import Counter
 from datetime import datetime, timedelta, timezone
 
 import generate
@@ -124,7 +125,10 @@ def main():
     if not unused:                       # whole pool shown → start a new cycle
         state["used_verses"] = []
         unused = verses
-    verse = unused[0]
+    # spread across books: pick a verse from the least-posted book (ties → file order)
+    book = lambda r: r.rsplit(" ", 1)[0]
+    used_books = Counter(book(r) for r in state["used_verses"])
+    verse = min(unused, key=lambda v: (used_books[book(v["ref"])], verses.index(v)))
     n = len(state["used_verses"])        # rotation index for music + photo
     photo = photos[n % len(photos)] if photos else None
     audio = tracks[n % len(tracks)] if tracks else None
