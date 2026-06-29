@@ -36,9 +36,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           REL="$(cat output/_path.txt)"
-          FILE="$(basename "$REL")"
+          FILE="post-${GITHUB_RUN_ID}.${REL##*.}"   # unique name → never collides/clobbers (IG fetch-safe)
+          cp "$REL" "$FILE"
           gh release view media >/dev/null 2>&1 || gh release create media --title media --notes "hosted media"
-          gh release upload media "$REL" --clobber
+          gh release upload media "$FILE" --clobber
           # keep only the 30 newest assets
           gh release view media --json assets -q '.assets[].name' | sort | head -n -30 \
             | while read -r a; do gh release delete-asset media "$a" -y || true; done
