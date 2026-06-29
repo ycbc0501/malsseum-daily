@@ -54,7 +54,9 @@ NEGATIVE = (", no people, no person, no text, no words, no letters, no watermark
 COMP = {
     ("center", "middle"): "a vast open sky fills the upper two-thirds for the text, with the grand "
                           "landscape kept low along the bottom third (very low horizon)",
-    ("center", "top"): "with a calm smooth empty area across the upper portion for text, detail kept lower",
+    ("center", "top"): "the ENTIRE UPPER HALF of the image is clear, open, empty sky (enough room "
+                       "for two lines of text AND a small caption line below it); the grand landscape "
+                       "sits entirely in the LOWER HALF, well below the text",
     ("center", "bottom"): "with a calm smooth empty area across the lower portion for text, detail kept higher",
     ("left", "middle"): "with a calm smooth empty area on the left for text, detail only on the right",
     ("right", "middle"): "with a calm smooth empty area on the right for text, detail only on the left",

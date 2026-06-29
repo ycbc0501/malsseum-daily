@@ -111,7 +111,7 @@ def main():
     OFFSETS = [("left", "middle"), ("right", "middle"), ("center", "top"),
                ("center", "bottom"), ("right", "top"), ("left", "bottom")]
     full_scene = (n % 5 == 4)
-    placement = ("center", "middle")
+    placement = ("center", "top")          # text block (verse + source) sits in the upper open sky
     if not full_scene and len(verse["text"]) <= 28 and n % 5 == 2:
         placement = OFFSETS[(n // 5) % len(OFFSETS)]
 
