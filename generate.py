@@ -231,7 +231,7 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
         top_y = ch - my - block_h
     if photo:
         base = cover_crop(Image.open(photo), cw, ch).filter(ImageFilter.GaussianBlur(1.2))
-        fg, shadow_c, busy = band_color(base, top_y, block_h, cw, col_left, col_w)
+        fg, shadow_c, busy = (252, 250, 246), (0, 0, 0), 0   # ALWAYS white text + dark scrim → legible on any bg
     else:
         theme = THEMES.get(theme_name, THEMES["ivory"])
         base = Image.new("RGB", (cw, ch), theme["bg"])
@@ -254,12 +254,12 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
         lw = text_w(td, ln, font)
         td.text((line_x(lw), y), ln, font=font, fill=fg + (255,))
         y += line_h
-    src_fill = tuple(int(c * 0.55 + (255 if fg[0] > 128 else 0) * 0.45) for c in fg)
+    src_fill = (228, 225, 219) if photo else tuple(int(c * 0.55 + (255 if fg[0] > 128 else 0) * 0.45) for c in fg)
     src_img = render_italic(f"[{verse['ref']}]", src_font, src_fill + (255,))
     txt.alpha_composite(src_img, (line_x(src_img.width), y + gap - src_h // 4))
 
     if photo:
-        base = Image.alpha_composite(base, soft_scrim(cw, ch, col_left, col_w, top_y, block_h, line_h, shadow_c))
+        base = Image.alpha_composite(base, soft_scrim(cw, ch, col_left, col_w, top_y, block_h, line_h, shadow_c, alpha=160))
         shadow = Image.new("RGBA", (cw, ch), shadow_c + (0,))
         shadow.putalpha(txt.getchannel("A").point(lambda a: int(a * 0.8)))
         shadow = shadow.filter(ImageFilter.GaussianBlur(6))
