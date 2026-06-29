@@ -7,10 +7,14 @@ Credentials: env HF_API_KEY + HF_API_SECRET, or a local higgsfield_key.txt with 
 """
 
 import os
+import time
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-MODEL = "flux-pro/kontext/max/text-to-image"
+FLUX = "flux-pro/kontext/max/text-to-image"
+MODEL = FLUX            # default: cleanest model (Soul/Reve bake fake text into empty areas)
+SOUL_APP = "v1/text2image/soul"   # flagship, photoreal, but risks baked text → manual use only
+SOUL_BASE = "https://platform.higgsfield.ai"
 
 # diverse, sublime nature — each has a CALM EMPTY ZONE (not only sky: also water, field,
 # mist, snow, smooth ground) where the verse text sits. Vast, majestic, sacred. No people/text.
@@ -81,7 +85,7 @@ def _credentials():
     return f"{key}:{sec}"
 
 
-def generate_background(dest, index=0, placement=("center", "middle"), full_scene=False):
+def generate_background(dest, index=0, placement=("center", "middle"), full_scene=False, model=MODEL):
     """Generate one sublime nature background → save to `dest`, return the path.
     Default (~80%): a calm empty area where the text sits (per `placement`).
     full_scene (~20%): a fuller, dramatic, well-composed scene (legible via the scrim)."""
@@ -97,11 +101,32 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
         comp = COMP.get(tuple(placement), COMP[("center", "middle")])
         prompt = (SCENES[index % len(SCENES)] + MOOD + ", " + comp + TONE
                   + ", generous text-safe negative space, unobstructed, minimal" + NEGATIVE)
-    result = client.subscribe(MODEL, {
-        "prompt": prompt, "aspect_ratio": "3:4", "safety_tolerance": 2})
-    url = result["images"][0]["url"]
+    if model == "soul":
+        url = _soul(client, prompt)
+    else:
+        args = {"prompt": prompt, "aspect_ratio": "3:4"}
+        if "flux" in model:
+            args["safety_tolerance"] = 2
+        url = client.subscribe(model, args)["images"][0]["url"]
     urllib.request.urlretrieve(url, dest)
     return dest
+
+
+def _soul(client, prompt, wh="1536x2048"):
+    """Higgsfield Soul (flagship). Its response shape differs from the SDK's, so we call
+    the endpoint via the SDK's transport and poll the status ourselves."""
+    t = client._transport
+    job = t.request("POST", f"{SOUL_BASE}/{SOUL_APP}",
+                    json={"params": {"prompt": prompt, "width_and_height": wh}}, timeout=120).json()
+    jid = job["id"]
+    for _ in range(60):
+        st = t.request("GET", f"{SOUL_BASE}/requests/{jid}/status", timeout=30).json()
+        if st["status"] == "completed":
+            return st["images"][0]["url"]
+        if st["status"] in ("failed", "error", "canceled"):
+            raise RuntimeError(f"soul {st['status']}")
+        time.sleep(3)
+    raise RuntimeError("soul timeout")
 
 
 if __name__ == "__main__":

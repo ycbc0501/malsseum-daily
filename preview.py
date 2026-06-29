@@ -53,6 +53,7 @@ def main():
     ap.add_argument("--halign", default="center")
     ap.add_argument("--valign", default="middle")
     ap.add_argument("--full", action="store_true")
+    ap.add_argument("--model", default=hf.MODEL)
     a = ap.parse_args()
 
     verses = json.load(open(os.path.join(generate.HERE, "verses.json"), encoding="utf-8"))["verses"]
@@ -60,7 +61,7 @@ def main():
 
     idx = next_idx()
     bg = f"/tmp/prev_bg_{idx}.png"
-    hf.generate_background(bg, a.scene, (a.halign, a.valign), full_scene=a.full)
+    hf.generate_background(bg, a.scene, (a.halign, a.valign), full_scene=a.full, model=a.model)
     out = os.path.join(IMG, f"{idx:04d}-{generate.slug(a.ref)}.png")
     generate.render(v, "ivory", "", out, photo=bg, placement=(a.halign, a.valign))
     build_html()
