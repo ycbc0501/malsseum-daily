@@ -188,14 +188,16 @@ def soft_scrim(cw, ch, col_left, col_w, top_y, block_h, line_h, color, alpha=120
     return s.filter(ImageFilter.GaussianBlur(80))
 
 
-def render_italic(text, font, fill):
+def render_italic(text, font, fill, stroke=0, stroke_fill=(0, 0, 0, 150)):
     asc, desc = font.getmetrics()
     h = asc + desc
     shear = 0.20
-    pad = int(shear * h) + 8
+    pad = int(shear * h) + 8 + stroke
+    vpad = stroke + 1
     tw = int(font.getlength(text))
-    base = Image.new("RGBA", (tw + 2 * pad, h), (0, 0, 0, 0))
-    ImageDraw.Draw(base).text((pad, 0), text, font=font, fill=fill)
+    base = Image.new("RGBA", (tw + 2 * pad, h + 2 * vpad), (0, 0, 0, 0))
+    ImageDraw.Draw(base).text((pad, vpad), text, font=font, fill=fill,
+                              stroke_width=stroke, stroke_fill=stroke_fill)
     return base.transform(base.size, Image.AFFINE, (1, shear, 0, 0, 1, 0), resample=Image.BICUBIC)
 
 
@@ -257,7 +259,7 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
                 stroke_width=stroke, stroke_fill=(0, 0, 0, 150))
         y += line_h
     src_fill = (228, 225, 219) if photo else tuple(int(c * 0.55 + (255 if fg[0] > 128 else 0) * 0.45) for c in fg)
-    src_img = render_italic(f"[{verse['ref']}]", src_font, src_fill + (255,))
+    src_img = render_italic(f"[{verse['ref']}]", src_font, src_fill + (255,), stroke=2 if photo else 0)
     txt.alpha_composite(src_img, (line_x(src_img.width), y + gap - src_h // 4))
 
     if photo:

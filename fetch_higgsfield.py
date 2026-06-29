@@ -24,7 +24,7 @@ SCENES = [
     "towering dunes low in the frame under an enormous deep sky",
     "a giant still lake below towering distant mountains, very low horizon",
     "vast misty valleys far below under an immense deep sky",
-    "a colossal cloudscape filling a vast sky over a low far landscape",
+    "vast dramatic storm clouds over distant plains at a low horizon",
     "immense rolling hills to a low horizon under a vast deep sky",
     "a grand coastline low in the frame under an enormous deep sky",
     "vast golden grasslands to a low horizon under a colossal sky",
@@ -43,9 +43,12 @@ DRAMATIC = [   # the ~20%: full, grand, well-composed sublime scenes (legible vi
     "an endless field of wildflowers under a towering golden sky",
 ]
 MOOD = (", sublime, vast, immense, majestic, monumental, epic grand scale, breathtaking, "
-        "awe-inspiring, sacred and reverent atmosphere, cinematic, soft natural light, "
-        "rich depth, ultra detailed, photographic")
-NEGATIVE = (", no people, no person, no text, no words, no letters, no watermark, no buildings")
+        "awe-inspiring, sacred and reverent atmosphere, REALISTIC PHOTOGRAPH, photorealistic, "
+        "shot on a DSLR, natural authentic detail and texture, true-to-life colors, "
+        "soft natural light, rich depth, ultra detailed")
+NEGATIVE = (", no people, no person, no text, no words, no letters, no watermark, no buildings, "
+            "not CGI, not a 3d render, not an illustration, not a painting, not surreal, "
+            "no fake plastic artificial look")
 
 # composition per placement: leave a CALM EMPTY area (any smooth surface) where text sits
 COMP = {
