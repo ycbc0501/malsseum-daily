@@ -106,11 +106,20 @@ def main():
     posts = os.path.join(generate.HERE, "output", "posts")
     os.makedirs(posts, exist_ok=True)
 
+    # text placement: long verses centered (need full width); short ones mostly centered
+    # (80%) but sometimes offset to a side/corner — the image gets matching empty space there
+    OFFSETS = [("left", "middle"), ("right", "middle"), ("center", "top"),
+               ("center", "bottom"), ("right", "top"), ("left", "bottom")]
+    placement = ("center", "middle")
+    if len(verse["text"]) <= 28 and n % 5 == 0:
+        placement = OFFSETS[(n // 5) % len(OFFSETS)]
+
     # background: generate a fresh, unique image via Higgsfield; fall back to the photo pool
     photo = None
     try:
-        photo = fetch_higgsfield.generate_background(os.path.join(generate.OUT_DIR, "_bg.png"), n)
-        print("background: higgsfield (generated)")
+        photo = fetch_higgsfield.generate_background(
+            os.path.join(generate.OUT_DIR, "_bg.png"), n, placement)
+        print(f"background: higgsfield (generated)  placement={placement}")
     except Exception as e:
         print(f"higgsfield failed ({e}) → photo pool fallback")
         used_photos = state.setdefault("used_photos", [])
@@ -121,7 +130,7 @@ def main():
 
     rel_path = f"output/posts/{date_str}.png"
     generate.render(verse, "ivory", "", os.path.join(generate.HERE, rel_path),
-                    photo=photo, canvas=generate.FEED)
+                    photo=photo, canvas=generate.FEED, placement=placement)
     print(f"image: {verse['ref']}")
 
     caption = build_caption(verse, data.get("translation", ""))

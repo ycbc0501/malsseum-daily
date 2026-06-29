@@ -12,18 +12,45 @@ import urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL = "flux-pro/kontext/max/text-to-image"
 
-# serene, reverent nature scenes — no people, no text
-PROMPTS = [
-    "serene misty mountains at dawn, soft pastel sky, layered blue hills, ethereal fog, cinematic calm light",
-    "soft pastel morning sky with gentle clouds over a calm sea, dreamy, peaceful, minimal, golden light",
-    "golden hour over a quiet wildflower meadow, soft bokeh, warm gentle light, serene, shallow depth",
-    "calm ocean waves under a soft pink and lavender sunset sky, minimal, tranquil, cinematic",
-    "sunlight streaming through a misty forest, soft god rays, peaceful, ethereal green, calm",
-    "a wheat field swaying under a vast pastel sky at golden hour, calm, cinematic, soft warm light",
-    "snowy mountain peaks under a soft pastel dawn, serene, minimal, majestic, gentle clouds",
-    "soft clouds drifting over a calm lake at sunrise, mirror reflection, peaceful, dreamy pastel tones",
+# diverse, sublime nature — vast, majestic, sacred. No people, no text.
+SCENES = [
+    "vast mountain range rising above a sea of clouds at dawn",
+    "endless desert dunes under an immense glowing sky",
+    "a towering waterfall plunging into a misty canyon",
+    "aurora borealis shimmering over snow-capped peaks",
+    "a starry night sky over a silent mountain valley",
+    "dramatic sea cliffs with waves crashing at golden hour",
+    "an ancient forest of giant trees pierced by god rays",
+    "a vast green valley with a winding river beneath towering clouds",
+    "a glacier and icy fjord under a soft polar sky",
+    "rolling golden plains stretching to the far horizon at sunset",
+    "layered blue misty mountains receding to infinity at dawn",
+    "a single tree standing alone on a vast windswept plain",
+    "sunbeams breaking through storm clouds over the open sea",
+    "alpine peaks glowing rose and gold at sunrise",
+    "a vast lavender field beneath a wide luminous sky",
+    "a deep canyon carved in warm light and long shadows",
+    "a still mirror lake reflecting immense snow mountains",
+    "a heavenly cloudscape seen from above, bathed in golden light",
+    "terraced rice fields under soft morning mist and warm light",
+    "a vast salt flat mirroring a pastel twilight sky",
 ]
-NEGATIVE = ", no people, no person, no text, no words, no letters, no watermark"
+MOOD = (", sublime, vast, majestic, awe-inspiring, sacred and reverent atmosphere, "
+        "cinematic, soft natural light, rich depth, ultra detailed, photographic")
+NEGATIVE = ", no people, no person, no text, no words, no letters, no watermark, no buildings"
+
+# where to leave empty/calm space so the verse text can sit there
+SPACE = {
+    ("center", "middle"): "in the center",
+    ("left", "middle"): "on the left side",
+    ("right", "middle"): "on the right side",
+    ("center", "top"): "across the upper area",
+    ("center", "bottom"): "across the lower area",
+    ("left", "top"): "in the upper left",
+    ("right", "top"): "in the upper right",
+    ("left", "bottom"): "in the lower left",
+    ("right", "bottom"): "in the lower right",
+}
 
 
 def _credentials():
@@ -40,11 +67,14 @@ def _credentials():
     return f"{key}:{sec}"
 
 
-def generate_background(dest, index=0):
-    """Generate one serene background → save to `dest`, return the path."""
+def generate_background(dest, index=0, placement=("center", "middle")):
+    """Generate one sublime nature background with calm negative space where the text
+    will sit (per `placement`) → save to `dest`, return the path."""
     import higgsfield_client as h
     client = h.SyncClient(api_key=_credentials())
-    prompt = PROMPTS[index % len(PROMPTS)] + NEGATIVE
+    space = SPACE.get(tuple(placement), "in the center")
+    prompt = (SCENES[index % len(SCENES)] + MOOD
+              + f", with calm uncluttered empty negative space {space} for text" + NEGATIVE)
     result = client.subscribe(MODEL, {
         "prompt": prompt, "aspect_ratio": "3:4", "safety_tolerance": 2})
     url = result["images"][0]["url"]

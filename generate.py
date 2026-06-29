@@ -201,11 +201,18 @@ def render_italic(text, font, fill):
 
 # ----- compose -----------------------------------------------------------------
 
-def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED):
+def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
+           placement=("center", "middle")):
     cw, ch = canvas
-    col_w = int(cw * (0.85 if canvas == REEL else 0.80))
-    col_left = (cw - col_w) // 2
+    halign, valign = placement
     verse_size = 44 if canvas == REEL else 40
+    mx, my = int(cw * 0.08), int(ch * 0.10)
+    if halign == "center":
+        col_w = int(cw * (0.85 if canvas == REEL else 0.80))
+        col_left = (cw - col_w) // 2
+    else:                                      # offset to one side → narrower column
+        col_w = int(cw * 0.60)
+        col_left = mx if halign == "left" else cw - mx - col_w
 
     probe = ImageDraw.Draw(Image.new("RGB", (cw, ch)))
     font, lines, line_h, size = fit_verse(probe, verse["text"], col_w, verse_size)
@@ -216,7 +223,12 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED):
     gap = int(line_h * 0.45)
     verse_h = len(lines) * line_h
     block_h = verse_h + gap + src_h
-    top_y = ch // 2 - verse_h // 2            # verse's vertical center = image center (same for 2 or 3 lines)
+    if valign == "middle":
+        top_y = ch // 2 - verse_h // 2        # verse's vertical center = image center
+    elif valign == "top":
+        top_y = my
+    else:                                      # bottom
+        top_y = ch - my - block_h
     if photo:
         base = cover_crop(Image.open(photo), cw, ch).filter(ImageFilter.GaussianBlur(1.2))
         fg, shadow_c, busy = band_color(base, top_y, block_h, cw, col_left, col_w)
@@ -227,17 +239,24 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED):
         shadow_c = (255, 255, 255) if sum(theme["bg"]) > 380 else (0, 0, 0)
         busy = 0
 
+    def line_x(w):                             # align within the column per halign
+        if halign == "left":
+            return col_left
+        if halign == "right":
+            return col_left + col_w - w
+        return (cw - w) // 2
+
     base = base.convert("RGBA")
     txt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
     td = ImageDraw.Draw(txt)
     y = top_y
     for ln in lines:
         lw = text_w(td, ln, font)
-        td.text(((cw - lw) // 2, y), ln, font=font, fill=fg + (255,))
+        td.text((line_x(lw), y), ln, font=font, fill=fg + (255,))
         y += line_h
     src_fill = tuple(int(c * 0.55 + (255 if fg[0] > 128 else 0) * 0.45) for c in fg)
     src_img = render_italic(f"[{verse['ref']}]", src_font, src_fill + (255,))
-    txt.alpha_composite(src_img, ((cw - src_img.width) // 2, y + gap - src_h // 4))
+    txt.alpha_composite(src_img, (line_x(src_img.width), y + gap - src_h // 4))
 
     if photo:
         base = Image.alpha_composite(base, soft_scrim(cw, ch, col_left, col_w, top_y, block_h, line_h, shadow_c))
