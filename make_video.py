@@ -19,6 +19,31 @@ def extract_frame(video, out_png, at=0.8):
     return out_png
 
 
+def _duration(path):
+    out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                          "-of", "default=noprint_wrappers=1:nokey=1", path],
+                         capture_output=True, text=True)
+    try:
+        return float(out.stdout.strip())
+    except Exception:
+        return 0.0
+
+
+def make_slowmo(clip, out, target=60.0, max_factor=3.0):
+    """Slow the clip down (no reverse) to fill ~target seconds — serene, natural motion.
+    Slowdown is capped (max_factor) so it never gets too choppy."""
+    dur = _duration(clip) or 12.0
+    factor = min(max(target / dur, 1.0), max_factor)
+    subprocess.run([
+        "ffmpeg", "-y", "-i", clip,
+        "-vf", f"setpts={factor:.3f}*PTS",
+        "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
+        "-preset", "fast", "-crf", "16",
+        out,
+    ], check=True, capture_output=True)
+    return out
+
+
 def make_boomerang(clip, out):
     """Forward + reverse → a seamless loop (~2× the clip length, no jump cut)."""
     subprocess.run([

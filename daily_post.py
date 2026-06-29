@@ -86,7 +86,7 @@ def pick_clip(used_clips, start):
             except Exception as e:
                 print(f"  candidates({kw}) failed: {e}")
                 continue
-            for vid, link in cands:
+            for vid, link, dur in cands:
                 if vid in used_clips:
                     continue
                 try:
@@ -143,7 +143,7 @@ def main():
         boom = os.path.join(generate.OUT_DIR, "_boom.mp4")
         frame = os.path.join(generate.OUT_DIR, "_frame.png")
         overlay = os.path.join(generate.OUT_DIR, "_overlay.png")
-        make_video.make_boomerang(clip, boom)
+        make_video.make_slowmo(clip, boom)
         make_video.extract_frame(boom, frame)
         generate.render_overlay(verse, overlay, frame, canvas=generate.REEL)
         rel_path = f"output/posts/{date_str}.mp4"

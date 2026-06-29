@@ -97,7 +97,8 @@ def candidates(query, key=None):
             continue
         link = best_portrait_file(vid.get("video_files", []))
         if link:
-            out.append((vid["id"], link))
+            out.append((vid["id"], link, vid.get("duration", 0)))
+    out.sort(key=lambda t: t[2], reverse=True)   # longer clips first (smoother slow-mo)
     return out
 
 
