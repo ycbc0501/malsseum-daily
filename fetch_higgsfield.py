@@ -40,24 +40,39 @@ SCENES = [
     "soft pastel sunrise clouds filling a vast open sky over a low calm sea",
     "delicate cherry blossom branches framing a vast open pastel sky",
     "vast green rolling meadows along a very low horizon under a deep sky",
+    "a vast tulip field in soft rows along a very low horizon under a pastel sky",
+    "a wide calm river winding through a low valley under a vast sky",
+    "terraced green tea fields in soft morning mist under an open sky",
+    "soft golden pampas grass swaying low under a vast warm sky",
+    "a tranquil olive grove on a low hillside under a soft Mediterranean sky",
+    "a serene rice paddy mirroring a vast pastel dawn sky, very low horizon",
+    "gentle ocean waves rolling onto a smooth empty shore under a soft sky",
+    "a single graceful tree alone on a vast plain under an enormous sky",
+    "soft pink and lavender twilight clouds over a calm low sea",
+    "a quiet pine forest edge under soft drifting mist and open sky",
+    "rolling sand dunes at golden hour with soft shadows, low horizon",
+    "a calm alpine lake reflecting a vast clear sky, low far shore",
 ]
-DRAMATIC = [   # the ~20%: full, grand scenes (incl. sacred architecture) — legible via the outline
-    "the vast light-filled nave of a grand cathedral, sunbeams through tall windows",
-    "towering ancient stone arches and columns in soft golden light",
-    "an immense grand canyon glowing at golden hour",
-    "a thundering waterfall in a vast lush green canyon",
-    "brilliant aurora borealis over towering snow peaks at night",
-    "the milky way arching over a colossal mountain range",
+DRAMATIC = [   # the ~20%: fuller hyperreal scenes (incl. sacred architecture) — legible via the outline
+    "the vast light-filled nave of a real Gothic stone cathedral, sunbeams through stained glass, architectural photography",
+    "an ancient stone monastery cloister with soft daylight, architectural photography",
+    "towering weathered marble columns of an ancient temple in warm golden light",
+    "an immense real grand canyon glowing at golden hour, landscape photography",
+    "a thundering waterfall in a vast lush green canyon, fine mist",
+    "brilliant aurora borealis over real snow-capped peaks at night, long exposure photo",
+    "the milky way arching over a vast silent mountain range, astrophotography",
     "god-rays bursting through dramatic storm clouds over a vast sea",
-    "towering misty mountain peaks ablaze at a dramatic sunrise",
+    "towering misty mountain peaks ablaze at a real dramatic sunrise",
+    "a vast field of sunflowers under a dramatic late-afternoon sky",
+    "a serene reflecting pool in a quiet stone courtyard, soft light",
+    "sunlight streaming through a misty ancient redwood forest, god-rays",
 ]
-MOOD = (", sublime, vast, immense, majestic, monumental, epic grand scale, breathtaking, "
-        "awe-inspiring, sacred and reverent atmosphere, elegant and beautiful, REALISTIC PHOTOGRAPH, "
-        "photorealistic, shot on a DSLR, natural authentic detail and texture, true-to-life colors, "
-        "soft natural light, rich depth, ultra detailed")
+MOOD = (", sublime, vast, majestic, awe-inspiring, sacred and reverent, elegant and beautiful, "
+        "HYPERREALISTIC PHOTOGRAPH, ultra-realistic, shot on a full-frame DSLR with a prime lens, "
+        "8k, sharp natural focus, true-to-life detail and lighting, natural soft light, rich depth")
 NEGATIVE = (", no people, no person, no text, no words, no letters, no watermark, no modern buildings, "
-            "no city, no cars, not CGI, not a 3d render, not an illustration, not a painting, "
-            "not surreal, no fake plastic artificial look, not tacky, not cheesy")
+            "no city, no cars, NOT CGI, not a 3d render, not a video game, not an illustration, "
+            "not a painting, not surreal, no fake plastic artificial look, not tacky, not cheesy")
 
 # text is ALWAYS vertically centered; only the horizontal side of the empty area changes.
 # Landscape is pushed to the very bottom so the centered text (verse + source) sits on clear sky.
