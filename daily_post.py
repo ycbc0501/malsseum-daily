@@ -24,9 +24,8 @@ from collections import Counter
 from datetime import datetime, timedelta, timezone
 
 import generate
-import make_video
 import post_instagram
-import fetch_videos
+import fetch_higgsfield
 
 KST = timezone(timedelta(hours=9))
 MUSIC_DIR = os.path.join(generate.HERE, "music")
@@ -68,38 +67,6 @@ def save_state(s):
     json.dump(s, open(STATE, "w"))
 
 
-def music_tracks():
-    return sorted(f for f in glob.glob(os.path.join(MUSIC_DIR, "*"))
-                  if f.lower().endswith((".mp3", ".m4a", ".wav", ".ogg")))
-
-
-def pick_clip(used_clips, start):
-    """Fetch a portrait clip that has NEVER been used. Rotates keywords from `start`.
-    Returns (path, video_id). Resets the ledger only if every candidate is exhausted."""
-    os.makedirs(VIDEO_DIR, exist_ok=True)
-    dest = os.path.join(VIDEO_DIR, "today.mp4")
-    Q = fetch_videos.QUERIES
-    order = [Q[(start + k) % len(Q)] for k in range(len(Q))]
-    for reset in (False, True):
-        if reset:
-            used_clips.clear()        # exhausted all keywords → start a fresh cycle
-        for kw in order:
-            try:
-                cands = fetch_videos.candidates(kw)
-            except Exception as e:
-                print(f"  candidates({kw}) failed: {e}")
-                continue
-            for vid, link, dur in cands:
-                if vid in used_clips:
-                    continue
-                try:
-                    fetch_videos._download(link, dest)
-                    return dest, vid
-                except Exception as e:
-                    print(f"  download {vid} failed: {e}")
-    return None, None
-
-
 def build_caption(verse, translation):
     return f"{verse['text']}\n[{verse['ref']}]"
 
@@ -120,8 +87,7 @@ def main():
     # safety: drop any verse that ends mid-clause so it can never be posted
     verses = [v for v in data["verses"]
               if not v["text"].rstrip().rstrip(".").endswith(INCOMPLETE_ENDINGS)]
-    photos = generate.pick_photos()
-    tracks = music_tracks()
+    photos = generate.pick_photos()   # fallback backgrounds if Higgsfield is unavailable
 
     state = load_state()
     unused = [v for v in verses if v["ref"] not in state["used_verses"]]
@@ -136,24 +102,31 @@ def main():
     used_books = Counter(book(r) for r in state["used_verses"])
     verse = min(pool, key=lambda v: (used_books[book(v["ref"])], verses.index(v)))
     n = len(state["used_verses"])
-    # background photo, no repeat (swap to Higgsfield-generated once its MCP is connected)
-    used_photos = state.setdefault("used_photos", [])
-    pool_p = [p for p in photos if os.path.basename(p) not in used_photos] or photos
-    photo = pool_p[n % len(pool_p)] if pool_p else None
-
     date_str = datetime.now(KST).strftime("%Y-%m-%d")
     posts = os.path.join(generate.HERE, "output", "posts")
     os.makedirs(posts, exist_ok=True)
+
+    # background: generate a fresh, unique image via Higgsfield; fall back to the photo pool
+    photo = None
+    try:
+        photo = fetch_higgsfield.generate_background(os.path.join(generate.OUT_DIR, "_bg.png"), n)
+        print("background: higgsfield (generated)")
+    except Exception as e:
+        print(f"higgsfield failed ({e}) → photo pool fallback")
+        used_photos = state.setdefault("used_photos", [])
+        pool_p = [p for p in photos if os.path.basename(p) not in used_photos] or photos
+        photo = pool_p[n % len(pool_p)] if pool_p else None
+        if photo:
+            used_photos.append(os.path.basename(photo))
+
     rel_path = f"output/posts/{date_str}.png"
     generate.render(verse, "ivory", "", os.path.join(generate.HERE, rel_path),
                     photo=photo, canvas=generate.FEED)
-    print(f"image: {verse['ref']}  [{os.path.basename(photo) if photo else 'solid'}]")
+    print(f"image: {verse['ref']}")
 
     caption = build_caption(verse, data.get("translation", ""))
     # record what we used so it NEVER repeats
     state["used_verses"].append(verse["ref"])
-    if photo:
-        used_photos.append(os.path.basename(photo))
     save_state(state)
     with open(os.path.join(generate.OUT_DIR, "_path.txt"), "w") as f:
         f.write(rel_path)

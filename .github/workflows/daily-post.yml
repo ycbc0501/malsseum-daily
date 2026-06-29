@@ -23,14 +23,12 @@ jobs:
           python-version: "3.12"
 
       - name: Install deps
-        run: pip install pillow
+        run: pip install pillow higgsfield-client
 
-      - name: Ensure ffmpeg
-        run: ffmpeg -version >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y ffmpeg)
-
-      - name: Wait for 05:00 KST ±10, render + build the Reel
+      - name: Wait for 05:00 KST ±10, then render the image (Higgsfield background)
         env:
-          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          HF_API_KEY: ${{ secrets.HF_API_KEY }}
+          HF_API_SECRET: ${{ secrets.HF_API_SECRET }}
         run: python daily_post.py --emit --jitter 600
 
       - name: Host media on a GitHub Release (keeps git history lean)
