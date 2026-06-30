@@ -29,7 +29,7 @@ def next_idx():
 def build_html():
     files = sorted(glob.glob(IMG + "/*.png"), key=lambda f: os.path.basename(f), reverse=True)
     cards = "\n".join(
-        f'<figure><img src="img/{os.path.basename(f)}" loading="lazy">'
+        f'<figure><img src="img/{os.path.basename(f)}?v={int(os.path.getmtime(f))}" loading="lazy">'
         f'<figcaption>{os.path.basename(f)[:-4]}</figcaption></figure>' for f in files)
     html = (
         '<!doctype html><meta charset="utf-8">'
