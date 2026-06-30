@@ -171,12 +171,79 @@ def clause_split(text):
     return lines
 
 
-def fit_verse(draw, text, max_w, size):
-    """FIXED font size for every verse. Prefer natural clause lines (2–3); else a clean
-    2-line split; else greedy wrap — size never changes."""
+_KIWI = None
+
+
+def _kiwi():
+    """Lazily load the Korean morphological analyzer (graceful if not installed)."""
+    global _KIWI
+    if _KIWI is None:
+        try:
+            from kiwipiepy import Kiwi
+            _KIWI = Kiwi()
+        except Exception:
+            _KIWI = False
+    return _KIWI
+
+
+def _breakable_words(text):
+    """Indices i such that we may break AFTER word i — its last morpheme is a Korean
+    connective/closing ending (EC/EF). Uses kiwipiepy; None if unavailable."""
+    k = _kiwi()
+    if not k:
+        return None
+    words = text.split()
+    ends, pos = [], 0
+    for w in words:
+        pos = text.index(w, pos) + len(w)
+        ends.append(pos)
+    toks = k.tokenize(text)
+    out = []
+    for i, end in enumerate(ends[:-1]):              # never break after the last word
+        finals = [m for m in toks if m.start + m.len == end]
+        if finals and finals[-1].tag in ("EC", "EF"):
+            out.append(i)
+    return out
+
+
+def kiwi_split(text, draw, font, max_w):
+    """Break Korean at real clause endings → 2 (preferred, near middle) or 3 lines that
+    fit max_w. Returns None if kiwipiepy is unavailable or nothing fits."""
+    bp = _breakable_words(text)
+    if not bp:
+        return None
+    words = text.split()
+    fits = lambda seg: text_w(draw, " ".join(seg), font) <= max_w
+    mid, best = len(text) / 2, None
+    for i in bp:                                     # best balanced 2-line at a clause ending
+        a, b = words[:i + 1], words[i + 1:]
+        if fits(a) and fits(b):
+            d = abs(len(" ".join(a)) - mid)
+            if best is None or d < best[0]:
+                best = (d, [" ".join(a), " ".join(b)])
+    if best:
+        return best[1]
+    for a in bp:                                     # else 3 lines at two clause endings
+        for b in bp:
+            if b <= a:
+                continue
+            segs = [words[:a + 1], words[a + 1:b + 1], words[b + 1:]]
+            if all(fits(s) for s in segs):
+                return [" ".join(s) for s in segs]
+    return None
+
+
+def fit_verse(draw, text, max_w, size, lines=None):
+    """FIXED font size. Priority: manual `lines` → kiwipiepy clause split → heuristic
+    clause split → 2-line split → greedy wrap. Size never changes."""
     font = load_font(SERIF, size)
     line_h = int(size * 1.6)
     fits = lambda lns: all(text_w(draw, ln, font) <= max_w for ln in lns)
+    if lines:                                        # hand-tuned override in verses.json
+        return font, lines, line_h, size
+    k = kiwi_split(text, draw, font, max_w)
+    if k and fits(k):
+        return font, k, line_h, size
     clauses = clause_split(text)
     if 2 <= len(clauses) <= 3 and fits(clauses):
         return font, clauses, line_h, size
@@ -229,7 +296,7 @@ def render_italic(text, font, fill, stroke=0, stroke_fill=(0, 0, 0, 150)):
 # ----- compose -----------------------------------------------------------------
 
 def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
-           placement=("center", "middle")):
+           placement=("center", "middle"), shadow="scrim"):
     cw, ch = canvas
     halign, valign = placement
     verse_size = 44 if canvas == REEL else 40
@@ -242,7 +309,8 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
         col_left = mx if halign == "left" else cw - mx - col_w
 
     probe = ImageDraw.Draw(Image.new("RGB", (cw, ch)))
-    font, lines, line_h, size = fit_verse(probe, verse["text"], col_w, verse_size)
+    font, lines, line_h, size = fit_verse(probe, verse["text"], col_w, verse_size,
+                                          lines=verse.get("lines"))
 
     src_font = load_font(SERIF, max(22, int(size * 0.62)))
     src_asc, src_desc = src_font.getmetrics()
@@ -276,7 +344,7 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
     base = base.convert("RGBA")
     txt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
     td = ImageDraw.Draw(txt)
-    stroke = 2 if photo else 0          # thin dark outline → crisp & legible on ANY background
+    stroke = 2 if (photo and shadow != "scrim") else 0   # outline (off for the soft-scrim style)
     y = top_y
     for ln in lines:
         lw = text_w(td, ln, font)
@@ -288,13 +356,26 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
     txt.alpha_composite(src_img, (line_x(src_img.width), y + gap - src_h // 4))
 
     if photo:
-        # a soft shadow that HUGS the letters (no big halo over the sky) — built up in a few
-        # passes so the text stays legible even on bright skies, while empty areas stay clean
-        glow = Image.new("RGBA", (cw, ch), shadow_c + (0,))
-        glow.putalpha(txt.getchannel("A").point(lambda a: int(a * 0.9)))
-        glow = glow.filter(ImageFilter.GaussianBlur(5))
-        for _ in range(3):
-            base = Image.alpha_composite(base, glow)
+        a = txt.getchannel("A")
+        def soft(alpha, blur, times=1):
+            g = Image.new("RGBA", (cw, ch), shadow_c + (0,))
+            g.putalpha(a.point(lambda v: int(v * alpha)))
+            g = g.filter(ImageFilter.GaussianBlur(blur))
+            return g
+        if shadow == "scrim":
+            # A — soft dark cloud behind the whole text block (softest, most readable)
+            base = Image.alpha_composite(base, soft_scrim(
+                cw, ch, col_left, col_w, top_y, block_h, line_h, shadow_c, alpha=150))
+            for _ in range(2):
+                base = Image.alpha_composite(base, soft(0.8, 6))
+        elif shadow == "outline":
+            # C — crisp thin outline + a small tight shadow (minimal halo)
+            base = Image.alpha_composite(base, soft(0.85, 3))
+        else:
+            # B — compromise: soft text-shaped backing + tight shadow + outline
+            for _ in range(2):
+                base = Image.alpha_composite(base, soft(0.6, 16))
+            base = Image.alpha_composite(base, soft(0.9, 5))
 
     base = Image.alpha_composite(base, txt)
     base.convert("RGB").save(out_path, "PNG")

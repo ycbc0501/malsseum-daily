@@ -23,7 +23,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install deps
-        run: pip install pillow higgsfield-client
+        run: pip install pillow higgsfield-client kiwipiepy
 
       - name: Wait for 05:00 KST ±10, then render the image (Nano Banana Pro background)
         env:

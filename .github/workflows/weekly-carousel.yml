@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install deps
-        run: pip install pillow
+        run: pip install pillow kiwipiepy
 
       - name: Build the 3 slides
         run: python carousel_post.py --emit
