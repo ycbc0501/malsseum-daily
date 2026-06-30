@@ -363,18 +363,14 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
             g = g.filter(ImageFilter.GaussianBlur(blur))
             return g
         if shadow == "scrim":
-            # A — soft dark cloud, hugging the ACTUAL text width (not the full column),
-            # so it doesn't bleed into the empty side margins.
-            tb_w = min(max(text_w(td, ln, font) for ln in lines) + int(line_h * 0.7), col_w)
-            if halign == "left":
-                tb_left = col_left
-            elif halign == "right":
-                tb_left = col_left + col_w - tb_w
-            else:
-                tb_left = (cw - tb_w) // 2
-            base = Image.alpha_composite(base, soft_scrim(
-                cw, ch, tb_left, tb_w, top_y, block_h, line_h, shadow_c, alpha=115))
-            base = Image.alpha_composite(base, soft(0.75, 6))
+            # A — soft dark cloud that follows the TEXT SHAPE (not a bounding ellipse), so it
+            # hugs the words only: no shadow in empty corners/margins, works for any alignment.
+            cloud = Image.new("RGBA", (cw, ch), shadow_c + (0,))
+            cloud.putalpha(a.point(lambda v: int(v * 0.5)))
+            cloud = cloud.filter(ImageFilter.GaussianBlur(22))
+            for _ in range(3):
+                base = Image.alpha_composite(base, cloud)
+            base = Image.alpha_composite(base, soft(0.6, 5))
         elif shadow == "outline":
             # C — crisp thin outline + a small tight shadow (minimal halo)
             base = Image.alpha_composite(base, soft(0.85, 3))
