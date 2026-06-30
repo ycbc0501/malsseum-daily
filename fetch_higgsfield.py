@@ -76,18 +76,34 @@ SCENES = [
     "a golden harvest field at sunset, low horizon",
     "a white lighthouse on a cliff above the sea under a soft sky",
     "a simple still life of bread and a plain cup on a wooden table, soft window light",
+    # intimate still-life / close scenes (dailymayim mood) — calm soft background for text
+    "a single white lily in soft morning light on a plain surface",
+    "a steaming cup of tea on a wooden table by a bright window",
+    "a small cluster of grapes and a piece of bread on a wooden table by a window",
+    "fresh olive branches resting on a simple linen cloth in soft daylight",
+    "an open window with sheer white curtains glowing in soft morning light",
+    "green leaves with fresh dewdrops in soft morning light, close up",
+    "an open field of tall grass glowing in warm low backlight",
+    "soft sunlight falling across a simple wooden table by a window",
 ]
-REGION = {
-    ("center", "middle"): "the central area",
-    ("left", "middle"): "the left side",
-    ("right", "middle"): "the right side",
+COMPOSE = {
+    ("center", "middle"): "Leave the upper and central part of the photo calm and simple for the "
+        "overlaid verse text — it can be open sky, soft daylight, gentle water or a quiet plain "
+        "background, whatever suits the scene. Place the main subject across the LOWER part of the "
+        "photo, keeping the upper-center clear and easy to read text over.",
+    ("left", "middle"): "Leave the left and central part of the photo calm and simple for the overlaid "
+        "text (soft sky, light, water or a quiet background); place the main subject toward the right "
+        "and lower part of the photo, keeping the text area clear.",
+    ("right", "middle"): "Leave the right and central part of the photo calm and simple for the overlaid "
+        "text (soft sky, light, water or a quiet background); place the main subject toward the left "
+        "and lower part of the photo, keeping the text area clear.",
 }
 QUALITY = ("Hyperrealistic photograph, shot on a full-frame camera with natural light — extremely "
            "sharp and crisp, in sharp focus front to back, with fine true-to-life detail, high "
            "resolution and natural colours. A genuine professional photo, not a render or illustration.")
-NOTEXT = ("There are no people anywhere. The image contains absolutely no text, letters, words, "
-          "captions, numbers, signs, watermark or logo of any kind. The photograph fills the whole "
-          "frame edge to edge — no border, no inner frame, no matte, no vignette box.")
+NOTEXT = ("There are no people, and absolutely no text, letters, words, captions, numbers, signs, "
+          "watermark or logo anywhere. It is a single full-bleed photograph that completely fills "
+          "the image, edge to edge.")
 
 
 def _credentials():
@@ -108,14 +124,8 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
     """Generate one background → save to `dest`. Clean natural-language prompt (Gemini follows
     prose); the text area is kept clear per `placement`. `full_scene` kept for compatibility."""
     scene = SCENES[index % len(SCENES)]
-    region = REGION.get(tuple(placement), REGION[("center", "middle")])
-    prompt = (
-        f"A real, natural photograph of {scene}. "
-        f"Composition: keep {region} of the frame calm, open and uncluttered — clear sky or smooth "
-        f"empty space with generous room for two lines of text and a small line below; keep the main "
-        f"subject and all detail away from that area, low and toward the edges. "
-        f"{QUALITY} {NOTEXT}"
-    )
+    compose = COMPOSE.get(tuple(placement), COMPOSE[("center", "middle")])
+    prompt = f"A real, natural photograph of {scene}. {compose} {QUALITY} {NOTEXT}"
 
     if model == "gemini":
         return _gemini(prompt, dest)
