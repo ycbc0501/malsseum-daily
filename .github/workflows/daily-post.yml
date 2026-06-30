@@ -1,11 +1,13 @@
 name: Daily 말씀 Reel
 
-# Fires at 03:00 KST (18:00 UTC) — early on purpose: GitHub's scheduler is often
-# 1-2h late, so we start early and daily_post.py then WAITS until 05:00 ±10 min KST.
-# This absorbs GitHub's delay so the post still lands ~5 AM. (Wait time is free on a public repo.)
+# Two posts a day: 05:00 KST and 19:00 KST (±10 min). Each cron fires ~2h early because
+# GitHub's scheduler runs 1-2h late; daily_post.py then WAITS until the target time.
+#   cron "0 18 * * *" = 03:00 KST → morning post (--hour 5)
+#   cron "0 8  * * *" = 17:00 KST → evening post (--hour 19)
 on:
   schedule:
     - cron: "0 18 * * *"
+    - cron: "0 8 * * *"
   workflow_dispatch:
 
 permissions:
@@ -25,12 +27,13 @@ jobs:
       - name: Install deps
         run: pip install pillow higgsfield-client kiwipiepy
 
-      - name: Wait for 05:00 KST ±10, then render the image (Nano Banana Pro background)
+      - name: Wait for target time (05:00 or 19:00 KST ±10), render the image (Nano Banana Pro)
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
           HF_API_SECRET: ${{ secrets.HF_API_SECRET }}
-        run: python daily_post.py --emit --jitter 600
+          TARGET_HOUR: ${{ github.event.schedule == '0 8 * * *' && '19' || '5' }}
+        run: python daily_post.py --emit --jitter 600 --hour "$TARGET_HOUR"
 
       - name: Host media on a GitHub Release (keeps git history lean)
         env:

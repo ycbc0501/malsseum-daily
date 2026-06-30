@@ -41,9 +41,9 @@ INCOMPLETE_ENDINGS = ("고", "며", "매", "이요", "으며", "하며")
 THEME_ORDER = ["위로", "평안", "담대", "믿음", "감사", "사랑", "인도", "은혜", "지혜"]
 
 
-def wait_until_target(jitter_s):
+def wait_until_target(jitter_s, hour=5):
     now = datetime.now(KST)
-    target = now.replace(hour=5, minute=0, second=0, microsecond=0)
+    target = now.replace(hour=hour, minute=0, second=0, microsecond=0)
     target += timedelta(seconds=random.randint(-jitter_s, jitter_s))
     delay = (target - now).total_seconds()
     if delay > 0:
@@ -77,10 +77,11 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--emit", action="store_true")
     ap.add_argument("--jitter", type=int, default=600)
+    ap.add_argument("--hour", type=int, default=5)   # 5 = morning, 19 = evening (KST)
     args = ap.parse_args()
 
     if not args.now:
-        wait_until_target(args.jitter)
+        wait_until_target(args.jitter, args.hour)
 
     with open(os.path.join(generate.HERE, "verses.json"), encoding="utf-8") as f:
         data = json.load(f)
