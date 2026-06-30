@@ -365,13 +365,23 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
         if shadow == "scrim":
             # A — soft dark cloud that follows the TEXT SHAPE (not a bounding ellipse), so it
             # hugs the words only: no shadow in empty corners/margins, works for any alignment.
+            # adapt shadow strength to the background brightness behind the text — a bright/busy
+            # background (e.g. a sunlit cathedral) needs a much darker backing than a calm sky.
+            bbox = txt.getbbox()
+            mean = ImageStat.Stat(base.convert("L").crop(bbox)).mean[0] if bbox else 128
+            if mean > 165:
+                passes, tights = 12, [(0.97, 6), (0.97, 4), (0.97, 3)]
+            elif mean > 115:
+                passes, tights = 9, [(0.95, 6), (0.95, 4)]
+            else:
+                passes, tights = 6, [(0.9, 6)]
             cloud = Image.new("RGBA", (cw, ch), shadow_c + (0,))
             cloud.putalpha(a.point(lambda v: int(v * 0.85)))
             cloud = cloud.filter(ImageFilter.GaussianBlur(18))
-            for _ in range(8):
+            for _ in range(passes):
                 base = Image.alpha_composite(base, cloud)
-            base = Image.alpha_composite(base, soft(0.95, 6))
-            base = Image.alpha_composite(base, soft(0.95, 4))
+            for al, bl in tights:
+                base = Image.alpha_composite(base, soft(al, bl))
         elif shadow == "outline":
             # C — crisp thin outline + a small tight shadow (minimal halo)
             base = Image.alpha_composite(base, soft(0.85, 3))
