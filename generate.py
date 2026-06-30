@@ -273,11 +273,11 @@ def soft_scrim(cw, ch, col_left, col_w, top_y, block_h, line_h, color, alpha=120
     """A soft, feathered darkening/brightening behind the text block so it stays
     legible over busy backgrounds (no hard box — just a gentle glow)."""
     s = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
-    sx, sy = int(col_w * 0.14), int(line_h * 1.3)
+    sx, sy = int(col_w * 0.10), int(line_h * 1.3)
     ImageDraw.Draw(s).ellipse(
         [col_left - sx, top_y - sy, col_left + col_w + sx, top_y + block_h + sy],
         fill=color + (alpha,))
-    return s.filter(ImageFilter.GaussianBlur(80))
+    return s.filter(ImageFilter.GaussianBlur(55))
 
 
 def render_italic(text, font, fill, stroke=0, stroke_fill=(0, 0, 0, 150)):
@@ -363,11 +363,18 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
             g = g.filter(ImageFilter.GaussianBlur(blur))
             return g
         if shadow == "scrim":
-            # A — soft dark cloud behind the whole text block (softest, most readable)
+            # A — soft dark cloud, hugging the ACTUAL text width (not the full column),
+            # so it doesn't bleed into the empty side margins.
+            tb_w = min(max(text_w(td, ln, font) for ln in lines) + int(line_h * 0.7), col_w)
+            if halign == "left":
+                tb_left = col_left
+            elif halign == "right":
+                tb_left = col_left + col_w - tb_w
+            else:
+                tb_left = (cw - tb_w) // 2
             base = Image.alpha_composite(base, soft_scrim(
-                cw, ch, col_left, col_w, top_y, block_h, line_h, shadow_c, alpha=150))
-            for _ in range(2):
-                base = Image.alpha_composite(base, soft(0.8, 6))
+                cw, ch, tb_left, tb_w, top_y, block_h, line_h, shadow_c, alpha=115))
+            base = Image.alpha_composite(base, soft(0.75, 6))
         elif shadow == "outline":
             # C — crisp thin outline + a small tight shadow (minimal halo)
             base = Image.alpha_composite(base, soft(0.85, 3))
