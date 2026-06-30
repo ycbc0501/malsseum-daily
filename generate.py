@@ -363,25 +363,18 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
             g = g.filter(ImageFilter.GaussianBlur(blur))
             return g
         if shadow == "scrim":
-            # A — soft dark cloud that follows the TEXT SHAPE (not a bounding ellipse), so it
-            # hugs the words only: no shadow in empty corners/margins, works for any alignment.
-            # adapt shadow strength to the background brightness behind the text — a bright/busy
-            # background (e.g. a sunlit cathedral) needs a much darker backing than a calm sky.
+            # A — soft dark cloud that follows the TEXT SHAPE (hugs the words; no shadow in empty
+            # corners/margins; works for any alignment). Strength adapts to background brightness.
+            # The alpha is CAPPED so dense small text (the source ref) can't pool darker than the
+            # larger verse → the verse and the source get the SAME shadow weight.
             bbox = txt.getbbox()
             mean = ImageStat.Stat(base.convert("L").crop(bbox)).mean[0] if bbox else 128
-            if mean > 165:
-                passes, tights = 10, [(0.9, 6), (0.9, 4)]
-            elif mean > 115:
-                passes, tights = 7, [(0.88, 6), (0.88, 4)]
-            else:
-                passes, tights = 5, [(0.85, 6)]
-            cloud = Image.new("RGBA", (cw, ch), shadow_c + (0,))
-            cloud.putalpha(a.point(lambda v: int(v * 0.85)))
-            cloud = cloud.filter(ImageFilter.GaussianBlur(18))
-            for _ in range(passes):
-                base = Image.alpha_composite(base, cloud)
-            for al, bl in tights:
-                base = Image.alpha_composite(base, soft(al, bl))
+            cap = 200 if mean > 165 else (165 if mean > 115 else 135)
+            for blur, reps in ((16, 2), (5, 1)):
+                layer = Image.new("RGBA", (cw, ch), shadow_c + (0,))
+                layer.putalpha(a.filter(ImageFilter.GaussianBlur(blur)).point(lambda v: min(cap, v * 3)))
+                for _ in range(reps):
+                    base = Image.alpha_composite(base, layer)
         elif shadow == "outline":
             # C — crisp thin outline + a small tight shadow (minimal halo)
             base = Image.alpha_composite(base, soft(0.85, 3))
