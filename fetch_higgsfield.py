@@ -98,9 +98,10 @@ COMPOSE = {
         "text (soft sky, light, water or a quiet background); place the main subject toward the left "
         "and lower part of the photo, keeping the text area clear.",
 }
-QUALITY = ("Hyperrealistic photograph, shot on a full-frame camera with natural light — extremely "
-           "sharp and crisp, in sharp focus front to back, with fine true-to-life detail, high "
-           "resolution and natural colours. A genuine professional photo, not a render or illustration.")
+QUALITY = ("It is an ordinary real photograph shot on 35mm film with natural available light — "
+           "a candid, true-to-life image with natural film grain and texture, soft realistic detail "
+           "and slightly muted natural colours. It looks like a genuine everyday photo someone took, "
+           "not polished, not a 3D render, not a video game.")
 NOTEXT = ("There are no people, and absolutely no text, letters, words, captions, numbers, signs, "
           "watermark or logo anywhere. It is a single full-bleed photograph that completely fills "
           "the image, edge to edge.")
