@@ -312,7 +312,7 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
     font, lines, line_h, size = fit_verse(probe, verse["text"], col_w, verse_size,
                                           lines=verse.get("lines"))
 
-    src_font = load_font(SERIF, max(22, int(size * 0.62)))
+    src_font = load_font(SERIF, size)          # source ref same size as the verse (test)
     src_asc, src_desc = src_font.getmetrics()
     src_h = src_asc + src_desc
     gap = int(line_h * 0.45)
@@ -373,9 +373,7 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
         else:   # "scrim" (default) and "compromise" — soft text-shaped cloud, brightness-adaptive
             cap = 200 if mean > 165 else (165 if mean > 115 else 135)
             base = cloud(base, va, cap, ((16, 2), (5, 1)))
-            # the source ref is small + dense, so its blurred shadow pools solid. A slightly lower
-            # cap makes its overall darkness MATCH the larger verse (not lighter, not darker).
-            base = cloud(base, sa, int(cap * 0.72), ((14, 2), (5, 1)))
+            base = cloud(base, sa, cap, ((16, 2), (5, 1)))   # source treated identically to verse
 
     base = Image.alpha_composite(base, txt)
     base = Image.alpha_composite(base, srctxt)
