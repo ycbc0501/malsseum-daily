@@ -106,11 +106,11 @@ def main():
     posts = os.path.join(generate.HERE, "output", "posts")
     os.makedirs(posts, exist_ok=True)
 
-    # text ALWAYS vertically centered; vary only the horizontal alignment now and then
-    OFFSETS = [("left", "middle"), ("right", "middle")]
-    placement = ("center", "middle")
-    if len(verse["text"]) <= 28 and n % 5 == 2:
-        placement = OFFSETS[(n // 2) % len(OFFSETS)]
+    # always vertically centered; horizontal alignment 80% center / 10% left / 10% right
+    slot = n % 10
+    placement = (("left", "middle") if slot == 0 else
+                 ("right", "middle") if slot == 1 else
+                 ("center", "middle"))
 
     # background: generate a fresh, unique image (Nano Banana Pro); fall back to the photo pool
     photo = None
