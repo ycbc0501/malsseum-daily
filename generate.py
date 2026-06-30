@@ -342,9 +342,9 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
         return (cw - w) // 2
 
     base = base.convert("RGBA")
-    txt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
-    td = ImageDraw.Draw(txt)
     stroke = 2 if (photo and shadow != "scrim") else 0   # outline (off for the soft-scrim style)
+    txt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))      # verse lines
+    td = ImageDraw.Draw(txt)
     y = top_y
     for ln in lines:
         lw = text_w(td, ln, font)
@@ -353,38 +353,32 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
         y += line_h
     src_fill = (228, 225, 219) if photo else tuple(int(c * 0.55 + (255 if fg[0] > 128 else 0) * 0.45) for c in fg)
     src_img = render_italic(f"[{verse['ref']}]", src_font, src_fill + (255,), stroke=stroke)
-    txt.alpha_composite(src_img, (line_x(src_img.width), y + gap - src_h // 4))
+    srctxt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))   # source ref, kept SEPARATE
+    srctxt.alpha_composite(src_img, (line_x(src_img.width), y + gap - src_h // 4))
 
     if photo:
-        a = txt.getchannel("A")
-        def soft(alpha, blur, times=1):
-            g = Image.new("RGBA", (cw, ch), shadow_c + (0,))
-            g.putalpha(a.point(lambda v: int(v * alpha)))
-            g = g.filter(ImageFilter.GaussianBlur(blur))
-            return g
-        if shadow == "scrim":
-            # A — soft dark cloud that follows the TEXT SHAPE (hugs the words; no shadow in empty
-            # corners/margins; works for any alignment). Strength adapts to background brightness.
-            # The alpha is CAPPED so dense small text (the source ref) can't pool darker than the
-            # larger verse → the verse and the source get the SAME shadow weight.
-            bbox = txt.getbbox()
-            mean = ImageStat.Stat(base.convert("L").crop(bbox)).mean[0] if bbox else 128
-            cap = 200 if mean > 165 else (165 if mean > 115 else 135)
-            for blur, reps in ((16, 2), (5, 1)):
+        def cloud(b, alpha, cap, blurreps):
+            for blur, reps in blurreps:
                 layer = Image.new("RGBA", (cw, ch), shadow_c + (0,))
-                layer.putalpha(a.filter(ImageFilter.GaussianBlur(blur)).point(lambda v: min(cap, v * 3)))
+                layer.putalpha(alpha.filter(ImageFilter.GaussianBlur(blur)).point(lambda v: min(cap, v * 3)))
                 for _ in range(reps):
-                    base = Image.alpha_composite(base, layer)
-        elif shadow == "outline":
-            # C — crisp thin outline + a small tight shadow (minimal halo)
-            base = Image.alpha_composite(base, soft(0.85, 3))
-        else:
-            # B — compromise: soft text-shaped backing + tight shadow + outline
-            for _ in range(2):
-                base = Image.alpha_composite(base, soft(0.6, 16))
-            base = Image.alpha_composite(base, soft(0.9, 5))
+                    b = Image.alpha_composite(b, layer)
+            return b
+        va, sa = txt.getchannel("A"), srctxt.getchannel("A")
+        bbox = txt.getbbox()
+        mean = ImageStat.Stat(base.convert("L").crop(bbox)).mean[0] if bbox else 128
+        if shadow == "outline":
+            base = cloud(base, va, 200, ((3, 1),))
+            base = cloud(base, sa, 120, ((3, 1),))
+        else:   # "scrim" (default) and "compromise" — soft text-shaped cloud, brightness-adaptive
+            cap = 200 if mean > 165 else (165 if mean > 115 else 135)
+            base = cloud(base, va, cap, ((16, 2), (5, 1)))
+            # the source ref is small + dense, so its blurred shadow pools solid → use a LIGHTER
+            # cap (and lighter blur) so it never looks darker than the verse
+            base = cloud(base, sa, int(cap * 0.5), ((12, 1), (4, 1)))
 
     base = Image.alpha_composite(base, txt)
+    base = Image.alpha_composite(base, srctxt)
     base.convert("RGB").save(out_path, "PNG")
     return out_path
 
