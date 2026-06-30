@@ -312,7 +312,7 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
     font, lines, line_h, size = fit_verse(probe, verse["text"], col_w, verse_size,
                                           lines=verse.get("lines"))
 
-    src_font = load_font(SERIF, size)          # source ref same size as the verse (test)
+    src_font = load_font(SERIF, max(22, int(size * 0.62)))   # source ref smaller than the verse
     src_asc, src_desc = src_font.getmetrics()
     src_h = src_asc + src_desc
     gap = int(line_h * 0.45)
