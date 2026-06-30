@@ -352,7 +352,7 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
                 stroke_width=stroke, stroke_fill=(0, 0, 0, 150))
         y += line_h
     src_fill = (228, 225, 219) if photo else tuple(int(c * 0.55 + (255 if fg[0] > 128 else 0) * 0.45) for c in fg)
-    src_img = render_italic(f"[{verse['ref']}]", src_font, src_fill + (255,), stroke=2 if photo else 0)
+    src_img = render_italic(f"[{verse['ref']}]", src_font, src_fill + (255,), stroke=stroke)
     txt.alpha_composite(src_img, (line_x(src_img.width), y + gap - src_h // 4))
 
     if photo:
@@ -370,11 +370,11 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
             bbox = txt.getbbox()
             mean = ImageStat.Stat(base.convert("L").crop(bbox)).mean[0] if bbox else 128
             if mean > 165:
-                passes, tights = 12, [(0.97, 6), (0.97, 4), (0.97, 3)]
+                passes, tights = 10, [(0.9, 6), (0.9, 4)]
             elif mean > 115:
-                passes, tights = 9, [(0.95, 6), (0.95, 4)]
+                passes, tights = 7, [(0.88, 6), (0.88, 4)]
             else:
-                passes, tights = 6, [(0.9, 6)]
+                passes, tights = 5, [(0.85, 6)]
             cloud = Image.new("RGBA", (cw, ch), shadow_c + (0,))
             cloud.putalpha(a.point(lambda v: int(v * 0.85)))
             cloud = cloud.filter(ImageFilter.GaussianBlur(18))
