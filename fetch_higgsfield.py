@@ -47,7 +47,6 @@ SCENES = [
         "soft daylight from tall windows, the central aisle empty and open",
     "a wide canyon seen from the rim with open sky above",
     "a gentle aurora over low snowy hills under a starry sky",
-    "a quiet stone courtyard with an open empty center and soft daylight",
     "a calm alpine lake reflecting a wide clear sky, low far shore",
     "soft pink twilight clouds over calm water, low horizon",
     "a single tree on a wide plain under a big open sky",
@@ -60,11 +59,8 @@ SCENES = [
     "weathered ancient stone columns and ruins under a wide open sky",
     "a quiet stone path winding through a wilderness valley under a wide sky",
     "a simple wooden cross on a grassy hill against a soft glowing sky",
-    "an old stone well in a quiet sunlit courtyard",
     "terraced hillsides with olive groves under a soft open sky",
     # village / town (no people)
-    "a quiet old Mediterranean stone village at dawn under a soft sky",
-    "warm terracotta rooftops of an old hillside town under a soft open sky",
     "a small calm harbor at dawn with still water and a wide sky",
     "a quiet empty cobblestone street in an old town, soft morning light",
     # life / season / symbol
@@ -77,11 +73,9 @@ SCENES = [
     "a gentle waterfall in a lush green forest with soft mist",
     "a calm moonlit night sky over a quiet low landscape",
     "an old stone archway opening to soft golden light beyond",
-    "the bright open interior of a simple whitewashed chapel with soft daylight",
     "a golden harvest field at sunset, low horizon",
     "a white lighthouse on a cliff above the sea under a soft sky",
     "a simple still life of bread and a plain cup on a wooden table, soft window light",
-    "a warm sunlit reading nook by a bright tall window",
 ]
 REGION = {
     ("center", "middle"): "the central area",
