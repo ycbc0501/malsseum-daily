@@ -373,9 +373,9 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
         else:   # "scrim" (default) and "compromise" — soft text-shaped cloud, brightness-adaptive
             cap = 200 if mean > 165 else (165 if mean > 115 else 135)
             base = cloud(base, va, cap, ((16, 2), (5, 1)))
-            # the source ref is small + dense, so its blurred shadow pools solid → use a LIGHTER
-            # cap (and lighter blur) so it never looks darker than the verse
-            base = cloud(base, sa, int(cap * 0.5), ((12, 1), (4, 1)))
+            # the source ref is small + dense, so its blurred shadow pools solid. A slightly lower
+            # cap makes its overall darkness MATCH the larger verse (not lighter, not darker).
+            base = cloud(base, sa, int(cap * 0.72), ((14, 2), (5, 1)))
 
     base = Image.alpha_composite(base, txt)
     base = Image.alpha_composite(base, srctxt)
