@@ -366,11 +366,12 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
             # A — soft dark cloud that follows the TEXT SHAPE (not a bounding ellipse), so it
             # hugs the words only: no shadow in empty corners/margins, works for any alignment.
             cloud = Image.new("RGBA", (cw, ch), shadow_c + (0,))
-            cloud.putalpha(a.point(lambda v: int(v * 0.65)))
-            cloud = cloud.filter(ImageFilter.GaussianBlur(20))
-            for _ in range(5):
+            cloud.putalpha(a.point(lambda v: int(v * 0.85)))
+            cloud = cloud.filter(ImageFilter.GaussianBlur(18))
+            for _ in range(8):
                 base = Image.alpha_composite(base, cloud)
-            base = Image.alpha_composite(base, soft(0.85, 6))
+            base = Image.alpha_composite(base, soft(0.95, 6))
+            base = Image.alpha_composite(base, soft(0.95, 4))
         elif shadow == "outline":
             # C — crisp thin outline + a small tight shadow (minimal halo)
             base = Image.alpha_composite(base, soft(0.85, 3))
