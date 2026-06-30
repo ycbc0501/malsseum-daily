@@ -51,6 +51,26 @@ SCENES = [
     "a calm alpine lake reflecting a wide clear sky, low far shore",
     "soft pink twilight clouds over calm water, low horizon",
     "a single tree on a wide plain under a big open sky",
+    # Christian / biblical places
+    "the old stone walls of Jerusalem at dawn under a soft open sky",
+    "ancient olive trees in a quiet garden at golden hour, open sky above",
+    "the calm Sea of Galilee at sunrise, very low horizon",
+    "a hillside vineyard with neat rows of vines under a soft open sky",
+    "the rocky desert wilderness under a wide pale sky, low horizon",
+    "weathered ancient stone columns and ruins under a wide open sky",
+    "a quiet stone path winding through a wilderness valley under a wide sky",
+    "a simple wooden cross on a grassy hill against a soft glowing sky",
+    "an old stone well in a quiet sunlit courtyard",
+    "terraced hillsides with olive groves under a soft open sky",
+    # village / town (no people)
+    "a quiet old Mediterranean stone village at dawn under a soft sky",
+    "warm terracotta rooftops of an old hillside town under a soft open sky",
+    "a small calm harbor at dawn with still water and a wide sky",
+    "a quiet empty cobblestone street in an old town, soft morning light",
+    # life / season / symbol
+    "fresh green spring blossoms and new leaves against a soft open sky",
+    "a peaceful garden path among soft flowers in gentle morning light",
+    "a gentle rainbow arching over a calm landscape after the rain",
 ]
 REGION = {
     ("center", "middle"): "the central area",
