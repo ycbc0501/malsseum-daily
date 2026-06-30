@@ -71,17 +71,29 @@ SCENES = [
     "fresh green spring blossoms and new leaves against a soft open sky",
     "a peaceful garden path among soft flowers in gentle morning light",
     "a gentle rainbow arching over a calm landscape after the rain",
+    # more categories
+    "an elegant old stone bridge over a calm river under a soft open sky",
+    "a soft rose garden in gentle morning light with open sky above",
+    "a gentle waterfall in a lush green forest with soft mist",
+    "a calm moonlit night sky over a quiet low landscape",
+    "an old stone archway opening to soft golden light beyond",
+    "the bright open interior of a simple whitewashed chapel with soft daylight",
+    "a golden harvest field at sunset, low horizon",
+    "a white lighthouse on a cliff above the sea under a soft sky",
+    "a simple still life of bread and a plain cup on a wooden table, soft window light",
+    "a warm sunlit reading nook by a bright tall window",
 ]
 REGION = {
     ("center", "middle"): "the central area",
     ("left", "middle"): "the left side",
     ("right", "middle"): "the right side",
 }
-QUALITY = ("Shot as a real photograph on a full-frame camera with natural light — candid and "
-           "true to life, with natural colours, fine grain and natural depth of field. It looks "
-           "like a genuine photo, not a render or illustration.")
+QUALITY = ("Hyperrealistic photograph, shot on a full-frame camera with natural light — extremely "
+           "sharp and crisp, in sharp focus front to back, with fine true-to-life detail, high "
+           "resolution and natural colours. A genuine professional photo, not a render or illustration.")
 NOTEXT = ("There are no people anywhere. The image contains absolutely no text, letters, words, "
-          "captions, numbers, signs, watermark or logo of any kind.")
+          "captions, numbers, signs, watermark or logo of any kind. The photograph fills the whole "
+          "frame edge to edge — no border, no inner frame, no matte, no vignette box.")
 
 
 def _credentials():
@@ -142,7 +154,7 @@ def _gemini_key():
 def _gemini(prompt, dest, aspect="3:4"):
     """Nano Banana Pro (Gemini 3 Pro Image) → save image to dest."""
     body = {"contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"imageConfig": {"aspectRatio": aspect}}}
+            "generationConfig": {"imageConfig": {"aspectRatio": aspect, "imageSize": "2K"}}}
     url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
            f"{GEMINI_MODEL}:generateContent?key={_gemini_key()}")
     req = urllib.request.Request(url, data=json.dumps(body).encode(),

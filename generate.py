@@ -150,13 +150,38 @@ def two_line_split(text):
     return [s for s in (" ".join(words[:k]), " ".join(words[k:])) if s]
 
 
+# STRICT clause endings for line breaks — real Korean phrase/clause finals only
+# (avoids false breaks like "나타나" → "나"). Order doesn't matter for endswith().
+_LINE_ENDERS = ("말미암아", "하리로다", "리로다", "이로다", "었도다", "도다", "로다", "느니라",
+                "니라", "으리라", "리라", "지어다", "이요", "으며", "하고", "하며", "거든",
+                "으되", "으니", "리니", "지라", "으라", "하라", "고", "며", "니", "라", "요", "면", "매")
+
+
+def clause_split(text):
+    """Split into lines at real Korean clause endings → natural phrase lines (2..n)."""
+    words = " ".join(text.split()).split(" ")
+    lines, cur = [], ""
+    for i, w in enumerate(words):
+        cur = w if not cur else cur + " " + w
+        if i < len(words) - 1 and len(w) >= 2 and w.endswith(_LINE_ENDERS):
+            lines.append(cur)
+            cur = ""
+    if cur:
+        lines.append(cur)
+    return lines
+
+
 def fit_verse(draw, text, max_w, size):
-    """FIXED font size for every verse (consistent look). Use a clean clause-aware
-    2-line split when it fits; otherwise wrap onto more lines — size never changes."""
+    """FIXED font size for every verse. Prefer natural clause lines (2–3); else a clean
+    2-line split; else greedy wrap — size never changes."""
     font = load_font(SERIF, size)
     line_h = int(size * 1.6)
+    fits = lambda lns: all(text_w(draw, ln, font) <= max_w for ln in lns)
+    clauses = clause_split(text)
+    if 2 <= len(clauses) <= 3 and fits(clauses):
+        return font, clauses, line_h, size
     two = two_line_split(text)
-    if len(two) <= 2 and all(text_w(draw, ln, font) <= max_w for ln in two):
+    if len(two) <= 2 and fits(two):
         return font, two, line_h, size
     return font, lines_for(draw, text, font, max_w), line_h, size
 
@@ -232,7 +257,7 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
     else:                                      # bottom
         top_y = ch - my - block_h
     if photo:
-        base = cover_crop(Image.open(photo), cw, ch).filter(ImageFilter.GaussianBlur(1.2))
+        base = cover_crop(Image.open(photo), cw, ch)         # keep the photo crisp (no blur)
         fg, shadow_c, busy = (252, 250, 246), (0, 0, 0), 0   # ALWAYS white text + dark scrim → legible on any bg
     else:
         theme = THEMES.get(theme_name, THEMES["ivory"])
