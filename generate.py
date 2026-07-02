@@ -334,10 +334,11 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
         rst = ImageStat.Stat(reg)
         rmean, rstd = rst.mean[0], rst.stddev[0]
         uniform = rstd < 48
+        light = False                          # dark-text-on-light uses a soft aura, not a filled backing
         if uniform and rmean < 118:            # calm & dark → clean WHITE text
             fg, shadow_c, cap = (250, 248, 244), (0, 0, 0), 115
         elif uniform and rmean > 148:          # calm & light → clean DARK text
-            fg, shadow_c, cap = (38, 34, 30), (255, 255, 255), 130
+            fg, shadow_c, cap, light = (38, 34, 30), (255, 255, 255), 105, True
         else:                                   # busy/mixed → white text + stronger even backing
             fg, shadow_c = (250, 248, 244), (0, 0, 0)
             cap = 200 if rmean > 165 else (165 if rmean > 118 else 140)
@@ -399,13 +400,23 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
             layer.putalpha(a)
             return Image.alpha_composite(b, layer)
 
+        def glow(b, alpha, cap):
+            """Soft OUTER aura for dark text on light backgrounds — blur only (NOT
+            solidified/dilated), so it hugs the outside of strokes and never floods
+            counters (ㅇ) or crooks (ㄴ) with white; thin strokes stay crisp."""
+            a = alpha.filter(ImageFilter.GaussianBlur(size * 0.16)).point(lambda v: min(cap, int(v * 1.5)))
+            layer = Image.new("RGBA", (cw, ch), shadow_c + (0,))
+            layer.putalpha(a)
+            return Image.alpha_composite(b, layer)
+
         va, sa = txt.getchannel("A"), srctxt.getchannel("A")
         if shadow == "outline":
             base = cloud(base, va, 200, ((3, 1),))
             base = cloud(base, sa, 120, ((3, 1),))
-        else:   # "scrim" (default) — even, uniform backing; `cap` set by adaptive color above
-            base = even_cloud(base, va, cap)
-            base = even_cloud(base, sa, cap)
+        else:   # "scrim" (default) — even backing (white text) or soft aura (dark text)
+            fn = glow if light else even_cloud
+            base = fn(base, va, cap)
+            base = fn(base, sa, cap)
 
     base = Image.alpha_composite(base, txt)
     base = Image.alpha_composite(base, srctxt)
