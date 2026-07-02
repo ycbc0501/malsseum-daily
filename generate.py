@@ -59,7 +59,26 @@ def load_font(path, size):
         return ImageFont.truetype(SERIF, size)
 
 
+def _trim_flat_border(img, thr=3.0, max_frac=0.10):
+    """Crop away any near-uniform synthetic border (e.g. the thin white margins the image
+    model sometimes adds instead of a full-bleed photo). A real photo edge — even bright
+    sky — has texture (stddev well above `thr`), so only flat manufactured borders trim."""
+    g = img.convert("L")
+    W, H = img.size
+    flat_col = lambda x: ImageStat.Stat(g.crop((x, 0, x + 1, H))).stddev[0] < thr
+    flat_row = lambda y: ImageStat.Stat(g.crop((0, y, W, y + 1))).stddev[0] < thr
+    l, r, t, b = 0, W, 0, H
+    while l < int(W * max_frac) and flat_col(l):        l += 1
+    while r > W - int(W * max_frac) and flat_col(r - 1): r -= 1
+    while t < int(H * max_frac) and flat_row(t):        t += 1
+    while b > H - int(H * max_frac) and flat_row(b - 1): b -= 1
+    if (l, t, r, b) != (0, 0, W, H) and r - l > W * 0.6 and b - t > H * 0.6:
+        return img.crop((l, t, r, b))
+    return img
+
+
 def cover_crop(img, cw, ch):
+    img = _trim_flat_border(img.convert("RGB"))
     img = img.convert("RGB")
     scale = max(cw / img.width, ch / img.height)
     img = img.resize((round(img.width * scale), round(img.height * scale)), Image.LANCZOS)
