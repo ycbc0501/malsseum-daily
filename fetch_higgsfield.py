@@ -101,6 +101,10 @@ COMPOSE = {
 EVENTONE = ("In the area kept for the text, keep the brightness even and consistent — a single "
             "calm tone, either evenly light or evenly dark, with no strong bright-and-dark "
             "contrast in that area — so overlaid text sits cleanly on it.")
+COMPOSE_SAFE = ("Keep the composition natural and open: the horizon stays low and the scene recedes "
+                "into the distance. Do NOT let any single object (a mountain, tree, building or rock) "
+                "stand tall and fill or dominate one whole side of the frame; keep such elements small "
+                "and low in the distance, not looming at the edge.")
 QUALITY = ("It is an ordinary real photograph shot on 35mm film with natural available light — "
            "a candid, true-to-life image with natural film grain and texture, soft realistic detail "
            "and slightly muted natural colours. It looks like a genuine everyday photo someone took, "
@@ -129,7 +133,7 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
     prose); the text area is kept clear per `placement`. `full_scene` kept for compatibility."""
     scene = SCENES[index % len(SCENES)]
     compose = COMPOSE.get(tuple(placement), COMPOSE[("center", "middle")])
-    prompt = f"A real, natural photograph of {scene}. {compose} {EVENTONE} {QUALITY} {NOTEXT}"
+    prompt = f"A real, natural photograph of {scene}. {compose} {COMPOSE_SAFE} {EVENTONE} {QUALITY} {NOTEXT}"
 
     if model == "gemini":
         return _gemini(prompt, dest)
