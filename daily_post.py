@@ -26,6 +26,7 @@ from datetime import datetime, timedelta, timezone
 import generate
 import post_instagram
 import fetch_higgsfield
+import make_video
 
 KST = timezone(timedelta(hours=9))
 MUSIC_DIR = os.path.join(generate.HERE, "music")
@@ -68,7 +69,19 @@ def save_state(s):
 
 
 def build_caption(verse, translation):
-    return f"{verse['text']}\n[{verse['ref']}]"
+    # verse + reference, then a gentle follow CTA (turns reach → followers)
+    return (f"{verse['text']}\n[{verse['ref']}]\n\n"
+            "매일 아침·저녁, 마음에 닿는 말씀을 전합니다 🕊\n"
+            "→ @to_light_bible 팔로우하고 하루를 말씀으로 시작하세요")
+
+
+def pick_music(n):
+    """Rotate through royalty-free INSTRUMENTAL tracks only (no vocals → minimal Content-ID
+    risk, so Reels don't get taken down like the old copyrighted-music ones)."""
+    tracks = sorted(f for f in glob.glob(os.path.join(MUSIC_DIR, "*.mp3"))
+                    if "instrumental" in os.path.basename(f).lower())
+    tracks = tracks or sorted(glob.glob(os.path.join(MUSIC_DIR, "*.mp3")))
+    return tracks[n % len(tracks)] if tracks else None
 
 
 def main():
@@ -107,18 +120,16 @@ def main():
     posts = os.path.join(generate.HERE, "output", "posts")
     os.makedirs(posts, exist_ok=True)
 
-    # always vertically centered; horizontal alignment 80% center / 10% left / 10% right
-    slot = n % 10
-    placement = (("left", "middle") if slot == 0 else
-                 ("right", "middle") if slot == 1 else
-                 ("center", "middle"))
+    # REEL: 9:16 card (text always centered — reads best in motion) + subtle zoom + music.
+    # Reels are the only format that reaches non-followers, so this is the growth engine.
+    placement = ("center", "middle")
 
-    # background: generate a fresh, unique image (Nano Banana Pro); fall back to the photo pool
+    # background: fresh, unique 9:16 image (Nano Banana Pro); fall back to the photo pool
     photo = None
     try:
         photo = fetch_higgsfield.generate_background(
-            os.path.join(generate.OUT_DIR, "_bg.png"), n, placement)
-        print(f"background: nano-banana  placement={placement}")
+            os.path.join(generate.OUT_DIR, "_bg.png"), n, placement, aspect="9:16")
+        print("background: nano-banana  9:16")
     except Exception as e:
         print(f"higgsfield failed ({e}) → photo pool fallback")
         used_photos = state.setdefault("used_photos", [])
@@ -127,10 +138,14 @@ def main():
         if photo:
             used_photos.append(os.path.basename(photo))
 
-    rel_path = f"output/posts/{date_str}.png"
-    generate.render(verse, "ivory", "", os.path.join(generate.HERE, rel_path),
-                    photo=photo, canvas=generate.FEED, placement=placement)
-    print(f"image: {verse['ref']}")
+    # render the 9:16 verse card, then turn it into a Reel (Ken Burns zoom + instrumental audio)
+    card = os.path.join(generate.OUT_DIR, "_card.png")
+    generate.render(verse, "ivory", "", card, photo=photo,
+                    canvas=generate.REEL, placement=placement)
+    rel_path = f"output/posts/{date_str}.mp4"
+    audio = pick_music(n)
+    make_video.make_reel_from_image(card, audio, os.path.join(generate.HERE, rel_path), duration=8)
+    print(f"reel: {verse['ref']}  music={os.path.basename(audio) if audio else 'none'}")
 
     caption = build_caption(verse, data.get("translation", ""))
     # record what we used so it NEVER repeats

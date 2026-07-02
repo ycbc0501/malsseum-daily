@@ -128,22 +128,23 @@ def _credentials():
     return f"{key}:{sec}"
 
 
-def generate_background(dest, index=0, placement=("center", "middle"), full_scene=False, model=MODEL):
+def generate_background(dest, index=0, placement=("center", "middle"), full_scene=False,
+                        model=MODEL, aspect="3:4"):
     """Generate one background → save to `dest`. Clean natural-language prompt (Gemini follows
-    prose); the text area is kept clear per `placement`. `full_scene` kept for compatibility."""
+    prose); the text area is kept clear per `placement`. `aspect` = "3:4" (feed) or "9:16" (reel)."""
     scene = SCENES[index % len(SCENES)]
     compose = COMPOSE.get(tuple(placement), COMPOSE[("center", "middle")])
     prompt = f"A real, natural photograph of {scene}. {compose} {COMPOSE_SAFE} {EVENTONE} {QUALITY} {NOTEXT}"
 
     if model == "gemini":
-        return _gemini(prompt, dest)
+        return _gemini(prompt, dest, aspect=aspect)
 
     import higgsfield_client as h
     client = h.SyncClient(api_key=_credentials())
     if model == "soul":
         url = _soul(client, prompt)
     else:
-        args = {"prompt": prompt, "aspect_ratio": "3:4"}
+        args = {"prompt": prompt, "aspect_ratio": aspect}
         if "flux" in model:
             args["safety_tolerance"] = 2
         url = client.subscribe(model, args)["images"][0]["url"]

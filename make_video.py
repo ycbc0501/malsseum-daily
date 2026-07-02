@@ -4,10 +4,51 @@ Build a Reel MP4 from a background video clip + a transparent text overlay + mus
 Requires ffmpeg (preinstalled on GitHub Actions ubuntu runners).
 """
 
+import shutil
 import subprocess
 
 W, H = 1080, 1920
 _COVER = f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},setsar=1"
+
+
+def _ffmpeg():
+    """Resolve an ffmpeg binary: system PATH (GitHub Actions) → bundled imageio-ffmpeg (local)."""
+    exe = shutil.which("ffmpeg")
+    if exe:
+        return exe
+    try:
+        import imageio_ffmpeg
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        return "ffmpeg"
+
+
+FFMPEG = _ffmpeg()
+
+
+def make_reel_from_image(card_png, audio, out, duration=7.0):
+    """Turn ONE finished 9:16 verse card into a Reel: a slow, subtle centred zoom
+    (Ken Burns) so it reads as gentle motion — no quality loss, text stays centred —
+    plus a royalty-free instrumental track (looped, faded). This is the image→Reel
+    bridge: keeps our high-quality card + typography, but gets Reels distribution."""
+    frames = max(1, int(duration * 30))
+    vf = (f"scale={W * 2}:{H * 2},"
+          f"zoompan=z='min(1.0+0.06*on/{frames},1.06)':d=1:"
+          f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={W}x{H}:fps=30,"
+          f"setsar=1,format=yuv420p")
+    cmd = [
+        FFMPEG, "-y",
+        "-loop", "1", "-framerate", "30", "-t", str(duration), "-i", card_png,
+        "-stream_loop", "-1", "-i", audio,
+        "-vf", vf,
+        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30", "-preset", "medium", "-crf", "18",
+        "-c:a", "aac", "-b:a", "192k", "-t", str(duration),
+        "-af", f"afade=t=in:st=0:d=1,afade=t=out:st={max(0.0, duration - 1.5):.2f}:d=1.5",
+        "-movflags", "+faststart",
+        out,
+    ]
+    subprocess.run(cmd, check=True, capture_output=True)
+    return out
 
 
 def extract_frame(video, out_png, at=0.8):

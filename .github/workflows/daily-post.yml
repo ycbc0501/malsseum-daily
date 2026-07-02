@@ -25,9 +25,9 @@ jobs:
           python-version: "3.12"
 
       - name: Install deps
-        run: pip install pillow higgsfield-client kiwipiepy
+        run: pip install pillow higgsfield-client kiwipiepy imageio-ffmpeg
 
-      - name: Wait for target time (05:00 or 19:00 KST ±10), render the image (Nano Banana Pro)
+      - name: Wait for target time (05:00 or 19:00 KST ±10), build the Reel (Nano Banana Pro + music)
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
