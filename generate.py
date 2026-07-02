@@ -364,16 +364,33 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
                 for _ in range(reps):
                     b = Image.alpha_composite(b, layer)
             return b
+
+        def even_cloud(b, alpha, cap):
+            """One continuous, UNIFORM soft patch behind the text — not a per-stroke
+            shadow. Solidify strokes → dilate so counters (ㅁ/ㅇ) and inter-stroke gaps
+            fill in and neighbouring strokes merge → feather the outer edge → flatten to
+            a single capped darkness. Result: every letter sits on the same even backing,
+            no blotches, and it still hugs the text (never bleeds into empty margins)."""
+            d = max(3, int(size * 0.34)) | 1            # dilation (odd) — merges strokes, fills counters
+            g = size * 0.30                              # edge softness
+            a = alpha.point(lambda v: 255 if v > 30 else 0)
+            a = a.filter(ImageFilter.MaxFilter(d))
+            a = a.filter(ImageFilter.GaussianBlur(g))
+            a = a.point(lambda v: min(cap, v))          # interior→cap (flat), edge feathers 0..cap
+            layer = Image.new("RGBA", (cw, ch), shadow_c + (0,))
+            layer.putalpha(a)
+            return Image.alpha_composite(b, layer)
+
         va, sa = txt.getchannel("A"), srctxt.getchannel("A")
         bbox = txt.getbbox()
         mean = ImageStat.Stat(base.convert("L").crop(bbox)).mean[0] if bbox else 128
         if shadow == "outline":
             base = cloud(base, va, 200, ((3, 1),))
             base = cloud(base, sa, 120, ((3, 1),))
-        else:   # "scrim" (default) and "compromise" — soft text-shaped cloud, brightness-adaptive
+        else:   # "scrim" (default) — even, uniform filled backing, brightness-adaptive
             cap = 200 if mean > 165 else (165 if mean > 115 else 135)
-            base = cloud(base, va, cap, ((16, 2), (5, 1)))
-            base = cloud(base, sa, cap, ((16, 2), (5, 1)))   # source treated identically to verse
+            base = even_cloud(base, va, cap)
+            base = even_cloud(base, sa, cap)
 
     base = Image.alpha_composite(base, txt)
     base = Image.alpha_composite(base, srctxt)
