@@ -262,36 +262,58 @@ def _compositions(n, k):
             yield (first,) + rest
 
 
+# Morphemes that grammatically ATTACH FORWARD — the word carrying them must stay on the same
+# line as the word that follows. Breaking right after such a word tears a grammatical unit apart.
+#   JKG 의 (genitive) · ETM 관형형 어미 · MM 관형사   → bind to the following NOUN
+#   JC  접속 조사 (과/와/이나)                          → bind to the next list item (사랑과│희락과)
+#   MAG 부사 · MAJ 접속부사                             → bind to what they modify (오직·다만·오래│참음)
+_FWD_NOUN = ("JKG", "ETM", "MM", "MAG", "MAJ", "JC")
+# conjunctive / comitative particle surfaces (과/와/이나/랑) — kiwi tags these inconsistently as
+# JC or JKB, so we also match on the surface form to be robust: 사랑과│희락과, 너와│함께.
+_CONJ_FORMS = ("과", "와", "이나", "랑", "이랑")
+
+
 def balanced_split(draw, text, font, max_w):
-    """Break a verse into lines by SCORING every possible split and picking the best:
-    lines should fit, be balanced in length, break at natural clause endings, avoid a
-    lonely short line, and never split a connective verb from its short completing verb
-    (맛보아│알지어다). Falls back to greedy wrap for very long inputs."""
+    """Break a verse into lines at GRAMMATICAL boundaries, never inside a grammatical unit.
+
+    Every possible split is scored. The dominant term is grammatical: a break after a
+    forward-attaching morpheme (modifier→noun, conjunction→item, adverb→word, adverbial
+    particle→predicate, connective→final verb) is effectively forbidden. Among the allowed
+    break points, clause endings and commas are preferred, then length balance / few lines
+    act only as gentle tie-breakers. Manual `lines` in verses.json still override upstream."""
     words = " ".join(text.split()).split(" ")
     n = len(words)
     if n <= 1:
         return [text or ""]
-    if n > 16:
+    if n > 18:
         return _greedy(draw, words, font, max_w)
 
-    clause = set(_breakable_words(text) or [])       # break-after indices at clause endings
-    for i, w in enumerate(words[:-1]):                # a comma is also a natural break point
-        if w.endswith((",", "，")):
-            clause.add(i)
     info = _word_endings(text)                        # (tag, form) per word, or None
-    def tight_after(i):                               # break splits a bound verb unit?
-        # a connective ending (EC) immediately followed by a word that IS a full predicate
-        # (its final morpheme is a sentence-ending EF) = 맛보아│알지어다, 놀라지│말라,
-        # 두려워하지│말라 … never split these.
-        return bool(info) and i + 1 < n and info[i][0] == "EC" and info[i + 1][0] == "EF"
+    def tag(i):
+        return info[i][0] if info and 0 <= i < n else None
 
-    def bond_after(i):                                # break splits a modifier from its head?
-        # genitive 의 (JKG), adnominal verb form (ETM), determiner (MM) bind to the following
-        # noun (여호와의│선하심을, 뿌리는│자는, 모든│일); an adverbial particle (JKB: 에게/로/에/께)
-        # binds to what it modifies (그에게│피하는, 하나님께│아뢰라). Keep them together — unless a
-        # comma already makes this a natural break.
-        return (bool(info) and i + 1 < n and info[i][0] in ("JKG", "ETM", "MM", "JKB")
-                and not words[i].endswith((",", "，")))
+    def is_comma(i):
+        return words[i].endswith((",", "，"))
+
+    def forward_attach(i):                            # is a break after word i grammatically wrong?
+        if not info or i + 1 >= n or is_comma(i):     # a comma always licenses a break
+            return False
+        t, form = info[i]
+        nxt = tag(i + 1)
+        if t in _FWD_NOUN:                            # modifier / conjunction / adverb → next word
+            return True
+        if t == "NP":                                # a bare pronoun modifies the next word (너희│마음, 내│안에)
+            return True
+        if t and t.startswith("J") and form in _CONJ_FORMS:  # 과/와/이나 conjunction/comitative → next
+            return True
+        if t == "JKB" and nxt in ("EC", "EF", "ETM"):  # adverbial particle → a predicate (그에게│피하는)
+            return True
+        if t == "EC" and nxt == "EF":                # connective → completing final verb (맛보아│알지어다)
+            return True
+        return False
+
+    def is_clause_end(i):                             # a natural, preferred break point
+        return is_comma(i) or tag(i) in ("EC", "EF")
 
     seg = {}
     def seg_w(i, j):
@@ -299,12 +321,11 @@ def balanced_split(draw, text, font, max_w):
             seg[(i, j)] = text_w(draw, " ".join(words[i:j + 1]), font)
         return seg[(i, j)]
 
-    P_NONCLAUSE = 0.30 * max_w                        # nudge toward clause-ending / comma breaks
-    P_ORPHAN    = 1.5 * max_w                         # a lonely short line is bad
-    P_TIGHT     = 2.4 * max_w                         # never split a bound verb unit (놀라지│말라)
-    P_BOND      = 1.0 * max_w                         # keep a modifier with its head noun
-    P_LINE      = 0.6 * max_w                         # prefer fewer lines, all else equal
-    ORPHAN_W    = 0.30 * max_w                        # only a truly tiny (≈1-word) line is an orphan
+    P_FORBID = 100.0 * max_w                          # forward-attach break: never (unless unavoidable)
+    P_SOFT   = 0.55 * max_w                           # allowed break that isn't a clause end/comma
+    P_ORPHAN = 2.0 * max_w                            # a lonely ~1-word line is bad
+    P_LINE   = 0.7 * max_w                            # prefer fewer lines, all else equal
+    ORPHAN_W = 0.30 * max_w
 
     kmin = 1 if seg_w(0, n - 1) <= 0.55 * max_w else 2   # medium/long verses use ≥2 lines
     best = None
@@ -323,10 +344,12 @@ def balanced_split(draw, text, font, max_w):
             if not ok:
                 continue
             score = (max(widths) - min(widths)) + P_LINE * k
-            score += P_NONCLAUSE * sum(1 for b in breaks if b not in clause)
             score += P_ORPHAN * sum(1 for w in widths if w < ORPHAN_W)
-            score += P_TIGHT * sum(1 for b in breaks if tight_after(b))
-            score += P_BOND * sum(1 for b in breaks if bond_after(b))
+            for b in breaks:
+                if forward_attach(b):
+                    score += P_FORBID
+                elif not is_clause_end(b):
+                    score += P_SOFT
             if best is None or score < best[0]:
                 cuts = [sum(sizes[:i]) for i in range(k)]
                 best = (score, [" ".join(words[c:c + s]) for c, s in zip(cuts, sizes)])
@@ -461,9 +484,12 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
         src_fill = (228, 225, 219) if fg[0] > 128 else (74, 68, 62)   # match verse (light/dark)
     else:
         src_fill = tuple(int(c * 0.55 + (255 if fg[0] > 128 else 0) * 0.45) for c in fg)
-    src_img = render_italic(f"[{verse['ref']}]", src_font, src_fill + (255,), stroke=stroke)
-    srctxt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))   # source ref, kept SEPARATE
-    srctxt.alpha_composite(src_img, (line_x(src_img.width), y + gap - src_h // 4))
+    srctxt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))   # source ref, kept SEPARATE (upright, no italic)
+    sd = ImageDraw.Draw(srctxt)
+    src_text = f"[{verse['ref']}]"
+    sw = text_w(sd, src_text, src_font)
+    sd.text((line_x(sw), y + gap), src_text, font=src_font, fill=src_fill + (255,),
+            stroke_width=stroke, stroke_fill=(0, 0, 0, 150))
 
     if photo:
         def cloud(b, alpha, cap, blurreps):
