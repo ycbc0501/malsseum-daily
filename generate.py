@@ -233,24 +233,114 @@ def kiwi_split(text, draw, font, max_w):
     return None
 
 
+def _word_endings(text):
+    """Per-word final-morpheme (tag, form) via kiwipiepy → lets us judge WHERE a break
+    reads naturally. None if kiwipiepy is unavailable."""
+    k = _kiwi()
+    if not k:
+        return None
+    words = text.split()
+    ends, pos = [], 0
+    for w in words:
+        pos = text.index(w, pos) + len(w)
+        ends.append(pos)
+    toks = k.tokenize(text)
+    info = []
+    for e in ends:
+        finals = [m for m in toks if m.start + m.len == e]
+        info.append((finals[-1].tag, finals[-1].form) if finals else (None, ""))
+    return info
+
+
+def _compositions(n, k):
+    """All ways to split n items into k contiguous non-empty groups (as size tuples)."""
+    if k == 1:
+        yield (n,)
+        return
+    for first in range(1, n - k + 2):
+        for rest in _compositions(n - first, k - 1):
+            yield (first,) + rest
+
+
+def balanced_split(draw, text, font, max_w):
+    """Break a verse into lines by SCORING every possible split and picking the best:
+    lines should fit, be balanced in length, break at natural clause endings, avoid a
+    lonely short line, and never split a connective verb from its short completing verb
+    (맛보아│알지어다). Falls back to greedy wrap for very long inputs."""
+    words = " ".join(text.split()).split(" ")
+    n = len(words)
+    if n <= 1:
+        return [text or ""]
+    if n > 16:
+        return _greedy(draw, words, font, max_w)
+
+    clause = set(_breakable_words(text) or [])       # break-after indices at clause endings
+    for i, w in enumerate(words[:-1]):                # a comma is also a natural break point
+        if w.endswith((",", "，")):
+            clause.add(i)
+    info = _word_endings(text)                        # (tag, form) per word, or None
+    def tight_after(i):                               # break splits a bound verb unit?
+        # a connective ending (EC) immediately followed by a word that IS a full predicate
+        # (its final morpheme is a sentence-ending EF) = 맛보아│알지어다, 놀라지│말라,
+        # 두려워하지│말라 … never split these.
+        return bool(info) and i + 1 < n and info[i][0] == "EC" and info[i + 1][0] == "EF"
+
+    def bond_after(i):                                # break splits a modifier from its head?
+        # genitive 의 (JKG), adnominal verb form (ETM), determiner (MM) bind to the following
+        # noun (여호와의│선하심을, 뿌리는│자는, 모든│일); an adverbial particle (JKB: 에게/로/에/께)
+        # binds to what it modifies (그에게│피하는, 하나님께│아뢰라). Keep them together — unless a
+        # comma already makes this a natural break.
+        return (bool(info) and i + 1 < n and info[i][0] in ("JKG", "ETM", "MM", "JKB")
+                and not words[i].endswith((",", "，")))
+
+    seg = {}
+    def seg_w(i, j):
+        if (i, j) not in seg:
+            seg[(i, j)] = text_w(draw, " ".join(words[i:j + 1]), font)
+        return seg[(i, j)]
+
+    P_NONCLAUSE = 0.30 * max_w                        # nudge toward clause-ending / comma breaks
+    P_ORPHAN    = 1.5 * max_w                         # a lonely short line is bad
+    P_TIGHT     = 2.4 * max_w                         # never split a bound verb unit (놀라지│말라)
+    P_BOND      = 1.0 * max_w                         # keep a modifier with its head noun
+    P_LINE      = 0.6 * max_w                         # prefer fewer lines, all else equal
+    ORPHAN_W    = 0.30 * max_w                        # only a truly tiny (≈1-word) line is an orphan
+
+    kmin = 1 if seg_w(0, n - 1) <= 0.55 * max_w else 2   # medium/long verses use ≥2 lines
+    best = None
+    for k in range(kmin, n + 1):
+        for sizes in _compositions(n, k):
+            widths, breaks, pos, ok = [], [], 0, True
+            for gi, s in enumerate(sizes):
+                w = seg_w(pos, pos + s - 1)
+                if w > max_w:
+                    ok = False
+                    break
+                widths.append(w)
+                pos += s
+                if gi < k - 1:
+                    breaks.append(pos - 1)
+            if not ok:
+                continue
+            score = (max(widths) - min(widths)) + P_LINE * k
+            score += P_NONCLAUSE * sum(1 for b in breaks if b not in clause)
+            score += P_ORPHAN * sum(1 for w in widths if w < ORPHAN_W)
+            score += P_TIGHT * sum(1 for b in breaks if tight_after(b))
+            score += P_BOND * sum(1 for b in breaks if bond_after(b))
+            if best is None or score < best[0]:
+                cuts = [sum(sizes[:i]) for i in range(k)]
+                best = (score, [" ".join(words[c:c + s]) for c, s in zip(cuts, sizes)])
+    return best[1] if best else _greedy(draw, words, font, max_w)
+
+
 def fit_verse(draw, text, max_w, size, lines=None):
-    """FIXED font size. Priority: manual `lines` → kiwipiepy clause split → heuristic
-    clause split → 2-line split → greedy wrap. Size never changes."""
+    """FIXED font size. Manual `lines` (verses.json) win; otherwise a scored balanced
+    split chooses natural, well-proportioned lines. Size never changes."""
     font = load_font(SERIF, size)
     line_h = int(size * 1.6)
-    fits = lambda lns: all(text_w(draw, ln, font) <= max_w for ln in lns)
     if lines:                                        # hand-tuned override in verses.json
         return font, lines, line_h, size
-    k = kiwi_split(text, draw, font, max_w)
-    if k and fits(k):
-        return font, k, line_h, size
-    clauses = clause_split(text)
-    if 2 <= len(clauses) <= 3 and fits(clauses):
-        return font, clauses, line_h, size
-    two = two_line_split(text)
-    if len(two) <= 2 and fits(two):
-        return font, two, line_h, size
-    return font, lines_for(draw, text, font, max_w), line_h, size
+    return font, balanced_split(draw, text, font, max_w), line_h, size
 
 
 # ----- adaptive color & placement ----------------------------------------------
