@@ -337,8 +337,8 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
         light = False                          # dark-text-on-light uses a soft aura, not a filled backing
         if uniform and rmean < 118:            # calm & dark → clean WHITE text
             fg, shadow_c, cap = (250, 248, 244), (0, 0, 0), 115
-        elif uniform and rmean > 148:          # calm & light → clean DARK text
-            fg, shadow_c, cap, light = (38, 34, 30), (255, 255, 255), 105, True
+        elif uniform and rmean > 148:          # calm & light → clean DARK text, NO halo
+            fg, shadow_c, cap, light = (38, 34, 30), (255, 255, 255), 0, True  # halo erodes thin strokes → none
         else:                                   # busy/mixed → white text + stronger even backing
             fg, shadow_c = (250, 248, 244), (0, 0, 0)
             cap = 200 if rmean > 165 else (165 if rmean > 118 else 140)
@@ -414,9 +414,13 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
             base = cloud(base, va, 200, ((3, 1),))
             base = cloud(base, sa, 120, ((3, 1),))
         else:   # "scrim" (default) — even backing (white text) or soft aura (dark text)
-            fn = glow if light else even_cloud
-            base = fn(base, va, cap)
-            base = fn(base, sa, cap)
+            if light:
+                if cap > 0:                    # dark text: optional whisper-aura (0 = none, crispest)
+                    base = glow(base, va, cap)
+                    base = glow(base, sa, cap)
+            else:
+                base = even_cloud(base, va, cap)
+                base = even_cloud(base, sa, cap)
 
     base = Image.alpha_composite(base, txt)
     base = Image.alpha_composite(base, srctxt)
