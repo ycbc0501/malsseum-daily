@@ -427,6 +427,75 @@ def render_italic(text, font, fill, stroke=0, stroke_fill=(0, 0, 0, 150)):
 
 # ----- compose -----------------------------------------------------------------
 
+def _even_cloud(base, alpha, cap, size, color):
+    """One continuous, UNIFORM soft patch behind the text — not a per-stroke shadow.
+    Solidify strokes → dilate so counters (ㅁ/ㅇ) and inter-stroke gaps fill in and merge →
+    feather the outer edge → flatten to a single capped darkness. Every letter sits on the
+    same even backing, no blotches, still hugging the text (never bleeds into margins)."""
+    d = max(3, int(size * 0.34)) | 1
+    a = alpha.point(lambda v: 255 if v > 30 else 0)
+    a = a.filter(ImageFilter.MaxFilter(d))
+    a = a.filter(ImageFilter.GaussianBlur(size * 0.30))
+    a = a.point(lambda v: min(cap, v))
+    layer = Image.new("RGBA", base.size, color + (0,))
+    layer.putalpha(a)
+    return Image.alpha_composite(base, layer)
+
+
+def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "middle")):
+    """Transparent PNG of the verse (white text + even dark shadow, upright source) to
+    composite OVER a moving video clip. White is used because a clip's brightness varies
+    frame to frame, so adaptive dark text isn't safe; the even shadow keeps it legible."""
+    cw, ch = canvas
+    halign, valign = placement
+    verse_size = 44 if canvas == REEL else 40
+    mx = int(cw * 0.08)
+    if halign == "center":
+        col_w = int(cw * (0.85 if canvas == REEL else 0.80))
+        col_left = (cw - col_w) // 2
+    else:
+        col_w = int(cw * 0.60)
+        col_left = mx if halign == "left" else cw - mx - col_w
+
+    probe = ImageDraw.Draw(Image.new("RGB", (cw, ch)))
+    font, lines, line_h, size = fit_verse(probe, verse["text"], col_w, verse_size,
+                                          lines=verse.get("lines"))
+    src_font = load_font(SERIF, max(22, int(size * 0.62)))
+    src_h = sum(src_font.getmetrics())
+    gap = int(line_h * 0.45)
+    verse_h = len(lines) * line_h
+    top_y = ch // 2 - verse_h // 2
+
+    def line_x(w):
+        if halign == "left":
+            return col_left
+        if halign == "right":
+            return col_left + col_w - w
+        return (cw - w) // 2
+
+    fg, shadow_c = (250, 248, 244), (0, 0, 0)
+    txt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
+    td = ImageDraw.Draw(txt)
+    y = top_y
+    for ln in lines:
+        lw = text_w(td, ln, font)
+        td.text((line_x(lw), y), ln, font=font, fill=fg + (255,))
+        y += line_h
+    srctxt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(srctxt)
+    src_text = f"[{verse['ref']}]"
+    sw = text_w(sd, src_text, src_font)
+    sd.text((line_x(sw), y + gap), src_text, font=src_font, fill=(228, 225, 219, 255))
+
+    out = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
+    out = _even_cloud(out, txt.getchannel("A"), 150, size, shadow_c)
+    out = _even_cloud(out, srctxt.getchannel("A"), 150, size, shadow_c)
+    out = Image.alpha_composite(out, txt)
+    out = Image.alpha_composite(out, srctxt)
+    out.save(out_path, "PNG")
+    return out_path
+
+
 def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
            placement=("center", "middle"), shadow="scrim"):
     cw, ch = canvas
@@ -520,20 +589,7 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
             return b
 
         def even_cloud(b, alpha, cap):
-            """One continuous, UNIFORM soft patch behind the text — not a per-stroke
-            shadow. Solidify strokes → dilate so counters (ㅁ/ㅇ) and inter-stroke gaps
-            fill in and neighbouring strokes merge → feather the outer edge → flatten to
-            a single capped darkness. Result: every letter sits on the same even backing,
-            no blotches, and it still hugs the text (never bleeds into empty margins)."""
-            d = max(3, int(size * 0.34)) | 1            # dilation (odd) — merges strokes, fills counters
-            g = size * 0.30                              # edge softness
-            a = alpha.point(lambda v: 255 if v > 30 else 0)
-            a = a.filter(ImageFilter.MaxFilter(d))
-            a = a.filter(ImageFilter.GaussianBlur(g))
-            a = a.point(lambda v: min(cap, v))          # interior→cap (flat), edge feathers 0..cap
-            layer = Image.new("RGBA", (cw, ch), shadow_c + (0,))
-            layer.putalpha(a)
-            return Image.alpha_composite(b, layer)
+            return _even_cloud(b, alpha, cap, size, shadow_c)
 
         def glow(b, alpha, cap):
             """Soft OUTER aura for dark text on light backgrounds — blur only (NOT

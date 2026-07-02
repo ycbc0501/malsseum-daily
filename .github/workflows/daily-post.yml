@@ -32,6 +32,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
           HF_API_SECRET: ${{ secrets.HF_API_SECRET }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           TARGET_HOUR: ${{ github.event.schedule == '0 8 * * *' && '19' || '5' }}
         run: python daily_post.py --emit --jitter 600 --hour "$TARGET_HOUR"
 

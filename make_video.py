@@ -54,7 +54,7 @@ def make_reel_from_image(card_png, audio, out, duration=7.0):
 def extract_frame(video, out_png, at=0.8):
     """Grab one representative frame (cropped to 9:16) for color/placement analysis."""
     subprocess.run([
-        "ffmpeg", "-y", "-ss", str(at), "-i", video,
+        FFMPEG, "-y", "-ss", str(at), "-i", video,
         "-vf", _COVER, "-frames:v", "1", out_png,
     ], check=True, capture_output=True)
     return out_png
@@ -76,7 +76,7 @@ def make_slowmo(clip, out, target=60.0, max_factor=3.0):
     dur = _duration(clip) or 12.0
     factor = min(max(target / dur, 1.0), max_factor)
     subprocess.run([
-        "ffmpeg", "-y", "-i", clip,
+        FFMPEG, "-y", "-i", clip,
         "-vf", f"setpts={factor:.3f}*PTS",
         "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
         "-preset", "fast", "-crf", "16",
@@ -88,7 +88,7 @@ def make_slowmo(clip, out, target=60.0, max_factor=3.0):
 def make_boomerang(clip, out):
     """Forward + reverse → a seamless loop (~2× the clip length, no jump cut)."""
     subprocess.run([
-        "ffmpeg", "-y", "-i", clip,
+        FFMPEG, "-y", "-i", clip,
         "-filter_complex", "[0:v]split[a][b];[b]reverse[r];[a][r]concat=n=2:v=1[v]",
         "-map", "[v]", "-an",
         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
@@ -101,7 +101,7 @@ def make_boomerang(clip, out):
 def build_reel(video, overlay_png, audio, out, duration=60):
     """Background video (boomerang, looped/cropped to 9:16) + text overlay + music → MP4."""
     cmd = [
-        "ffmpeg", "-y",
+        FFMPEG, "-y",
         "-stream_loop", "-1", "-i", video,        # 0: bg video (loop to fill duration)
         "-i", overlay_png,                         # 1: text overlay (static)
         "-stream_loop", "-1", "-i", audio,         # 2: music (loop to fill)
@@ -124,7 +124,7 @@ def build_reel(video, overlay_png, audio, out, duration=60):
 def make_video(image, audio, out, duration=14, size=(1080, 1350)):
     w, h = size
     subprocess.run([
-        "ffmpeg", "-y",
+        FFMPEG, "-y",
         "-loop", "1", "-i", image,
         "-stream_loop", "-1", "-i", audio,
         "-c:v", "libx264", "-tune", "stillimage", "-pix_fmt", "yuv420p", "-r", "30",

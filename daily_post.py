@@ -26,6 +26,7 @@ from datetime import datetime, timedelta, timezone
 import generate
 import post_instagram
 import fetch_higgsfield
+import fetch_videos
 import make_video
 
 KST = timezone(timedelta(hours=9))
@@ -120,32 +121,50 @@ def main():
     posts = os.path.join(generate.HERE, "output", "posts")
     os.makedirs(posts, exist_ok=True)
 
-    # REEL: 9:16 card (text always centered — reads best in motion) + subtle zoom + music.
-    # Reels are the only format that reaches non-followers, so this is the growth engine.
+    # REEL (text always centered — reads best in motion). Two background sources, alternated
+    # for variety: (a) real Pexels footage (clouds/fields, gently moving) with a white-text
+    # overlay, and (b) a Nano Banana still with a subtle Ken Burns zoom (adaptive color).
     placement = ("center", "middle")
-
-    # background: fresh, unique 9:16 image (Nano Banana Pro); fall back to the photo pool
-    photo = None
-    try:
-        photo = fetch_higgsfield.generate_background(
-            os.path.join(generate.OUT_DIR, "_bg.png"), n, placement, aspect="9:16")
-        print("background: nano-banana  9:16")
-    except Exception as e:
-        print(f"higgsfield failed ({e}) → photo pool fallback")
-        used_photos = state.setdefault("used_photos", [])
-        pool_p = [p for p in photos if os.path.basename(p) not in used_photos] or photos
-        photo = pool_p[n % len(pool_p)] if pool_p else None
-        if photo:
-            used_photos.append(os.path.basename(photo))
-
-    # render the 9:16 verse card, then turn it into a Reel (Ken Burns zoom + instrumental audio)
-    card = os.path.join(generate.OUT_DIR, "_card.png")
-    generate.render(verse, "ivory", "", card, photo=photo,
-                    canvas=generate.REEL, placement=placement)
     rel_path = f"output/posts/{date_str}.mp4"
+    out_mp4 = os.path.join(generate.HERE, rel_path)
     audio = pick_music(n)
-    make_video.make_reel_from_image(card, audio, os.path.join(generate.HERE, rel_path), duration=8)
-    print(f"reel: {verse['ref']}  music={os.path.basename(audio) if audio else 'none'}")
+    made = False
+
+    if n % 2 == 1:                                   # odd runs → real moving footage
+        keyword = ("clouds", "field")[(n // 2) % 2]  # 구름 / 들판, alternating
+        try:
+            clip = os.path.join(generate.OUT_DIR, "_clip.mp4")
+            fetch_videos.fetch_one(keyword, clip, pick=n)
+            boom = os.path.join(generate.OUT_DIR, "_boom.mp4")
+            make_video.make_boomerang(clip, boom)     # seamless loop, no jump cut
+            overlay = os.path.join(generate.OUT_DIR, "_overlay.png")
+            generate.render_text_overlay(verse, overlay, canvas=generate.REEL, placement=placement)
+            make_video.build_reel(boom, overlay, audio, out_mp4, duration=20)
+            print(f"reel(clip:{keyword}): {verse['ref']}")
+            made = True
+        except Exception as e:
+            print(f"clip path failed ({e}) → nano-banana still")
+
+    if not made:                                     # even runs, or clip fetch failed
+        photo = None
+        try:
+            photo = fetch_higgsfield.generate_background(
+                os.path.join(generate.OUT_DIR, "_bg.png"), n, placement, aspect="9:16")
+            print("background: nano-banana  9:16")
+        except Exception as e:
+            print(f"higgsfield failed ({e}) → photo pool fallback")
+            used_photos = state.setdefault("used_photos", [])
+            pool_p = [p for p in photos if os.path.basename(p) not in used_photos] or photos
+            photo = pool_p[n % len(pool_p)] if pool_p else None
+            if photo:
+                used_photos.append(os.path.basename(photo))
+        card = os.path.join(generate.OUT_DIR, "_card.png")
+        generate.render(verse, "ivory", "", card, photo=photo,
+                        canvas=generate.REEL, placement=placement)
+        make_video.make_reel_from_image(card, audio, out_mp4, duration=20)
+        print(f"reel(still): {verse['ref']}")
+
+    print(f"music={os.path.basename(audio) if audio else 'none'}")
 
     caption = build_caption(verse, data.get("translation", ""))
     # record what we used so it NEVER repeats
