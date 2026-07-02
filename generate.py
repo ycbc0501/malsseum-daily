@@ -326,7 +326,22 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
         top_y = ch - my - block_h
     if photo:
         base = cover_crop(Image.open(photo), cw, ch)         # keep the photo crisp (no blur)
-        fg, shadow_c, busy = (252, 250, 246), (0, 0, 0), 0   # ALWAYS white text + dark scrim → legible on any bg
+        # Adaptive color (dailymayim/Alabaster): sample the actual text region → white text
+        # on dark areas, dark text on light areas. Then the shadow only has to be a whisper
+        # (it shows only where local contrast is weak, and vanishes where it's already fine).
+        reg = base.convert("L").crop((col_left, max(0, top_y), col_left + col_w,
+                                      min(ch, top_y + block_h)))
+        rst = ImageStat.Stat(reg)
+        rmean, rstd = rst.mean[0], rst.stddev[0]
+        uniform = rstd < 48
+        if uniform and rmean < 118:            # calm & dark → clean WHITE text
+            fg, shadow_c, cap = (250, 248, 244), (0, 0, 0), 115
+        elif uniform and rmean > 148:          # calm & light → clean DARK text
+            fg, shadow_c, cap = (38, 34, 30), (255, 255, 255), 130
+        else:                                   # busy/mixed → white text + stronger even backing
+            fg, shadow_c = (250, 248, 244), (0, 0, 0)
+            cap = 200 if rmean > 165 else (165 if rmean > 118 else 140)
+        busy = 0
     else:
         theme = THEMES.get(theme_name, THEMES["ivory"])
         base = Image.new("RGB", (cw, ch), theme["bg"])
@@ -351,7 +366,10 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
         td.text((line_x(lw), y), ln, font=font, fill=fg + (255,),
                 stroke_width=stroke, stroke_fill=(0, 0, 0, 150))
         y += line_h
-    src_fill = (228, 225, 219) if photo else tuple(int(c * 0.55 + (255 if fg[0] > 128 else 0) * 0.45) for c in fg)
+    if photo:
+        src_fill = (228, 225, 219) if fg[0] > 128 else (74, 68, 62)   # match verse (light/dark)
+    else:
+        src_fill = tuple(int(c * 0.55 + (255 if fg[0] > 128 else 0) * 0.45) for c in fg)
     src_img = render_italic(f"[{verse['ref']}]", src_font, src_fill + (255,), stroke=stroke)
     srctxt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))   # source ref, kept SEPARATE
     srctxt.alpha_composite(src_img, (line_x(src_img.width), y + gap - src_h // 4))
@@ -382,13 +400,10 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
             return Image.alpha_composite(b, layer)
 
         va, sa = txt.getchannel("A"), srctxt.getchannel("A")
-        bbox = txt.getbbox()
-        mean = ImageStat.Stat(base.convert("L").crop(bbox)).mean[0] if bbox else 128
         if shadow == "outline":
             base = cloud(base, va, 200, ((3, 1),))
             base = cloud(base, sa, 120, ((3, 1),))
-        else:   # "scrim" (default) — even, uniform filled backing, brightness-adaptive
-            cap = 200 if mean > 165 else (165 if mean > 115 else 135)
+        else:   # "scrim" (default) — even, uniform backing; `cap` set by adaptive color above
             base = even_cloud(base, va, cap)
             base = even_cloud(base, sa, cap)
 

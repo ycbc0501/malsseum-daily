@@ -98,6 +98,9 @@ COMPOSE = {
         "text (soft sky, light, water or a quiet background); place the main subject toward the left "
         "and lower part of the photo, keeping the text area clear.",
 }
+EVENTONE = ("In the area kept for the text, keep the brightness even and consistent — a single "
+            "calm tone, either evenly light or evenly dark, with no strong bright-and-dark "
+            "contrast in that area — so overlaid text sits cleanly on it.")
 QUALITY = ("It is an ordinary real photograph shot on 35mm film with natural available light — "
            "a candid, true-to-life image with natural film grain and texture, soft realistic detail "
            "and slightly muted natural colours. It looks like a genuine everyday photo someone took, "
@@ -126,7 +129,7 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
     prose); the text area is kept clear per `placement`. `full_scene` kept for compatibility."""
     scene = SCENES[index % len(SCENES)]
     compose = COMPOSE.get(tuple(placement), COMPOSE[("center", "middle")])
-    prompt = f"A real, natural photograph of {scene}. {compose} {QUALITY} {NOTEXT}"
+    prompt = f"A real, natural photograph of {scene}. {compose} {EVENTONE} {QUALITY} {NOTEXT}"
 
     if model == "gemini":
         return _gemini(prompt, dest)
