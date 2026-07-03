@@ -102,6 +102,18 @@ def candidates(query, key=None):
     return out
 
 
+def fetch_long(query, dest, min_dur=20, pick=0, key=None):
+    """Fetch a clip that is already at least `min_dur` seconds long, so the Reel can just
+    play FORWARD (no boomerang/reverse, which reads as weird). Falls back to the longest
+    available clip if none reach min_dur. `pick` rotates among the long clips for variety."""
+    cands = candidates(query, key)                 # (id, link, duration), sorted longest-first
+    longs = [c for c in cands if c[2] >= min_dur] or cands
+    if not longs:
+        return None
+    _download(longs[pick % len(longs)][1], dest)
+    return dest
+
+
 def fetch_by_id(vid_id, dest, key=None):
     """Fetch a specific (human-approved) Pexels clip by id."""
     key = key or get_key()

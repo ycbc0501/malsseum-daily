@@ -134,12 +134,11 @@ def main():
         keyword = ("clouds", "field")[(n // 2) % 2]  # 구름 / 들판, alternating
         try:
             clip = os.path.join(generate.OUT_DIR, "_clip.mp4")
-            fetch_videos.fetch_one(keyword, clip, pick=n)
-            boom = os.path.join(generate.OUT_DIR, "_boom.mp4")
-            make_video.make_boomerang(clip, boom)     # seamless loop, no jump cut
+            # a clip already ≥20s → play FORWARD only (no weird reverse/boomerang)
+            fetch_videos.fetch_long(keyword, clip, min_dur=20, pick=n)
             overlay = os.path.join(generate.OUT_DIR, "_overlay.png")
             generate.render_text_overlay(verse, overlay, canvas=generate.REEL, placement=placement)
-            make_video.build_reel(boom, overlay, audio, out_mp4, duration=20)
+            make_video.build_reel(clip, overlay, audio, out_mp4, duration=20)
             print(f"reel(clip:{keyword}): {verse['ref']}")
             made = True
         except Exception as e:
