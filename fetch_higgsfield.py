@@ -19,72 +19,43 @@ FLUX = "flux-pro/kontext/max/text-to-image"   # Higgsfield fallback options
 SOUL_APP = "v1/text2image/soul"
 SOUL_BASE = "https://platform.higgsfield.ai"
 
-# Plain, natural-language scenes (Gemini follows prose, NOT keyword soup). Each can keep a
-# clear calm area for the text. Diverse, beautiful, dignified — no hype words.
+# Grand, cinematic scenes (Gemini follows prose, NOT keyword soup). Vast, majestic and
+# awe-inspiring — a sense of divine glory — yet each keeps a calm sky / upper-center area
+# for the overlaid verse. No hype-word soup; the grandeur is in the scene itself.
 SCENES = [
-    "a calm sea under a soft open sky, very low horizon",
-    "distant mountains low on the horizon under a wide open sky",
-    "a golden wheat field under a soft open sky, low horizon",
-    "a field of wildflowers under a soft pastel sky, low horizon",
-    "a lavender field under a wide soft sky, low horizon",
-    "morning mist over a quiet valley under a pale open sky",
-    "smooth desert dunes under a wide soft sky, low horizon",
-    "a snowy plain under a soft pastel sky, low horizon",
-    "a calm lake reflecting distant low mountains under a wide sky",
-    "a soft layer of clouds seen from above under an open sky",
-    "the milky way and stars over a dark low horizon",
-    "soft sunbeams through gentle clouds in a wide open sky",
-    "rolling autumn hills under a wide open sky, low horizon",
-    "soft pastel sunrise clouds over a calm sea, low horizon",
-    "cherry blossom branches against a soft open sky",
-    "green rolling meadows under a wide open sky, low horizon",
-    "rows of tulips under a soft pastel sky, low horizon",
-    "a wide calm river through a low valley under an open sky",
-    "terraced green tea fields in soft morning mist",
-    "soft golden pampas grass under a wide warm sky, low horizon",
-    "an olive grove on a low hillside under a soft sky",
-    "the inside of an old stone cathedral looking down the long central aisle, "
-        "soft daylight from tall windows, the central aisle empty and open",
-    "a wide canyon seen from the rim with open sky above",
-    "a gentle aurora over low snowy hills under a starry sky",
-    "a calm alpine lake reflecting a wide clear sky, low far shore",
-    "soft pink twilight clouds over calm water, low horizon",
-    "a single tree on a wide plain under a big open sky",
-    # Christian / biblical places
-    "the old stone walls of Jerusalem at dawn under a soft open sky",
-    "ancient olive trees in a quiet garden at golden hour, open sky above",
-    "the calm Sea of Galilee at sunrise, very low horizon",
-    "a hillside vineyard with neat rows of vines under a soft open sky",
-    "the rocky desert wilderness under a wide pale sky, low horizon",
-    "weathered ancient stone columns and ruins under a wide open sky",
-    "a quiet stone path winding through a wilderness valley under a wide sky",
-    "a simple wooden cross on a grassy hill against a soft glowing sky",
-    "terraced hillsides with olive groves under a soft open sky",
-    # village / town (no people)
-    "a small calm harbor at dawn with still water and a wide sky",
-    "a quiet empty cobblestone street in an old town, soft morning light",
-    # life / season / symbol
-    "fresh green spring blossoms and new leaves against a soft open sky",
-    "a peaceful garden path among soft flowers in gentle morning light",
-    "a gentle rainbow arching over a calm landscape after the rain",
-    # more categories
-    "an elegant old stone bridge over a calm river under a soft open sky",
-    "a soft rose garden in gentle morning light with open sky above",
-    "a gentle waterfall in a lush green forest with soft mist",
-    "a calm moonlit night sky over a quiet low landscape",
-    "an old stone archway opening to soft golden light beyond",
-    "a golden harvest field at sunset, low horizon",
-    "a white lighthouse on a cliff above the sea under a soft sky",
-    "a simple still life of bread and a plain cup on a wooden table, soft window light",
-    # intimate still-life / close scenes (dailymayim mood) — calm soft background for text
-    "a single white lily in soft morning light on a plain surface",
-    "a steaming cup of tea on a wooden table by a bright window",
-    "a small cluster of grapes and a piece of bread on a wooden table by a window",
-    "fresh olive branches resting on a simple linen cloth in soft daylight",
-    "an open window with sheer white curtains glowing in soft morning light",
-    "green leaves with fresh dewdrops in soft morning light, close up",
-    "an open field of tall grass glowing in warm low backlight",
-    "soft sunlight falling across a simple wooden table by a window",
+    "a vast mountain range and green valley receding to a distant low horizon under an immense sky",
+    "an endless calm ocean meeting a radiant sky at a very low horizon, god-rays over the water",
+    "towering luminous clouds and sunbeams over a boundless plain, low horizon",
+    "a great canyon receding into vast distance under an immense open sky",
+    "immense snow-capped peaks far in the distance beyond a wide valley, low horizon",
+    "a vast desert of rolling dunes stretching to a distant horizon under a dramatic sky",
+    "a sweeping sea of clouds seen from a great height under a glowing sky",
+    "an enormous starry night sky and the milky way over a vast dark plain, low horizon",
+    "a grand golden sunrise over an endless calm sea, very low horizon",
+    "a majestic glacier valley receding to distant peaks under a wide radiant sky",
+    "vast rolling green hills stretching to a far horizon under towering luminous clouds",
+    "an immense aurora over a vast snowy wilderness under a starry sky, low horizon",
+    "a boundless flower plain stretching to a distant low horizon under a glowing sky",
+    "a colossal glowing cloudscape at golden hour over a distant low land",
+    "a great river winding through an immense valley to a distant horizon under a wide sky",
+    "towering thunderclouds parting with radiant light over a wide calm sea, low horizon",
+    "a vast alpine lake mirroring immense distant peaks under a wide radiant sky, low far shore",
+    "a boundless golden wheat plain rippling to a far horizon under a dramatic glowing sky",
+    "immense misty ridgelines fading into the vast distance under a soft radiant sky",
+    "a great open plateau falling away to a vast distant horizon under towering clouds",
+    "a vast twilight sky of soft pink and gold over a calm endless sea, very low horizon",
+    # Christian / biblical places, made grand
+    "the vast rocky wilderness of Sinai receding to distant mesas under an immense dramatic sky",
+    "the great calm expanse of the Sea of Galilee at radiant sunrise, very low horizon",
+    "the ancient walls of Jerusalem far across a vast valley at golden dawn under an immense sky",
+    "a grand vineyard-covered hillside sweeping down to a distant valley under a glowing sky",
+    "a solitary hill with a distant cross far off, a vast radiant sky with sunbeams above, low horizon",
+    "immense olive groves on hills sweeping to a far horizon under a soft radiant sky",
+    "a vast promised land of green valleys and distant blue hills under a glorious open sky",
+    "the great wilderness of the Jordan valley receding to distant hills under a wide radiant sky",
+    "an immense field of lilies stretching toward distant hills under a soft glowing sky, low horizon",
+    "a grand ancient stone archway opening onto a vast radiant landscape beyond, low horizon",
+    "a majestic waterfall plunging into a vast misty gorge, an immense open sky above",
 ]
 COMPOSE = {
     ("center", "middle"): "Leave the upper and central part of the photo calm and simple for the "
@@ -98,17 +69,23 @@ COMPOSE = {
         "text (soft sky, light, water or a quiet background); place the main subject toward the left "
         "and lower part of the photo, keeping the text area clear.",
 }
-EVENTONE = ("In the area kept for the text, keep the brightness even and consistent — a single "
-            "calm tone, either evenly light or evenly dark, with no strong bright-and-dark "
-            "contrast in that area — so overlaid text sits cleanly on it.")
+EVENTONE = ("CRUCIAL: keep the whole CENTER of the image — a wide horizontal band across the "
+            "vertical middle — calm, open and smooth, so the overlaid verse can be read clearly. "
+            "That center band must be a single even tone (evenly light OR evenly dark, no strong "
+            "bright-and-dark contrast, no busy clouds, no bright cloud edge or sunbeam cutting "
+            "through it). Put all the drama — towering clouds, sunbeams, peaks, detail — in the "
+            "UPPER edge and LOWER part of the frame, leaving that middle band clear and quiet.")
 COMPOSE_SAFE = ("Keep the composition natural and open: the horizon stays low and the scene recedes "
-                "into the distance. Do NOT let any single object (a mountain, tree, building or rock) "
-                "stand tall and fill or dominate one whole side of the frame; keep such elements small "
-                "and low in the distance, not looming at the edge.")
-QUALITY = ("It is an ordinary real photograph shot on 35mm film with natural available light — "
-           "a candid, true-to-life image with natural film grain and texture, soft realistic detail "
-           "and slightly muted natural colours. It looks like a genuine everyday photo someone took, "
-           "not polished, not a 3D render, not a video game.")
+                "grandly into the far distance. Do NOT let any single object (a mountain, tree, "
+                "building or rock) stand tall through the middle of the frame or dominate the center; "
+                "keep such elements to the lower part and the far distance, never looming over the "
+                "clear center band.")
+QUALITY = ("It is a breathtaking, awe-inspiring cinematic landscape — vast, majestic and immense in "
+           "scale and depth, with a sense of divine glory and grandeur. Radiant light and god-rays "
+           "through towering luminous clouds, a glowing atmospheric sky, a sweeping epic vista; "
+           "reverent, serene and glorious, like a glimpse of heaven. Photoreal and richly detailed, "
+           "high dynamic range, deep cinematic light and colour, sharp and clean — a real photograph, "
+           "not a 3D render, not a video game.")
 NOTEXT = ("There are no people, and absolutely no text, letters, words, captions, numbers, signs, "
           "watermark or logo anywhere. It is a single full-bleed photograph that completely fills "
           "the image, edge to edge.")
@@ -134,7 +111,7 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
     prose); the text area is kept clear per `placement`. `aspect` = "3:4" (feed) or "9:16" (reel)."""
     scene = SCENES[index % len(SCENES)]
     compose = COMPOSE.get(tuple(placement), COMPOSE[("center", "middle")])
-    prompt = f"A real, natural photograph of {scene}. {compose} {COMPOSE_SAFE} {EVENTONE} {QUALITY} {NOTEXT}"
+    prompt = f"A breathtaking, grand cinematic photograph of {scene}. {compose} {COMPOSE_SAFE} {EVENTONE} {QUALITY} {NOTEXT}"
 
     if model == "gemini":
         return _gemini(prompt, dest, aspect=aspect)

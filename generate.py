@@ -442,13 +442,19 @@ def _even_cloud(base, alpha, cap, size, color):
     return Image.alpha_composite(base, layer)
 
 
-def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "middle")):
+def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "middle"), ss=2):
     """Transparent PNG of the verse (white text + even dark shadow, upright source) to
     composite OVER a moving video clip. White is used because a clip's brightness varies
-    frame to frame, so adaptive dark text isn't safe; the even shadow keeps it legible."""
-    cw, ch = canvas
+    frame to frame, so adaptive dark text isn't safe; the even shadow keeps it legible.
+
+    Rendered at `ss`× and LANCZOS-downsampled so the serif edges stay smooth and clean
+    (no jaggies) when the overlay is composited on top of the video — and, crucially, the
+    text is drawn ONCE at native size and never passes through the zoom, so it never
+    scales or shakes with the background's Ken Burns motion."""
+    cw0, ch0 = canvas
+    cw, ch = cw0 * ss, ch0 * ss                        # render everything supersampled…
     halign, valign = placement
-    verse_size = 44 if canvas == REEL else 40
+    verse_size = (44 if canvas == REEL else 40) * ss
     mx = int(cw * 0.08)
     if halign == "center":
         col_w = int(cw * (0.85 if canvas == REEL else 0.80))
@@ -492,6 +498,8 @@ def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "midd
     out = _even_cloud(out, srctxt.getchannel("A"), 150, size, shadow_c)
     out = Image.alpha_composite(out, txt)
     out = Image.alpha_composite(out, srctxt)
+    if ss != 1:                                        # …then downsample to native → crisp edges
+        out = out.resize((cw0, ch0), Image.LANCZOS)
     out.save(out_path, "PNG")
     return out_path
 

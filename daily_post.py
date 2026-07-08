@@ -146,9 +146,9 @@ def main():
 
     if not made:                                     # even runs, or clip fetch failed
         photo = None
+        bg = os.path.join(generate.OUT_DIR, "_bg.png")
         try:
-            photo = fetch_higgsfield.generate_background(
-                os.path.join(generate.OUT_DIR, "_bg.png"), n, placement, aspect="9:16")
+            photo = fetch_higgsfield.generate_background(bg, n, placement, aspect="9:16")
             print("background: nano-banana  9:16")
         except Exception as e:
             print(f"higgsfield failed ({e}) → photo pool fallback")
@@ -157,10 +157,14 @@ def main():
             photo = pool_p[n % len(pool_p)] if pool_p else None
             if photo:
                 used_photos.append(os.path.basename(photo))
-        card = os.path.join(generate.OUT_DIR, "_card.png")
-        generate.render(verse, "ivory", "", card, photo=photo,
-                        canvas=generate.REEL, placement=placement)
-        make_video.make_reel_from_image(card, audio, out_mp4, duration=20)
+        # Order matters: render a TEXT-FREE background, zoom that, THEN lay the verse on
+        # top (build_reel_still). Text is added after the zoom → stays crisp, never shakes.
+        from PIL import Image
+        src = photo if photo else bg
+        generate.cover_crop(Image.open(src), *generate.REEL).save(bg, "PNG")
+        overlay = os.path.join(generate.OUT_DIR, "_overlay.png")
+        generate.render_text_overlay(verse, overlay, canvas=generate.REEL, placement=placement)
+        make_video.build_reel_still(bg, overlay, audio, out_mp4, duration=20)
         print(f"reel(still): {verse['ref']}")
 
     print(f"music={os.path.basename(audio) if audio else 'none'}")
