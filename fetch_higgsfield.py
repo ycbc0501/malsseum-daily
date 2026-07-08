@@ -58,10 +58,10 @@ SCENES = [
     "a majestic waterfall plunging into a vast misty gorge, an immense open sky above",
 ]
 COMPOSE = {
-    ("center", "middle"): "Leave the upper and central part of the photo calm and simple for the "
-        "overlaid verse text — it can be open sky, soft daylight, gentle water or a quiet plain "
-        "background, whatever suits the scene. Place the main subject across the LOWER part of the "
-        "photo, keeping the upper-center clear and easy to read text over.",
+    ("center", "middle"): "Let the middle of the frame breathe: a calmer, softer, more open region "
+        "of the scene (open sky, soft luminous haze, gentle light) sits behind where the verse goes, "
+        "flowing naturally out of the surrounding landscape. The grand detail lives mostly above and "
+        "below it, easing softly toward that quiet middle — never a hard split.",
     ("left", "middle"): "Leave the left and central part of the photo calm and simple for the overlaid "
         "text (soft sky, light, water or a quiet background); place the main subject toward the right "
         "and lower part of the photo, keeping the text area clear.",
@@ -69,23 +69,25 @@ COMPOSE = {
         "text (soft sky, light, water or a quiet background); place the main subject toward the left "
         "and lower part of the photo, keeping the text area clear.",
 }
-EVENTONE = ("CRUCIAL: keep the whole CENTER of the image — a wide horizontal band across the "
-            "vertical middle — calm, open and smooth, so the overlaid verse can be read clearly. "
-            "That center band must be a single even tone (evenly light OR evenly dark, no strong "
-            "bright-and-dark contrast, no busy clouds, no bright cloud edge or sunbeam cutting "
-            "through it). Put all the drama — towering clouds, sunbeams, peaks, detail — in the "
-            "UPPER edge and LOWER part of the frame, leaving that middle band clear and quiet.")
+EVENTONE = ("CRUCIAL: render ONE single, continuous, natural scene with smooth, gradual transitions "
+            "and absolutely NO hard horizontal line, band, strip or seam anywhere — never a "
+            "pasted-together, stacked or panorama-collage look. The middle of the frame is simply a "
+            "calmer, softer, more open part of the SAME scene (open sky, soft luminous haze, gentle "
+            "atmospheric distance) where the verse can be read — arrived at gradually and organically, "
+            "its edges dissolving softly into the surrounding drama, never a flat rectangular block or "
+            "a sharp-edged strip. The boldest detail and light sit toward the top and the bottom and "
+            "fade smoothly into that quiet middle. Keep tones in the middle gentle and even.")
 COMPOSE_SAFE = ("Keep the composition natural and open: the horizon stays low and the scene recedes "
                 "grandly into the far distance. Do NOT let any single object (a mountain, tree, "
                 "building or rock) stand tall through the middle of the frame or dominate the center; "
-                "keep such elements to the lower part and the far distance, never looming over the "
-                "clear center band.")
-QUALITY = ("It is a breathtaking, awe-inspiring cinematic landscape — vast, majestic and immense in "
-           "scale and depth, with a sense of divine glory and grandeur. Radiant light and god-rays "
-           "through towering luminous clouds, a glowing atmospheric sky, a sweeping epic vista; "
-           "reverent, serene and glorious, like a glimpse of heaven. Photoreal and richly detailed, "
-           "high dynamic range, deep cinematic light and colour, sharp and clean — a real photograph, "
-           "not a 3D render, not a video game.")
+                "keep such elements to the lower part and the far distance, easing into the quiet "
+                "middle. Everything must read as one real, continuous photograph.")
+QUALITY = ("It is a breathtaking, awe-inspiring cinematic landscape of monumental, epic scale — vast, "
+           "majestic and immense, with towering depth and a profound sense of divine glory and "
+           "grandeur. Radiant volumetric god-rays pour through colossal luminous clouds, a glowing "
+           "atmospheric sky, sweeping horizons stretching to infinity; reverent, sublime and glorious, "
+           "like a vision of heaven. Photoreal and richly detailed, high dynamic range, deep cinematic "
+           "light and colour, sharp and clean — a real photograph, not a 3D render, not a video game.")
 NOTEXT = ("There are no people, and absolutely no text, letters, words, captions, numbers, signs, "
           "watermark or logo anywhere. It is a single full-bleed photograph that completely fills "
           "the image, edge to edge.")
