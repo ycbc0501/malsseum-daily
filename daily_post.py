@@ -157,15 +157,26 @@ def main():
             photo = pool_p[n % len(pool_p)] if pool_p else None
             if photo:
                 used_photos.append(os.path.basename(photo))
-        # Order matters: render a TEXT-FREE background, zoom that, THEN lay the verse on
-        # top (build_reel_still). Text is added after the zoom → stays crisp, never shakes.
+        # A grand background deserves REAL motion, not a zoom: animate the still into a moving
+        # clip (Veo image-to-video) and lay the crisp verse on top. If Veo is unavailable, fall
+        # back to the background-only Ken Burns zoom (text still added AFTER, so it never shakes).
         from PIL import Image
         src = photo if photo else bg
         generate.cover_crop(Image.open(src), *generate.REEL).save(bg, "PNG")
         overlay = os.path.join(generate.OUT_DIR, "_overlay.png")
         generate.render_text_overlay(verse, overlay, canvas=generate.REEL, placement=placement)
-        make_video.build_reel_still(bg, overlay, audio, out_mp4, duration=20)
-        print(f"reel(still): {verse['ref']}")
+        try:
+            import fetch_veo
+            clip = os.path.join(generate.OUT_DIR, "_veo.mp4")
+            fetch_veo.animate(bg, clip)                          # grand still → real motion
+            slow = os.path.join(generate.OUT_DIR, "_veo_slow.mp4")
+            make_video.make_slowmo(clip, slow, target=20)        # serene ~20s pace, no loop seam
+            make_video.build_reel(slow, overlay, audio, out_mp4, duration=20)
+            print(f"reel(grand-veo): {verse['ref']}")
+        except Exception as e:
+            print(f"veo motion failed ({e}) → background-zoom still")
+            make_video.build_reel_still(bg, overlay, audio, out_mp4, duration=20)
+            print(f"reel(grand-still): {verse['ref']}")
 
     print(f"music={os.path.basename(audio) if audio else 'none'}")
 
