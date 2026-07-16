@@ -163,7 +163,18 @@ def main():
     placement = ("center", "middle")
     rel_path = f"output/posts/{date_str}.mp4"
     out_mp4 = os.path.join(generate.HERE, rel_path)
-    audio = pick_music(state)   # no-repeat, family-interleaved (never same track/sound twice)
+    # MUSIC: generate a UNIQUE instrumental per post with Lyria (never the same music twice, and
+    # no Content-ID risk). Falls back to the vetted library only if generation fails.
+    audio = os.path.join(generate.OUT_DIR, "_music.mp3")
+    music_i = state.get("music_i", 0)
+    try:
+        import fetch_lyria
+        fetch_lyria.generate(audio, music_i)
+        state["music_i"] = music_i + 1
+        print(f"music: lyria unique (mood {music_i % len(fetch_lyria.MOODS)})")
+    except Exception as e:
+        print(f"lyria failed ({e}) → library fallback")
+        audio = pick_music(state)   # no-repeat, family-interleaved fallback
     made = False
 
     if n % 2 == 1:                                   # odd runs → real moving footage

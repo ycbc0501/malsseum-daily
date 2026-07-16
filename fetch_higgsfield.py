@@ -68,14 +68,6 @@ SCENES = [
     "an open window framing a green garden, gentle daylight streaming through",
     "a quiet corner of a room, a plant in soft shadow lit by a warm glow",
     "a simple wooden desk by a bright window in soft, calm daylight",
-    # ── still life (soft, real) ──
-    "a simple cup of coffee on a wooden table by a bright soft window",
-    "a small vase of wildflowers on a windowsill in gentle morning light",
-    "an open book resting on rumpled linen in soft morning light",
-    "a loaf of rustic bread and a folded linen cloth on a wooden table by a window",
-    "a single candle glowing warm and soft on a quiet dark table",
-    "fresh olive branches resting on pale linen in soft daylight",
-    "a small bowl of figs and grapes on a wooden table in soft window light",
 ]
 COMPOSE = {
     ("center", "middle"): "COMPOSITION IS KEY: keep the UPPER and CENTRAL part of the frame calm, soft "
