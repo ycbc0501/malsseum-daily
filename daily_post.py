@@ -170,12 +170,23 @@ def main():
         keyword = ("clouds", "field")[(n // 2) % 2]  # 구름 / 들판, alternating
         try:
             clip = os.path.join(generate.OUT_DIR, "_clip.mp4")
-            # a clip already ≥20s → play FORWARD only (no weird reverse/boomerang)
-            fetch_videos.fetch_long(keyword, clip, min_dur=20, pick=n)
+            # NEVER reuse a clip: skip any Pexels id already in used_clips, take the first
+            # UNUSED one (prefer ≥20s so it plays forward), and record it. If the keyword is
+            # exhausted, raise → falls through to a fresh, unique AI background instead of
+            # re-downloading a clip we've already posted.
+            used_clips = state.setdefault("used_clips", [])
+            cands = fetch_videos.candidates(keyword)        # [(id, link, dur)] longest-first
+            fresh = [c for c in cands if c[0] not in used_clips]
+            fresh = [c for c in fresh if c[2] >= 20] or fresh
+            if not fresh:
+                raise RuntimeError(f"no unused '{keyword}' clips left")
+            cid, link, _ = fresh[0]
+            fetch_videos._download(link, clip)
+            used_clips.append(cid)
             overlay = os.path.join(generate.OUT_DIR, "_overlay.png")
             generate.render_text_overlay(verse, overlay, canvas=generate.REEL, placement=placement)
             make_video.build_reel(clip, overlay, audio, out_mp4, duration=20)
-            print(f"reel(clip:{keyword}): {verse['ref']}")
+            print(f"reel(clip:{keyword} id={cid}): {verse['ref']}")
             made = True
         except Exception as e:
             print(f"clip path failed ({e}) → nano-banana still")
