@@ -19,6 +19,7 @@ import glob
 import json
 import os
 import random
+import re
 import time
 from collections import Counter
 from datetime import datetime, timedelta, timezone
@@ -76,13 +77,48 @@ def build_caption(verse, translation):
             "→ @to_light_bible 팔로우하고 하루를 말씀으로 시작하세요")
 
 
-def pick_music(n):
-    """Rotate through royalty-free INSTRUMENTAL tracks only (no vocals → minimal Content-ID
-    risk, so Reels don't get taken down like the old copyrighted-music ones)."""
+def _music_family(path):
+    """Group near-identical cuts from the same source series (e.g. both 'harmony-of-heaven…'
+    tracks → one family, both 'misselle-bible…' → another) so the same SOUND never plays on
+    back-to-back posts. Keyed on the leading title tokens, which name the series."""
+    b = os.path.basename(path).lower().replace("_", "-")
+    tokens = [t for t in b.split("-") if t and not t.isdigit() and t != "instrumental"]
+    return "-".join(tokens[:2])
+
+
+def _instrumental_tracks():
+    """All instrumental tracks, with families INTERLEAVED (A,B,A,B,…) so rotating through the
+    list alternates the mood every post instead of playing two similar cuts in a row."""
     tracks = sorted(f for f in glob.glob(os.path.join(MUSIC_DIR, "*.mp3"))
                     if "instrumental" in os.path.basename(f).lower())
     tracks = tracks or sorted(glob.glob(os.path.join(MUSIC_DIR, "*.mp3")))
-    return tracks[n % len(tracks)] if tracks else None
+    fams = {}
+    for t in tracks:
+        fams.setdefault(_music_family(t), []).append(t)
+    queues = [list(reversed(v)) for v in fams.values()]
+    ordered = []
+    while any(queues):
+        for q in queues:
+            if q:
+                ordered.append(q.pop())
+    return ordered
+
+
+def pick_music(state):
+    """Pick an instrumental with NO repeat until the whole set has been used (a ledger in
+    state), and with families interleaved so the same sound never lands on consecutive posts.
+    (Royalty-free instrumentals only → minimal Content-ID risk.)"""
+    tracks = _instrumental_tracks()
+    if not tracks:
+        return None
+    used = state.setdefault("used_music", [])
+    unused = [t for t in tracks if os.path.basename(t) not in used]
+    if not unused:                        # whole set played → start a fresh cycle
+        used.clear()
+        unused = tracks
+    pick = unused[0]
+    used.append(os.path.basename(pick))
+    return pick
 
 
 def main():
@@ -127,7 +163,7 @@ def main():
     placement = ("center", "middle")
     rel_path = f"output/posts/{date_str}.mp4"
     out_mp4 = os.path.join(generate.HERE, rel_path)
-    audio = pick_music(n)
+    audio = pick_music(state)   # no-repeat, family-interleaved (never same track/sound twice)
     made = False
 
     if n % 2 == 1:                                   # odd runs → real moving footage
@@ -147,9 +183,14 @@ def main():
     if not made:                                     # even runs, or clip fetch failed
         photo = None
         bg = os.path.join(generate.OUT_DIR, "_bg.png")
+        # Walk the SCENES list with its OWN sequential counter — only ~half the posts reach this
+        # grand path, so keying off `n` would silently skip every other scene. This visits them
+        # all in order (no scene repeats until the whole diverse set has been used).
+        scene_i = state.get("scene_i", 0)
         try:
-            photo = fetch_higgsfield.generate_background(bg, n, placement, aspect="9:16")
-            print("background: nano-banana  9:16")
+            photo = fetch_higgsfield.generate_background(bg, scene_i, placement, aspect="9:16")
+            state["scene_i"] = scene_i + 1
+            print(f"background: nano-banana  9:16  (scene {scene_i})")
         except Exception as e:
             print(f"higgsfield failed ({e}) → photo pool fallback")
             used_photos = state.setdefault("used_photos", [])

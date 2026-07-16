@@ -19,49 +19,54 @@ FLUX = "flux-pro/kontext/max/text-to-image"   # Higgsfield fallback options
 SOUL_APP = "v1/text2image/soul"
 SOUL_BASE = "https://platform.higgsfield.ai"
 
-# Grand, cinematic scenes (Gemini follows prose, NOT keyword soup). Vast, majestic and
-# awe-inspiring — a sense of divine glory — yet each keeps a calm sky / upper-center area
-# for the overlaid verse. No hype-word soup; the grandeur is in the scene itself.
+# Grand, cinematic scenes — DELIBERATELY DIVERSE in subject (mountains, seas, forests,
+# deserts, fields, canyons, lakes, gardens…), so the feed never looks like the same cloudy
+# sky over and over. Each scene carries its OWN light/mood (the QUALITY block no longer
+# forces clouds or god-rays onto everything). Each still recedes into open distance, so a
+# calmer area for the verse falls naturally near the center. Ordered to alternate the look
+# post-to-post. No hype-word soup; the grandeur is in the scene itself.
 SCENES = [
-    "a vast mountain range and green valley receding to a distant low horizon under an immense sky",
-    "an endless calm ocean meeting a radiant sky at a very low horizon, god-rays over the water",
-    "towering luminous clouds and sunbeams over a boundless plain, low horizon",
-    "a great canyon receding into vast distance under an immense open sky",
-    "immense snow-capped peaks far in the distance beyond a wide valley, low horizon",
-    "a vast desert of rolling dunes stretching to a distant horizon under a dramatic sky",
-    "a sweeping sea of clouds seen from a great height under a glowing sky",
-    "an enormous starry night sky and the milky way over a vast dark plain, low horizon",
-    "a grand golden sunrise over an endless calm sea, very low horizon",
-    "a majestic glacier valley receding to distant peaks under a wide radiant sky",
-    "vast rolling green hills stretching to a far horizon under towering luminous clouds",
-    "an immense aurora over a vast snowy wilderness under a starry sky, low horizon",
-    "a boundless flower plain stretching to a distant low horizon under a glowing sky",
-    "a colossal glowing cloudscape at golden hour over a distant low land",
-    "a great river winding through an immense valley to a distant horizon under a wide sky",
-    "towering thunderclouds parting with radiant light over a wide calm sea, low horizon",
-    "a vast alpine lake mirroring immense distant peaks under a wide radiant sky, low far shore",
-    "a boundless golden wheat plain rippling to a far horizon under a dramatic glowing sky",
-    "immense misty ridgelines fading into the vast distance under a soft radiant sky",
-    "a great open plateau falling away to a vast distant horizon under towering clouds",
-    "a vast twilight sky of soft pink and gold over a calm endless sea, very low horizon",
-    # Christian / biblical places, made grand
-    "the vast rocky wilderness of Sinai receding to distant mesas under an immense dramatic sky",
+    "a vast mountain range and green valley receding to a distant horizon at golden hour",
+    "an immense turquoise ocean and dramatic coastline seen from a high cliff, very low horizon",
+    "a colossal waterfall thundering into a lush green misty gorge",
+    "an endless desert of golden sand dunes rippling to a far horizon at sunrise",
+    "a vast ancient forest of giant redwood trees with soft light falling through the canopy",
+    "a boundless field of purple lavender stretching to distant hills at golden hour",
+    "a grand red-rock canyon receding into immense depth at sunset",
+    "a serene alpine lake perfectly mirroring towering snow-capped peaks",
+    "rolling autumn hills ablaze with crimson and gold forest fading to a far horizon",
+    "cherry blossom trees in full bloom along a calm river below distant mountains",
+    "a shimmering green aurora over a vast snowy wilderness at night, low horizon",
+    "a great river winding through an immense green valley toward distant blue mountains",
+    "a vast meadow of wildflowers sweeping toward far snow-capped peaks",
+    "terraced rice paddies curving down a vast misty mountainside at dawn",
+    "a monumental glacier and still icy fjord under a soft polar sky",
+    "an immense sea of clouds glowing at sunrise seen from a high summit",
+    "a golden wheat field stretching endlessly under warm evening light, low horizon",
+    "a lush tropical valley of waterfalls and mist beneath towering green peaks",
+    "a vast calm lake at dawn with distant misty islands, very low horizon",
+    "a rugged coastline with tall sea stacks and gentle surf at golden hour",
+    "towering sandstone buttes and mesas glowing deep orange at sunset, immense scale",
+    "a vast pine forest blanketed in soft morning mist with distant mountains",
+    "a boundless salt flat mirroring a soft pastel sky to infinity at twilight",
+    "endless rows of blooming tulips in bands of colour reaching a distant horizon",
+    "a snow-covered mountain valley glowing soft pink at dawn",
+    "a tranquil bamboo forest path opening to soft glowing light in the distance",
+    "a lush green gorge with a winding turquoise river far below high cliffs",
+    "rolling green pastures and hills bathed in soft golden evening light",
+    # Christian / biblical places, grand and varied
+    "a grand terraced vineyard sweeping down green hills to a distant valley at golden hour",
+    "ancient olive groves on rolling hills stretching to a far horizon in warm morning light",
+    "the vast rocky desert wilderness receding to distant mesas at sunset",
     "the great calm expanse of the Sea of Galilee at radiant sunrise, very low horizon",
-    "the ancient walls of Jerusalem far across a vast valley at golden dawn under an immense sky",
-    "a grand vineyard-covered hillside sweeping down to a distant valley under a glowing sky",
-    "a solitary hill with a distant cross far off, a vast radiant sky with sunbeams above, low horizon",
-    "immense olive groves on hills sweeping to a far horizon under a soft radiant sky",
-    "a vast promised land of green valleys and distant blue hills under a glorious open sky",
-    "the great wilderness of the Jordan valley receding to distant hills under a wide radiant sky",
-    "an immense field of lilies stretching toward distant hills under a soft glowing sky, low horizon",
-    "a grand ancient stone archway opening onto a vast radiant landscape beyond, low horizon",
-    "a majestic waterfall plunging into a vast misty gorge, an immense open sky above",
+    "a solitary green hill with a distant wooden cross against a wide glowing dawn sky",
 ]
 COMPOSE = {
     ("center", "middle"): "Let the middle of the frame breathe: a calmer, softer, more open region "
-        "of the scene (open sky, soft luminous haze, gentle light) sits behind where the verse goes, "
-        "flowing naturally out of the surrounding landscape. The grand detail lives mostly above and "
-        "below it, easing softly toward that quiet middle — never a hard split.",
+        "of the scene (soft light, gentle haze, open distance, calm water or sky — whatever suits THIS "
+        "scene) sits behind where the verse goes, flowing naturally out of the surrounding landscape. "
+        "The grand detail lives mostly above and below it, easing softly toward that quiet middle — "
+        "never a hard split.",
     ("left", "middle"): "Leave the left and central part of the photo calm and simple for the overlaid "
         "text (soft sky, light, water or a quiet background); place the main subject toward the right "
         "and lower part of the photo, keeping the text area clear.",
@@ -72,8 +77,8 @@ COMPOSE = {
 EVENTONE = ("CRUCIAL: render ONE single, continuous, natural scene with smooth, gradual transitions "
             "and absolutely NO hard horizontal line, band, strip or seam anywhere — never a "
             "pasted-together, stacked or panorama-collage look. The middle of the frame is simply a "
-            "calmer, softer, more open part of the SAME scene (open sky, soft luminous haze, gentle "
-            "atmospheric distance) where the verse can be read — arrived at gradually and organically, "
+            "calmer, softer, more open part of the SAME scene (soft light, gentle haze, open distance, "
+            "calm water or sky) where the verse can be read — arrived at gradually and organically, "
             "its edges dissolving softly into the surrounding drama, never a flat rectangular block or "
             "a sharp-edged strip. The boldest detail and light sit toward the top and the bottom and "
             "fade smoothly into that quiet middle. Keep tones in the middle gentle and even.")
@@ -82,12 +87,12 @@ COMPOSE_SAFE = ("Keep the composition natural and open: the horizon stays low an
                 "building or rock) stand tall through the middle of the frame or dominate the center; "
                 "keep such elements to the lower part and the far distance, easing into the quiet "
                 "middle. Everything must read as one real, continuous photograph.")
-QUALITY = ("It is a breathtaking, awe-inspiring cinematic landscape of monumental, epic scale — vast, "
-           "majestic and immense, with towering depth and a profound sense of divine glory and "
-           "grandeur. Radiant volumetric god-rays pour through colossal luminous clouds, a glowing "
-           "atmospheric sky, sweeping horizons stretching to infinity; reverent, sublime and glorious, "
-           "like a vision of heaven. Photoreal and richly detailed, high dynamic range, deep cinematic "
-           "light and colour, sharp and clean — a real photograph, not a 3D render, not a video game.")
+QUALITY = ("It is a breathtaking, awe-inspiring cinematic photograph of monumental, epic scale — vast, "
+           "majestic and immense, with sweeping depth and a profound sense of divine glory and grandeur. "
+           "Glorious natural light and rich atmosphere suited to THIS particular scene, sublime and "
+           "reverent, like a vision of heaven. Photoreal and richly detailed, high dynamic range, deep "
+           "cinematic light and colour, sharp and clean — a real photograph, not a 3D render, not a "
+           "video game.")
 NOTEXT = ("There are no people, and absolutely no text, letters, words, captions, numbers, signs, "
           "watermark or logo anywhere. It is a single full-bleed photograph that completely fills "
           "the image, edge to edge.")
