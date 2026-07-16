@@ -21,12 +21,16 @@ API = "https://generativelanguage.googleapis.com/v1beta"
 
 # Locked camera + gentle scene motion only, so the composition (and the clear center band the
 # verse sits on) never shifts. Anything more energetic would slide the text off its calm area.
-MOTION = ("The camera stays completely locked and still — no pan, no zoom, no camera move at all. "
-          "Only the scene itself moves, gently and slowly: clouds drift, soft god-rays and light "
-          "shift, water and grass shimmer faintly. Serene, reverent, cinematic, subtle slow motion. "
-          "The framing and composition never change.")
-NEG = ("text, letters, words, watermark, logo, people, person, camera pan, camera zoom, "
-       "camera shake, hard cut, scene change, morphing, warping, distortion")
+MOTION = ("The camera stays locked and still — no pan, no zoom, no camera move — so the composition "
+          "never shifts. The scene comes alive gently and CONTINUOUSLY from the very first frame: water "
+          "ripples and reflections shimmer, mist and clouds drift slowly, flowers and tall grass sway "
+          "softly in a light breeze, leaves flutter subtly. EVERYTHING already in the frame stays "
+          "present the whole time and moves only softly and steadily — nothing suddenly appears, grows, "
+          "pops in, flickers, blooms or morphs; no timelapse. The motion is smooth, subtle and "
+          "consistent from start to finish. Serene, dreamy, cinematic, natural slow motion.")
+NEG = ("text, letters, words, watermark, logo, people, person, camera pan, camera zoom, camera shake, "
+       "hard cut, scene change, morphing, warping, distortion, sudden changes, popping in, flickering, "
+       "elements appearing or disappearing, growing, blooming, timelapse, jump cut, strobing")
 
 
 def animate(still_png, dest, aspect="9:16", prompt=MOTION, timeout_s=420, poll_s=10):

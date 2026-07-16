@@ -19,64 +19,61 @@ FLUX = "flux-pro/kontext/max/text-to-image"   # Higgsfield fallback options
 SOUL_APP = "v1/text2image/soul"
 SOUL_BASE = "https://platform.higgsfield.ai"
 
-# Grand, cinematic scenes — DELIBERATELY DIVERSE in subject (mountains, seas, forests,
-# deserts, fields, canyons, lakes, gardens…), so the feed never looks like the same cloudy
-# sky over and over. Each scene carries its OWN light/mood (the QUALITY block no longer
-# forces clouds or god-rays onto everything). Each still recedes into open distance, so a
-# calmer area for the verse falls naturally near the center. Ordered to alternate the look
-# post-to-post. No hype-word soup; the grandeur is in the scene itself.
-# dailymayim-style: calm, real, muted FILM photography — the variety is in DIVERSE everyday
-# subjects (nature, quiet architecture, gardens, interiors, windows, paths, still life), all
-# sharing one soft, understated, contemplative mood. Each has a naturally calm area for the
-# verse. Ordered to alternate the subject type so the feed never repeats a look. NOT epic.
+# wondervisionary-style: LUSH, warm, dreamy CINEMATIC scenes with rich (but tasteful) colour,
+# golden light, and a shallow-depth-of-field foreground (soft out-of-focus flowers / grass /
+# leaves framing a luminous subject beyond). Diverse subjects — meadows, water & reflections,
+# windows framing views, gardens, flowering architecture, coasts — each with a calm sky / water
+# / soft area for the verse, and natural motion potential (drifting clouds, rippling water,
+# swaying flowers). Ordered to alternate the look post-to-post.
 SCENES = [
-    # ── nature (soft, muted) ──
-    "soft layered misty hills fading into a pale pastel sunset, gentle and quiet",
-    "a calm sea meeting a soft hazy sky with a small distant island, very low horizon",
-    "gentle ocean waves rolling onto a quiet shore under a soft overcast sky",
-    "a still lake at dawn with soft mist, faint golden light and a gentle lens flare",
-    "a quiet forest path dappled with soft golden light through the leaves",
-    "a misty pine forest in soft grey-green morning light",
-    "a wooded green hillside glowing gently in warm golden-hour light",
-    "an autumn forest in muted red and gold with a soft leaf-covered path",
-    "a quiet snowy field under a soft pale winter sky, bare trees in the distance",
-    "a meadow of wildflowers swaying in soft overcast light",
-    "a lavender field at soft dusk, muted purple fading into gentle haze",
-    "rolling green hills under a soft, calm overcast sky",
-    "distant blue mountains fading into layered haze at dusk",
-    "delicate cherry blossom branches against a soft, pale sky",
-    "tall grass glowing softly in warm low backlight, blurred and gentle",
-    "a river winding quietly through a green valley in soft flat light",
-    "a golden wheat field under a soft muted overcast sky",
-    "soft pink and grey dawn clouds drifting over a calm quiet plain",
-    # ── quiet architecture / places (no people) ──
-    "a small black wooden church standing alone in a vast green field under a soft pale sky",
-    "a modern house with large glass windows and a neat green lawn at soft blue-hour dusk",
-    "a quiet country road curving gently through open fields at soft dawn",
-    "an old stone bridge over a calm river in soft, flat morning light",
-    "a lone cabin beside a still misty lake at dawn",
-    "a garden with a small table and two chairs under dappled tree light",
-    "a weathered white chapel steeple against a soft pastel evening sky",
-    "a wooden dock reaching out into a calm, misty lake",
-    "warm string lights strung over an empty garden terrace at dusk",
-    "a greenhouse glowing softly with warm light at blue-hour dusk",
-    "a quiet cobblestone alley in soft, hazy morning light",
-    # ── interior / window / intimate ──
-    "a sunlit room with a large leafy potted plant and soft warm afternoon light",
-    "sheer white curtains at an open window looking out to a calm sea, plants on the sill",
-    "a cozy windowsill with a small plant, soft morning light spilling in",
-    "an open window framing a green garden, gentle daylight streaming through",
-    "a quiet corner of a room, a plant in soft shadow lit by a warm glow",
-    "a simple wooden desk by a bright window in soft, calm daylight",
+    # ── meadows & flowers (foreground bokeh) ──
+    "a lush wildflower meadow at golden hour, soft out-of-focus poppies and daisies in the "
+        "foreground, a luminous open sky above",
+    "a golden field of buttercups on rolling hills with a small wooden barn, soft blurred "
+        "flowers in the foreground, warm hazy light",
+    "a dreamy field of pink cosmos swaying, soft bokeh blossoms in front, a bright soft sky beyond",
+    "a sunlit lavender field rolling to the sea, soft purple blur in the foreground, open sky",
+    "tall wildflowers and grasses seen looking gently upward toward a bright soft sky with drifting clouds",
+    "a meadow of poppies and cornflowers by the sea, soft focus flowers in front, calm bright horizon",
+    # ── water & reflections ──
+    "a lone tree on a riverbank mirrored in still water, tall summer clouds above, calm reflective surface",
+    "gentle rain dimpling a still green pond that reflects trees and a soft bright sky, delicate ripples",
+    "a calm lake at golden hour with soft mist and warm light, mountains reflected, a bright open sky",
+    "sunlight sparkling on gently rippling sea water seen from a flowered shore, bright open horizon",
+    "a quiet river winding through a green valley, big soft clouds above, warm cinematic light",
+    # ── windows framing a view ──
+    "a rustic open window with sheer curtains framing a sunlit sea and distant hills, plants on the sill",
+    "an arched old stone window framing a small boat on a glittering sea, warm light",
+    "an open window framing a lush green garden and blue sky, roses climbing the frame",
+    "a train window with roses and petals along the sill, a soft green landscape sliding past",
+    # ── flowering architecture / places ──
+    "a weathered wooden pergola arch covered in vines over a wildflower meadow, blue sky beyond",
+    "a Mediterranean stone house with flower-filled balconies in warm golden afternoon light",
+    "a brick garden wall overflowing with climbing pink and orange roses, soft warm light",
+    "a small storybook cottage in a green meadow ringed by blossoming trees, soft cinematic light",
+    "a cobblestone European lane lined with flowers, warm morning sun and long soft shadows",
+    # ── skies, hills, coasts ──
+    "a single tree on a green hill under towering soft cumulus clouds, warm afternoon light",
+    "a winding country road through green hills toward a distant sunlit sea, wildflowers along it",
+    "white chalk sea cliffs above a calm turquoise shore under a big soft sky",
+    "rolling green pastures with a small cabin, warm low sun and golden bokeh in the foreground",
+    "soft pink and gold sunset clouds over a calm sea, a lone tree silhouette on the shore",
+    # ── forests, seasons, moody ──
+    "a soft forest clearing where cherry blossoms open into golden light, petals drifting",
+    "an autumn forest glowing red and gold, a soft misty path receding into warm light",
+    "a single glowing wildflower on a dark mossy forest floor, a soft shaft of light, dreamy",
+    "a quiet street lamp glowing warm over roses on a rainy night, soft reflections",
+    "a dewy patch of clover with one small white flower catching a soft morning sunbeam",
 ]
 COMPOSE = {
-    ("center", "middle"): "COMPOSITION IS KEY: keep the UPPER and CENTRAL part of the frame calm, soft "
-        "and open — an even, low-detail, gently-lit area (soft sky, mist, still water, a plain wall, "
-        "gentle blur or a shaft of light, whatever suits THIS scene) big enough to hold two centered "
-        "lines of text. Place the single main subject and the richest detail in the LOWER part of the "
-        "frame or off toward the edges, so it never intrudes into that calm upper-center. Show each "
-        "subject only ONCE — never duplicate, mirror, repeat or stack it. The subject must not sit "
-        "dead-center.",
+    ("center", "middle"): "COMPOSITION: compose so the CENTER of the frame — where the verse will sit — "
+        "stays soft, open and easy to read text over (open sky, soft mist, calm water or gentle "
+        "out-of-focus blur, whatever suits THIS scene). Keep the main subject and any tall elements "
+        "(trees, buildings, branches) LOW in the frame or off to the sides, well clear of the centre, so "
+        "nothing crosses the middle where the text goes. It must be ONE single natural photograph filling "
+        "the whole frame — NEVER a framed picture, inset, border, panel, photo-within-a-photo, polaroid "
+        "or collage; the whole image is one continuous scene. Show each subject only ONCE, never "
+        "duplicated or mirrored, and never dead-centre.",
     ("left", "middle"): "Leave the left and central part of the photo calm and simple for the overlaid "
         "text (soft sky, light, water or a quiet background); place the main subject toward the right "
         "and lower part of the photo, keeping the text area clear.",
@@ -85,20 +82,22 @@ COMPOSE = {
         "and lower part of the photo, keeping the text area clear.",
 }
 EVENTONE = ("Render ONE single, continuous, real photograph with smooth, natural transitions and "
-            "absolutely NO hard horizontal line, band, strip or seam anywhere — never a pasted-together "
-            "or collage look. The middle of the frame is a calmer, softer, more open part of the SAME "
+            "absolutely NO hard horizontal line, band, strip or seam anywhere, and NO framed picture, "
+            "inset, border, panel or photo-within-a-photo — never a pasted-together or collage look. "
+            "The middle of the frame is a calmer, softer, more open part of the SAME "
             "scene (soft light, gentle haze, calm water, sky, a wall, still ground or gentle blur) where "
             "the verse can be read — even in tone, quietly lit, arrived at organically. Keep the richer "
             "detail toward the edges, top and bottom, easing softly into that quiet middle.")
 COMPOSE_SAFE = ("Keep it a real, natural, uncluttered composition — one continuous photograph. Do not let "
                 "any object crowd, block or sit dead-center in the calm middle where the text goes; keep "
                 "the main subject and busy detail toward the edges, top or bottom of the frame.")
-QUALITY = ("It is a REAL photograph with the natural, understated look of 35mm film — soft true-to-life "
-           "detail, gentle available light, slightly muted and desaturated natural colours, fine film "
-           "grain, and a calm, quiet, contemplative mood. It looks like a genuine, beautifully-composed "
-           "moment someone captured on a film camera: intimate, serene and elegant, tasteful and "
-           "understated — never flashy, never oversaturated, never over-dramatic, NOT a cinematic 3D "
-           "render, NOT a video game, NOT an obvious AI image.")
+QUALITY = ("It is a breathtaking, dreamy, cinematic photograph — lush and richly beautiful, with warm "
+           "golden natural light, vivid yet tasteful colour, and a romantic sense of wonder. Shallow "
+           "depth of field: soft, out-of-focus foreground detail (flowers, grass or leaves) framing a "
+           "luminous, sharp subject beyond, with gentle bokeh and a soft glow. Atmospheric, magical and "
+           "serene, like a beautiful dream — an image that stops the scroll. Photoreal and cinematic, "
+           "high detail, a gentle warm film-like grade, natural and believable — not a flat 3D render, "
+           "not a video game, not an obviously-AI picture.")
 NOTEXT = ("There are no visible human faces, and absolutely no text, letters, words, captions, numbers, "
           "signs, watermark or logo anywhere. It is a single full-bleed photograph that completely fills "
           "the image, edge to edge.")
@@ -124,7 +123,7 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
     prose); the text area is kept clear per `placement`. `aspect` = "3:4" (feed) or "9:16" (reel)."""
     scene = SCENES[index % len(SCENES)]
     compose = COMPOSE.get(tuple(placement), COMPOSE[("center", "middle")])
-    prompt = f"A beautiful, natural film photograph of {scene}. {compose} {COMPOSE_SAFE} {EVENTONE} {QUALITY} {NOTEXT}"
+    prompt = f"A breathtaking, dreamy cinematic photograph of {scene}. {compose} {COMPOSE_SAFE} {EVENTONE} {QUALITY} {NOTEXT}"
 
     if model == "gemini":
         return _gemini(prompt, dest, aspect=aspect)

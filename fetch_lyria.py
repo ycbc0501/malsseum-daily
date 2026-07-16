@@ -18,31 +18,32 @@ import fetch_higgsfield as hf   # reuse _gemini_key()
 MODEL = "lyria-3-clip-preview"   # 30s instrumental clip
 API = "https://generativelanguage.googleapis.com/v1beta"
 
-# Distinct instrumentation palettes for an instrumental HYMN → each post sounds different in
-# character on top of Lyria's own variation. All calm, reverent, wordless church-hymn arrangements.
+# Distinct instrumentation palettes for a VERY GENTLE instrumental hymn → each post sounds
+# different in character on top of Lyria's own variation. All soft, quiet, sparse and soothing.
 MOODS = [
-    "solo felt piano, like a quiet church hymn",
-    "warm strings and piano, a soft hymn arrangement",
-    "a soft, distant pipe organ, gentle and hymnal",
-    "acoustic fingerstyle guitar, a warm intimate hymn",
-    "harp and soft strings, a serene hymn",
-    "felt piano with a warm string pad, a tender hymn",
-    "cello and piano, a slow reverent hymn",
-    "warm organ and strings, a slow sacred hymn",
-    "soft acoustic guitar and light strings, a gentle hymn",
-    "delicate music box and strings, a calm hymn",
-    "warm strings and soft brass, a stately gentle hymn",
-    "soft flute and strings, a pastoral hymn",
+    "soft solo felt piano, played very quietly and slowly",
+    "warm strings, gentle and hushed, played softly",
+    "a very soft, distant pipe organ, pianissimo and airy",
+    "delicate acoustic fingerstyle guitar, intimate and quiet",
+    "a gentle harp with faint soft strings, delicate",
+    "quiet felt piano with a soft warm pad underneath",
+    "a soft, slow cello with faint piano, tender",
+    "an airy soft ambient pad with faint distant piano",
+    "light acoustic guitar with a whisper of strings",
+    "a delicate music box with soft strings, faint and calm",
+    "a soft warm string pad, slow and barely-there",
+    "a soft flute over gentle strings, hushed and pastoral",
 ]
 
 
 def generate(dest, index=0, extra="", timeout_s=180):
-    """Generate one instrumental HYMN track → save mp3 to `dest`. `index` rotates the palette."""
+    """Generate one VERY GENTLE instrumental HYMN → save mp3 to `dest`. `index` rotates the palette."""
     mood = MOODS[index % len(MOODS)]
-    prompt = (f"A calm, reverent, instrumental HYMN for quiet Scripture reflection, in the style of a "
-              f"traditional Christian church hymn: a warm, singable, worshipful melody with gentle "
-              f"sacred harmony, arranged for {mood}. Slow, peaceful and tender, no vocals, no drums, "
-              f"no beat — just a soft hymn melody.{extra}")
+    prompt = (f"A very gentle, soft and quiet instrumental hymn for peaceful Scripture reflection, in "
+              f"the style of a tender traditional church hymn: a slow, delicate, sparse melody with soft "
+              f"warm harmony, arranged for {mood}. Extremely calm, unhurried and soothing, minimal and "
+              f"understated, played softly and low, no vocals, no drums, no beat, no big swells or loud "
+              f"moments — just a soft, quiet, peaceful hymn.{extra}")
     body = {"contents": [{"parts": [{"text": prompt}]}]}
     url = f"{API}/models/{MODEL}:generateContent?key={hf._gemini_key()}"
     req = urllib.request.Request(url, data=json.dumps(body).encode(),
