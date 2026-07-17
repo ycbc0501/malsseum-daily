@@ -4,6 +4,7 @@ Build a Reel MP4 from a background video clip + a transparent text overlay + mus
 Requires ffmpeg (preinstalled on GitHub Actions ubuntu runners).
 """
 
+import re
 import shutil
 import subprocess
 
@@ -70,13 +71,26 @@ def extract_frame(video, out_png, at=0.8):
 
 
 def _duration(path):
-    out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
-                          "-of", "default=noprint_wrappers=1:nokey=1", path],
-                         capture_output=True, text=True)
-    try:
-        return float(out.stdout.strip())
-    except Exception:
-        return 0.0
+    """Clip duration in seconds. Uses ffprobe if present, otherwise parses `ffmpeg -i` —
+    GitHub runners ship only the bundled ffmpeg (via imageio-ffmpeg), NOT a standalone
+    ffprobe, so relying on ffprobe made make_slowmo crash and the Veo path fall back to a
+    zoom. This works with just ffmpeg."""
+    exe = shutil.which("ffprobe")
+    if exe:
+        out = subprocess.run([exe, "-v", "error", "-show_entries", "format=duration",
+                              "-of", "default=noprint_wrappers=1:nokey=1", path],
+                             capture_output=True, text=True)
+        try:
+            return float(out.stdout.strip())
+        except Exception:
+            pass
+    # fallback: parse "Duration: HH:MM:SS.ss" from ffmpeg's stderr (no ffprobe needed)
+    out = subprocess.run([FFMPEG, "-i", path], capture_output=True, text=True)
+    m = re.search(r"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)", out.stderr)
+    if m:
+        h, mnt, s = m.groups()
+        return int(h) * 3600 + int(mnt) * 60 + float(s)
+    return 0.0
 
 
 def make_slowmo(clip, out, target=60.0, max_factor=3.0):
