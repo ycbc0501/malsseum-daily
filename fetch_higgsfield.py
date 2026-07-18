@@ -19,51 +19,52 @@ FLUX = "flux-pro/kontext/max/text-to-image"   # Higgsfield fallback options
 SOUL_APP = "v1/text2image/soul"
 SOUL_BASE = "https://platform.higgsfield.ai"
 
-# wondervisionary-style: LUSH, warm, dreamy CINEMATIC scenes with rich (but tasteful) colour,
-# golden light, and a shallow-depth-of-field foreground (soft out-of-focus flowers / grass /
-# leaves framing a luminous subject beyond). Diverse subjects — meadows, water & reflections,
-# windows framing views, gardens, flowering architecture, coasts — each with a calm sky / water
-# / soft area for the verse, and natural motion potential (drifting clouds, rippling water,
-# swaying flowers). Ordered to alternate the look post-to-post.
+# WIDE-RANGING, dreamy cinematic scenes — deliberately across MANY subjects (water, city streets,
+# windows, architecture, weather, coasts, whimsical objects, cozy corners), NOT just fields and
+# flowers. Each is chosen to also ANIMATE cleanly in Veo (one clear, simple motion — rippling or
+# reflecting water, rain, drifting mist/clouds, gently swaying elements) rather than a busy field of
+# many small flowers (which comes out coarse). Each keeps a soft area for the verse. Ordered to
+# alternate the subject so the feed never looks the same twice.
 SCENES = [
-    # ── meadows & flowers (foreground bokeh) ──
-    "a lush wildflower meadow at golden hour, soft out-of-focus poppies and daisies in the "
-        "foreground, a luminous open sky above",
-    "a golden field of buttercups on rolling hills with a small wooden barn, soft blurred "
-        "flowers in the foreground, warm hazy light",
-    "a dreamy field of pink cosmos swaying, soft bokeh blossoms in front, a bright soft sky beyond",
-    "a sunlit lavender field rolling to the sea, soft purple blur in the foreground, open sky",
-    "tall wildflowers and grasses seen looking gently upward toward a bright soft sky with drifting clouds",
-    "a meadow of poppies and cornflowers by the sea, soft focus flowers in front, calm bright horizon",
-    # ── water & reflections ──
-    "a lone tree on a riverbank mirrored in still water, tall summer clouds above, calm reflective surface",
-    "gentle rain dimpling a still green pond that reflects trees and a soft bright sky, delicate ripples",
-    "a calm lake at golden hour with soft mist and warm light, mountains reflected, a bright open sky",
-    "sunlight sparkling on gently rippling sea water seen from a flowered shore, bright open horizon",
-    "a quiet river winding through a green valley, big soft clouds above, warm cinematic light",
-    # ── windows framing a view ──
-    "a rustic open window with sheer curtains framing a sunlit sea and distant hills, plants on the sill",
-    "an arched old stone window framing a small boat on a glittering sea, warm light",
-    "an open window framing a lush green garden and blue sky, roses climbing the frame",
-    "a train window with roses and petals along the sill, a soft green landscape sliding past",
-    # ── flowering architecture / places ──
-    "a weathered wooden pergola arch covered in vines over a wildflower meadow, blue sky beyond",
-    "a Mediterranean stone house with flower-filled balconies in warm golden afternoon light",
-    "a brick garden wall overflowing with climbing pink and orange roses, soft warm light",
-    "a small storybook cottage in a green meadow ringed by blossoming trees, soft cinematic light",
-    "a cobblestone European lane lined with flowers, warm morning sun and long soft shadows",
-    # ── skies, hills, coasts ──
-    "a single tree on a green hill under towering soft cumulus clouds, warm afternoon light",
-    "a winding country road through green hills toward a distant sunlit sea, wildflowers along it",
-    "white chalk sea cliffs above a calm turquoise shore under a big soft sky",
-    "rolling green pastures with a small cabin, warm low sun and golden bokeh in the foreground",
-    "soft pink and gold sunset clouds over a calm sea, a lone tree silhouette on the shore",
-    # ── forests, seasons, moody ──
-    "a soft forest clearing where cherry blossoms open into golden light, petals drifting",
-    "an autumn forest glowing red and gold, a soft misty path receding into warm light",
-    "a single glowing wildflower on a dark mossy forest floor, a soft shaft of light, dreamy",
-    "a quiet street lamp glowing warm over roses on a rainy night, soft reflections",
-    "a dewy patch of clover with one small white flower catching a soft morning sunbeam",
+    # ── water & reflections (clean motion) ──
+    "gentle rain rippling a still pond that mirrors autumn trees and a soft sky",
+    "an old town canal reflecting flower-draped balconies, the water rippling softly",
+    "a wooden rowboat resting on a glassy misty lake at dawn, faint drifting mist",
+    "a puddle on a cobblestone street mirroring a glowing sunset sky",
+    "a quiet stone fountain in an empty plaza, water falling softly in warm evening light",
+    # ── windows (curtains, light, rain outside) ──
+    "a rain-speckled window with soft roses blurred beyond the wet glass",
+    "an open window, sheer curtains drifting gently, a calm sea and soft sky beyond",
+    "a train window with a green countryside gliding gently past, soft daylight",
+    # ── city / street ──
+    "a narrow European alley with flower boxes, warm morning light and long soft shadows",
+    "a lone street lamp glowing over wet cobblestones and reflections on a rainy night",
+    "an empty cafe terrace with string lights swaying softly at dusk",
+    "a red bicycle with a flower basket leaning against an old stone wall in soft light",
+    "a rainy city crosswalk at night, glowing neon and headlights reflected in the wet street",
+    # ── architecture / places ──
+    "a Mediterranean stone house with flowering balconies above a shimmering calm sea",
+    "an arched stone window framing a small boat on a glittering sea, warm light",
+    "a weathered seaside chapel under slowly drifting soft clouds",
+    "the tall interior of a cathedral with soft coloured light drifting from stained glass",
+    # ── sky / weather ──
+    "soft towering clouds drifting slowly over a single tree on a green hill",
+    "warm sunbeams shifting through mist in a quiet forest clearing",
+    "gentle snow drifting down over a lone park bench at dusk",
+    "fireflies drifting over a dark meadow at deep-blue twilight",
+    "a soft rainbow arching over misty green hills after the rain",
+    # ── coast / mountains / nature (varied) ──
+    "a lighthouse on a cliff with slow drifting clouds and gentle surf below",
+    "white sea cliffs above a calm turquoise shore, slow gentle waves rolling in",
+    "a waterfall spilling into a misty emerald pool, soft spray drifting",
+    "a calm alpine lake mirroring snow peaks at dawn, faint mist on the water",
+    "cherry blossom branches swaying softly, a few petals drifting down",
+    "an autumn forest path with leaves drifting slowly in soft golden light",
+    # ── whimsical / cozy (tasteful) ──
+    "a lone wooden bench facing a calm, misty sea at dawn",
+    "a clear umbrella cradling soft flowers on wet cobblestones in the gentle rain",
+    "a paper lantern drifting gently over a calm dark river at night, soft reflections",
+    "a windowsill of potted plants in soft daylight, leaves stirring in a light breeze",
 ]
 COMPOSE = {
     ("center", "middle"): "COMPOSITION: compose so the CENTER of the frame — where the verse will sit — "
@@ -91,13 +92,12 @@ EVENTONE = ("Render ONE single, continuous, real photograph with smooth, natural
 COMPOSE_SAFE = ("Keep it a real, natural, uncluttered composition — one continuous photograph. Do not let "
                 "any object crowd, block or sit dead-center in the calm middle where the text goes; keep "
                 "the main subject and busy detail toward the edges, top or bottom of the frame.")
-QUALITY = ("It is a breathtaking, dreamy, cinematic photograph — lush and richly beautiful, with warm "
-           "golden natural light, vivid yet tasteful colour, and a romantic sense of wonder. Shallow "
-           "depth of field: soft, out-of-focus foreground detail (flowers, grass or leaves) framing a "
-           "luminous, sharp subject beyond, with gentle bokeh and a soft glow. Atmospheric, magical and "
-           "serene, like a beautiful dream — an image that stops the scroll. Photoreal and cinematic, "
-           "high detail, a gentle warm film-like grade, natural and believable — not a flat 3D render, "
-           "not a video game, not an obviously-AI picture.")
+QUALITY = ("It is a breathtaking, dreamy, cinematic photograph — richly beautiful and atmospheric, with "
+           "a romantic sense of wonder, tasteful colour and beautiful natural light suited to THIS "
+           "particular scene (golden, soft, moody, bright or blue as fits — NOT always golden hour). "
+           "Cinematic depth of field with gentle bokeh and a soft glow where it suits the scene. Magical "
+           "yet believable — photoreal, high detail, a gentle film-like grade — not a flat 3D render, "
+           "not a video game, not an obviously-AI picture. An image that stops the scroll.")
 NOTEXT = ("There are no visible human faces, and absolutely no text, letters, words, captions, numbers, "
           "signs, watermark or logo anywhere. It is a single full-bleed photograph that completely fills "
           "the image, edge to edge.")
