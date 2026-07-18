@@ -18,32 +18,36 @@ import fetch_higgsfield as hf   # reuse _gemini_key()
 MODEL = "lyria-3-clip-preview"   # 30s instrumental clip
 API = "https://generativelanguage.googleapis.com/v1beta"
 
-# Distinct instrumentation palettes for a VERY GENTLE instrumental hymn → each post sounds
-# different in character on top of Lyria's own variation. All soft, quiet, sparse and soothing.
+# Distinct instrumentation palettes for a WARM, HOPEFUL church hymn → each post sounds different
+# in character on top of Lyria's own variation. All gentle, but reassuring and comforting (major
+# key, hymn-like) — deliberately NOT the sad/melancholic ambient it drifted toward before.
 MOODS = [
-    "soft solo felt piano, played very quietly and slowly",
-    "warm strings, gentle and hushed, played softly",
-    "a very soft, distant pipe organ, pianissimo and airy",
-    "delicate acoustic fingerstyle guitar, intimate and quiet",
-    "a gentle harp with faint soft strings, delicate",
-    "quiet felt piano with a soft warm pad underneath",
-    "a soft, slow cello with faint piano, tender",
-    "an airy soft ambient pad with faint distant piano",
-    "light acoustic guitar with a whisper of strings",
-    "a delicate music box with soft strings, faint and calm",
-    "a soft warm string pad, slow and barely-there",
-    "a soft flute over gentle strings, hushed and pastoral",
+    "a warm church pipe organ with soft strings, like a beloved Sunday hymn",
+    "a warm grand piano playing a clear, comforting hymn melody, with gentle strings underneath",
+    "warm strings and a soft French horn, rich and reassuring, a hymn of praise",
+    "a bright acoustic guitar and warm piano, a hopeful, uplifting hymn",
+    "a warm harp and soft strings, tender and comforting, a lullaby-like hymn",
+    "a warm chapel organ and a soft choir-like pad, peaceful and hopeful",
+    "a warm piano with cello and violin in gentle harmony, a heartfelt hymn",
+    "soft strings swelling gently under a warm piano hymn melody, comforting",
+    "a warm acoustic guitar with piano and light strings, a gentle folk hymn",
+    "a music box and warm strings carrying a sweet, hopeful hymn melody",
+    "a warm string ensemble playing a rich, comforting traditional hymn",
+    "a soft flute and warm organ over gentle strings, a pastoral hymn of peace",
 ]
 
 
 def generate(dest, index=0, extra="", timeout_s=180):
-    """Generate one VERY GENTLE instrumental HYMN → save mp3 to `dest`. `index` rotates the palette."""
+    """Generate one WARM, HOPEFUL church HYMN → save mp3 to `dest`. `index` rotates the palette."""
     mood = MOODS[index % len(MOODS)]
-    prompt = (f"A very gentle, soft and quiet instrumental hymn for peaceful Scripture reflection, in "
-              f"the style of a tender traditional church hymn: a slow, delicate, sparse melody with soft "
-              f"warm harmony, arranged for {mood}. Extremely calm, unhurried and soothing, minimal and "
-              f"understated, played softly and low, no vocals, no drums, no beat, no big swells or loud "
-              f"moments — just a soft, quiet, peaceful hymn.{extra}")
+    prompt = (f"A warm, comforting and hopeful instrumental church hymn for peaceful Scripture "
+              f"reflection — in the spirit of a beloved traditional hymn like 'Amazing Grace' or 'It Is "
+              f"Well' (a similar warm, reverent, singable feel, NOT those exact tunes). A clear, gentle, "
+              f"singable hymn melody in a MAJOR key with warm, consonant harmony, arranged for {mood}. "
+              f"Tender, reverent and reassuring — soft and unhurried but heartfelt and uplifting, the way "
+              f"a hymn comforts. No vocals, no drums, no beat. It must sound like a real CHURCH HYMN, "
+              f"warm and hopeful — absolutely NOT sad, melancholic, mournful, dark, tense or like "
+              f"ambient background drone.{extra}")
     body = {"contents": [{"parts": [{"text": prompt}]}]}
     url = f"{API}/models/{MODEL}:generateContent?key={hf._gemini_key()}"
     req = urllib.request.Request(url, data=json.dumps(body).encode(),
