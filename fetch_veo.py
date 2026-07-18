@@ -19,18 +19,24 @@ import fetch_higgsfield as hf   # reuse _gemini_key()
 VEO_MODEL = "veo-3.1-fast-generate-preview"   # "fast" tier: good motion, lower cost than full
 API = "https://generativelanguage.googleapis.com/v1beta"
 
-# Locked camera + gentle scene motion only, so the composition (and the clear center band the
-# verse sits on) never shifts. Anything more energetic would slide the text off its calm area.
-MOTION = ("The camera stays locked and still — no pan, no zoom, no camera move — so the composition "
-          "never shifts. The scene comes alive gently and CONTINUOUSLY from the very first frame: water "
-          "ripples and reflections shimmer, mist and clouds drift slowly, flowers and tall grass sway "
-          "softly in a light breeze, leaves flutter subtly. EVERYTHING already in the frame stays "
-          "present the whole time and moves only softly and steadily — nothing suddenly appears, grows, "
-          "pops in, flickers, blooms or morphs; no timelapse. The motion is smooth, subtle and "
-          "consistent from start to finish. Serene, dreamy, cinematic, natural slow motion.")
-NEG = ("text, letters, words, watermark, logo, people, person, camera pan, camera zoom, camera shake, "
+# Locked camera + BARELY-THERE motion, so the composition (and the clear center band the verse
+# sits on) never shifts AND the scene never looks frantic. Veo's fast tier tends to over-animate,
+# so the prompt pushes hard toward "a living photograph that only breathes" — the fast waves /
+# rushing traffic came from asking for too much motion, not from any speed bug downstream.
+MOTION = ("Animate this photograph with EXTREMELY subtle, minimal, slow motion — it should look almost "
+          "exactly like a STILL photograph that is only faintly breathing, a calm living wallpaper. The "
+          "camera is completely locked: no pan, no zoom, no camera move at all. Allow only the faintest, "
+          "slowest, gentlest movement — a soft shimmer on water, an almost-imperceptible drift of mist or "
+          "cloud, a tiny glimmer of light. Keep EVERY movement very slow, very small and calm. Absolutely "
+          "NO fast, energetic or busy motion: no crashing or rushing waves, no fast-moving or speeding "
+          "cars or traffic, no fast water, no timelapse, no sped-up anything. Everything already in the "
+          "frame stays present the whole time — nothing appears, grows, pops in, flickers or morphs. "
+          "Serene, peaceful, barely-moving — like a photograph gently coming to life.")
+NEG = ("fast motion, fast movement, rushing water, crashing waves, choppy water, fast-moving cars, "
+       "speeding cars, busy traffic, timelapse, sped up, energetic movement, churning, turbulence, "
+       "text, letters, words, watermark, logo, people, person, camera pan, camera zoom, camera shake, "
        "hard cut, scene change, morphing, warping, distortion, sudden changes, popping in, flickering, "
-       "elements appearing or disappearing, growing, blooming, timelapse, jump cut, strobing")
+       "elements appearing or disappearing, growing, blooming, jump cut, strobing")
 
 
 def animate(still_png, dest, aspect="9:16", prompt=MOTION, timeout_s=420, poll_s=10):
