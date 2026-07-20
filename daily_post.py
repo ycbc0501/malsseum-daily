@@ -185,7 +185,7 @@ def main():
     photo = None
     scene_i = state.get("scene_i", 0)
     try:
-        fetch_higgsfield.generate_background(bg, scene_i, placement, aspect="9:16")
+        fetch_higgsfield.generate_checked(bg, scene_i, placement, aspect="9:16")
         state["scene_i"] = scene_i + 1
         print(f"background: nano-banana 9:16 (scene {scene_i})")
     except Exception as e:

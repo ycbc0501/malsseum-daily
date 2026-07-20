@@ -15,6 +15,8 @@ import urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL = "gemini"        # default backend: Nano Banana Pro (photoreal, clean, respects "no text")
 GEMINI_MODEL = "gemini-3-pro-image"
+VISION_MODEL = "gemini-2.5-pro"   # vision model that inspects the render for composition flaws
+                                  # (flash missed the upright-reflection bug; pro catches it)
 FLUX = "flux-pro/kontext/max/text-to-image"   # Higgsfield fallback options
 SOUL_APP = "v1/text2image/soul"
 SOUL_BASE = "https://platform.higgsfield.ai"
@@ -90,7 +92,11 @@ EVENTONE = ("Render ONE single, continuous, real photograph — one coherent sce
             "water surface, in their natural real-world places — sky above, ground or water below, a "
             "single horizon. Compose it so the calm, soft, open area where the verse sits (soft sky, "
             "gentle haze, calm water or quiet out-of-focus light) falls naturally across the middle of "
-            "this ONE scene — reached organically, never by pasting a second scene into the centre.")
+            "this ONE scene — reached organically, never by pasting a second scene into the centre. "
+            "If any water (puddle, canal, lake, wet street) reflects something, the reflection MUST be a "
+            "physically-correct UPSIDE-DOWN MIRROR image directly below the real object — rooftops and "
+            "buildings in the reflection point DOWNWARD, inverted — NEVER a second upright building, town "
+            "or scene sitting the right way up in the water.")
 COMPOSE_SAFE = ("Keep it a real, natural, uncluttered composition — one continuous photograph. Do not let "
                 "any object crowd, block or sit dead-center in the calm middle where the text goes; keep "
                 "the main subject and busy detail toward the edges, top or bottom of the frame.")
@@ -140,6 +146,55 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
             args["safety_tolerance"] = 2
         url = client.subscribe(model, args)["images"][0]["url"]
     urllib.request.urlretrieve(url, dest)
+    return dest
+
+
+_CHECK_PROMPT = (
+    "You are inspecting an AI-GENERATED photo for PHYSICALLY IMPOSSIBLE composition flaws — the kind "
+    "of mistakes an image generator makes. Look ONLY for these, and be strict:\n"
+    "1) TWO separate scenes stacked into one frame: two horizons, two skies, two separate bodies of "
+    "water, or a landscape/townscape duplicated so it appears both above and below.\n"
+    "2) A reflection in water (puddle, canal, lake, wet street) that is NOT a correct upside-down mirror: "
+    "e.g. buildings/rooftops appearing UPRIGHT (right-way-up) in the water instead of inverted, so it "
+    "looks like a 'second town' sitting in the water rather than a true reflection.\n"
+    "3) Obviously impossible, duplicated, melted or warped major structures.\n"
+    "Do NOT flag normal artistic blur, bokeh, mist, grain, or a CORRECT (properly inverted) reflection. "
+    "Reply ONLY as JSON: {\"ok\": true, \"reason\": \"\"} if it looks physically plausible, or "
+    "{\"ok\": false, \"reason\": \"<short reason>\"} if any flaw above is present.")
+
+
+def check_composition(image_path):
+    """Ask a Gemini vision model whether the render has a physically-impossible composition (stacked
+    double scene / wrong-way reflection / duplicated structure). Returns (ok: bool, reason: str).
+    Best-effort: on ANY error returns (True, ...) so a flaky check never blocks the daily post."""
+    try:
+        img_b64 = base64.b64encode(open(image_path, "rb").read()).decode()
+        body = {"contents": [{"parts": [
+                    {"inlineData": {"mimeType": "image/png", "data": img_b64}},
+                    {"text": _CHECK_PROMPT}]}],
+                "generationConfig": {"responseMimeType": "application/json", "temperature": 0}}
+        url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+               f"{VISION_MODEL}:generateContent?key={_gemini_key()}")
+        req = urllib.request.Request(url, data=json.dumps(body).encode(),
+                                     headers={"Content-Type": "application/json"}, method="POST")
+        data = json.load(urllib.request.urlopen(req, timeout=90))
+        txt = data["candidates"][0]["content"]["parts"][0]["text"]
+        j = json.loads(txt)
+        return bool(j.get("ok", True)), str(j.get("reason", ""))[:200]
+    except Exception as e:
+        return True, f"check skipped ({e})"
+
+
+def generate_checked(dest, index=0, placement=("center", "middle"), aspect="3:4", attempts=3):
+    """Generate a background AND vision-check its composition; regenerate (up to `attempts`) if the
+    checker flags a stacked/duplicated scene or a wrong reflection. Returns the last render either
+    way (best-effort — never raises just because the checker was unhappy)."""
+    for a in range(1, attempts + 1):
+        generate_background(dest, index, placement, aspect=aspect)
+        ok, reason = check_composition(dest)
+        print(f"composition check {a}/{attempts}: ok={ok} :: {reason}")
+        if ok:
+            return dest
     return dest
 
 
