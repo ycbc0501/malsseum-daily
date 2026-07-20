@@ -27,46 +27,48 @@ SOUL_BASE = "https://platform.higgsfield.ai"
 # reflecting water, rain, drifting mist/clouds, gently swaying elements) rather than a busy field of
 # many small flowers (which comes out coarse). Each keeps a soft area for the verse. Ordered to
 # alternate the subject so the feed never looks the same twice.
+# Scenes chosen for WEIGHT, GRAVITY and REALNESS (the user loved a dark, heavy real-sea photo and
+# hated a kitschy AI fountain). Lean toward deep, serious, atmospheric, real-looking imagery — dark
+# seas, heavy skies, mist, stone, rain — with some quieter serene scenes for tonal range. AVOID
+# staged/twee/ornamental subjects (decorative fountains, string-light cafés, flower-basket bicycles,
+# umbrellas cradling flowers) — AI renders those as fake CGI. Each still animates cleanly in Veo (or,
+# for heavy seas, the motion gate falls it back to a strong still — which is exactly the loved look).
 SCENES = [
+    # ── deep water & sea (WEIGHT / gravity) ──
+    "dark ocean swells rolling under a heavy overcast sky, white foam streaking the deep water",
+    "slow heavy waves rolling onto a vast empty shore under a dim grey dawn",
+    "a shaft of pale light breaking through dark storm clouds over a wide restless sea",
+    "deep still water at dusk, faint ripples under a brooding sky",
     # ── water & reflections (clean motion) ──
-    "gentle rain rippling a still pond that mirrors autumn trees and a soft sky",
-    "an old town canal reflecting flower-draped balconies, the water rippling softly",
+    "gentle rain rippling a still dark pond that mirrors bare autumn trees and a grey sky",
+    "an old town canal reflecting weathered stone buildings, the dark water rippling softly",
     "a wooden rowboat resting on a glassy misty lake at dawn, faint drifting mist",
-    "a puddle on a cobblestone street mirroring a glowing sunset sky",
-    "a quiet stone fountain in an empty plaza, water falling softly in warm evening light",
-    # ── windows (curtains, light, rain outside) ──
-    "a rain-speckled window with soft roses blurred beyond the wet glass",
-    "an open window, sheer curtains drifting gently, a calm sea and soft sky beyond",
-    "a train window with a green countryside gliding gently past, soft daylight",
-    # ── city / street ──
-    "a narrow European alley with flower boxes, warm morning light and long soft shadows",
+    "a puddle on a cobblestone street mirroring a moody twilight sky",
+    # ── sky / weather / mist (gravity) ──
+    "low cloud and mist rolling over a lone bare tree on a wide, empty hillside",
+    "mist drifting slowly through dark pine-covered mountains at first light",
+    "bare winter trees standing in still, heavy fog, quiet and grey",
+    "gentle snow drifting down over a dark, silent forest at dusk",
+    # ── windows ──
+    "a rain-speckled window with a blurred grey landscape beyond the wet glass",
+    "an open window, sheer curtains drifting gently, a calm pale sea beyond",
+    # ── city / street (real, moody) ──
     "a lone street lamp glowing over wet cobblestones and reflections on a rainy night",
-    "an empty cafe terrace with string lights swaying softly at dusk",
-    "a red bicycle with a flower basket leaning against an old stone wall in soft light",
+    "a narrow old European alley in the rain, warm light pooling on the wet stone",
     "a rainy city crosswalk at night, glowing neon and headlights reflected in the wet street",
-    # ── architecture / places ──
-    "a Mediterranean stone house with flowering balconies above a shimmering calm sea",
-    "an arched stone window framing a small boat on a glittering sea, warm light",
-    "a weathered seaside chapel under slowly drifting soft clouds",
-    "the tall interior of a cathedral with soft coloured light drifting from stained glass",
-    # ── sky / weather ──
-    "soft towering clouds drifting slowly over a single tree on a green hill",
-    "warm sunbeams shifting through mist in a quiet forest clearing",
-    "gentle snow drifting down over a lone park bench at dusk",
-    "fireflies drifting over a dark meadow at deep-blue twilight",
-    "a soft rainbow arching over misty green hills after the rain",
-    # ── coast / mountains / nature (varied) ──
-    "a lighthouse on a cliff with slow drifting clouds and gentle surf below",
-    "white sea cliffs above a calm turquoise shore, slow gentle waves rolling in",
-    "a waterfall spilling into a misty emerald pool, soft spray drifting",
-    "a calm alpine lake mirroring snow peaks at dawn, faint mist on the water",
-    "cherry blossom branches swaying softly, a few petals drifting down",
-    "an autumn forest path with leaves drifting slowly in soft golden light",
-    # ── whimsical / cozy (tasteful) ──
-    "a lone wooden bench facing a calm, misty sea at dawn",
-    "a clear umbrella cradling soft flowers on wet cobblestones in the gentle rain",
-    "a paper lantern drifting gently over a calm dark river at night, soft reflections",
-    "a windowsill of potted plants in soft daylight, leaves stirring in a light breeze",
+    # ── stone / architecture (reads real, weighty) ──
+    "the tall interior of an old stone cathedral, soft light drifting from high windows",
+    "a weathered stone chapel on the coast under a heavy drifting sky",
+    "an ancient stone archway opening onto a misty sea at dawn",
+    # ── coast / mountains / nature ──
+    "a lighthouse on a dark cliff under drifting cloud, surf breaking on the rocks below",
+    "pale sea cliffs above a deep restless shore under a wide, muted sky",
+    "a calm alpine lake mirroring dark snow peaks at dawn, faint mist on the water",
+    "an autumn forest path in low morning mist, leaves drifting slowly",
+    "cherry blossom branches swaying softly against a soft grey sky, a few petals drifting",
+    # ── quiet / still ──
+    "a lone weathered wooden bench facing a calm, misty sea at grey dawn",
+    "a single candle-lit stone windowsill at dusk, soft shadow and still air",
 ]
 COMPOSE = {
     ("center", "middle"): "COMPOSITION: compose so the CENTER of the frame — where the verse will sit — "
@@ -90,7 +92,10 @@ EVENTONE = ("Render ONE single, continuous, real photograph — one coherent sce
             "mirrored, doubled or repeated view, and never a framed picture, inset, panel, collage, "
             "photo-within-a-photo or any hard horizontal seam. There is only one sky and (if any) one "
             "water surface, in their natural real-world places — sky above, ground or water below, a "
-            "single horizon. Compose it so the calm, soft, open area where the verse sits (soft sky, "
+            "single horizon. The TOP of the frame is sky or open space — NEVER an upside-down mirror of "
+            "the bottom: no upside-down trees, mountains, cliffs or land hanging down from the top edge, "
+            "and no top-bottom kaleidoscope symmetry. "
+            "Compose it so the calm, soft, open area where the verse sits (soft sky, "
             "gentle haze, calm water or quiet out-of-focus light) falls naturally across the middle of "
             "this ONE scene — reached organically, never by pasting a second scene into the centre. "
             "If any water (puddle, canal, lake, wet street) reflects something, the reflection MUST be a "
@@ -100,12 +105,14 @@ EVENTONE = ("Render ONE single, continuous, real photograph — one coherent sce
 COMPOSE_SAFE = ("Keep it a real, natural, uncluttered composition — one continuous photograph. Do not let "
                 "any object crowd, block or sit dead-center in the calm middle where the text goes; keep "
                 "the main subject and busy detail toward the edges, top or bottom of the frame.")
-QUALITY = ("It is a breathtaking, dreamy, cinematic photograph — richly beautiful and atmospheric, with "
-           "a romantic sense of wonder, tasteful colour and beautiful natural light suited to THIS "
-           "particular scene (golden, soft, moody, bright or blue as fits — NOT always golden hour). "
-           "Cinematic depth of field with gentle bokeh and a soft glow where it suits the scene. Magical "
-           "yet believable — photoreal, high detail, a gentle film-like grade — not a flat 3D render, "
-           "not a video game, not an obviously-AI picture. An image that stops the scroll.")
+QUALITY = ("It is a GENUINE real photograph taken with a real camera — richly atmospheric, with real "
+           "depth and a quiet sense of WEIGHT, gravity and reverence (holy, still, serious and true — "
+           "never cute, kitschy, saccharine, twee or fantastical). Real natural light suited to THIS "
+           "scene — often deep, dim, overcast, moody or low-key, not always sunny or golden. Natural "
+           "photographic detail, real texture and true-to-life colour with a subtle film grain. It must "
+           "look like an ACTUAL photograph a person took — absolutely NOT a glossy 3D render, CGI, a "
+           "video-game frame, a digital painting, or a plasticky/artificial AI image. Understated, "
+           "grounded and real, with weight — an image that feels honest and quietly moving.")
 NOTEXT = ("There are no visible human faces, and absolutely no text, letters, words, captions, numbers, "
           "signs, watermark or logo anywhere. It is a single full-bleed photograph that completely fills "
           "the image, edge to edge.")
@@ -150,15 +157,26 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
 
 
 _CHECK_PROMPT = (
-    "You are inspecting an AI-GENERATED photo for PHYSICALLY IMPOSSIBLE composition flaws — the kind "
-    "of mistakes an image generator makes. Look ONLY for these, and be strict:\n"
-    "1) TWO separate scenes stacked into one frame: two horizons, two skies, two separate bodies of "
-    "water, or a landscape/townscape duplicated so it appears both above and below.\n"
-    "2) A reflection in water (puddle, canal, lake, wet street) that is NOT a correct upside-down mirror: "
-    "e.g. buildings/rooftops appearing UPRIGHT (right-way-up) in the water instead of inverted, so it "
-    "looks like a 'second town' sitting in the water rather than a true reflection.\n"
-    "3) Obviously impossible, duplicated, melted or warped major structures.\n"
-    "Do NOT flag normal artistic blur, bokeh, mist, grain, or a CORRECT (properly inverted) reflection. "
+    "You are inspecting an AI-GENERATED vertical photo for PHYSICALLY IMPOSSIBLE composition flaws — "
+    "the kind an image generator makes. IMPORTANT: a NORMAL photo has sky or open space in the UPPER "
+    "part and ground / water / the subject in the LOWER part, meeting at ONE horizon — that is CORRECT "
+    "and common, so do NOT flag a normal single-horizon landscape or seascape. Flag ONLY these clear "
+    "flaws, and be strict about them:\n"
+    "1) VERTICAL MIRROR: the TOP portion is an upside-down mirror of the bottom — trees, mountains, "
+    "cliffs, buildings or land hanging UPSIDE-DOWN from the top edge, or an obvious kaleidoscope / "
+    "top-bottom mirror symmetry.\n"
+    "2) STACKED DUPLICATE: the frame is split into TWO separate scenes — two separate horizons, or two "
+    "separate bodies of water with land between them (e.g. one lake high up AND another lake below).\n"
+    "3) WRONG REFLECTION: a reflection in water (puddle, canal, lake, wet street) that is NOT a correct "
+    "upside-down mirror — e.g. buildings appearing UPRIGHT in the water instead of inverted (a 'second "
+    "town' sitting in the water).\n"
+    "4) FAKE / CGI: the image clearly looks like a glossy 3D/CGI render, a video-game frame, a digital "
+    "painting or a plasticky artificial AI image — including fake, over-perfect ornate man-made objects "
+    "— rather than a real photograph. Only flag CLEARLY fake/plastic/CGI, not a real photo with moody "
+    "or dim light.\n"
+    "5) Obviously impossible, duplicated, melted or badly warped major structures.\n"
+    "Do NOT flag: a normal single-horizon landscape/seascape, artistic blur, bokeh, mist, grain, dark "
+    "or moody light, or a CORRECT (properly inverted) reflection.\n"
     "Reply ONLY as JSON: {\"ok\": true, \"reason\": \"\"} if it looks physically plausible, or "
     "{\"ok\": false, \"reason\": \"<short reason>\"} if any flaw above is present.")
 
