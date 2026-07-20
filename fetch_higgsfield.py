@@ -82,13 +82,15 @@ COMPOSE = {
         "text (soft sky, light, water or a quiet background); place the main subject toward the left "
         "and lower part of the photo, keeping the text area clear.",
 }
-EVENTONE = ("Render ONE single, continuous, real photograph with smooth, natural transitions and "
-            "absolutely NO hard horizontal line, band, strip or seam anywhere, and NO framed picture, "
-            "inset, border, panel or photo-within-a-photo — never a pasted-together or collage look. "
-            "The middle of the frame is a calmer, softer, more open part of the SAME "
-            "scene (soft light, gentle haze, calm water, sky, a wall, still ground or gentle blur) where "
-            "the verse can be read — even in tone, quietly lit, arrived at organically. Keep the richer "
-            "detail toward the edges, top and bottom, easing softly into that quiet middle.")
+EVENTONE = ("Render ONE single, continuous, real photograph — one coherent scene with ONE horizon line "
+            "only. It must NOT be split or stacked into two scenes: NEVER two horizons, NEVER a second "
+            "body of water, second lake, second sky or second landscape above or below the first, NEVER a "
+            "mirrored, doubled or repeated view, and never a framed picture, inset, panel, collage, "
+            "photo-within-a-photo or any hard horizontal seam. There is only one sky and (if any) one "
+            "water surface, in their natural real-world places — sky above, ground or water below, a "
+            "single horizon. Compose it so the calm, soft, open area where the verse sits (soft sky, "
+            "gentle haze, calm water or quiet out-of-focus light) falls naturally across the middle of "
+            "this ONE scene — reached organically, never by pasting a second scene into the centre.")
 COMPOSE_SAFE = ("Keep it a real, natural, uncluttered composition — one continuous photograph. Do not let "
                 "any object crowd, block or sit dead-center in the calm middle where the text goes; keep "
                 "the main subject and busy detail toward the edges, top or bottom of the frame.")
