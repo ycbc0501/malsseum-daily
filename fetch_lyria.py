@@ -44,10 +44,11 @@ def generate(dest, index=0, extra="", timeout_s=180):
               f"reflection — in the spirit of a beloved traditional hymn like 'Amazing Grace' or 'It Is "
               f"Well' (a similar warm, reverent, singable feel, NOT those exact tunes). A clear, gentle, "
               f"singable hymn melody in a MAJOR key with warm, consonant harmony, arranged for {mood}. "
-              f"Tender, reverent and reassuring — soft and unhurried but heartfelt and uplifting, the way "
-              f"a hymn comforts. No vocals, no drums, no beat. It must sound like a real CHURCH HYMN, "
-              f"warm and hopeful — absolutely NOT sad, melancholic, mournful, dark, tense or like "
-              f"ambient background drone.{extra}")
+              f"Tender, reverent and reassuring — heartfelt and hopeful, the way a hymn comforts. Keep it "
+              f"VERY soft, quiet, small, sparse and intimate — played gently and low, just a few tender "
+              f"notes, never full, loud, grand, cinematic or swelling. No vocals, no drums, no beat. It "
+              f"must sound like a real CHURCH HYMN, warm and hopeful — absolutely NOT sad, melancholic, "
+              f"mournful, dark, tense or like ambient background drone.{extra}")
     body = {"contents": [{"parts": [{"text": prompt}]}]}
     url = f"{API}/models/{MODEL}:generateContent?key={hf._gemini_key()}"
     req = urllib.request.Request(url, data=json.dumps(body).encode(),

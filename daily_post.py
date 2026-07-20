@@ -198,17 +198,30 @@ def main():
     generate.cover_crop(Image.open(photo or bg), *generate.REEL).save(bg, "PNG")
     overlay = os.path.join(generate.OUT_DIR, "_overlay.png")
     generate.render_text_overlay(verse, overlay, canvas=generate.REEL, placement=placement)
+    # Veo → REAL motion at NATIVE speed (no slow-mo: stretching made it coarse). An automatic motion
+    # gate rejects an over-animated clip (racing/timelapse clouds or churning water): retry once, and
+    # only if it is STILL too fast fall back to a calm still — a bad-motion clip can never post itself.
+    MOTION_MAX, SKY_MAX = 2.6, 0.7   # thresholds from real clips: calm≈1.7/0.35, frantic city≈7.3
     try:
         import fetch_veo
         clip = os.path.join(generate.OUT_DIR, "_veo.mp4")
-        fetch_veo.animate(bg, clip)                              # AI image → real motion
-        slow = os.path.join(generate.OUT_DIR, "_veo_slow.mp4")
-        make_video.make_slowmo(clip, slow, target=20)            # serene ~20s pace, no loop seam
-        make_video.build_reel(slow, overlay, audio, out_mp4, duration=20)
-        print(f"reel(veo): {verse['ref']}")
+        ov = sky = 99.0
+        for attempt in (1, 2):
+            fetch_veo.animate(bg, clip)                          # AI image → real motion
+            ov, sky = make_video.motion_score(clip)
+            print(f"veo motion attempt {attempt}: overall {ov:.2f}, sky {sky:.2f}")
+            if ov <= MOTION_MAX and sky <= SKY_MAX:
+                break
+        if ov <= MOTION_MAX and sky <= SKY_MAX:
+            make_video.build_reel_native(clip, overlay, audio, out_mp4)
+            print(f"reel(veo native, overall {ov:.2f}, sky {sky:.2f}): {verse['ref']}")
+        else:
+            print(f"veo still too fast (overall {ov:.2f}, sky {sky:.2f}) → calm still fallback")
+            make_video.build_reel_still(bg, overlay, audio, out_mp4, duration=12)
+            print(f"reel(still-fallback): {verse['ref']}")
     except Exception as e:
         print(f"veo motion failed ({e}) → background-zoom still")
-        make_video.build_reel_still(bg, overlay, audio, out_mp4, duration=20)
+        make_video.build_reel_still(bg, overlay, audio, out_mp4, duration=12)
         print(f"reel(still): {verse['ref']}")
 
     print(f"music={os.path.basename(audio) if audio else 'none'}")
