@@ -227,7 +227,8 @@ EVENTONE = ("Render ONE single, continuous, real photograph — one coherent sce
 COMPOSE_SAFE = ("Keep it a real, natural, uncluttered composition — one continuous photograph. Do not let "
                 "any object crowd, block or sit dead-center in the calm middle where the text goes; keep "
                 "the main subject and busy detail toward the edges, top or bottom of the frame.")
-QUALITY = ("It is a GENUINE real photograph taken with a real camera — richly atmospheric, with real "
+QUALITY = ("It is HYPERREALISTIC — completely indistinguishable from a GENUINE real photograph taken "
+           "with a real camera — richly atmospheric, with real "
            "depth and a quiet sense of WEIGHT, gravity and reverence (holy, still, serious and true — "
            "never cute, kitschy, saccharine, twee or fantastical). Real natural light suited to THIS "
            "scene — often deep, dim, overcast, moody or low-key, not always sunny or golden. Natural "

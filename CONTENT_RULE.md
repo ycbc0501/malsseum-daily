@@ -26,6 +26,11 @@ When a theme comes round again it must differ by multiple axes:
 - **Camera vantage / angle:** `VANTAGE` (4 options) — wide/distant, low eye-level, high looking-out, intimate close.
 - These are set in `scene_variation(post_i)` and injected into every prompt. Axes to keep leveraging: colour, angle, narrative, time-of-day feel, season, age/era.
 
+## 3b. Every post is VIDEO, and every image is HYPERREALISTIC
+- **Production posts are always Reels (.mp4)** — never a static image post. `daily_post.py` always builds and publishes a video via `publish_reel`. (Preview-page stills are illustrations only, not production.)
+- The still-Ken-Burns fallback is *still an .mp4*, used only when Veo motion fails the gate/errors — a rare safety net, not a static post.
+- **Every rendered image must be HYPERREALISTIC — indistinguishable from a genuine photograph.** `QUALITY` enforces this in prose (one clean realism statement, NOT stacked hype-words like "8k ultra" which backfire on this model → baked text / game look). Absolutely no glossy CGI, 3D render, video-game frame, digital painting, or plasticky AI look.
+
 ## 4. Physics must be real — nothing impossible
 - ONE horizon; sky above, ground/water below. **No** stacked/doubled scenes, **no** two water surfaces, **no** vertical mirror (upside-down land hanging from the top), **no** framed-inset/collage/photo-in-photo.
 - Any reflection is a **physically-correct upside-down mirror** (roofs point down) — never a second upright "town in the water."
