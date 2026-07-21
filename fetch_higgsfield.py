@@ -39,59 +39,107 @@ SOUL_BASE = "https://platform.higgsfield.ai"
 # into the flat SCENES list so walking it sequentially alternates themes (sea → forest → street →
 # cathedral → mountain → …), never the same theme twice running. `pick_scene()` adds a second guard:
 # a category no-repeat ledger, so even a gate rejection / fallback can't collapse two same-theme posts.
+# 24 distinct THEMES, all fitting the 경건함/무게감 (reverence / weight) direction. The dict ORDER
+# alternates families (open water → dry land → architecture → sky → interior …) so the round-robin
+# below never places two similar-looking themes back-to-back. Base prompts describe SUBJECT + weather
+# only — time-of-day and colour come from the rotating VARIATION layer, so the same theme looks
+# substantially different each time it comes round (different light, palette and camera angle).
 SCENE_GROUPS = {
-    # ── deep water & sea (WEIGHT / gravity) ──
     "sea": [
-        "dark ocean swells rolling under a heavy overcast sky, white foam streaking the deep water",
-        "slow heavy waves rolling onto a vast empty shore under a dim grey dawn",
-        "a shaft of pale light breaking through dark storm clouds over a wide restless sea",
-        "deep still water at dusk, faint ripples under a brooding sky",
+        "dark ocean swells rolling under a vast heavy sky, white foam streaking the deep water",
+        "the open sea heaving in long slow swells far from any shore, deep and restless",
     ],
-    # ── forest / trees / snow (dry land, no big water) ──
-    "forest": [
-        "gentle snow drifting down over a dark, silent pine forest at dusk",
-        "an autumn forest path in low morning mist, leaves drifting slowly",
-        "bare winter trees standing in still, heavy fog, quiet and grey",
-        "cherry blossom branches swaying softly against a soft grey sky, a few petals drifting",
+    "forest_path": [
+        "a quiet path winding into a deep forest, tall trees receding into soft haze",
+        "a narrow trail through dark pines, fallen leaves on the ground and mist between the trunks",
     ],
-    # ── city / street (real, moody) ──
-    "street": [
-        "a lone street lamp glowing over wet cobblestones on a rainy night",
-        "a narrow old European alley in the rain, warm light pooling on the wet stone",
-        "a rainy city crosswalk at night, glowing neon and headlights reflected in the wet street",
+    "cathedral": [
+        "the tall stone interior of an old cathedral, shafts of light falling from high windows",
+        "the vaulted nave of an ancient church, worn stone columns rising into shadow",
     ],
-    # ── stone / architecture (reads real, weighty) ──
-    "stone": [
-        "the tall interior of an old stone cathedral, soft light drifting from high windows",
-        "a weathered stone chapel alone on a hill under a heavy drifting sky",
-        "an ancient stone archway opening onto a misty valley at dawn",
+    "mist_mountain": [
+        "mist drifting between dark pine-covered mountain ridges",
+        "a lone bare peak rising above a sea of low cloud",
     ],
-    # ── mountains / hills (dry, high, dry-land gravity) ──
-    "mountain": [
-        "mist drifting slowly through dark pine-covered mountains at first light",
-        "low cloud and mist rolling over a lone bare tree on a wide, empty hillside",
-        "a calm alpine lake mirroring dark snow peaks at dawn, faint mist on the water",
+    "street_rain": [
+        "a narrow old cobblestone alley after rain, worn stone walls and quiet light",
+        "an empty old-town lane glistening after rain, stone houses on either side",
     ],
-    # ── water & reflections (clean motion) ──
-    "reflection": [
-        "gentle rain rippling a still dark pond that mirrors bare autumn trees and a grey sky",
-        "an old town canal reflecting weathered stone buildings, the dark water rippling softly",
-        "a wooden rowboat resting on a glassy misty lake at dawn, faint drifting mist",
+    "wheat_field": [
+        "a wide field of ripe wheat bending in the wind under a broad open sky",
+        "endless golden grain rolling in slow waves across an open plain",
     ],
-    # ── coast / cliffs ──
-    "coast": [
-        "a lighthouse on a dark cliff under drifting cloud, surf breaking on the rocks below",
-        "pale sea cliffs above a deep restless shore under a wide, muted sky",
+    "reflection_lake": [
+        "a still glassy lake holding a correct upside-down reflection of dark mountains",
+        "a calm mountain tarn mirroring the peaks above in a perfect inverted reflection",
     ],
-    # ── windows / interior ──
+    "lighthouse": [
+        "a lighthouse standing on a dark rocky headland, surf breaking on the rocks below",
+        "a solitary lighthouse above steep cliffs, the sea stretching grey to the horizon",
+    ],
+    "snowfall": [
+        "snow drifting down over a silent, dark pine forest",
+        "soft snow falling across a still, empty field of white",
+    ],
+    "canal_town": [
+        "an old stone town beside a quiet canal, the weathered buildings reflected correctly upside-down in the still water",
+        "a narrow canal between ancient stone houses, the calm water holding an inverted reflection",
+    ],
+    "chapel": [
+        "a small stone chapel standing alone on a windswept hill",
+        "a weathered country chapel on an open moor under a wide sky",
+    ],
+    "wilderness": [
+        "a vast rocky desert wilderness of bare stone and distant ridges",
+        "a dry canyon of weathered rock under a wide, empty sky",
+    ],
     "window": [
-        "a rain-speckled window with a blurred grey landscape beyond the wet glass",
-        "an open window, sheer curtains drifting gently, a calm pale sky beyond",
+        "a rain-speckled window looking out on a blurred, distant landscape",
+        "an open window with a sheer curtain drifting, a pale calm view beyond",
     ],
-    # ── quiet / still ──
-    "quiet": [
-        "a lone weathered wooden bench facing a calm, misty field at grey dawn",
-        "a single candle-lit stone windowsill at dusk, soft shadow and still air",
+    "river": [
+        "a broad quiet river winding slowly through a wide valley",
+        "a calm river flowing gently between wooded banks and low hills",
+    ],
+    "archway": [
+        "an ancient weathered stone archway among old ruins",
+        "the worn stone arches of an old ruin standing open to the sky",
+    ],
+    "blossom": [
+        "branches of blossom swaying softly against a pale sky, a few petals drifting",
+        "a single flowering tree in gentle bloom on an open lawn",
+    ],
+    "starfield": [
+        "a vast field of stars arching over dark, silent hills",
+        "a deep night sky full of stars above a still, low horizon",
+    ],
+    "harbor": [
+        "a quiet misty harbor with a few wooden boats moored on calm water",
+        "small fishing boats resting on still harbor water under a soft sky",
+    ],
+    "winter_trees": [
+        "bare winter trees standing in still, heavy fog",
+        "a row of leafless trees fading into cold, drifting mist",
+    ],
+    "candle": [
+        "a single candle burning on a worn stone windowsill in a dim room",
+        "one small flame glowing in a quiet, shadowed stone interior",
+    ],
+    "storm_sky": [
+        "a shaft of pale light breaking through dark storm clouds over a wide restless sea",
+        "towering dark storm clouds parting to let a single beam of light fall on the water",
+    ],
+    "rain_pond": [
+        "gentle rain rippling a still dark pond, the bare trees reflected correctly upside-down",
+        "raindrops dimpling a quiet pond, an inverted reflection of the trees below",
+    ],
+    "shore": [
+        "slow heavy waves rolling onto a vast, empty shore",
+        "a long deserted beach with waves sliding up wet, dark sand",
+    ],
+    "waterfall": [
+        "a tall waterfall spilling straight down a dark rock face into a misty pool below",
+        "water falling steadily down a sheer cliff into a deep plunge pool",
     ],
 }
 # Round-robin interleave: one scene from each theme per pass, so SCENES[i], SCENES[i+1]… cycle
@@ -104,6 +152,32 @@ while any(len(v) > _round for v in SCENE_GROUPS.values()):
             SCENES.append(_items[_round])
             SCENE_CATS.append(_cat)
     _round += 1
+
+# VARIATION — so even the SAME theme looks substantially different each time it recurs. LIGHT sets a
+# colour/light palette (not a strict clock-time, so it never contradicts a scene, e.g. stars or a
+# candle), VANTAGE sets the camera angle/distance. Keyed on a MONOTONIC per-post counter, not the
+# scene index. LIGHT has 5 entries deliberately: a theme comes round every ~24 posts, and 5 does not
+# divide 24, so a theme's light palette cycles through all five across successive appearances (a 6th
+# palette would divide 24 and lock each theme to the same light every time).
+LIGHT = [
+    "in cold, blue-grey light",
+    "under soft, heavy overcast light",
+    "in pale, misty low light",
+    "in warm, low golden light",
+    "in dim, moody near-dark light",
+]
+VANTAGE = [
+    "from a wide, distant vantage with deep open space",
+    "from a low, grounded eye-level view",
+    "from a high vantage looking out over it",
+    "in an intimate, close and quiet framing",
+]
+
+
+def scene_variation(t):
+    """A rotating 'light palette + camera angle' phrase, keyed on the monotonic post counter `t`, so
+    successive appearances of the same theme differ in light, colour and angle."""
+    return f"{LIGHT[t % len(LIGHT)]}, {VANTAGE[(t // len(LIGHT)) % len(VANTAGE)]}"
 
 
 def pick_scene(start, recent_cats, avoid=2):
@@ -181,12 +255,13 @@ def _credentials():
 
 
 def generate_background(dest, index=0, placement=("center", "middle"), full_scene=False,
-                        model=MODEL, aspect="3:4"):
+                        model=MODEL, aspect="3:4", var_t=None):
     """Generate one background → save to `dest`. Clean natural-language prompt (Gemini follows
     prose); the text area is kept clear per `placement`. `aspect` = "3:4" (feed) or "9:16" (reel)."""
     scene = SCENES[index % len(SCENES)]
+    variation = scene_variation(index if var_t is None else var_t)
     compose = COMPOSE.get(tuple(placement), COMPOSE[("center", "middle")])
-    prompt = f"A breathtaking, dreamy cinematic photograph of {scene}. {compose} {COMPOSE_SAFE} {EVENTONE} {QUALITY} {NOTEXT}"
+    prompt = f"A cinematic, genuine real photograph of {scene}, {variation}. {compose} {COMPOSE_SAFE} {EVENTONE} {QUALITY} {NOTEXT}"
 
     if model == "gemini":
         return _gemini(prompt, dest, aspect=aspect)
@@ -251,12 +326,12 @@ def check_composition(image_path):
         return True, f"check skipped ({e})"
 
 
-def generate_checked(dest, index=0, placement=("center", "middle"), aspect="3:4", attempts=3):
+def generate_checked(dest, index=0, placement=("center", "middle"), aspect="3:4", attempts=3, var_t=None):
     """Generate a background AND vision-check its composition; regenerate (up to `attempts`) if the
     checker flags a stacked/duplicated scene or a wrong reflection. Returns the last render either
     way (best-effort — never raises just because the checker was unhappy)."""
     for a in range(1, attempts + 1):
-        generate_background(dest, index, placement, aspect=aspect)
+        generate_background(dest, index, placement, aspect=aspect, var_t=var_t)
         ok, reason = check_composition(dest)
         print(f"composition check {a}/{attempts}: ok={ok} :: {reason}")
         if ok:

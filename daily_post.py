@@ -148,10 +148,13 @@ def main():
     # this week's theme → draw from it (fall back to any unused if its verses run out)
     theme = THEME_ORDER[datetime.now(KST).isocalendar()[1] % len(THEME_ORDER)]
     pool = [v for v in unused if v.get("theme") == theme] or unused
-    # within the theme, spread across books (least-posted book first)
+    # within the theme, spread across books (least-posted book first) AND never repeat the book of
+    # the immediately-previous post — consecutive posts always come from different books.
     book = lambda r: r.rsplit(" ", 1)[0]
     used_books = Counter(book(r) for r in state["used_verses"])
-    verse = min(pool, key=lambda v: (used_books[book(v["ref"])], verses.index(v)))
+    last_book = book(state["used_verses"][-1]) if state["used_verses"] else None
+    cand = [v for v in pool if book(v["ref"]) != last_book] or pool
+    verse = min(cand, key=lambda v: (used_books[book(v["ref"])], verses.index(v)))
     n = len(state["used_verses"])
     date_str = datetime.now(KST).strftime("%Y-%m-%d")
     posts = os.path.join(generate.HERE, "output", "posts")
@@ -184,12 +187,14 @@ def main():
     bg = os.path.join(generate.OUT_DIR, "_bg.png")
     photo = None
     scene_i = state.get("scene_i", 0)
+    post_i = state.get("post_i", 0)   # monotonic counter → rotates the light/angle variation
     scene_cats = state.setdefault("used_scene_cats", [])
     # Skip forward past any theme used in the last 2 posts so the feed never clusters (e.g. 3 water scenes).
     scene_i, scene_cat = fetch_higgsfield.pick_scene(scene_i, scene_cats)
     try:
-        fetch_higgsfield.generate_checked(bg, scene_i, placement, aspect="9:16")
+        fetch_higgsfield.generate_checked(bg, scene_i, placement, aspect="9:16", var_t=post_i)
         state["scene_i"] = scene_i + 1
+        state["post_i"] = post_i + 1
         scene_cats.append(scene_cat)
         del scene_cats[:-4]   # keep only the last few themes
         print(f"background: nano-banana 9:16 (scene {scene_i}, theme {scene_cat})")
@@ -218,15 +223,19 @@ def main():
             if ov <= MOTION_MAX and sky <= SKY_MAX:
                 break
         if ov <= MOTION_MAX and sky <= SKY_MAX:
-            make_video.build_reel_native(clip, overlay, audio, out_mp4)
-            print(f"reel(veo native, overall {ov:.2f}, sky {sky:.2f}): {verse['ref']}")
+            # DOUBLE the length: boomerang (forward+reverse) the ~8s clip into a seamless ~16s loop.
+            # The motion gate has already ensured the motion is gentle, so the reverse is imperceptible.
+            boom = os.path.join(generate.OUT_DIR, "_boom.mp4")
+            make_video.make_boomerang(clip, boom)
+            make_video.build_reel_native(boom, overlay, audio, out_mp4)
+            print(f"reel(veo native ×2 boomerang, overall {ov:.2f}, sky {sky:.2f}): {verse['ref']}")
         else:
             print(f"veo still too fast (overall {ov:.2f}, sky {sky:.2f}) → calm still fallback")
-            make_video.build_reel_still(bg, overlay, audio, out_mp4, duration=12)
+            make_video.build_reel_still(bg, overlay, audio, out_mp4, duration=24)
             print(f"reel(still-fallback): {verse['ref']}")
     except Exception as e:
         print(f"veo motion failed ({e}) → background-zoom still")
-        make_video.build_reel_still(bg, overlay, audio, out_mp4, duration=12)
+        make_video.build_reel_still(bg, overlay, audio, out_mp4, duration=24)
         print(f"reel(still): {verse['ref']}")
 
     print(f"music={os.path.basename(audio) if audio else 'none'}")
