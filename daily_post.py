@@ -184,10 +184,15 @@ def main():
     bg = os.path.join(generate.OUT_DIR, "_bg.png")
     photo = None
     scene_i = state.get("scene_i", 0)
+    scene_cats = state.setdefault("used_scene_cats", [])
+    # Skip forward past any theme used in the last 2 posts so the feed never clusters (e.g. 3 water scenes).
+    scene_i, scene_cat = fetch_higgsfield.pick_scene(scene_i, scene_cats)
     try:
         fetch_higgsfield.generate_checked(bg, scene_i, placement, aspect="9:16")
         state["scene_i"] = scene_i + 1
-        print(f"background: nano-banana 9:16 (scene {scene_i})")
+        scene_cats.append(scene_cat)
+        del scene_cats[:-4]   # keep only the last few themes
+        print(f"background: nano-banana 9:16 (scene {scene_i}, theme {scene_cat})")
     except Exception as e:
         print(f"higgsfield failed ({e}) → photo pool fallback")
         used_photos = state.setdefault("used_photos", [])

@@ -33,43 +33,91 @@ SOUL_BASE = "https://platform.higgsfield.ai"
 # staged/twee/ornamental subjects (decorative fountains, string-light cafés, flower-basket bicycles,
 # umbrellas cradling flowers) — AI renders those as fake CGI. Each still animates cleanly in Veo (or,
 # for heavy seas, the motion gate falls it back to a strong still — which is exactly the loved look).
-SCENES = [
+# Scenes are grouped by THEME so we can guarantee variety. Sequential rotation over a flat list
+# was clustering (the list happened to start with 8 water scenes in a row → every recent post was
+# "village + water below"). Fix: keep the themes in named groups, then ROUND-ROBIN interleave them
+# into the flat SCENES list so walking it sequentially alternates themes (sea → forest → street →
+# cathedral → mountain → …), never the same theme twice running. `pick_scene()` adds a second guard:
+# a category no-repeat ledger, so even a gate rejection / fallback can't collapse two same-theme posts.
+SCENE_GROUPS = {
     # ── deep water & sea (WEIGHT / gravity) ──
-    "dark ocean swells rolling under a heavy overcast sky, white foam streaking the deep water",
-    "slow heavy waves rolling onto a vast empty shore under a dim grey dawn",
-    "a shaft of pale light breaking through dark storm clouds over a wide restless sea",
-    "deep still water at dusk, faint ripples under a brooding sky",
-    # ── water & reflections (clean motion) ──
-    "gentle rain rippling a still dark pond that mirrors bare autumn trees and a grey sky",
-    "an old town canal reflecting weathered stone buildings, the dark water rippling softly",
-    "a wooden rowboat resting on a glassy misty lake at dawn, faint drifting mist",
-    "a puddle on a cobblestone street mirroring a moody twilight sky",
-    # ── sky / weather / mist (gravity) ──
-    "low cloud and mist rolling over a lone bare tree on a wide, empty hillside",
-    "mist drifting slowly through dark pine-covered mountains at first light",
-    "bare winter trees standing in still, heavy fog, quiet and grey",
-    "gentle snow drifting down over a dark, silent forest at dusk",
-    # ── windows ──
-    "a rain-speckled window with a blurred grey landscape beyond the wet glass",
-    "an open window, sheer curtains drifting gently, a calm pale sea beyond",
+    "sea": [
+        "dark ocean swells rolling under a heavy overcast sky, white foam streaking the deep water",
+        "slow heavy waves rolling onto a vast empty shore under a dim grey dawn",
+        "a shaft of pale light breaking through dark storm clouds over a wide restless sea",
+        "deep still water at dusk, faint ripples under a brooding sky",
+    ],
+    # ── forest / trees / snow (dry land, no big water) ──
+    "forest": [
+        "gentle snow drifting down over a dark, silent pine forest at dusk",
+        "an autumn forest path in low morning mist, leaves drifting slowly",
+        "bare winter trees standing in still, heavy fog, quiet and grey",
+        "cherry blossom branches swaying softly against a soft grey sky, a few petals drifting",
+    ],
     # ── city / street (real, moody) ──
-    "a lone street lamp glowing over wet cobblestones and reflections on a rainy night",
-    "a narrow old European alley in the rain, warm light pooling on the wet stone",
-    "a rainy city crosswalk at night, glowing neon and headlights reflected in the wet street",
+    "street": [
+        "a lone street lamp glowing over wet cobblestones on a rainy night",
+        "a narrow old European alley in the rain, warm light pooling on the wet stone",
+        "a rainy city crosswalk at night, glowing neon and headlights reflected in the wet street",
+    ],
     # ── stone / architecture (reads real, weighty) ──
-    "the tall interior of an old stone cathedral, soft light drifting from high windows",
-    "a weathered stone chapel on the coast under a heavy drifting sky",
-    "an ancient stone archway opening onto a misty sea at dawn",
-    # ── coast / mountains / nature ──
-    "a lighthouse on a dark cliff under drifting cloud, surf breaking on the rocks below",
-    "pale sea cliffs above a deep restless shore under a wide, muted sky",
-    "a calm alpine lake mirroring dark snow peaks at dawn, faint mist on the water",
-    "an autumn forest path in low morning mist, leaves drifting slowly",
-    "cherry blossom branches swaying softly against a soft grey sky, a few petals drifting",
+    "stone": [
+        "the tall interior of an old stone cathedral, soft light drifting from high windows",
+        "a weathered stone chapel alone on a hill under a heavy drifting sky",
+        "an ancient stone archway opening onto a misty valley at dawn",
+    ],
+    # ── mountains / hills (dry, high, dry-land gravity) ──
+    "mountain": [
+        "mist drifting slowly through dark pine-covered mountains at first light",
+        "low cloud and mist rolling over a lone bare tree on a wide, empty hillside",
+        "a calm alpine lake mirroring dark snow peaks at dawn, faint mist on the water",
+    ],
+    # ── water & reflections (clean motion) ──
+    "reflection": [
+        "gentle rain rippling a still dark pond that mirrors bare autumn trees and a grey sky",
+        "an old town canal reflecting weathered stone buildings, the dark water rippling softly",
+        "a wooden rowboat resting on a glassy misty lake at dawn, faint drifting mist",
+    ],
+    # ── coast / cliffs ──
+    "coast": [
+        "a lighthouse on a dark cliff under drifting cloud, surf breaking on the rocks below",
+        "pale sea cliffs above a deep restless shore under a wide, muted sky",
+    ],
+    # ── windows / interior ──
+    "window": [
+        "a rain-speckled window with a blurred grey landscape beyond the wet glass",
+        "an open window, sheer curtains drifting gently, a calm pale sky beyond",
+    ],
     # ── quiet / still ──
-    "a lone weathered wooden bench facing a calm, misty sea at grey dawn",
-    "a single candle-lit stone windowsill at dusk, soft shadow and still air",
-]
+    "quiet": [
+        "a lone weathered wooden bench facing a calm, misty field at grey dawn",
+        "a single candle-lit stone windowsill at dusk, soft shadow and still air",
+    ],
+}
+# Round-robin interleave: one scene from each theme per pass, so SCENES[i], SCENES[i+1]… cycle
+# through DIFFERENT themes. SCENE_CATS[i] is the theme of SCENES[i] (used by the no-repeat ledger).
+SCENES, SCENE_CATS = [], []
+_round = 0
+while any(len(v) > _round for v in SCENE_GROUPS.values()):
+    for _cat, _items in SCENE_GROUPS.items():
+        if _round < len(_items):
+            SCENES.append(_items[_round])
+            SCENE_CATS.append(_cat)
+    _round += 1
+
+
+def pick_scene(start, recent_cats, avoid=2):
+    """Choose the next scene index, skipping forward past any whose THEME appears in the last
+    `avoid` posts — so themes never cluster even if the gate rejects/falls back. Returns
+    (index, category). Caller advances scene_i to index+1 and records the category."""
+    recent = list(recent_cats)[-avoid:] if avoid else []
+    n = len(SCENES)
+    for step in range(n):
+        i = (start + step) % n
+        if SCENE_CATS[i] not in recent:
+            return i, SCENE_CATS[i]
+    i = start % n
+    return i, SCENE_CATS[i]
 COMPOSE = {
     ("center", "middle"): "COMPOSITION: compose so the CENTER of the frame — where the verse will sit — "
         "stays soft, open and easy to read text over (open sky, soft mist, calm water or gentle "
