@@ -44,10 +44,10 @@ When a theme comes round again it must differ by multiple axes:
 - A **unique Lyria hymn per post** (`fetch_lyria.py`): warm, hopeful, major-key church-hymn spirit — **not sad, not big**; kept **small, quiet, sparse, intimate**; never loud/grand/swelling. Mixed in **soft (volume 0.4)**.
 - Fallback: the vetted royalty-free library via `pick_music()`, which has a **no-repeat ledger** (`used_music`) and **family-interleave** so the same *sound* never lands on consecutive posts. **Never repeat music.** No auto-downloaded internet music (Content-ID risk).
 
-## 8. Verses & books — never repeat, never adjacent-overlap
-- **Never repeat a verse:** `used_verses` ledger; the whole pool cycles before any repeat.
+## 8. Verses never repeat (books may)
+- **Never repeat a verse:** `used_verses` ledger; the whole pool cycles before any verse repeats. This is the hard rule.
+- **Books MAY overlap** — no book-level restriction. There is only a *soft* least-posted-book-first tiebreak for gentle balance; it never forbids a book.
 - Weekly **theme series** (`THEME_ORDER`) gives the feed meaning.
-- Spread across books (least-posted book first) **and never the same book as the immediately-previous post** (`last_book` guard). Consecutive posts always come from different books.
 - Never post a verse that ends mid-clause (`INCOMPLETE_ENDINGS`).
 
 ## 9. Text & format — consistent, centered, readable

@@ -148,13 +148,11 @@ def main():
     # this week's theme → draw from it (fall back to any unused if its verses run out)
     theme = THEME_ORDER[datetime.now(KST).isocalendar()[1] % len(THEME_ORDER)]
     pool = [v for v in unused if v.get("theme") == theme] or unused
-    # within the theme, spread across books (least-posted book first) AND never repeat the book of
-    # the immediately-previous post — consecutive posts always come from different books.
+    # within the theme, gently spread across books (least-posted book first) for balance — but books
+    # MAY repeat; only VERSES never repeat (the used_verses ledger guarantees that).
     book = lambda r: r.rsplit(" ", 1)[0]
     used_books = Counter(book(r) for r in state["used_verses"])
-    last_book = book(state["used_verses"][-1]) if state["used_verses"] else None
-    cand = [v for v in pool if book(v["ref"]) != last_book] or pool
-    verse = min(cand, key=lambda v: (used_books[book(v["ref"])], verses.index(v)))
+    verse = min(pool, key=lambda v: (used_books[book(v["ref"])], verses.index(v)))
     n = len(state["used_verses"])
     date_str = datetime.now(KST).strftime("%Y-%m-%d")
     posts = os.path.join(generate.HERE, "output", "posts")
