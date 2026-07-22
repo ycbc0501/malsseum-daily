@@ -141,6 +141,12 @@ SCENE_GROUPS = {
         "a tall waterfall spilling straight down a dark rock face into a misty pool below",
         "water falling steadily down a sheer cliff into a deep plunge pool",
     ],
+    # 어스름 — the quiet dusk gradient the user loved: a vast bare sky doing almost all the work,
+    # the land reduced to a low dark silhouette. Deliberately minimal and still.
+    "dusk_sky": [
+        "a vast clear twilight sky grading from deep blue overhead down to a warm orange band at the horizon, a thin crescent moon high above, a low dark silhouette of distant hills and a city scattered with tiny lights along the bottom edge",
+        "the last orange glow of dusk along a low horizon under a deep darkening sky, a faint crescent moon, the land below a simple dark silhouette speckled with small distant lights",
+    ],
 }
 # Round-robin interleave: one scene from each theme per pass, so SCENES[i], SCENES[i+1]… cycle
 # through DIFFERENT themes. SCENE_CATS[i] is the theme of SCENES[i] (used by the no-repeat ledger).

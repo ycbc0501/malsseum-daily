@@ -221,12 +221,11 @@ def main():
             if ov <= MOTION_MAX and sky <= SKY_MAX:
                 break
         if ov <= MOTION_MAX and sky <= SKY_MAX:
-            # DOUBLE the length: boomerang (forward+reverse) the ~8s clip into a seamless ~16s loop.
-            # The motion gate has already ensured the motion is gentle, so the reverse is imperceptible.
-            boom = os.path.join(generate.OUT_DIR, "_boom.mp4")
-            make_video.make_boomerang(clip, boom)
-            make_video.build_reel_native(boom, overlay, audio, out_mp4)
-            print(f"reel(veo native ×2 boomerang, overall {ov:.2f}, sky {sky:.2f}): {verse['ref']}")
+            # FORWARD ONLY, native speed. Never boomerang/reverse the clip — playing footage backwards
+            # is exactly the kind of artificial post-processing that is banned (water and light running
+            # backwards reads as fake). Length comes from Veo itself, not from replaying frames.
+            make_video.build_reel_native(clip, overlay, audio, out_mp4)
+            print(f"reel(veo native, overall {ov:.2f}, sky {sky:.2f}): {verse['ref']}")
         else:
             print(f"veo still too fast (overall {ov:.2f}, sky {sky:.2f}) → calm still fallback")
             make_video.build_reel_still(bg, overlay, audio, out_mp4, duration=24)

@@ -15,7 +15,7 @@ Fully hands-off: it runs itself; a human should never need to approve a post.
 - Never more, never fewer. Both posts follow every rule below.
 
 ## 2. Themes — at least 20, always rotating, never overlapping
-- `fetch_higgsfield.SCENE_GROUPS` holds **≥20 distinct visual themes** (currently 24), each fitting 경건/무게: sea, forest path, cathedral, misty mountain, rainy street, wheat field, reflection lake, lighthouse, snowfall, canal town, chapel, wilderness, window, river, archway/ruins, blossom, starfield, harbor, winter trees, candle, storm sky, rain pond, shore, waterfall.
+- `fetch_higgsfield.SCENE_GROUPS` holds **≥20 distinct visual themes** (currently 25), each fitting 경건/무게: sea, forest path, cathedral, misty mountain, rainy street, wheat field, reflection lake, lighthouse, snowfall, canal town, chapel, wilderness, window, river, archway/ruins, blossom, starfield, harbor, winter trees, candle, storm sky, rain pond, shore, waterfall, dusk sky (어스름).
 - Themes are **round-robin interleaved** into the flat `SCENES` list so sequential rotation walks through *different* themes; the dict order alternates families (water / dry land / architecture / interior) so neighbours never look alike.
 - `pick_scene()` + the `used_scene_cats` ledger in `state.json` **skip forward past any theme used in the last 2 posts** — a gate rejection or fallback can never cluster the same theme. Invariant: **no two consecutive posts share a theme.**
 
@@ -41,8 +41,9 @@ When a theme comes round again it must differ by multiple axes:
 - Veo prompt (`fetch_veo.py`) forces **real-time 1× playback, ~8s, camera locked, clouds barely moving**. No artificial slow-mo / interpolation / frozen-sky compositing (they bug out and look weird).
 - **Motion gate:** `make_video.motion_score()` with `MOTION_MAX=2.6`, `SKY_MAX=0.7`. Too-fast clip → retry once → still too fast → fall back to a **calm still**. A frantic clip can never post itself.
 
-## 6. Video length — 2× (never too short)
-- Native Veo clips are **boomeranged** (forward+reverse) into a seamless **~16s** loop (`make_boomerang` → `build_reel_native`). The motion gate guarantees the motion is gentle, so the reverse is imperceptible.
+## 6. Video length — and NEVER reverse playback
+- **NEVER boomerang / reverse / ping-pong the clip.** Playing footage backwards is banned artificial post-processing (water and light running backwards read as fake), same rule as no slow-mo and no interpolation. Video always plays **forward at native speed**.
+- Length must come from **Veo itself**, never from replaying frames. Veo's fast tier caps at ~8s; to go longer, chain a genuine continuation (feed the clip's last frame back into Veo) — never a reverse or a hard loop.
 - Still fallbacks run **24s**.
 
 ## 7. Music — unique every time, warm but small
