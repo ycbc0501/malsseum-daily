@@ -25,7 +25,7 @@ Fully hands-off: it runs itself; a human should never need to approve a post.
 ## 3. Even the same theme must look substantially different
 When a theme comes round again it must differ by multiple axes:
 - **Base variant:** each theme has ≥2 differently-worded scene prompts.
-- **Light / colour palette:** `LIGHT` (5 options) — cold blue-grey, heavy overcast, pale misty, warm low-golden, dim near-dark. Keyed on the **monotonic `post_i` counter**; 5 does not divide the ~24-post theme cycle, so a theme cycles through all five palettes across its appearances.
+- **Light / colour palette:** `LIGHT` (5 options, all bright & hopeful) — bright clear morning, soft luminous daylight, warm golden sunlight, fresh sparkling after-rain, gentle glowing dawn. Keyed on the **monotonic `post_i` counter**; 5 does not divide the ~24-post theme cycle, so a theme cycles through all five palettes across its appearances.
 - **Camera vantage / angle:** `VANTAGE` (4 options) — wide/distant, low eye-level, high looking-out, intimate close.
 - These are set in `scene_variation(post_i)` and injected into every prompt. Axes to keep leveraging: colour, angle, narrative, time-of-day feel, season, age/era.
 
