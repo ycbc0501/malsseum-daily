@@ -4,8 +4,11 @@ The single source of truth for what this account posts and how. **Every change t
 checked against ALL of these rules before it ships.** If a change would break a rule, the change is
 wrong — not the rule. Where a rule names code, the code is the enforcement; the rule is the intent.
 
-Voice: a Korean daily Bible-verse account (말씀) whose whole feeling is **경건함 (reverence) and 무게감
-(weight / gravity)** — real, serious, holy, still. Never cute, kitschy, twee, saccharine, or fake/CGI.
+Voice: a Korean daily Bible-verse account (말씀) whose whole feeling is **밝고 희망참 (bright & hopeful)**
+— uplifting, warm, peaceful and full of light — while staying **real, reverent and hyperrealistic**
+(경건함 유지). Never dark/gloomy, and never cute, kitschy, twee, saccharine, or fake/CGI. (Direction
+changed 2026-07-23 from the earlier dark/heavy/moody look → generally bright and hopeful; a few
+naturally-darker-but-hopeful scenes — stars, candle, dusk — remain as a small minority for range.)
 Fully hands-off: it runs itself; a human should never need to approve a post.
 
 ---
@@ -15,7 +18,7 @@ Fully hands-off: it runs itself; a human should never need to approve a post.
 - Never more, never fewer. Both posts follow every rule below.
 
 ## 2. Themes — at least 20, always rotating, never overlapping
-- `fetch_higgsfield.SCENE_GROUPS` holds **≥20 distinct visual themes** (currently 25), each fitting 경건/무게: sea, forest path, cathedral, misty mountain, rainy street, wheat field, reflection lake, lighthouse, snowfall, canal town, chapel, wilderness, window, river, archway/ruins, blossom, starfield, harbor, winter trees, candle, storm sky, rain pond, shore, waterfall, dusk sky (어스름).
+- `fetch_higgsfield.SCENE_GROUPS` holds **≥20 distinct visual themes** (currently 25), each bright & hopeful (경건함 유지): sea, forest path, cathedral, misty mountain, rainy street, wheat field, reflection lake, lighthouse, snowfall, canal town, chapel, wilderness, window, river, archway/ruins, blossom, starfield, harbor, winter trees, candle, storm sky, rain pond, shore, waterfall, dusk sky (어스름).
 - Themes are **round-robin interleaved** into the flat `SCENES` list so sequential rotation walks through *different* themes; the dict order alternates families (water / dry land / architecture / interior) so neighbours never look alike.
 - `pick_scene()` + the `used_scene_cats` ledger in `state.json` **skip forward past any theme used in the last 2 posts** — a gate rejection or fallback can never cluster the same theme. Invariant: **no two consecutive posts share a theme.**
 

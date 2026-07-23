@@ -27,125 +27,120 @@ SOUL_BASE = "https://platform.higgsfield.ai"
 # reflecting water, rain, drifting mist/clouds, gently swaying elements) rather than a busy field of
 # many small flowers (which comes out coarse). Each keeps a soft area for the verse. Ordered to
 # alternate the subject so the feed never looks the same twice.
-# Scenes chosen for WEIGHT, GRAVITY and REALNESS (the user loved a dark, heavy real-sea photo and
-# hated a kitschy AI fountain). Lean toward deep, serious, atmospheric, real-looking imagery — dark
-# seas, heavy skies, mist, stone, rain — with some quieter serene scenes for tonal range. AVOID
-# staged/twee/ornamental subjects (decorative fountains, string-light cafés, flower-basket bicycles,
-# umbrellas cradling flowers) — AI renders those as fake CGI. Each still animates cleanly in Veo (or,
-# for heavy seas, the motion gate falls it back to a strong still — which is exactly the loved look).
-# Scenes are grouped by THEME so we can guarantee variety. Sequential rotation over a flat list
-# was clustering (the list happened to start with 8 water scenes in a row → every recent post was
-# "village + water below"). Fix: keep the themes in named groups, then ROUND-ROBIN interleave them
-# into the flat SCENES list so walking it sequentially alternates themes (sea → forest → street →
-# cathedral → mountain → …), never the same theme twice running. `pick_scene()` adds a second guard:
-# a category no-repeat ledger, so even a gate rejection / fallback can't collapse two same-theme posts.
-# 24 distinct THEMES, all fitting the 경건함/무게감 (reverence / weight) direction. The dict ORDER
-# alternates families (open water → dry land → architecture → sky → interior …) so the round-robin
-# below never places two similar-looking themes back-to-back. Base prompts describe SUBJECT + weather
-# only — time-of-day and colour come from the rotating VARIATION layer, so the same theme looks
-# substantially different each time it comes round (different light, palette and camera angle).
+# AESTHETIC = generally BRIGHT and HOPEFUL (user direction 2026-07-23: shift away from the earlier
+# dark/moody/heavy look toward light-filled, uplifting imagery). Still HYPERREALISTIC, real and
+# reverent, and still anti-kitsch — AVOID staged/twee/ornamental subjects (decorative fountains,
+# string-light cafés, flower-basket bicycles, umbrellas cradling flowers) which AI renders as fake CGI.
+# Scenes are bright, airy and full of light; a few naturally-darker-but-hopeful ones (stars, candle,
+# dusk) stay as a small minority for tonal range (light shining in the dark is itself hopeful).
+# Scenes are grouped by THEME so we can guarantee variety. Sequential rotation over a flat list was
+# clustering, so we keep themes in named groups then ROUND-ROBIN interleave them into the flat SCENES
+# list so walking it sequentially alternates themes (sea → forest → street → …), never the same theme
+# twice running. `pick_scene()` adds a category no-repeat ledger too. Base prompts describe SUBJECT +
+# weather only — time-of-day and colour come from the rotating VARIATION layer (now bright palettes),
+# so the same theme looks substantially different each time it comes round.
 SCENE_GROUPS = {
     "sea": [
-        "dark ocean swells rolling under a vast heavy sky, white foam streaking the deep water",
-        "the open sea heaving in long slow swells far from any shore, deep and restless",
+        "a bright open sea rolling in gentle sparkling swells under a wide clear sky, sunlight glinting on the water",
+        "the open sea shimmering in the sunlight, long gentle swells catching bright highlights far from shore",
     ],
     "forest_path": [
-        "a quiet path winding into a deep forest, tall trees receding into soft haze",
-        "a narrow trail through dark pines, fallen leaves on the ground and mist between the trunks",
+        "a sunlit path winding into a green forest, warm light streaming down between tall bright trees",
+        "a bright woodland trail, sunlight filtering through fresh green leaves and dappling the ground",
     ],
     "cathedral": [
-        "the tall stone interior of an old cathedral, shafts of light falling from high windows",
-        "the vaulted nave of an ancient church, worn stone columns rising into shadow",
+        "the tall stone interior of an old cathedral filled with bright light streaming from high windows",
+        "the sunlit nave of an old church, warm light pouring across the stone columns and floor",
     ],
     "mist_mountain": [
-        "mist drifting between dark pine-covered mountain ridges",
-        "a lone bare peak rising above a sea of low cloud",
+        "green mountain ridges under a bright sky, soft morning mist glowing in the sunlight between them",
+        "a sunlit peak rising above a bright sea of low cloud lit from above",
     ],
     "street_rain": [
-        "a narrow old cobblestone alley after rain, worn stone walls and quiet light",
-        "an empty old-town lane glistening after rain, stone houses on either side",
+        "a bright cobblestone lane freshly washed by rain, sunlight glowing on the wet stones and pastel houses",
+        "a cheerful old-town lane glistening after rain, warm sunlight breaking across the stone walls",
     ],
     "wheat_field": [
-        "a wide field of ripe wheat bending in the wind under a broad open sky",
-        "endless golden grain rolling in slow waves across an open plain",
+        "a wide field of golden wheat glowing in bright sunlight, gently bending under a broad blue sky",
+        "endless sunlit grain rolling in warm golden waves across an open plain under a clear sky",
     ],
     "reflection_lake": [
-        "a still glassy lake holding a correct upside-down reflection of dark mountains",
-        "a calm mountain tarn mirroring the peaks above in a perfect inverted reflection",
+        "a bright still lake holding a correct upside-down reflection of green sunlit mountains under a clear sky",
+        "a calm sunlit mountain lake mirroring the bright peaks above in a perfect inverted reflection",
     ],
     "lighthouse": [
-        "a lighthouse standing on a dark rocky headland, surf breaking on the rocks below",
-        "a solitary lighthouse above steep cliffs, the sea stretching grey to the horizon",
+        "a white lighthouse on a green headland in bright sunlight, blue sea sparkling below",
+        "a bright lighthouse above sunlit cliffs, the clear blue sea stretching to a bright horizon",
     ],
     "snowfall": [
-        "snow drifting down over a silent, dark pine forest",
-        "soft snow falling across a still, empty field of white",
+        "soft snow drifting down over a bright forest, sunlight glowing through the falling flakes",
+        "gentle snow falling across a bright, sunlit field of clean white",
     ],
     "canal_town": [
-        "an old stone town beside a quiet canal, the weathered buildings reflected correctly upside-down in the still water",
-        "a narrow canal between ancient stone houses, the calm water holding an inverted reflection",
+        "a colourful old town beside a bright canal in sunlight, the buildings reflected correctly upside-down in the calm water",
+        "a sunny canal between pastel stone houses, the bright calm water holding a clean inverted reflection",
     ],
     "chapel": [
-        "a small stone chapel standing alone on a windswept hill",
-        "a weathered country chapel on an open moor under a wide sky",
+        "a small white chapel on a green hill under a bright blue sky",
+        "a bright country chapel on an open sunlit meadow under a wide clear sky",
     ],
     "wilderness": [
-        "a vast rocky desert wilderness of bare stone and distant ridges",
-        "a dry canyon of weathered rock under a wide, empty sky",
+        "a vast sunlit landscape of open golden hills and distant ridges under a bright wide sky",
+        "a bright open canyon of warm sunlit rock under a wide clear sky",
     ],
     "window": [
-        "a rain-speckled window looking out on a blurred, distant landscape",
-        "an open window with a sheer curtain drifting, a pale calm view beyond",
+        "a bright window with morning sunlight streaming in across a sunlit sill",
+        "an open window with a sheer curtain drifting in the breeze, bright sunlight and a calm green view beyond",
     ],
     "river": [
-        "a broad quiet river winding slowly through a wide valley",
-        "a calm river flowing gently between wooded banks and low hills",
+        "a broad bright river winding through a green sunlit valley, sunlight sparkling on the water",
+        "a calm sunlit river flowing gently between green banks under a bright sky",
     ],
     "archway": [
-        "an ancient weathered stone archway among old ruins",
-        "the worn stone arches of an old ruin standing open to the sky",
+        "a warm sunlit stone archway among old ruins, bright sky beyond",
+        "the worn stone arches of an old ruin glowing in warm sunlight, open bright sky through them",
     ],
     "blossom": [
-        "branches of blossom swaying softly against a pale sky, a few petals drifting",
-        "a single flowering tree in gentle bloom on an open lawn",
+        "branches of spring blossom glowing in bright sunlight against a clear blue sky, a few petals drifting",
+        "a single flowering tree in full bright bloom on a sunlit green lawn",
     ],
     "starfield": [
-        "a vast field of stars arching over dark, silent hills",
-        "a deep night sky full of stars above a still, low horizon",
+        "a brilliant field of stars arching over gentle hills, the Milky Way glowing bright and clear",
+        "a luminous night sky full of bright stars above a soft, low horizon",
     ],
     "harbor": [
-        "a quiet misty harbor with a few wooden boats moored on calm water",
-        "small fishing boats resting on still harbor water under a soft sky",
+        "a bright cheerful harbor with colourful wooden boats on sparkling sunlit water",
+        "small boats resting on bright sunlit harbor water under a clear blue sky",
     ],
     "winter_trees": [
-        "bare winter trees standing in still, heavy fog",
-        "a row of leafless trees fading into cold, drifting mist",
+        "bright bare winter trees in soft sunlight, glowing frost and a pale clear sky",
+        "a row of winter trees in crisp bright morning light under a clear sky",
     ],
     "candle": [
-        "a single candle burning on a worn stone windowsill in a dim room",
-        "one small flame glowing in a quiet, shadowed stone interior",
+        "a single candle glowing warmly on a stone windowsill, soft bright light filling the room",
+        "one warm flame glowing brightly in a soft, light-filled stone interior",
     ],
     "storm_sky": [
-        "a shaft of pale light breaking through dark storm clouds over a wide restless sea",
-        "towering dark storm clouds parting to let a single beam of light fall on the water",
+        "bright shafts of golden sunlight breaking through parting clouds over a sparkling sea",
+        "clouds parting to let broad bright beams of sunlight pour down onto the shining water",
     ],
     "rain_pond": [
-        "gentle rain rippling a still dark pond, the bare trees reflected correctly upside-down",
-        "raindrops dimpling a quiet pond, an inverted reflection of the trees below",
+        "gentle rain rippling a bright pond in sunlight, the green trees reflected correctly upside-down",
+        "raindrops dimpling a sunlit pond, a bright clean inverted reflection of the trees below",
     ],
     "shore": [
-        "slow heavy waves rolling onto a vast, empty shore",
-        "a long deserted beach with waves sliding up wet, dark sand",
+        "gentle waves sliding up a bright sunlit shore, sparkling water and clean pale sand",
+        "a long bright beach in sunshine, clear water sliding up warm golden sand",
     ],
     "waterfall": [
-        "a tall waterfall spilling straight down a dark rock face into a misty pool below",
-        "water falling steadily down a sheer cliff into a deep plunge pool",
+        "a bright waterfall spilling down a green rock face into a sparkling sunlit pool, mist glowing in the light",
+        "water falling down a sunlit cliff into a clear bright pool, sunlight catching the spray",
     ],
-    # 어스름 — the quiet dusk gradient the user loved: a vast bare sky doing almost all the work,
-    # the land reduced to a low dark silhouette. Deliberately minimal and still.
+    # 어스름 — the dusk gradient the user loved: a vast bare sky doing almost all the work. Kept in the
+    # bright era as a minority tonal-range scene, but warmed toward a glowing, hopeful sunset.
     "dusk_sky": [
-        "a vast clear twilight sky grading from deep blue overhead down to a warm orange band at the horizon, a thin crescent moon high above, a low dark silhouette of distant hills and a city scattered with tiny lights along the bottom edge",
-        "the last orange glow of dusk along a low horizon under a deep darkening sky, a faint crescent moon, the land below a simple dark silhouette speckled with small distant lights",
+        "a wide glowing sunset sky grading from soft blue overhead down to warm gold and pink at the horizon, a thin crescent moon, a gentle low silhouette of hills and a town with warm twinkling lights along the bottom",
+        "a warm luminous evening sky glowing gold and rose along a low horizon, a faint crescent moon, the land below a soft silhouette with warm scattered lights",
     ],
 }
 # Round-robin interleave: one scene from each theme per pass, so SCENES[i], SCENES[i+1]… cycle
@@ -166,11 +161,11 @@ while any(len(v) > _round for v in SCENE_GROUPS.values()):
 # divide 24, so a theme's light palette cycles through all five across successive appearances (a 6th
 # palette would divide 24 and lock each theme to the same light every time).
 LIGHT = [
-    "in cold, blue-grey light",
-    "under soft, heavy overcast light",
-    "in pale, misty low light",
-    "in warm, low golden light",
-    "in dim, moody near-dark light",
+    "in bright, clear morning light",
+    "in soft, luminous daylight",
+    "in warm, golden sunlight",
+    "in fresh, sparkling light after rain",
+    "in gentle, glowing dawn light",
 ]
 VANTAGE = [
     "from a wide, distant vantage with deep open space",
@@ -234,14 +229,15 @@ COMPOSE_SAFE = ("Keep it a real, natural, uncluttered composition — one contin
                 "any object crowd, block or sit dead-center in the calm middle where the text goes; keep "
                 "the main subject and busy detail toward the edges, top or bottom of the frame.")
 QUALITY = ("It is HYPERREALISTIC — completely indistinguishable from a GENUINE real photograph taken "
-           "with a real camera — richly atmospheric, with real "
-           "depth and a quiet sense of WEIGHT, gravity and reverence (holy, still, serious and true — "
-           "never cute, kitschy, saccharine, twee or fantastical). Real natural light suited to THIS "
-           "scene — often deep, dim, overcast, moody or low-key, not always sunny or golden. Natural "
+           "with a real camera — richly atmospheric, luminous and full of light and air, with real "
+           "depth and a quiet sense of hope, grace and reverence (uplifting, warm, peaceful and true — "
+           "never cute, kitschy, saccharine, twee or fantastical). Generally BRIGHT and HOPEFUL natural "
+           "light suited to THIS scene — bright, softly glowing and filled with light, not dark, dim or "
+           "gloomy. Natural "
            "photographic detail, real texture and true-to-life colour with a subtle film grain. It must "
            "look like an ACTUAL photograph a person took — absolutely NOT a glossy 3D render, CGI, a "
-           "video-game frame, a digital painting, or a plasticky/artificial AI image. Understated, "
-           "grounded and real, with weight — an image that feels honest and quietly moving.")
+           "video-game frame, a digital painting, or a plasticky/artificial AI image. Real, uplifting "
+           "and quietly moving — an image that feels honest and full of hope.")
 NOTEXT = ("There are no visible human faces, and absolutely no text, letters, words, captions, numbers, "
           "signs, watermark or logo anywhere. It is a single full-bleed photograph that completely fills "
           "the image, edge to edge.")
