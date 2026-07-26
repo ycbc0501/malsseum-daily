@@ -16,6 +16,11 @@ Fully hands-off: it runs itself; a human should never need to approve a post.
 ## 1. Cadence — twice a day, forever
 - **Two posts daily: 05:00 and 19:00 KST** (±10 min jitter). GitHub Actions cron (`.github/workflows/daily-post.yml`), which fires early and then `daily_post.py` waits for the exact target time.
 - Never more, never fewer. Both posts follow every rule below.
+- **Timing budget:** the cron fires ~2h early (GitHub's scheduler runs 1–2h late), so the job spends
+  **up to 130 min sleeping** before it starts working. `timeout-minutes` must therefore cover
+  **wait + build (~50 min) — i.e. stay ≥ 180.** Sizing it to the build alone silently kills posts
+  mid-render on days the scheduler fires late (this ate the 07-24 and 07-26 morning posts).
+- **A missed post is never silent:** any failed/cancelled run opens a GitHub issue.
 
 ## 2. Themes — at least 20, always rotating, never overlapping
 - `fetch_higgsfield.SCENE_GROUPS` holds **≥20 distinct visual themes** (currently 25), each bright & hopeful (경건함 유지): sea, forest path, cathedral, misty mountain, rainy street, wheat field, reflection lake, lighthouse, snowfall, canal town, chapel, wilderness, window, river, archway/ruins, blossom, starfield, harbor, winter trees, candle, storm sky, rain pond, shore, waterfall, dusk sky (어스름).

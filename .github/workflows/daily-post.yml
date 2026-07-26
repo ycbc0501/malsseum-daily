@@ -12,11 +12,19 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   post:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # TIMING BUDGET — do not shrink below (max wait + max build) or posts die mid-render.
+    #   max wait  = cron fires on time (2h early) + jitter +10 min      = 130 min
+    #   max build = image + gates/regens, Veo + retry, Lyria, ffmpeg,
+    #               release upload, IG publish                          ~ 50 min
+    # 2026-07-26: was 60, which was *less than the wait alone* — a late-firing scheduler
+    # (03:57 KST instead of 03:00) left only 7 min of build budget and the morning post was
+    # killed mid-ffmpeg. Silent miss, twice (07-24, 07-26). Keep this >= 180.
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
 
@@ -72,3 +80,20 @@ jobs:
           git commit -m "ledger update" || { echo "nothing to commit"; exit 0; }
           git pull --rebase --autostash origin main || true
           git push
+
+      # A missed post must never be silent again. Any failure/timeout opens an issue.
+      - name: Alert on a missed post
+        if: failure() || cancelled()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_HOUR: ${{ github.event.schedule == '0 8 * * *' && '19' || '5' }}
+        run: |
+          gh issue create \
+            --title "missed post — ${TARGET_HOUR}:00 KST (run ${GITHUB_RUN_ID})" \
+            --body "The \`${TARGET_HOUR}:00 KST\` post did not publish.
+
+          Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+
+          If the job hit the 180-min timeout, check the timing budget comment in
+          \`.github/workflows/daily-post.yml\` — wait + build must fit inside it." \
+            || echo "could not open issue"
