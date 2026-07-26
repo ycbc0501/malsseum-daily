@@ -173,12 +173,42 @@ VANTAGE = [
     "from a high vantage looking out over it",
     "in an intimate, close and quiet framing",
 ]
+# The one vantage that means "come close" — asking for monumental scale on top of it would be a
+# self-contradicting prompt, so SCALE is skipped for it (see scene_variation).
+_INTIMATE = 3
+
+# SCALE — the 웅장함 (grandeur) axis. The hard constraint: COMPOSE keeps the CENTRE soft and open for
+# the verse and pushes tall subjects low or to the sides, so we can NOT get grandeur the usual way (a
+# huge subject filling the middle) — the two instructions would fight and the render comes out
+# muddled. So every phrase below builds scale OUTSIDE the centre: receding depth, atmospheric
+# perspective, immensity at the frame edges, and a small element that reveals how big everything else
+# is. Each stays scene-agnostic ("whatever suits THIS scene") because this string is appended to all
+# 25 themes, from open sea to a candle-lit interior.
+SCALE = [
+    "on a grand, monumental scale, the immensity carried by whatever already belongs in THIS scene "
+    "rising tall along its SIDES and upper edges — towering cloud banks and open sky are enough on "
+    "their own; do NOT invent cliffs, peaks or structures the scene does not call for — while the "
+    "middle stays open and airy",
+    "with vast atmospheric depth — layer behind layer receding into soft haze toward a far horizon, "
+    "so the eye travels a great distance into the frame",
+    "with a quiet sense of enormity, whatever small element naturally belongs in THIS scene left "
+    "far off and dwarfed by its surroundings, revealing the true scale of the place",
+]
 
 
 def scene_variation(t):
-    """A rotating 'light palette + camera angle' phrase, keyed on the monotonic post counter `t`, so
-    successive appearances of the same theme differ in light, colour and angle."""
-    return f"{LIGHT[t % len(LIGHT)]}, {VANTAGE[(t // len(LIGHT)) % len(VANTAGE)]}"
+    """A rotating 'light palette + camera angle + scale' phrase, keyed on the monotonic post counter
+    `t`, so successive appearances of the same theme differ in light, colour, angle and grandeur.
+
+    Periods are kept coprime on purpose: LIGHT every post (5), VANTAGE every 5 posts (4), SCALE every
+    post (3). 5 and 3 share no factor, so a theme meets a fresh light+scale pairing for 15 posts
+    before any combination comes round again."""
+    light = LIGHT[t % len(LIGHT)]
+    vi = (t // len(LIGHT)) % len(VANTAGE)
+    parts = [light, VANTAGE[vi]]
+    if vi != _INTIMATE:
+        parts.append(SCALE[t % len(SCALE)])
+    return ", ".join(parts)
 
 
 def pick_scene(start, recent_cats, avoid=2):

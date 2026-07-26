@@ -32,7 +32,14 @@ When a theme comes round again it must differ by multiple axes:
 - **Base variant:** each theme has ≥2 differently-worded scene prompts.
 - **Light / colour palette:** `LIGHT` (5 options, all bright & hopeful) — bright clear morning, soft luminous daylight, warm golden sunlight, fresh sparkling after-rain, gentle glowing dawn. Keyed on the **monotonic `post_i` counter**; 5 does not divide the ~24-post theme cycle, so a theme cycles through all five palettes across its appearances.
 - **Camera vantage / angle:** `VANTAGE` (4 options) — wide/distant, low eye-level, high looking-out, intimate close.
+- **Scale / grandeur (웅장함):** `SCALE` (3 options) — monumental forms at the edges, vast atmospheric depth, a small element dwarfed to reveal scale. Skipped for the *intimate close* vantage, where "come close" and "be monumental" would contradict each other.
 - These are set in `scene_variation(post_i)` and injected into every prompt. Axes to keep leveraging: colour, angle, narrative, time-of-day feel, season, age/era.
+- Periods are deliberately **coprime** (LIGHT 5 / SCALE 3, VANTAGE every 5th post) so a theme meets a fresh light+scale pairing for 15 posts before any combination recurs.
+
+**Grandeur must never be bought with legibility.** The verse is the point of the account, so `COMPOSE`'s
+soft-open centre wins every time. Scale is therefore built *outside* the centre — depth, atmospheric
+perspective, immensity at the frame edges, scale contrast — never by parking a huge subject in the
+middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적), alongside @wondervisionary.
 
 ## 3b. Every post is VIDEO, and every image is HYPERREALISTIC
 - **Production posts are always Reels (.mp4)** — never a static image post. `daily_post.py` always builds and publishes a video via `publish_reel`. (Preview-page stills are illustrations only, not production.)
