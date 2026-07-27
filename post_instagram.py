@@ -127,6 +127,29 @@ def comment(media_id, message, ig_user_id=None, token=None):
     return _post(f"{GRAPH}/{media_id}/comments", {"message": message, "access_token": token})
 
 
+def comments(media_id, token=None):
+    """Every comment on a published media, newest first: [{id, text, timestamp, username}]."""
+    token = token or os.environ.get("IG_ACCESS_TOKEN")
+    got = _get(f"{GRAPH}/{media_id}/comments"
+               f"?fields=id,text,timestamp,username&access_token={token}")
+    return got.get("data", [])
+
+
+def private_reply(comment_id, message, ig_user_id=None, token=None):
+    """Send the ONE private reply Meta allows for a comment (Private Replies).
+
+    Meta's limits, which the caller must respect: exactly one message per comment,
+    within 7 days of it, and it may not make a follow the price of the content. If the
+    commenter doesn't already follow the account the DM lands in their Requests folder.
+    Needs instagram_manage_messages on the token (App Review)."""
+    ig_user_id = ig_user_id or os.environ.get("IG_USER_ID")
+    token = token or os.environ.get("IG_ACCESS_TOKEN")
+    return _post(f"{GRAPH}/{ig_user_id}/messages", {
+        "recipient": json.dumps({"comment_id": comment_id}),
+        "message": json.dumps({"text": message}),
+        "access_token": token})
+
+
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser()

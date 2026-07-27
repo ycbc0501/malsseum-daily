@@ -87,8 +87,26 @@ middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적)
 - **Caption:** verse text + `[book chapter:verse]` reference + a gentle follow CTA.
 - **First comment:** the hashtag set (`HASHTAGS`). Reference/book handling stays **as it is now** (shown on-image + in caption; hashtags in the comment).
 
+## 10b. Direct messages — ONE gift, never a pitch
+- The account **never cold-DMs anyone.** Meta's Instagram API has no outbound endpoint for it,
+  and mass unsolicited DMs would cost us the account. The only DM we ever send is a **Private
+  Reply**: Meta allows **exactly one message per comment**, within **7 days** of it.
+- That message **asks for nothing** — no follow request, no link. Meta's spam policy names
+  follows explicitly as something you may not charge for content, and a DM to a non-follower
+  lands in their Requests folder anyway. It carries the **기도문 for the theme of the verse they
+  commented on** (`dm_reply.compose`), and nothing else.
+- **Never a second message.** No sequence, no follow-up, and deliberately **no reply bait** —
+  a reply would open Meta's 24-hour window, but this account is hands-off, and inviting someone
+  to share a burden nobody will read is worse than staying quiet. One gift, then silence.
+- `replied_comments` makes one-per-comment a **hard invariant** (a poller re-sees every comment;
+  Meta allows one). Wording rotates via `dm_i` so the account never emits identical text
+  repeatedly — same principle as rule 11.
+- **Not wired up:** no workflow calls `dm_reply`, and `reply_to_new_comments()` defaults to
+  dry-run, until `instagram_manage_messages` clears App Review.
+
 ## 11. No-repeat ledgers (all in `state.json`, committed back after each run)
-`used_verses`, `used_music`, `used_scene_cats`, `scene_i`, `post_i`, `music_i`, `used_photos`, `used_clips`.
+`used_verses`, `used_music`, `used_scene_cats`, `scene_i`, `post_i`, `music_i`, `used_photos`,
+`used_clips`, `posted_media` (media id → theme, for 10b), `replied_comments`, `dm_i`.
 Every rotating resource has a ledger and cycles the whole set before repeating. Perceived sameness counts as a repeat, not just literal file reuse.
 
 ## 12. Fallback chain (stay alive, always on-brand)

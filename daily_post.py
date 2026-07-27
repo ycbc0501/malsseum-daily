@@ -260,6 +260,14 @@ def main():
     print("published:", result)
     if isinstance(result, dict) and result.get("id"):
         print("comment:", post_instagram.comment(result["id"], HASHTAGS))
+        # Remember which verse each post carries, so the one private reply we're allowed to
+        # send a commenter can carry the 기도문 for THAT verse's theme (dm_reply.py). Bounded
+        # to ~20: Meta's private-reply window is 7 days, which is 14 posts at 2/day.
+        posted = state.setdefault("posted_media", {})
+        posted[result["id"]] = verse.get("theme", "믿음")
+        for old in list(posted)[:-20]:
+            del posted[old]
+        save_state(state)
 
 
 if __name__ == "__main__":
