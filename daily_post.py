@@ -25,6 +25,7 @@ from collections import Counter
 from datetime import datetime, timedelta, timezone
 
 import generate
+import hashtags
 import post_instagram
 import fetch_higgsfield
 import fetch_videos
@@ -35,7 +36,8 @@ MUSIC_DIR = os.path.join(generate.HERE, "music")
 VIDEO_DIR = os.path.join(generate.HERE, "videos")
 STATE = os.path.join(generate.HERE, "state.json")
 CLIPS = os.path.join(generate.HERE, "clips.json")  # human-approved Pexels video ids
-HASHTAGS = "#성경 #말씀 #오늘의말씀 #말씀묵상 #큐티 #말씀스타그램 #빛으로"
+# Hashtags are built per-post from the verse's theme — see hashtags.py. Instagram caps
+# them at 5 (caption + comments share the same 5 slots), so there is no fixed set here.
 
 # never post a verse that ends mid-clause (reads incomplete as a standalone card)
 INCOMPLETE_ENDINGS = ("고", "며", "매", "이요", "으며", "하며")
@@ -238,6 +240,7 @@ def main():
     print(f"music={os.path.basename(audio) if audio else 'none'}")
 
     caption = build_caption(verse, data.get("translation", ""))
+    tags = hashtags.build(verse.get("theme", "믿음"), post_i)
     # record what we used so it NEVER repeats
     state["used_verses"].append(verse["ref"])
     save_state(state)
@@ -246,10 +249,10 @@ def main():
     with open(os.path.join(generate.OUT_DIR, "_caption.txt"), "w", encoding="utf-8") as f:
         f.write(caption)
     with open(os.path.join(generate.OUT_DIR, "_comment.txt"), "w", encoding="utf-8") as f:
-        f.write(HASHTAGS)  # hashtags go in the first comment, not the caption
+        f.write(tags)  # hashtags go in the first comment, not the caption
 
     if args.dry_run or args.emit:
-        print("\n--- caption ---\n" + caption + "\n--- comment ---\n" + HASHTAGS)
+        print("\n--- caption ---\n" + caption + "\n--- comment ---\n" + tags)
         return
 
     base = os.environ.get("PUBLIC_IMAGE_BASE")
@@ -259,7 +262,7 @@ def main():
     result = (post_instagram.publish_reel if rel_path.endswith(".mp4") else post_instagram.publish)(url, caption)
     print("published:", result)
     if isinstance(result, dict) and result.get("id"):
-        print("comment:", post_instagram.comment(result["id"], HASHTAGS))
+        print("comment:", post_instagram.comment(result["id"], tags))
         # Remember which verse each post carries, so the one private reply we're allowed to
         # send a commenter can carry the 기도문 for THAT verse's theme (dm_reply.py). Bounded
         # to ~20: Meta's private-reply window is 7 days, which is 14 posts at 2/day.

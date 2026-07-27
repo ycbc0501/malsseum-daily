@@ -14,12 +14,13 @@ from datetime import datetime, timedelta, timezone
 
 import generate
 import carousel
+import hashtags
 import post_instagram
 
 KST = timezone(timedelta(hours=9))
 INCOMPLETE_ENDINGS = ("고", "며", "매", "이요", "으며", "하며")
 THEME_ORDER = ["위로", "평안", "담대", "믿음", "감사", "사랑", "인도", "은혜", "지혜"]
-HASHTAGS = "#성경 #말씀 #오늘의말씀 #말씀묵상 #큐티 #말씀스타그램 #빛으로"
+# Hashtags are built per-post from the verse's theme — see hashtags.py (Instagram caps them at 5).
 
 
 def main():
@@ -45,6 +46,7 @@ def main():
     slides = carousel.build_slides(verse, photo, prefix)
     rels = [os.path.relpath(s, generate.HERE) for s in slides]
     caption = f"{verse['text']}\n[{verse['ref']}]"
+    tags = hashtags.build(theme, week)     # the week number is this post's rotation counter
     print(f"carousel: [{theme}] {verse['ref']}  ({len(rels)} slides)")
 
     with open(os.path.join(generate.OUT_DIR, "_carousel.txt"), "w") as f:
@@ -52,10 +54,10 @@ def main():
     with open(os.path.join(generate.OUT_DIR, "_caption.txt"), "w", encoding="utf-8") as f:
         f.write(caption)
     with open(os.path.join(generate.OUT_DIR, "_comment.txt"), "w", encoding="utf-8") as f:
-        f.write(HASHTAGS)
+        f.write(tags)
 
     if args.emit:
-        print("\n--- caption ---\n" + caption)
+        print("\n--- caption ---\n" + caption + "\n--- comment ---\n" + tags)
         return
 
     base = os.environ.get("PUBLIC_IMAGE_BASE")
@@ -65,7 +67,7 @@ def main():
     result = post_instagram.publish_carousel(urls, caption)
     print("published:", result)
     if isinstance(result, dict) and result.get("id"):
-        print("comment:", post_instagram.comment(result["id"], HASHTAGS))
+        print("comment:", post_instagram.comment(result["id"], tags))
 
 
 if __name__ == "__main__":

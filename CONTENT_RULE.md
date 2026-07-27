@@ -85,7 +85,15 @@ middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적)
 
 ## 10. Caption & comment
 - **Caption:** verse text + `[book chapter:verse]` reference + a gentle follow CTA.
-- **First comment:** the hashtag set (`HASHTAGS`). Reference/book handling stays **as it is now** (shown on-image + in caption; hashtags in the comment).
+- **First comment:** the hashtag set (`hashtags.build`). Reference/book handling stays **as it is now** (shown on-image + in caption; hashtags in the comment).
+- **Exactly 5 hashtags — never more.** Instagram capped posts and reels at 5 in December 2025,
+  and the cap counts caption + comments **together**, so putting them in the first comment buys
+  no extra slots; over the cap Instagram strips the excess or refuses the publish. `hashtags.MAX`
+  is that cap and `build()` enforces it. (The old fixed 7-tag string was over the limit.)
+- Tags are **chosen for the verse's theme**, not to fish for reach — Instagram's own position is
+  that hashtags label a topic rather than distribute content, so 5 accurate tags beat 5 broad
+  ones. One anchor (`#오늘의말씀`) plus 2 broad + 2 theme tags rotating on `post_i` at coprime
+  steps: 15 distinct sets per theme, and **no two consecutive posts carry the same set**.
 
 ## 10b. Direct messages — ONE gift, never a pitch
 - The account **never cold-DMs anyone.** Meta's Instagram API has no outbound endpoint for it,
