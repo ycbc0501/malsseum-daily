@@ -30,7 +30,7 @@ def main():
     with open(os.path.join(generate.HERE, "verses.json"), encoding="utf-8") as f:
         verses = [v for v in json.load(f)["verses"]
                   if not v["text"].rstrip().rstrip(".").endswith(INCOMPLETE_ENDINGS)]
-    photos = generate.pick_photos()
+    photos = generate.calm_photos(generate.pick_photos())   # busy-centred photos bury the verse
 
     week = datetime.now(KST).isocalendar()[1]
     theme = THEME_ORDER[week % len(THEME_ORDER)]

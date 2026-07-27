@@ -138,7 +138,7 @@ def main():
     # safety: drop any verse that ends mid-clause so it can never be posted
     verses = [v for v in data["verses"]
               if not v["text"].rstrip().rstrip(".").endswith(INCOMPLETE_ENDINGS)]
-    photos = generate.pick_photos()   # fallback backgrounds if Higgsfield is unavailable
+    photos = generate.calm_photos(generate.pick_photos())   # fallback backgrounds if Higgsfield is unavailable (calm centres only — the verse must stay legible)
 
     state = load_state()
     unused = [v for v in verses if v["ref"] not in state["used_verses"]]

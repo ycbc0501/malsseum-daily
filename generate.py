@@ -550,7 +550,17 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
             fg, shadow_c, cap, light = (38, 34, 30), (255, 255, 255), 0, True  # halo erodes thin strokes → none
         else:                                   # busy/mixed → white text + stronger even backing
             fg, shadow_c = (250, 248, 244), (0, 0, 0)
-            cap = 200 if rmean > 165 else (165 if rmean > 118 else 140)
+            # Strength must answer the BRIGHTEST patches under the text, not the average —
+            # a stained-glass window averages dark yet its white panes swallow white text.
+            hist = reg.histogram()
+            acc, hi, p90 = 0, 255, sum(hist) * 0.9
+            for v, cnt in enumerate(hist):
+                acc += cnt
+                if acc >= p90:
+                    hi = v
+                    break
+            cap = 210 if hi > 200 else (185 if hi > 160 else 150)
+        very_busy = rstd >= 65                 # e.g. stained glass, dense foliage
         busy = 0
     else:
         theme = THEMES.get(theme_name, THEMES["ivory"])
@@ -618,6 +628,9 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
                     base = glow(base, va, cap)
                     base = glow(base, sa, cap)
             else:
+                if very_busy:                  # chaotic centre → wide feathered scrim UNDER the backing
+                    base = Image.alpha_composite(base, soft_scrim(
+                        cw, ch, col_left, col_w, top_y, block_h, line_h, shadow_c, alpha=120))
                 base = even_cloud(base, va, cap)
                 base = even_cloud(base, sa, cap)
 
@@ -676,6 +689,29 @@ def slug(ref):
 def pick_photos():
     return sorted(f for f in glob.glob(os.path.join(PHOTO_DIR, "*"))
                   if f.lower().endswith((".jpg", ".jpeg", ".png")))
+
+
+def center_busy(path, canvas=FEED):
+    """How hostile a photo's centre is to overlaid text: stddev of the centered band
+    where the verse sits. High = chaotic detail (stained glass, dense foliage)."""
+    cw, ch = canvas
+    col_w = int(cw * 0.80)
+    col_left = (cw - col_w) // 2
+    base = cover_crop(Image.open(path), cw, ch)
+    reg = base.convert("L").crop((col_left, ch // 2 - 140, col_left + col_w, ch // 2 + 140))
+    return ImageStat.Stat(reg).stddev[0]
+
+
+def calm_photos(photos, max_std=60):
+    """Only photos whose centre is calm enough to carry the verse — the photo-pool
+    equivalent of the COMPOSE soft-open-centre rule for generated scenes. Order is
+    preserved. If nothing passes, fall back to the calmest half rather than none."""
+    scored = [(center_busy(p), p) for p in photos]
+    calm = [p for s, p in scored if s < max_std]
+    if calm:
+        return calm
+    cutoff = sorted(s for s, _ in scored)[len(scored) // 2] if scored else 0
+    return [p for s, p in scored if s <= cutoff]
 
 
 def main():

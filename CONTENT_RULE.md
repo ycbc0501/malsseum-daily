@@ -74,6 +74,13 @@ middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적)
 ## 9. Text & format — consistent, centered, readable
 - Verse text is **always centered**, in the **NanumMyeongjo serif** at a fixed size, wrapped so it never splits a verb phrase / modifier-head pair (`generate.py`).
 - Every scene prompt keeps the **center of the frame soft and open** (`COMPOSE`) so the verse is always legible over it.
+- The **photo pool obeys the same soft-centre rule**: `generate.calm_photos()` filters out photos whose
+  centre band is too chaotic to carry text (stained glass, dense foliage) before any pick — carousel
+  and daily fallback both. And when a busy background does get through, `render()`'s backing strength
+  is keyed to the **brightest patches under the text (90th percentile), not the band average** — a
+  dark-averaging photo with bright patches (the 2026-07-26 stained-glass carousel) must still read —
+  plus a wide feathered scrim under the backing when the band is very busy. **Legibility beats the
+  photo; the verse is the point.**
 - **Same letter format on every post** — do not change the font, size logic, or centering without a deliberate decision recorded here.
 
 ## 10. Caption & comment
