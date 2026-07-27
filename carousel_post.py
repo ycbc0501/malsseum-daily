@@ -46,7 +46,7 @@ def main():
     slides = carousel.build_slides(verse, photo, prefix)
     rels = [os.path.relpath(s, generate.HERE) for s in slides]
     caption = f"{verse['text']}\n[{verse['ref']}]"
-    tags = hashtags.build(theme, week)     # the week number is this post's rotation counter
+    tags = hashtags.build(theme)
     print(f"carousel: [{theme}] {verse['ref']}  ({len(rels)} slides)")
 
     with open(os.path.join(generate.OUT_DIR, "_carousel.txt"), "w") as f:

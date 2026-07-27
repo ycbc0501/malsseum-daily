@@ -92,8 +92,10 @@ middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적)
   is that cap and `build()` enforces it. (The old fixed 7-tag string was over the limit.)
 - Tags are **chosen for the verse's theme**, not to fish for reach — Instagram's own position is
   that hashtags label a topic rather than distribute content, so 5 accurate tags beat 5 broad
-  ones. One anchor (`#오늘의말씀`) plus 2 broad + 2 theme tags rotating on `post_i` at coprime
-  steps: 15 distinct sets per theme, and **no two consecutive posts carry the same set**.
+  ones. `hashtags.SETS` is a plain lookup table, one fixed set per theme.
+- **Deliberately NOT rotated.** The no-repeat ledgers in rule 11 exist because a reader
+  *experiences* a repeated image or hymn as staleness; nobody experiences hashtag sameness.
+  Rotation here would be moving parts serving nothing, so the table stays a table.
 
 ## 10b. Direct messages — ONE gift, never a pitch
 - The account **never cold-DMs anyone.** Meta's Instagram API has no outbound endpoint for it,

@@ -1,56 +1,49 @@
 #!/usr/bin/env python3
 """
-The post's hashtag set — FIVE tags, chosen for the verse's theme.
+The post's hashtag set — five tags, fixed per theme.
 
-Instagram capped hashtags at **5 per post/reel** in December 2025, and the cap counts
-caption and comments together: putting them in the first comment buys no extra slots.
-Over the cap, Instagram strips the excess or refuses the publish. So five is the account's
-entire hashtag budget and `build()` enforces it as a hard invariant.
+Instagram capped posts and reels at **5 hashtags** in December 2025, and the cap counts
+caption and comments together (the first-comment placement buys no extra slots), so five
+is the account's entire budget. Over the cap Instagram strips the excess or refuses the
+publish.
 
-Hashtags no longer drive reach — Instagram's own position is that they label topics rather
-than distribute content. These five are therefore chosen to say accurately what the post is
-about (this verse, this theme), not to fish. One anchor that never changes, two broad tags
-and two theme tags that rotate on the post counter at coprime steps, so consecutive posts
-never carry an identical set.
+Hashtags no longer drive reach — Instagram's own position is that they label a topic
+rather than distribute content — so the only job here is to say accurately what the post
+is about. That makes this a lookup table and not an algorithm: one reviewable set per
+theme, no counter, no rotation. Rotating them would add moving parts for no reader-visible
+benefit, since nobody experiences hashtag sameness the way they experience a repeated
+image or hymn (which is what the no-repeat ledgers in CONTENT_RULE §11 are actually for).
 
-    python3 hashtags.py            # print a few posts' worth
+    python3 hashtags.py            # print the table
 """
 
 MAX = 5                       # Instagram's hard cap (Dec 2025). Never raise this.
 
-ANCHOR = "#오늘의말씀"          # the one constant: what this account is
-
-BROAD = ["#말씀", "#성경말씀", "#큐티", "#말씀묵상", "#말씀스타그램"]
-
-THEME = {
-    "위로": ["#위로", "#위로의말씀", "#쉼"],
-    "평안": ["#평안", "#평안의말씀", "#기도"],
-    "담대": ["#담대", "#용기", "#믿음생활"],
-    "믿음": ["#믿음", "#믿음생활", "#신앙"],
-    "감사": ["#감사", "#감사일기", "#감사의말씀"],
-    "사랑": ["#사랑", "#하나님의사랑", "#은혜"],
-    "인도": ["#인도하심", "#순종", "#기도"],
-    "은혜": ["#은혜", "#은혜의말씀", "#신앙"],
-    "지혜": ["#지혜", "#잠언", "#묵상"],
+SETS = {
+    "위로": "#오늘의말씀 #성경말씀 #위로 #위로의말씀 #쉼",
+    "평안": "#오늘의말씀 #성경말씀 #평안 #평안의말씀 #기도",
+    "담대": "#오늘의말씀 #성경말씀 #담대 #용기 #믿음생활",
+    "믿음": "#오늘의말씀 #성경말씀 #믿음 #믿음생활 #신앙",
+    "감사": "#오늘의말씀 #성경말씀 #감사 #감사일기 #감사의말씀",
+    "사랑": "#오늘의말씀 #성경말씀 #사랑 #하나님의사랑 #은혜",
+    "인도": "#오늘의말씀 #성경말씀 #인도하심 #순종 #기도",
+    "은혜": "#오늘의말씀 #성경말씀 #은혜 #은혜의말씀 #신앙",
+    "지혜": "#오늘의말씀 #성경말씀 #지혜 #잠언 #묵상",
 }
 
+# The cap is a hard external constraint, so the table is checked once at import rather
+# than trusted: a set that grew a sixth tag would otherwise fail silently on Instagram.
+for _theme, _set in SETS.items():
+    _tags = _set.split()
+    assert all(t.startswith("#") for t in _tags), _theme
+    assert len(_tags) == len(set(_tags)) == MAX, f"{_theme}: {len(_tags)} tags, need {MAX}"
 
-def build(theme, i):
-    """The five tags for a `theme` verse on post `i` (the monotonic post counter).
 
-    Steps are coprime with the list lengths so the set keeps moving instead of settling
-    into a repeat: broad tags step 1 and 2 through a list of 5, theme tags 1 and 2
-    through a list of 3."""
-    broad = [BROAD[i % len(BROAD)], BROAD[(i + 2) % len(BROAD)]]
-    tt = THEME.get(theme) or THEME["믿음"]
-    theme_tags = [tt[i % len(tt)], tt[(i + 1) % len(tt)]]
-    tags = []
-    for t in [ANCHOR] + broad + theme_tags:      # dedupe, keep order
-        if t not in tags:
-            tags.append(t)
-    return " ".join(tags[:MAX])                  # the cap is not negotiable
+def build(theme):
+    """The five hashtags for a `theme` verse."""
+    return SETS.get(theme) or SETS["믿음"]
 
 
 if __name__ == "__main__":
-    for theme in THEME:
-        print(f"{theme:4s}  " + "\n      ".join(build(theme, i) for i in range(3)))
+    for theme in SETS:
+        print(f"{theme}  {build(theme)}")

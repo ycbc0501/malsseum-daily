@@ -240,7 +240,7 @@ def main():
     print(f"music={os.path.basename(audio) if audio else 'none'}")
 
     caption = build_caption(verse, data.get("translation", ""))
-    tags = hashtags.build(verse.get("theme", "믿음"), post_i)
+    tags = hashtags.build(verse.get("theme", "믿음"))
     # record what we used so it NEVER repeats
     state["used_verses"].append(verse["ref"])
     save_state(state)
