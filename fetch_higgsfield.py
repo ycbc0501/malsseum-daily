@@ -279,9 +279,15 @@ def pick_scene(start, recent_cats, avoid=2):
     i = start % n
     return i, SCENE_CATS[i]
 COMPOSE = {
-    ("center", "top"): "COMPOSITION: the UPPER HALF of the frame must be genuinely EMPTY — open sky, "
-        "still water, a plain wall or soft haze, whatever suits THIS scene — because the verse sits "
-        "there and must read with nothing behind it. Anchor the subject and every detailed or textured "
+    ("center", "top"): "COMPOSITION: the UPPER HALF of the frame must be genuinely EMPTY and must be "
+        "ONE SINGLE FLAT EVEN TONE — a clear cloudless sky, a plain wall, still water or soft haze, "
+        "whatever suits THIS scene. That area carries the verse, so it has to be one continuous "
+        "unbroken colour: NO texture, NO pattern, NO detail, NO bright patches or hotspots, NO dark "
+        "blotches, no strong edges, no sun disc or glare, no scattered cloud, nothing crossing it. A "
+        "smooth, barely-perceptible gradient of the SAME colour is fine; two different tones meeting "
+        "there is not. That tone must be decisively LIGHT (a pale, near-white sky or wall) or "
+        "decisively DARK (a deep, near-black sky or wall) — never a middling mid-grey, which no text "
+        "colour can sit on. Anchor the subject and every detailed or textured "
         "element in the LOWER THIRD: a low horizon, the ground, the furniture, the flowers, the "
         "rooftops all sit along the bottom edge, and NOTHING (no branch, no tree, no post, no "
         "building, no bird) reaches up into the empty upper half. Aim for a lot of plain negative "

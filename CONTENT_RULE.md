@@ -118,6 +118,31 @@ spectacular. If a render is impressive, it is wrong.
 - **Backing is insurance, not the mechanism.** With an empty upper half and adaptive colour, the halo is
   dialled down to alpha 95 (was 150 — the visible grey smudge). It exists only to save a post when a
   render ignores `COMPOSE`; a compliant render should look like the reference, text straight on the photo.
+- **The typeface never changes.** NanumMyeongjo, fixed size. Legibility is solved on the IMAGE side
+  (below), never by altering the lettering.
+
+### 9b. The text area is MEASURED, not hoped for
+The verse must sit on **one precisely-contrasting tone**. `COMPOSE` asks the model for a single flat even
+area — decisively light or decisively dark, never a middling mid-grey — but a prompt is a request, not a
+guarantee, so the render is **measured and regenerated** like every other generator output.
+
+- `generate.verse_ink()` renders the **real glyph mask** (geometry only, background-independent), and
+  `text_area_contrast()` measures the candidate background *under exactly those pixels* — not an
+  approximate band.
+- **Worst-case, never the mean.** Which end is "worst" depends on the text colour: against light text the
+  brightest pixels are the danger, against dark text the darkest. Measuring the mean is precisely what
+  hid the 2026-07-26 stained-glass failure (dark average, bright panes under white strokes).
+- Thresholds (`MIN_CONTRAST` 4.5 WCAG AA, `MAX_SPREAD` 22 gray stddev) are **empirical**, calibrated over
+  the 100-photo pool: its best backgrounds score 3–9 spread / 12–19 contrast, its worst 65–75 / ~1.0.
+  Contrast and flatness track each other almost perfectly — they are one property.
+- A flat **mid-grey scores only 3.7 against either text colour** and is correctly rejected. That is why
+  `COMPOSE` demands the tone be decisively light or decisively dark.
+- `daily_post` retries up to **3** renders, advancing `post_i` each time so the light/angle changes
+  rather than re-rolling the same prompt. The **photo-pool fallback is ranked by the same measurement**,
+  so both paths obey one rule.
+- **It never blocks a post.** If all attempts fail it ships with a `WARNING`, the backing carries it, and
+  the measured `text_contrast` / `text_spread` go into `_meta.json` → `metrics.json` (rule 11b) so a bad
+  text area is recorded rather than hidden — and can be correlated with performance.
 - The **photo pool obeys the same soft-centre rule**: `generate.calm_photos()` filters out photos whose
   centre band is too chaotic to carry text (stained glass, dense foliage) before any pick — carousel
   and daily fallback both. And when a busy background does get through, `render()`'s backing strength

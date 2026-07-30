@@ -201,8 +201,21 @@ def main():
     scene_cats = state.setdefault("used_scene_cats", [])
     # Skip forward past any theme used in the last 2 posts so the feed never clusters (e.g. 3 water scenes).
     scene_i, scene_cat = fetch_higgsfield.pick_scene(scene_i, scene_cats)
+    # The verse must land on ONE precisely-contrasting tone. COMPOSE asks the model for a flat even
+    # area, but a prompt is a request, not a guarantee — so we MEASURE the render under the real glyph
+    # mask and regenerate when it fails. Same shape as the composition and motion gates: the pipeline
+    # never trusts a generator it can check. Attempts are bounded by rule 1's build budget.
+    ink = generate.verse_ink(verse, canvas=generate.REEL, placement=placement, grow=5)
+    AREA_TRIES = 3
     try:
-        fetch_higgsfield.generate_checked(bg, scene_i, placement, aspect="9:16", var_t=post_i)
+        for attempt in range(1, AREA_TRIES + 1):
+            fetch_higgsfield.generate_checked(bg, scene_i, placement, aspect="9:16", var_t=post_i)
+            ok, why, stats = generate.text_area_ok(bg, ink, canvas=generate.REEL)
+            print(f"text-area gate attempt {attempt}: {why} "
+                  f"(contrast {stats['contrast']}, spread {stats['spread']}, mean {stats['mean']})")
+            if ok:
+                break
+            post_i += 1        # a different light/angle next try, not the same prompt again
         state["scene_i"] = scene_i + 1
         state["post_i"] = post_i + 1
         scene_cats.append(scene_cat)
@@ -212,11 +225,22 @@ def main():
         print(f"higgsfield failed ({e}) → photo pool fallback")
         used_photos = state.setdefault("used_photos", [])
         pool_p = [p for p in photos if os.path.basename(p) not in used_photos] or photos
-        photo = pool_p[n % len(pool_p)] if pool_p else None
-        if photo:
+        # Rank the fallback pool by the SAME measurement, so the photo path obeys the same rule
+        # instead of a looser proxy. Ledger order still wins; this only breaks ties among unused.
+        if pool_p:
+            scored = sorted(pool_p, key=lambda p: -generate.text_area_contrast(
+                p, ink, canvas=generate.REEL)[0])
+            photo = scored[0]
             used_photos.append(os.path.basename(photo))
+            c, sd, mean, _fg = generate.text_area_contrast(photo, ink, canvas=generate.REEL)
+            print(f"photo fallback: {os.path.basename(photo)} (contrast {c:.2f}, spread {sd:.1f})")
     generate.cover_crop(Image.open(photo or bg), *generate.REEL).save(bg, "PNG")
     overlay = os.path.join(generate.OUT_DIR, "_overlay.png")
+    # Final measurement of what actually shipped — recorded in _meta.json so metrics.py can correlate
+    # legibility with performance, and visible in the log even when the gate had to give up.
+    area_ok, area_why, area_stats = generate.text_area_ok(bg, ink, canvas=generate.REEL)
+    if not area_ok:
+        print(f"WARNING: shipping with an imperfect text area ({area_why}) — backing carries it")
     generate.render_text_overlay(verse, overlay, canvas=generate.REEL, placement=placement, bg=bg)
     # Veo → REAL motion at NATIVE speed (no slow-mo: stretching made it coarse). An automatic motion
     # gate rejects an over-animated clip (racing/timelapse clouds or churning water): retry once, and
@@ -292,7 +316,11 @@ def main():
         json.dump({"ref": verse["ref"], "theme": verse.get("theme", "믿음"),
                    "date": date_str, "format": "reel",
                    "segments": n_segments,
-                   "duration": round(make_video._duration(out_mp4), 2)},
+                   "duration": round(make_video._duration(out_mp4), 2),
+                   # legibility of what actually shipped, so metrics.py can correlate a clean
+                   # text area with performance instead of us assuming it matters
+                   "text_contrast": area_stats["contrast"],
+                   "text_spread": area_stats["spread"]},
                   f, ensure_ascii=False)
 
     if args.dry_run or args.emit:
