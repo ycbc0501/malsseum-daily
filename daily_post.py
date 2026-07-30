@@ -220,6 +220,7 @@ def main():
     # gate rejects an over-animated clip (racing/timelapse clouds or churning water): retry once, and
     # only if it is STILL too fast fall back to a calm still — a bad-motion clip can never post itself.
     MOTION_MAX, SKY_MAX = 2.6, 0.7   # thresholds from real clips: calm≈1.7/0.35, frantic city≈7.3
+    n_segments = 0          # recorded in _meta.json so metrics.py can measure length changes
     try:
         import fetch_veo
         clip = os.path.join(generate.OUT_DIR, "_veo.mp4")
@@ -257,6 +258,7 @@ def main():
             joined = make_video.chain_clips(
                 segments, os.path.join(generate.OUT_DIR, "_veo_long.mp4"))
             make_video.build_reel_native(joined, overlay, audio, out_mp4)
+            n_segments = len(segments)
             print(f"reel(veo native, {len(segments)} segment(s), "
                   f"overall {ov:.2f}, sky {sky:.2f}): {verse['ref']}")
         else:
@@ -281,6 +283,15 @@ def main():
         f.write(caption)
     with open(os.path.join(generate.OUT_DIR, "_comment.txt"), "w", encoding="utf-8") as f:
         f.write(tags)  # hashtags go in the first comment, not the caption
+    # What we CHOSE for this post. metrics.py pairs it with what Instagram reports, so a format
+    # change (reel length, theme) becomes a measurable number instead of an opinion. Written here
+    # because the publish itself happens later, in the workflow's post_instagram.py step.
+    with open(os.path.join(generate.OUT_DIR, "_meta.json"), "w", encoding="utf-8") as f:
+        json.dump({"ref": verse["ref"], "theme": verse.get("theme", "믿음"),
+                   "date": date_str, "format": "reel",
+                   "segments": n_segments,
+                   "duration": round(make_video._duration(out_mp4), 2)},
+                  f, ensure_ascii=False)
 
     if args.dry_run or args.emit:
         print("\n--- caption ---\n" + caption + "\n--- comment ---\n" + tags)
@@ -294,14 +305,14 @@ def main():
     print("published:", result)
     if isinstance(result, dict) and result.get("id"):
         print("comment:", post_instagram.comment(result["id"], tags))
-        # Remember which verse each post carries, so the one private reply we're allowed to
-        # send a commenter can carry the 기도문 for THAT verse's theme (dm_reply.py). Bounded
-        # to ~20: Meta's private-reply window is 7 days, which is 14 posts at 2/day.
-        posted = state.setdefault("posted_media", {})
-        posted[result["id"]] = verse.get("theme", "믿음")
-        for old in list(posted)[:-20]:
-            del posted[old]
-        save_state(state)
+        # Record the post so metrics.py can measure it and dm_reply.py can look up its theme.
+        # NOTE: in production this branch never runs — the workflow calls daily_post.py with
+        # --emit (which returns above) and publishes via post_instagram.py, whose CLI writes
+        # output/_media_id.txt for the workflow's `metrics.py record` step. This path exists for
+        # a local end-to-end publish, so it records the same way rather than a second way.
+        import metrics
+        metrics.record(result["id"], json.load(
+            open(os.path.join(generate.OUT_DIR, "_meta.json"), encoding="utf-8")))
 
 
 if __name__ == "__main__":

@@ -121,13 +121,36 @@ middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적)
 - `replied_comments` makes one-per-comment a **hard invariant** (a poller re-sees every comment;
   Meta allows one). Wording rotates via `dm_i` so the account never emits identical text
   repeatedly — same principle as rule 11.
+- The theme of the verse a commenter replied to comes from **`metrics.json`**, not from a
+  `posted_media` ledger. (There was one; it never populated. It was written in `daily_post.py`'s
+  publish block, but the workflow runs `daily_post.py --emit`, which returns before it — the real
+  publish happens in the workflow's `post_instagram.py` step. Anything that must be recorded at
+  publish time has to hang off **that** step, not off `daily_post.py`.)
 - **Not wired up:** no workflow calls `dm_reply`, and `reply_to_new_comments()` defaults to
   dry-run, until `instagram_manage_messages` clears App Review.
 
 ## 11. No-repeat ledgers (all in `state.json`, committed back after each run)
 `used_verses`, `used_music`, `used_scene_cats`, `scene_i`, `post_i`, `music_i`, `used_photos`,
-`used_clips`, `posted_media` (media id → theme, for 10b), `replied_comments`, `dm_i`.
+`used_clips`, `replied_comments`, `dm_i`.
 Every rotating resource has a ledger and cycles the whole set before repeating. Perceived sameness counts as a repeat, not just literal file reuse.
+
+## 11b. Performance ledger — decisions must be measurable (`metrics.json`)
+- Every no-repeat ledger above answers *"what have we used?"*. None answers *"did it work?"*, so
+  without this file every format argument is taste versus taste. `metrics.py` records one entry
+  per published post: the **inputs we chose** (verse, theme, reel duration, Veo segment count)
+  next to the **outcome Instagram reports** (reach, plays, shares, saves, watch time).
+- Recording inputs beside outcomes is the point — it makes a change measurable *after the fact*
+  without an A/B harness. `python3 metrics.py report` groups by reel length and by theme.
+- **Separate from `state.json` on purpose.** `state.json` is a bounded, rewritten-every-run
+  no-repeat ledger; this is append-only history that must grow. Mixing them would force a choice
+  between truncating history and bloating the hot file.
+- **Reach is the denominator.** The open question is *why so few people see this*; a share rate
+  computed against a tiny reach says nothing about reach itself.
+- Insights are **re-pulled** for `MATURE_DAYS` (14) after publishing — reels accrue views for
+  well over a week, so a single fetch at publish time would record a near-zero and freeze it.
+- Needs `instagram_manage_insights` on the token. Measurement is **`continue-on-error`** in the
+  workflow and `insights()` returns `{}` rather than raising: a metrics failure must never take
+  down a posting run.
 
 ## 12. Fallback chain (stay alive, always on-brand)
 - Image gen down → licensed photo pool (`used_photos` ledger).
