@@ -59,7 +59,17 @@ middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적)
 ## 6. Video length — and NEVER reverse playback
 - **NEVER boomerang / reverse / ping-pong the clip.** Playing footage backwards is banned artificial post-processing (water and light running backwards read as fake), same rule as no slow-mo and no interpolation. Video always plays **forward at native speed**.
 - Length must come from **Veo itself**, never from replaying frames. Veo's fast tier caps at ~8s; to go longer, chain a genuine continuation (feed the clip's last frame back into Veo) — never a reverse or a hard loop.
-- Still fallbacks run **24s**.
+- **Production reels are ~16s: `daily_post.SEGMENTS = 2` chained continuations.** Each segment
+  animates the *tail* frame of the one before it (`make_video.last_frame`, taken `TAIL` before the
+  end so Veo's frozen last frames never seed or show), and the segments are joined forward-only
+  (`make_video.chain_clips`). No frame is ever repeated or reversed.
+- **The motion gate applies to every segment**, not just the first. A continuation gets one
+  attempt and no retry: if it errors or comes back too fast we publish the segments that passed,
+  so a bad continuation costs *length*, never the post.
+- **Raising `SEGMENTS` is a timing-budget decision, not a free knob** — each segment is another
+  Veo call (~2–6 min) against rule 1's ~50 min of build time, and past ~30s the reel outlasts
+  Lyria's 30s hymn, which would force the music to loop (rule 7 keeps it seamless).
+- Still fallbacks run **24s** — already longer than the chained reel, so they are not doubled.
 
 ## 7. Music — unique every time, warm but small
 - A **unique Lyria hymn per post** (`fetch_lyria.py`): warm, hopeful, major-key church-hymn spirit — **not sad, not big**; kept **small, quiet, sparse, intimate**; never loud/grand/swelling. Mixed in **soft (volume 0.4)**.

@@ -34,6 +34,16 @@ MOTION = ("REAL-TIME footage at normal 1x playback speed — this is NOT a timel
           "move noticeably). Everything already in the frame stays present the whole time — nothing "
           "appears, grows, pops in, flickers or morphs. Calm, slow, serene, real-time — like a "
           "photograph gently breathing at natural speed.")
+# Prefixed to MOTION when animating the tail frame of an earlier segment, so the segments read as
+# ONE continuous shot rather than two takes of the same place. Length has to come from Veo itself
+# (CONTENT_RULE 6) — this is the "genuine continuation" that rule allows, as opposed to a loop.
+CONTINUE = ("This is a DIRECT CONTINUATION of one single continuous shot, resuming from the exact "
+            "frame provided. The scene, framing, composition, colour and light are already correct "
+            "and must stay identical — the motion simply carries on from where it left off. There is "
+            "no cut, no new scene, no camera move, no change of subject, no relighting, no shift in "
+            "colour grade, and nothing enters or leaves the frame. A viewer must not be able to tell "
+            "where the previous footage ended and this begins. ")
+
 NEG = ("timelapse, time-lapse, sped up, speed up, fast-forward, accelerated motion, fast playback, "
        "fast motion, fast movement, fast-moving clouds, racing clouds, rushing water, crashing waves, "
        "choppy water, fast-moving cars, speeding cars, busy traffic, energetic movement, churning, "

@@ -10,6 +10,10 @@ import subprocess
 
 W, H = 1080, 1920
 _COVER = f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},setsar=1"
+# Veo's fast tier sometimes freezes or smears the final few frames, so every Veo clip gets
+# its tail cut — at the end of the reel (build_reel_native) and at each internal join
+# (chain_clips), where a frozen frame would otherwise show up as a stutter mid-video.
+TAIL = 0.35
 
 
 def _ffmpeg():
@@ -68,6 +72,55 @@ def extract_frame(video, out_png, at=0.8):
         "-vf", _COVER, "-frames:v", "1", out_png,
     ], check=True, capture_output=True)
     return out_png
+
+
+def last_frame(video, out_png, back=TAIL):
+    """The frame `back` seconds BEFORE the end — the seed for a Veo continuation.
+
+    Not the literal final frame: Veo's fast tier sometimes freezes or smears the last few
+    frames (the same tail build_reel_native trims), and seeding a continuation from a frozen
+    frame produces a clip that starts by sitting still. Cropped to 9:16 so the continuation
+    is generated at the same framing as the segment before it."""
+    at = max(0.0, (_duration(video) or 8.0) - back)
+    subprocess.run([
+        FFMPEG, "-y", "-ss", f"{at:.3f}", "-i", video,
+        "-vf", _COVER, "-frames:v", "1", out_png,
+    ], check=True, capture_output=True)
+    return out_png
+
+
+def chain_clips(clips, out, tail=TAIL):
+    """Join Veo segments end-to-end into ONE longer forward clip.
+
+    This is how length is allowed to grow (CONTENT_RULE 6): every segment is genuine Veo
+    footage continuing the one before it, played forward once at native speed. It is NOT a
+    loop and NOT a boomerang — no frame is ever shown twice or backwards.
+
+    Each segment except the last is cut `tail` short, because the next segment was seeded
+    from the frame at exactly that point: trimming makes the join continuous instead of
+    replaying the frozen tail Veo left behind."""
+    if len(clips) == 1:
+        return clips[0]
+    cmd = [FFMPEG, "-y"]
+    for i, c in enumerate(clips):
+        if i < len(clips) - 1:
+            cmd += ["-t", f"{max(0.5, (_duration(c) or 8.0) - tail):.3f}"]
+        cmd += ["-i", c]
+    # concat demands identical resolution/SAR/frame rate across inputs, so normalise every
+    # segment to the 9:16 canvas at 30fps first. Veo returns the segments at a consistent size
+    # in practice, but a single mismatched continuation would otherwise throw here and lose the
+    # good footage along with it — and this step re-encodes anyway, so the crop is free.
+    norm = "".join(f"[{i}:v]{_COVER},fps=30[c{i}];" for i in range(len(clips)))
+    streams = "".join(f"[c{i}]" for i in range(len(clips)))
+    cmd += [
+        "-filter_complex", f"{norm}{streams}concat=n={len(clips)}:v=1[v]",
+        "-map", "[v]", "-an",
+        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
+        "-preset", "fast", "-crf", "16",
+        out,
+    ]
+    subprocess.run(cmd, check=True, capture_output=True)
+    return out
 
 
 def _duration(path):
@@ -134,7 +187,7 @@ def build_reel_native(video, overlay_png, audio, out, volume=0.4, duration=None)
     frame rate and made motion look coarse/juddery, so we play Veo's real-time motion as-is and
     just crop to 9:16, overlay the verse, and mix the hymn in softly (volume<1)."""
     dur = duration or (_duration(video) or 8.0)
-    dur = max(1.0, dur - 0.2)   # drop the last couple of frames (Veo sometimes freezes on the tail)
+    dur = max(1.0, dur - TAIL)   # drop Veo's frozen tail
     fc = f"[0:v]{_COVER},fps=30[bg];[bg][1:v]overlay=0:0:format=auto,format=yuv420p[v]"
     cmd = [
         FFMPEG, "-y", "-i", video, "-loop", "1", "-i", overlay_png,

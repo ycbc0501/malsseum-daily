@@ -2,10 +2,10 @@
 """
 Daily 말씀 Reel — the hands-off orchestrator.
 
-Each day: waits for 05:00 KST ±10 min, picks the next verse + hymn track + sky/cloud
-clip (sequential rotation, each used once before repeating), makes the ~15s clip into
-a seamless ~60s boomerang (forward+reverse), overlays the verse (always centered),
-adds the hymn music, and publishes a Reel (shows in feed via share_to_feed).
+Each day: waits for 05:00 KST ±10 min, picks the next verse + a unique hymn, generates an
+AI background, animates it with Veo into ~16s of real motion (two chained ~8s continuations,
+played forward at native speed — never looped or reversed), overlays the verse (always
+centered), mixes the hymn in softly, and publishes a Reel (shows in feed via share_to_feed).
 
 Fallbacks keep it alive: no clip → still 4:5 card + music; no music → plain 4:5 photo.
 
@@ -44,6 +44,14 @@ INCOMPLETE_ENDINGS = ("고", "며", "매", "이요", "으며", "하며")
 
 # weekly themed series — each week's posts are drawn from one theme (meaningful flow)
 THEME_ORDER = ["위로", "평안", "담대", "믿음", "감사", "사랑", "인도", "은혜", "지혜"]
+
+# How many chained Veo segments make up one reel. Veo's fast tier caps a single generation at
+# ~8s, so length is built by animating each segment's tail frame into the next and playing them
+# forward once (CONTENT_RULE 6 — never a loop, never a reverse). 2 ≈ 16s.
+# Raising this is a TIMING-BUDGET decision, not a free knob: each segment is another Veo call
+# (~2-6 min), rule 1 leaves only ~50 min of build time after the scheduler wait, and past ~30s
+# the reel outlasts Lyria's hymn and the music would have to loop.
+SEGMENTS = 2
 
 
 def wait_until_target(jitter_s, hour=5):
@@ -223,11 +231,34 @@ def main():
             if ov <= MOTION_MAX and sky <= SKY_MAX:
                 break
         if ov <= MOTION_MAX and sky <= SKY_MAX:
+            segments = [clip]
+            # Extend, one segment at a time. A continuation gets ONE attempt and no retry: if it
+            # errors or comes back too fast we publish the segments that already passed, so a bad
+            # continuation costs us length but never the post. The motion gate applies to every
+            # segment, so a frantic continuation can no more post itself than a frantic opening.
+            for seg in range(2, SEGMENTS + 1):
+                seed = os.path.join(generate.OUT_DIR, f"_veo{seg}_seed.png")
+                nxt = os.path.join(generate.OUT_DIR, f"_veo{seg}.mp4")
+                try:
+                    make_video.last_frame(segments[-1], seed)
+                    fetch_veo.animate(seed, nxt, prompt=fetch_veo.CONTINUE + fetch_veo.MOTION)
+                    s_ov, s_sky = make_video.motion_score(nxt)
+                    print(f"veo segment {seg}: overall {s_ov:.2f}, sky {s_sky:.2f}")
+                    if s_ov > MOTION_MAX or s_sky > SKY_MAX:
+                        print(f"veo segment {seg} too fast → keeping {len(segments)} segment(s)")
+                        break
+                    segments.append(nxt)
+                except Exception as e:
+                    print(f"veo segment {seg} failed ({e}) → keeping {len(segments)} segment(s)")
+                    break
             # FORWARD ONLY, native speed. Never boomerang/reverse the clip — playing footage backwards
             # is exactly the kind of artificial post-processing that is banned (water and light running
             # backwards reads as fake). Length comes from Veo itself, not from replaying frames.
-            make_video.build_reel_native(clip, overlay, audio, out_mp4)
-            print(f"reel(veo native, overall {ov:.2f}, sky {sky:.2f}): {verse['ref']}")
+            joined = make_video.chain_clips(
+                segments, os.path.join(generate.OUT_DIR, "_veo_long.mp4"))
+            make_video.build_reel_native(joined, overlay, audio, out_mp4)
+            print(f"reel(veo native, {len(segments)} segment(s), "
+                  f"overall {ov:.2f}, sky {sky:.2f}): {verse['ref']}")
         else:
             print(f"veo still too fast (overall {ov:.2f}, sky {sky:.2f}) → calm still fallback")
             make_video.build_reel_still(bg, overlay, audio, out_mp4, duration=24)
