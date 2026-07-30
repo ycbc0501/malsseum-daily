@@ -442,10 +442,20 @@ def _even_cloud(base, alpha, cap, size, color):
     return Image.alpha_composite(base, layer)
 
 
-def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "middle"), ss=2):
-    """Transparent PNG of the verse (white text + even dark shadow, upright source) to
-    composite OVER a moving video clip. White is used because a clip's brightness varies
-    frame to frame, so adaptive dark text isn't safe; the even shadow keeps it legible.
+def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "top"), ss=2, bg=None):
+    """Transparent PNG of the verse to composite OVER a moving video clip.
+
+    Verse-first layout (2026-07-30, @dailymayim reference): the block sits in the UPPER
+    THIRD over the empty part of the frame, in a NARROW column so the lines come out short
+    and stack into a compact centred text object — that shape, not a larger font, is what
+    makes the 말씀 read as the subject rather than a caption.
+
+    `bg` is the background still. Text colour is sampled from it (dark text on a light sky,
+    light text on a dark one) instead of always being white. White-always was safe while
+    every scene was forced bright, but the LIGHT palette now runs from pale dawn to night,
+    and white on a pale dawn sky is invisible. Sampling one still is sound here because
+    rule 5 pins the camera and keeps motion barely-there, so the band's brightness hardly
+    moves across the clip.
 
     Rendered at `ss`× and LANCZOS-downsampled so the serif edges stay smooth and clean
     (no jaggies) when the overlay is composited on top of the video — and, crucially, the
@@ -457,7 +467,8 @@ def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "midd
     verse_size = (44 if canvas == REEL else 40) * ss
     mx = int(cw * 0.08)
     if halign == "center":
-        col_w = int(cw * (0.85 if canvas == REEL else 0.80))
+        # Narrower than the old 0.85: short lines are the reference's signature.
+        col_w = int(cw * (0.68 if canvas == REEL else 0.66))
         col_left = (cw - col_w) // 2
     else:
         col_w = int(cw * 0.60)
@@ -466,11 +477,16 @@ def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "midd
     probe = ImageDraw.Draw(Image.new("RGB", (cw, ch)))
     font, lines, line_h, size = fit_verse(probe, verse["text"], col_w, verse_size,
                                           lines=verse.get("lines"))
-    src_font = load_font(SERIF, max(22, int(size * 0.62)))
+    src_font = load_font(SERIF, max(20, int(size * 0.52)))
     src_h = sum(src_font.getmetrics())
     gap = int(line_h * 0.45)
     verse_h = len(lines) * line_h
-    top_y = ch // 2 - verse_h // 2
+    if valign == "top":
+        # Upper third, measured from the block's CENTRE so a 2-line and a 5-line verse sit at
+        # the same optical height instead of drifting down as the verse gets longer.
+        top_y = max(int(ch * 0.06), int(ch * 0.30) - verse_h // 2)
+    else:
+        top_y = ch // 2 - verse_h // 2
 
     def line_x(w):
         if halign == "left":
@@ -479,7 +495,16 @@ def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "midd
             return col_left + col_w - w
         return (cw - w) // 2
 
+    # Sample the actual background band (incl. the source line) so a pale sky gets dark text.
     fg, shadow_c = (250, 248, 244), (0, 0, 0)
+    if bg is not None:
+        try:
+            src = bg if isinstance(bg, Image.Image) else Image.open(bg)
+            band = cover_crop(src, cw, ch)
+            fg, shadow_c, _busy = band_color(band, top_y, verse_h + gap + src_h,
+                                             cw, col_left, col_w)
+        except Exception as e:                         # legibility insurance, never a hard fail
+            print(f"overlay: background sample failed ({e}) → white text")
     txt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
     td = ImageDraw.Draw(txt)
     y = top_y
@@ -489,13 +514,20 @@ def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "midd
         y += line_h
     srctxt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
     sd = ImageDraw.Draw(srctxt)
-    src_text = f"[{verse['ref']}]"
+    # No brackets on the image — the reference sets the citation bare ("이사야 41:10"). The caption
+    # keeps its "[book chapter:verse]" form (rule 10); this is the on-image line only.
+    src_text = verse["ref"]
     sw = text_w(sd, src_text, src_font)
-    sd.text((line_x(sw), y + gap), src_text, font=src_font, fill=(228, 225, 219, 255))
+    # The reference sets the reference line quieter than the verse — same colour, lower presence.
+    sd.text((line_x(sw), y + gap), src_text, font=src_font, fill=fg + (205,))
 
+    # Backing is now INSURANCE, not the legibility mechanism. COMPOSE demands an empty upper half
+    # and the text colour adapts to it, so the heavy 150-alpha cloud that produced the visible grey
+    # smudge is dialled back to a faint halo — enough to save a post if the render ignores COMPOSE,
+    # light enough that a compliant render looks like the reference: text straight on the photo.
     out = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
-    out = _even_cloud(out, txt.getchannel("A"), 150, size, shadow_c)
-    out = _even_cloud(out, srctxt.getchannel("A"), 150, size, shadow_c)
+    out = _even_cloud(out, txt.getchannel("A"), 95, size, shadow_c)
+    out = _even_cloud(out, srctxt.getchannel("A"), 95, size, shadow_c)
     out = Image.alpha_composite(out, txt)
     out = Image.alpha_composite(out, srctxt)
     if ss != 1:                                        # …then downsample to native → crisp edges

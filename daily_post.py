@@ -171,7 +171,9 @@ def main():
     # REEL (text always centered — reads best in motion). Two background sources, alternated
     # for variety: (a) real Pexels footage (clouds/fields, gently moving) with a white-text
     # overlay, and (b) a Nano Banana still with a subtle Ken Burns zoom (adaptive color).
-    placement = ("center", "middle")
+    # Verse-first (2026-07-30): the verse sits in the UPPER third over the empty part of the frame,
+    # and COMPOSE anchors the subject in the lower third to leave that space genuinely open.
+    placement = ("center", "top")
     rel_path = f"output/posts/{date_str}.mp4"
     out_mp4 = os.path.join(generate.HERE, rel_path)
     # MUSIC: generate a UNIQUE instrumental per post with Lyria (never the same music twice, and
@@ -215,7 +217,7 @@ def main():
             used_photos.append(os.path.basename(photo))
     generate.cover_crop(Image.open(photo or bg), *generate.REEL).save(bg, "PNG")
     overlay = os.path.join(generate.OUT_DIR, "_overlay.png")
-    generate.render_text_overlay(verse, overlay, canvas=generate.REEL, placement=placement)
+    generate.render_text_overlay(verse, overlay, canvas=generate.REEL, placement=placement, bg=bg)
     # Veo → REAL motion at NATIVE speed (no slow-mo: stretching made it coarse). An automatic motion
     # gate rejects an over-animated clip (racing/timelapse clouds or churning water): retry once, and
     # only if it is STILL too fast fall back to a calm still — a bad-motion clip can never post itself.

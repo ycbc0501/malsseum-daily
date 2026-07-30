@@ -4,12 +4,20 @@ The single source of truth for what this account posts and how. **Every change t
 checked against ALL of these rules before it ships.** If a change would break a rule, the change is
 wrong — not the rule. Where a rule names code, the code is the enforcement; the rule is the intent.
 
-Voice: a Korean daily Bible-verse account (말씀) whose whole feeling is **밝고 희망참 (bright & hopeful)**
-— uplifting, warm, peaceful and full of light — while staying **real, reverent and hyperrealistic**
-(경건함 유지). Never dark/gloomy, and never cute, kitschy, twee, saccharine, or fake/CGI. (Direction
-changed 2026-07-23 from the earlier dark/heavy/moody look → generally bright and hopeful; a few
-naturally-darker-but-hopeful scenes — stars, candle, dusk — remain as a small minority for range.)
-Fully hands-off: it runs itself; a human should never need to approve a post.
+Voice: a Korean daily Bible-verse account (말씀) whose whole feeling is **고요함 (quiet & still)** —
+calm, peaceful, tender and reverent — while staying **real and hyperrealistic** (경건함 유지). Never
+cute, kitschy, twee, saccharine, or fake/CGI.
+
+**The criterion is QUIET, not brightness** (direction changed 2026-07-30, superseding the bright-only
+direction of 2026-07-23). A pale dawn sky and a lamp-lit room after dark are **both** on brand; the
+full tonal range is open — night sea, starfield, dusk, a dim interior, blue hour. What is banned is
+**gloom**: ominous, oppressive, bleak, sorrowful, frightening or heavy. A quiet dark is peaceful; a
+gloomy dark is not.
+
+**The 말씀 LEADS; the image accompanies it.** This is the account's ordering rule and it outranks any
+visual ambition. The frame is deliberately under-stated — plain, simple, lots of empty space — because
+a spectacular photograph competes with the verse and wins. Reference: **@dailymayim** (말씀 우선, 일상적
+이고 고요한 사진). Fully hands-off: it runs itself; a human should never need to approve a post.
 
 ---
 
@@ -23,23 +31,34 @@ Fully hands-off: it runs itself; a human should never need to approve a post.
 - **A missed post is never silent:** any failed/cancelled run opens a GitHub issue.
 
 ## 2. Themes — at least 20, always rotating, never overlapping
-- `fetch_higgsfield.SCENE_GROUPS` holds **≥20 distinct visual themes** (currently 25), each bright & hopeful (경건함 유지): sea, forest path, cathedral, misty mountain, rainy street, wheat field, reflection lake, lighthouse, snowfall, canal town, chapel, wilderness, window, river, archway/ruins, blossom, starfield, harbor, winter trees, candle, storm sky, rain pond, shore, waterfall, dusk sky (어스름).
+- `fetch_higgsfield.SCENE_GROUPS` holds **≥20 distinct visual themes** (currently 36) in two families:
+  - **Quiet nature & architecture:** sea, forest path, cathedral, misty mountain, rainy street, wheat field, reflection lake, lighthouse, snowfall, canal town, chapel, wilderness, river, archway/ruins, blossom, starfield, harbor, winter trees, storm sky, rain pond, shore, waterfall, dusk sky (어스름), candle, still water.
+  - **Everyday & intimate** (added 2026-07-30, the @dailymayim register): window light, bedroom, lamp-lit room, flowers in a vase, curtain, desk, café table, alley, city at night, field flowers, country road. This family exists **because it lets the verse lead** — an ordinary room has far less to say than a monumental landscape.
+- **Base prompts name the SUBJECT and weather ONLY — never the time of day, never the brightness.**
+  Tone comes from the rotating `LIGHT` palette. This was always the documented design but was
+  violated in practice: the prompts carried **109 hardcoded tone words** ("bright" 46×, "sunlit" 22×,
+  "sunlight" 20×), which is the real reason the account could only ever look bright — a dark palette
+  would have contradicted the scene text itself. Keep tone words OUT of scene prompts.
 - Themes are **round-robin interleaved** into the flat `SCENES` list so sequential rotation walks through *different* themes; the dict order alternates families (water / dry land / architecture / interior) so neighbours never look alike.
 - `pick_scene()` + the `used_scene_cats` ledger in `state.json` **skip forward past any theme used in the last 2 posts** — a gate rejection or fallback can never cluster the same theme. Invariant: **no two consecutive posts share a theme.**
 
 ## 3. Even the same theme must look substantially different
 When a theme comes round again it must differ by multiple axes:
 - **Base variant:** each theme has ≥2 differently-worded scene prompts.
-- **Light / colour palette:** `LIGHT` (5 options, all bright & hopeful) — bright clear morning, soft luminous daylight, warm golden sunlight, fresh sparkling after-rain, gentle glowing dawn. Keyed on the **monotonic `post_i` counter**; 5 does not divide the ~24-post theme cycle, so a theme cycles through all five palettes across its appearances.
+- **Light / colour palette:** `LIGHT` (**7 options spanning bright → dark**) — clear early morning, soft even daylight, warm low afternoon, pale quiet dawn, last quiet light of dusk, cool blue stillness after sunset, faint light after dark. Keyed on the **monotonic `post_i` counter**; 7 is prime and divides neither 36 (themes) nor 72 (scenes), so a theme never locks onto one tone.
 - **Camera vantage / angle:** `VANTAGE` (4 options) — wide/distant, low eye-level, high looking-out, intimate close.
-- **Scale / grandeur (웅장함):** `SCALE` (3 options) — monumental forms at the edges, vast atmospheric depth, a small element dwarfed to reveal scale. Skipped for the *intimate close* vantage, where "come close" and "be monumental" would contradict each other.
-- These are set in `scene_variation(post_i)` and injected into every prompt. Axes to keep leveraging: colour, angle, narrative, time-of-day feel, season, age/era.
-- Periods are deliberately **coprime** (LIGHT 5 / SCALE 3, VANTAGE every 5th post) so a theme meets a fresh light+scale pairing for 15 posts before any combination recurs.
+- These are set in `scene_variation(post_i)` and injected into every prompt. Periods stay **coprime**: LIGHT every post (7), VANTAGE every 7th post (4), so a theme meets a fresh light+angle pairing for 28 posts before any combination recurs.
 
-**Grandeur must never be bought with legibility.** The verse is the point of the account, so `COMPOSE`'s
-soft-open centre wins every time. Scale is therefore built *outside* the centre — depth, atmospheric
-perspective, immensity at the frame edges, scale contrast — never by parking a huge subject in the
-middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적), alongside @wondervisionary.
+### The 웅장함 (grandeur) axis is RETIRED — 2026-07-30
+`SCALE` is gone. It was the instrument of an image-first post, and this account is verse-first: a
+monumental frame competes with the 말씀 for attention and wins. The @dailymayim reference carries
+almost no monumental imagery — windows, lamps, made beds, stems in a glass — and that is precisely why
+the verse reads as the subject there. **Grandeur is no longer a variation axis**; the everyday/intimate
+scene family in rule 2 replaces it. (@fuezstudio is no longer a reference for this account.)
+
+**Understatement is a requirement, not a preference.** `QUALITY` asks for muted, slightly desaturated,
+low-contrast, filmic colour with plenty of plain empty space — never vivid, glossy, dramatic or
+spectacular. If a render is impressive, it is wrong.
 
 ## 3b. Every post is VIDEO, and every image is HYPERREALISTIC
 - **Production posts are always Reels (.mp4)** — never a static image post. `daily_post.py` always builds and publishes a video via `publish_reel`. (Preview-page stills are illustrations only, not production.)
@@ -81,9 +100,24 @@ middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적)
 - Weekly **theme series** (`THEME_ORDER`) gives the feed meaning.
 - Never post a verse that ends mid-clause (`INCOMPLETE_ENDINGS`).
 
-## 9. Text & format — consistent, centered, readable
-- Verse text is **always centered**, in the **NanumMyeongjo serif** at a fixed size, wrapped so it never splits a verb phrase / modifier-head pair (`generate.py`).
-- Every scene prompt keeps the **center of the frame soft and open** (`COMPOSE`) so the verse is always legible over it.
+## 9. Text & format — verse-first, upper third, adaptive
+- Verse text is **always centered horizontally**, in the **NanumMyeongjo serif** at a fixed size, wrapped so it never splits a verb phrase / modifier-head pair (`generate.py`).
+- **The verse sits in the UPPER THIRD** (`placement = ("center", "top")`, block centred at 30% down), in
+  a **narrow column** (0.68 of width, was 0.85) so lines come out short and stack into a compact centred
+  text object. **That shape — not a bigger font — is what makes the 말씀 the subject.** The reference's
+  type is no larger than ours; its verses lead because of position, emptiness and short lines.
+- **`COMPOSE` keeps the UPPER HALF genuinely empty** and anchors the subject and all texture in the
+  **lower third**, with nothing reaching up into the text area. (Was "soft-open centre" — which put the
+  verse over the busiest part of the frame and is why heavy backing was ever needed.)
+- **On-image citation** is set bare and small — `시편 100:5`, no brackets, 0.52× the verse size. The
+  caption keeps the `[book chapter:verse]` form (rule 10).
+- **Text colour is sampled from the background** (`band_color`): dark text on a light sky, light text on
+  a dark one. Non-negotiable now that `LIGHT` runs from pale dawn to night — white-always was only safe
+  while every scene was forced bright, and white on a pale dawn sky is invisible. Sampling a single
+  still is sound because rule 5 pins the camera and keeps motion barely-there.
+- **Backing is insurance, not the mechanism.** With an empty upper half and adaptive colour, the halo is
+  dialled down to alpha 95 (was 150 — the visible grey smudge). It exists only to save a post when a
+  render ignores `COMPOSE`; a compliant render should look like the reference, text straight on the photo.
 - The **photo pool obeys the same soft-centre rule**: `generate.calm_photos()` filters out photos whose
   centre band is too chaotic to carry text (stained glass, dense foliage) before any pick — carousel
   and daily fallback both. And when a busy background does get through, `render()`'s backing strength
