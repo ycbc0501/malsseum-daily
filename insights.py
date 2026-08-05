@@ -53,7 +53,18 @@ def _themes():
         return {}
 
 
+def _why(e):
+    """Meta puts the actual reason in the error body, so an HTTPError alone says nothing
+    useful — 'usable metrics = NONE' without a reason sends you looking for the wrong bug."""
+    try:
+        return json.loads(e.read().decode()).get("error", {}).get("message", str(e))
+    except Exception:
+        return str(e)
+
+
 def _insights(media_id, metrics, token):
+    if not metrics:
+        return {}
     got = post_instagram._get(f"{post_instagram.GRAPH}/{media_id}/insights"
                               f"?metric={','.join(metrics)}&access_token={token}")
     out = {}
@@ -71,6 +82,11 @@ def fetch_media_insights(media_id, kind, ledger, token):
     once, not on every poll."""
     ok = ledger.setdefault("metrics_ok", {})
     if kind in ok:
+        if not ok[kind]:
+            # Probed to nothing already — usually a token missing instagram_manage_insights.
+            # Re-probing per post would spend ~9 requests each against a 200/hour budget and
+            # still learn nothing, so take the answer and move on until the token changes.
+            return {}
         try:
             return _insights(media_id, ok[kind], token)
         except Exception as e:
@@ -83,19 +99,21 @@ def fetch_media_insights(media_id, kind, ledger, token):
         ok[kind] = wanted
         return got
     except urllib.error.HTTPError as e:
-        print(f"  {kind}: full metric set rejected ({e.code}) — probing one at a time")
+        print(f"  {kind}: full metric set rejected ({e.code}: {_why(e)}) — probing one at a time")
     except Exception as e:
         print(f"  {kind}: full metric set failed ({e}) — probing one at a time")
 
-    good, out = [], {}
+    good, out, last = [], {}, ""
     for m in wanted:
         try:
             out.update(_insights(media_id, [m], token))
             good.append(m)
-        except Exception:
-            pass
+        except urllib.error.HTTPError as e:
+            last = _why(e)
+        except Exception as e:
+            last = str(e)
     ok[kind] = good
-    print(f"  {kind}: usable metrics = {good or 'NONE'}")
+    print(f"  {kind}: usable metrics = {good or 'NONE'}" + (f" — last error: {last}" if not good else ""))
     return out
 
 
@@ -139,6 +157,8 @@ def collect(ledger, token=None, ig_user_id=None):
         for row in got.get("data", []):
             for v in row.get("values", []):
                 daily[v.get("end_time", "")[:10]] = v.get("value")
+    except urllib.error.HTTPError as e:
+        print(f"follower_count unavailable ({e.code}: {_why(e)})")
     except Exception as e:
         print(f"follower_count unavailable ({e})")
 
