@@ -162,6 +162,14 @@ def collect(ledger, token=None, ig_user_id=None):
     except Exception as e:
         print(f"follower_count unavailable ({e})")
 
+    if any(not v for v in (ledger.get("metrics_ok") or {}).values()):
+        print("\nNO METRICS AVAILABLE. Meta answers '(#10) Application does not have permission'\n"
+              "for every insights call, which means IG_ACCESS_TOKEN is missing the\n"
+              "instagram_manage_insights scope. Everything else here works — publishing,\n"
+              "comments and captions only need the scopes the token already has.\n"
+              "Fix: reissue the token with instagram_manage_insights added, update the\n"
+              "IG_ACCESS_TOKEN repo secret, then run `python3 insights.py --reprobe` once\n"
+              "(the empty result is cached deliberately, so it will not retry on its own).")
     ledger["updated"] = datetime.now(KST).isoformat(timespec="seconds")
     return ledger
 
@@ -217,6 +225,9 @@ def report(ledger, top=10):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--report", action="store_true", help="print the stored ledger, fetch nothing")
+    ap.add_argument("--reprobe", action="store_true",
+                    help="forget which metrics are available and probe again "
+                         "(run this after granting the token a new scope)")
     args = ap.parse_args()
 
     try:
@@ -224,6 +235,9 @@ def main():
             ledger = json.load(f)
     except Exception:
         ledger = {}
+    if args.reprobe:
+        ledger.pop("metrics_ok", None)
+        print("metric availability forgotten — probing from scratch")
     if not args.report:
         collect(ledger)
         with open(LEDGER, "w", encoding="utf-8") as f:
