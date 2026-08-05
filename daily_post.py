@@ -5,7 +5,8 @@ Daily 말씀 Reel — the hands-off orchestrator.
 Each day: waits for 05:00 KST ±10 min, picks the next verse + a unique hymn, generates an
 AI background, animates it with Veo into ~16s of real motion (two chained ~8s continuations,
 played forward at native speed — never looped or reversed), overlays the verse (always
-centered), mixes the hymn in softly, and publishes a Reel (shows in feed via share_to_feed).
+centered), mixes the hymn in softly, and publishes a Reel (shown in the profile grid via
+share_to_feed) plus a Story.
 
 Fallbacks keep it alive: no clip → still 4:5 card + music; no music → plain 4:5 photo.
 
@@ -20,6 +21,7 @@ import json
 import os
 import random
 import re
+import shutil
 import time
 from collections import Counter
 from datetime import datetime, timedelta, timezone
@@ -81,10 +83,18 @@ def save_state(s):
 
 
 def build_caption(verse, translation):
-    # verse + reference, then a gentle follow CTA (turns reach → followers)
+    """Verse + reference, then a SHARE ask first and a follow ask second.
+
+    The order is deliberate and it is the whole caption strategy. Instagram's stated ranking
+    signals are watch time, sends per reach and likes per reach, and a send weighs several times
+    a like when deciding whether to show the post to people who don't follow the account — so
+    asking for a follow (which only the already-convinced can give) spends the strongest line of
+    the caption on the weakest signal. Asking someone to forward a 말씀 to a friend who needs it
+    is both the higher-weighted action and the honest purpose of the account; the follow follows
+    from being seen. Measured by `insights.py` (send/reach per post), not assumed."""
     return (f"{verse['text']}\n[{verse['ref']}]\n\n"
-            "매일 아침·저녁, 마음에 닿는 말씀을 전합니다 🕊\n"
-            "→ @to_light_bible 팔로우하고 하루를 말씀으로 시작하세요")
+            "오늘 이 말씀이 필요한 사람에게 보내주세요 🕊\n"
+            "→ 매일 아침·저녁 @to_light_bible")
 
 
 def _music_family(path):
@@ -219,19 +229,32 @@ def main():
     # Veo → REAL motion at NATIVE speed (no slow-mo: stretching made it coarse). An automatic motion
     # gate rejects an over-animated clip (racing/timelapse clouds or churning water): retry once, and
     # only if it is STILL too fast fall back to a calm still — a bad-motion clip can never post itself.
-    MOTION_MAX, SKY_MAX = 2.6, 0.7   # thresholds from real clips: calm≈1.7/0.35, frantic city≈7.3
+    # Tightened 2026-08-05: 2.6/0.7 was ~2x the calm reference and let visibly racing clouds and
+    # churning water through (published reels the account owner flagged). Scored against the local
+    # clip library, calm sits at 1.7/0.35 and frantic city at 7.3/0.4, so the bar now sits just
+    # above calm instead of halfway to frantic.
+    MOTION_MAX, SKY_MAX = 2.0, 0.45
     try:
         import fetch_veo
         clip = os.path.join(generate.OUT_DIR, "_veo.mp4")
+        best = os.path.join(generate.OUT_DIR, "_veo_best.mp4")
         ov = sky = 99.0
-        for attempt in (1, 2):
+        # Three tries, KEEPING THE CALMEST rather than the first one that squeaks under the bar —
+        # otherwise a tighter threshold just buys more still fallbacks instead of better motion.
+        for attempt in (1, 2, 3):
             fetch_veo.animate(bg, clip)                          # AI image → real motion
-            ov, sky = make_video.motion_score(clip)
-            print(f"veo motion attempt {attempt}: overall {ov:.2f}, sky {sky:.2f}")
+            o, s = make_video.motion_score(clip)
+            print(f"veo motion attempt {attempt}: overall {o:.2f}, sky {s:.2f}")
+            # A clip is only as calm as its WORST axis, so rank on the larger of the two ratios.
+            if max(o / MOTION_MAX, s / SKY_MAX) < max(ov / MOTION_MAX, sky / SKY_MAX):
+                ov, sky = o, s
+                shutil.copyfile(clip, best)
             if ov <= MOTION_MAX and sky <= SKY_MAX:
                 break
         if ov <= MOTION_MAX and sky <= SKY_MAX:
-            segments = [clip]
+            # Chain from the CALMEST take, not the last one generated — `clip` holds whatever
+            # attempt ran most recently, which may be the frantic one we rejected.
+            segments = [best]
             # Extend, one segment at a time. A continuation gets ONE attempt and no retry: if it
             # errors or comes back too fast we publish the segments that already passed, so a bad
             # continuation costs us length but never the post. The motion gate applies to every
@@ -294,6 +317,13 @@ def main():
     print("published:", result)
     if isinstance(result, dict) and result.get("id"):
         print("comment:", post_instagram.comment(result["id"], tags))
+        # Also to Stories. `share_to_feed` on the reel only puts it in the profile GRID, so
+        # without this the account has no story presence at all. Best-effort: a story that
+        # fails must never fail the post that already published.
+        try:
+            print("story:", post_instagram.publish_story(url))
+        except Exception as e:
+            print(f"story failed ({e}) — feed post already published, continuing")
         # Remember which verse each post carries, so the one private reply we're allowed to
         # send a commenter can carry the 기도문 for THAT verse's theme (dm_reply.py). Bounded
         # to ~20: Meta's private-reply window is 7 days, which is 14 posts at 2/day.

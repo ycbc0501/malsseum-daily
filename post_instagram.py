@@ -127,12 +127,66 @@ def comment(media_id, message, ig_user_id=None, token=None):
     return _post(f"{GRAPH}/{media_id}/comments", {"message": message, "access_token": token})
 
 
+def publish_story(media_url, ig_user_id=None, token=None):
+    """Publish the post to Stories as well (media_type=STORIES).
+
+    Same container→publish flow as everything else; the only difference is that a story
+    carries no caption (Instagram ignores one) and expires after 24h. `share_to_feed` on
+    a Reel puts it in the profile GRID, which is not this — a story has to be published
+    separately."""
+    ig_user_id = ig_user_id or os.environ.get("IG_USER_ID")
+    token = token or os.environ.get("IG_ACCESS_TOKEN")
+    is_video = media_url.rsplit("?", 1)[0].lower().endswith((".mp4", ".mov"))
+    params = {"media_type": "STORIES", "access_token": token}
+    params["video_url" if is_video else "image_url"] = media_url
+    container = _post(f"{GRAPH}/{ig_user_id}/media", params)
+    creation_id = container["id"]
+
+    for _ in range(60):
+        status = _get(f"{GRAPH}/{creation_id}?fields=status_code&access_token={token}")
+        code = status.get("status_code")
+        if code == "FINISHED":
+            break
+        if code == "ERROR":
+            raise SystemExit(f"story processing error: {status}")
+        time.sleep(5)
+    else:
+        raise SystemExit("story processing timed out")
+
+    return _post(f"{GRAPH}/{ig_user_id}/media_publish", {
+        "creation_id": creation_id, "access_token": token})
+
+
+def recent_media(limit=8, ig_user_id=None, token=None):
+    """The account's most recent media: [{id, timestamp, media_product_type, permalink, caption}].
+
+    Read straight from the API rather than from a local ledger so the comment poller and the
+    insights collector both work on posts published before any bookkeeping existed — the caption
+    carries the verse reference, which is how an old post is matched back to its theme."""
+    ig_user_id = ig_user_id or os.environ.get("IG_USER_ID")
+    token = token or os.environ.get("IG_ACCESS_TOKEN")
+    got = _get(f"{GRAPH}/{ig_user_id}/media"
+               f"?fields=id,timestamp,media_product_type,permalink,caption"
+               f"&limit={int(limit)}&access_token={token}")
+    return got.get("data", [])
+
+
 def comments(media_id, token=None):
     """Every comment on a published media, newest first: [{id, text, timestamp, username}]."""
     token = token or os.environ.get("IG_ACCESS_TOKEN")
     got = _get(f"{GRAPH}/{media_id}/comments"
                f"?fields=id,text,timestamp,username&access_token={token}")
     return got.get("data", [])
+
+
+def reply(comment_id, message, token=None):
+    """Reply publicly, in-thread, to a comment.
+
+    Uses instagram_manage_comments — the permission the hashtag first-comment already needs —
+    so unlike a private reply this works today with no extra App Review."""
+    token = token or os.environ.get("IG_ACCESS_TOKEN")
+    return _post(f"{GRAPH}/{comment_id}/replies",
+                 {"message": message, "access_token": token})
 
 
 def private_reply(comment_id, message, ig_user_id=None, token=None):

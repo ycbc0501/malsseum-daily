@@ -68,6 +68,10 @@ def main():
     print("published:", result)
     if isinstance(result, dict) and result.get("id"):
         print("comment:", post_instagram.comment(result["id"], tags))
+        try:                                     # 말씀 slide to Stories; never fail a live post
+            print("story:", post_instagram.publish_story(urls[0]))
+        except Exception as e:
+            print(f"story failed ({e}) — carousel already published, continuing")
 
 
 if __name__ == "__main__":

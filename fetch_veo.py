@@ -45,7 +45,9 @@ CONTINUE = ("This is a DIRECT CONTINUATION of one single continuous shot, resumi
             "where the previous footage ended and this begins. ")
 
 NEG = ("timelapse, time-lapse, sped up, speed up, fast-forward, accelerated motion, fast playback, "
-       "fast motion, fast movement, fast-moving clouds, racing clouds, rushing water, crashing waves, "
+       "fast motion, fast movement, fast-moving clouds, racing clouds, drifting clouds, streaming "
+       "clouds, moving clouds, cloud movement, rushing water, crashing waves, flowing water, "
+       "streaming water, running water, strong current, swirling water, rolling waves, "
        "choppy water, fast-moving cars, speeding cars, busy traffic, energetic movement, churning, "
        "turbulence, text, letters, words, watermark, logo, people, person, camera pan, camera zoom, "
        "camera shake, hard cut, scene change, morphing, warping, distortion, sudden changes, popping "

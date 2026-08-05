@@ -266,8 +266,17 @@ QUALITY = ("It is HYPERREALISTIC — completely indistinguishable from a GENUINE
            "gloomy. Natural "
            "photographic detail, real texture and true-to-life colour with a subtle film grain. It must "
            "look like an ACTUAL photograph a person took — absolutely NOT a glossy 3D render, CGI, a "
-           "video-game frame, a digital painting, or a plasticky/artificial AI image. Real, uplifting "
-           "and quietly moving — an image that feels honest and full of hope.")
+           "video-game frame, a digital painting, or a plasticky/artificial AI image. "
+           # A plain subject (an empty field, a bare hillside) has no complexity to hide the AI
+           # tells behind, so realism has to be asked for in terms of what a real lens actually
+           # does — uneven detail, real focus falloff, imperfect colour — not just declared.
+           "It was shot on a full-frame camera with a normal prime lens: natural depth of field with "
+           "the far distance falling gently out of focus, believable lens character, and the slight "
+           "imperfection of a real photograph. Detail is UNEVEN and organic the way nature actually "
+           "is — grass, foliage and ground vary in height, colour and density, never a uniform "
+           "repeating carpet. Colour is restrained and true to life, NOT over-saturated, NOT "
+           "HDR-boosted, NOT airbrushed or artificially smooth, with no unnatural glow or halo around "
+           "edges. Real, uplifting and quietly moving — an image that feels honest and full of hope.")
 NOTEXT = ("There are no visible human faces, and absolutely no text, letters, words, captions, numbers, "
           "signs, watermark or logo anywhere. It is a single full-bleed photograph that completely fills "
           "the image, edge to edge.")
@@ -326,10 +335,15 @@ _CHECK_PROMPT = (
     "3) WRONG REFLECTION: a reflection in water (puddle, canal, lake, wet street) that is NOT a correct "
     "upside-down mirror — e.g. buildings appearing UPRIGHT in the water instead of inverted (a 'second "
     "town' sitting in the water).\n"
-    "4) FAKE / CGI: the image clearly looks like a glossy 3D/CGI render, a video-game frame, a digital "
+    "4) FAKE / CGI: the image looks like a glossy 3D/CGI render, a video-game frame, a digital "
     "painting or a plasticky artificial AI image — including fake, over-perfect ornate man-made objects "
-    "— rather than a real photograph. Only flag CLEARLY fake/plastic/CGI, not a real photo with moody "
-    "or dim light.\n"
+    "— rather than a real photograph. Judge this by the usual AI tells: over-saturated or candy-like "
+    "colour, an unnatural glow or halo, airbrushed plastic smoothness, uniformly repeating grass or "
+    "foliage texture, everything equally sharp from front to back with no real depth of field, or "
+    "light that comes from nowhere. Be STRICTEST on plain, simple scenes — an open field, a bare "
+    "hillside, a plain sky have no detail to hide behind, so if such a scene looks even somewhat "
+    "artificial or 'rendered' rather than photographed, flag it. Do not flag a real photo merely for "
+    "moody or dim light.\n"
     "5) Obviously impossible, duplicated, melted or badly warped major structures.\n"
     "Do NOT flag: a normal single-horizon landscape/seascape, artistic blur, bokeh, mist, grain, dark "
     "or moody light, or a CORRECT (properly inverted) reflection.\n"

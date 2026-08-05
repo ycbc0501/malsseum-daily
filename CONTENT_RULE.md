@@ -43,8 +43,11 @@ middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적)
 
 ## 3b. Every post is VIDEO, and every image is HYPERREALISTIC
 - **Production posts are always Reels (.mp4)** — never a static image post. `daily_post.py` always builds and publishes a video via `publish_reel`. (Preview-page stills are illustrations only, not production.)
+- **Every post also goes to Stories** (`post_instagram.publish_story`, `media_type=STORIES`). `share_to_feed` on a Reel only places it in the profile GRID — a story is a separate publish, and without it the account has no story presence at all. Best-effort: a failed story never fails a post that already published.
 - The still-Ken-Burns fallback is *still an .mp4*, used only when Veo motion fails the gate/errors — a rare safety net, not a static post.
 - **Every rendered image must be HYPERREALISTIC — indistinguishable from a genuine photograph.** `QUALITY` enforces this in prose (one clean realism statement, NOT stacked hype-words like "8k ultra" which backfire on this model → baked text / game look). Absolutely no glossy CGI, 3D render, video-game frame, digital painting, or plasticky AI look.
+- **Realism is asked for in camera terms, not declared.** `QUALITY` names what a real lens actually does — natural depth of field with the far distance falling off, uneven organic detail (never a uniformly repeating grass carpet), restrained true-to-life colour, no HDR boost, no airbrushed smoothness, no edge glow. Declaring "hyperrealistic" is not enough on its own.
+- **Plain scenes are judged hardest.** An open field, a bare hillside or a plain sky has no complexity to hide the AI tells behind, so `_CHECK_PROMPT` clause 4 is explicitly *strictest* on simple scenes — a plain scene that looks even somewhat rendered is rejected. (Added 2026-08-05 after a simple field published looking obviously fake.)
 
 ## 4. Physics must be real — nothing impossible
 - ONE horizon; sky above, ground/water below. **No** stacked/doubled scenes, **no** two water surfaces, **no** vertical mirror (upside-down land hanging from the top), **no** framed-inset/collage/photo-in-photo.
@@ -54,7 +57,9 @@ middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적)
 
 ## 5. Motion — real-time, calm, never fast
 - Veo prompt (`fetch_veo.py`) forces **real-time 1× playback, ~8s, camera locked, clouds barely moving**. No artificial slow-mo / interpolation / frozen-sky compositing (they bug out and look weird).
-- **Motion gate:** `make_video.motion_score()` with `MOTION_MAX=2.6`, `SKY_MAX=0.7`. Too-fast clip → retry once → still too fast → fall back to a **calm still**. A frantic clip can never post itself.
+- **Motion gate:** `make_video.motion_score()` with **`MOTION_MAX=2.0`, `SKY_MAX=0.45`**. Up to **three** Veo attempts, **keeping the calmest** (ranked on the worse of the two normalised axes) rather than the first one that squeaks under the bar; still too fast → fall back to a **calm still**. A frantic clip can never post itself.
+- **Tightened 2026-08-05.** The old 2.6/0.7 sat roughly twice the measured calm reference (1.7/0.35) and let visibly racing clouds and churning water reach the feed. Keeping the calmest of three attempts is what makes the tighter bar affordable — without it, a stricter threshold only buys more still fallbacks instead of better motion.
+- The rule-6 continuation chain seeds from that **calmest** take, not from whichever attempt Veo generated last — otherwise a rejected frantic opening would still set the motion for every segment after it.
 
 ## 6. Video length — and NEVER reverse playback
 - **NEVER boomerang / reverse / ping-pong the clip.** Playing footage backwards is banned artificial post-processing (water and light running backwards read as fake), same rule as no slow-mo and no interpolation. Video always plays **forward at native speed**.
@@ -94,7 +99,8 @@ middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적)
 - **Same letter format on every post** — do not change the font, size logic, or centering without a deliberate decision recorded here.
 
 ## 10. Caption & comment
-- **Caption:** verse text + `[book chapter:verse]` reference + a gentle follow CTA.
+- **Caption:** verse text + `[book chapter:verse]` reference + a **share ask first, follow ask second**.
+- **The share ask outranks the follow ask, deliberately.** Instagram's stated ranking signals are watch time, **sends per reach** and likes per reach, and a send weighs several times a like in deciding whether to show a post to non-followers. A follow can only come from the already-convinced, so leading with it spends the strongest line of the caption on the weakest signal. Asking someone to forward a 말씀 to a person who needs it is simultaneously the higher-weighted action and the account's honest purpose. Measured per post as send/reach by `insights.py` — if the data says otherwise, change it back and record that here. (Changed 2026-08-05.)
 - **First comment:** the hashtag set (`hashtags.build`). Reference/book handling stays **as it is now** (shown on-image + in caption; hashtags in the comment).
 - **Exactly 5 hashtags — never more.** Instagram capped posts and reels at 5 in December 2025,
   and the cap counts caption + comments **together**, so putting them in the first comment buys
@@ -124,16 +130,54 @@ middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적)
 - **Not wired up:** no workflow calls `dm_reply`, and `reply_to_new_comments()` defaults to
   dry-run, until `instagram_manage_messages` clears App Review.
 
+## 10c. Comment replies — 🙏, in public, about half an hour later
+- **Every comment gets a reply**, in-thread and public: `🙏` or `아멘🙏`, nothing more
+  (`comment_reply.py`). In-thread replies use `instagram_manage_comments` — the permission the
+  hashtag first-comment already holds — so unlike the private reply in 10b this works today.
+- **Never instant.** Each comment draws its own target time of **comment + 10–50 min** (≈30 ± 20)
+  once, when first seen, and the target is remembered so a stateless cron still honours it. An
+  instant reply is the single thing that makes a warm gesture read as a machine.
+- **Exactly one reply per comment**, enforced by the `replied_publicly` ledger — the poller
+  re-sees every comment on every run. Our own hashtag comment is skipped by username. (Named
+  apart from 10b's `replied_comments` on purpose: one records a public reply, the other a DM,
+  and a shared name across two files would eventually get them confused.)
+- **No backlog burst.** A comment already older than 24h when first seen is marked handled
+  *without* replying: a first deploy answering months of comments at once is precisely the bot
+  behaviour the delay exists to prevent.
+- Polled every 10 minutes by `.github/workflows/comment-reply.yml`. GitHub's scheduler drifts
+  (see rule 1), so the ~30 min target is best-effort, never a guarantee.
+
 ## 11. No-repeat ledgers (all in `state.json`, committed back after each run)
 `used_verses`, `used_music`, `used_scene_cats`, `scene_i`, `post_i`, `music_i`, `used_photos`,
-`used_clips`, `posted_media` (media id → theme, for 10b), `replied_comments`, `dm_i`.
+`used_clips`, `posted_media` (media id → theme, for 10b), `replied_comments` (10b, DMs), `dm_i`.
 Every rotating resource has a ledger and cycles the whole set before repeating. Perceived sameness counts as a repeat, not just literal file reuse.
+
+**Two ledgers live in their own files, on purpose:** `comments.json` (`replied_publicly`,
+`pending_replies`, `reply_i` — rule 10c) and `insights.json` (rule 13). Both are written by
+crons that run far more often than the poster, and two jobs rebasing the same one-line
+`state.json` is a merge conflict waiting to happen. Separate files never collide.
 
 ## 12. Fallback chain (stay alive, always on-brand)
 - Image gen down → licensed photo pool (`used_photos` ledger).
 - Veo down / too fast → calm still zoom (24s).
 - Lyria down → vetted music library (no-repeat).
 None of the fallbacks may violate rules 2–10.
+
+## 13. Measure, don't guess
+- The account ran its first ~70 posts without reading back a single number, so every content
+  decision was an assumption. `insights.py` collects per-post metrics (views, reach, likes,
+  comments, saved, shares) plus the daily follower count into `insights.json` nightly
+  (`.github/workflows/insights.yml`), joined to each post's verse and theme.
+- **Old posts join by verse reference.** The caption carries `[book chapter:verse]`, so posts
+  published long before any bookkeeping existed still resolve to a theme via `verses.json`.
+- **Metric availability is probed, never assumed.** Meta rejects an entire insights request if
+  any single metric is unsupported for that media type, and the supported set changes between
+  API versions. `insights.py` tries the full set, falls back to probing one at a time, and
+  caches the working set per media type in `metrics_ok`. A metric Meta stops serving degrades
+  the report; it must never crash the job.
+- **The headline number is send/reach**, not likes — see rule 10. Anything that claims to
+  improve the account should be checkable against this ledger, and a claim that cannot be
+  checked against it is an opinion.
 
 ---
 

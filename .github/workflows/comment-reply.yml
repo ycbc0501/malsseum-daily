@@ -1,0 +1,42 @@
+name: Reply 🙏 to comments
+
+# Every 10 minutes. Each comment gets a target time of comment + 10..50 min drawn once when
+# first seen (comment_reply.py), so the poll interval only decides the granularity, not the
+# delay. Most runs find nothing and commit nothing.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# A slow run must never overlap the next tick and reply twice.
+concurrency:
+  group: comment-reply
+  cancel-in-progress: false
+
+jobs:
+  reply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Poll comments and reply to any that are due
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: python comment_reply.py
+
+      - name: Save the reply ledger
+        run: |
+          git config user.name "malsseum-bot"
+          git config user.email "malsseum-bot@users.noreply.github.com"
+          git add comments.json
+          git commit -m "comments: reply ledger" || { echo "nothing to commit"; exit 0; }
+          git pull --rebase --autostash origin main || true
+          git push
