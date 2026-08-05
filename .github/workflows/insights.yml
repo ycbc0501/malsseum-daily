@@ -5,6 +5,11 @@ on:
   schedule:
     - cron: "20 18 * * *"
   workflow_dispatch:
+    inputs:
+      reprobe:
+        description: "Forget which metrics are available and probe again (use after granting the token a new scope)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -23,7 +28,7 @@ jobs:
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
-        run: python insights.py
+        run: python insights.py ${{ inputs.reprobe && '--reprobe' || '' }}
 
       - name: Save the insights ledger
         run: |
