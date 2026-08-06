@@ -127,7 +127,10 @@ def collect(ledger, token=None, ig_user_id=None):
     media_rows = ledger.setdefault("media", {})
     now = datetime.now(timezone.utc)
 
-    for m in post_instagram.recent_media(limit=30, ig_user_id=ig_user_id, token=token):
+    # The whole history, not a recent window: likes/comments arrive with the media list itself,
+    # so covering every post costs one request, and per-post insight calls are skipped for
+    # anything already settled (FRESH_DAYS) regardless.
+    for m in post_instagram.recent_media(limit=90, ig_user_id=ig_user_id, token=token):
         mid = m["id"]
         row = media_rows.setdefault(mid, {})
         row["timestamp"] = m.get("timestamp", "")
