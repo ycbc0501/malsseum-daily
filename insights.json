@@ -1,4 +1,7 @@
 {
+ "daily_followers": {
+  "2026-08-06": 186
+ },
  "media": {
   "17876453580523141": {
    "kind": "REELS",
@@ -200,6 +203,14 @@
    "theme": "믿음",
    "timestamp": "2026-07-22T10:21:46+0000"
   },
+  "18146104630533959": {
+   "kind": "REELS",
+   "metrics": {},
+   "permalink": "https://www.instagram.com/reel/Dbq8yeKkmFI/",
+   "ref": "빌립보서 4:19",
+   "theme": "은혜",
+   "timestamp": "2026-08-05T20:02:07+0000"
+  },
   "18148538053509674": {
    "kind": "REELS",
    "metrics": {},
@@ -249,9 +260,10 @@
    "timestamp": "2026-07-28T10:31:23+0000"
   }
  },
+ "media_count": 88,
  "metrics_ok": {
   "FEED": [],
   "REELS": []
  },
- "updated": "2026-08-06T04:57:28+09:00"
+ "updated": "2026-08-06T18:26:13+09:00"
 }
