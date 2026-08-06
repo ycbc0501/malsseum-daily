@@ -243,19 +243,23 @@ def report(ledger, top=10):
               f"{(tot_shares / tot_reach * 100) if tot_reach else 0:.2f}%   "
               f"(2%+ is a strong signal; below ~0.5% means the post isn't being forwarded)")
 
+    # PER POST, never totals: a theme that ran six times would otherwise outrank a better theme
+    # that ran once, and the table would be measuring the rotation instead of the content.
     by_theme = {}
     for r in rows:
-        t = by_theme.setdefault(r["theme"] or "?", [0, 0, 0])
+        t = by_theme.setdefault(r["theme"] or "?", [0, 0, 0, 0])
         t[0] += r["shares"]
         t[1] += r["reach"]
         t[2] += r["likes"] + r["comments"]
+        t[3] += 1
     if engagement_only:
-        ranked = sorted(by_theme.items(), key=lambda kv: -kv[1][2])
-        print("by theme (likes+comments): " + "  ".join(f"{t}={e}" for t, (_, _, e) in ranked))
+        ranked = sorted(by_theme.items(), key=lambda kv: -kv[1][2] / kv[1][3])
+        print("by theme (likes+comments per post): " + "  ".join(
+            f"{t}={e / n:.1f}(n={n})" for t, (_, _, e, n) in ranked))
     else:
         ranked = sorted(by_theme.items(), key=lambda kv: -(kv[1][0] / kv[1][1] if kv[1][1] else 0))
         print("by theme (send/reach): " + "  ".join(
-            f"{t}={(s / rc * 100) if rc else 0:.2f}%" for t, (s, rc, _) in ranked))
+            f"{t}={(s / rc * 100) if rc else 0:.2f}%(n={n})" for t, (s, rc, _, n) in ranked))
 
     days = {k: v for k, v in (ledger.get("daily_followers") or {}).items() if v is not None}
     if days:
