@@ -138,6 +138,9 @@ def collect(ledger, token=None, ig_user_id=None):
         ref = _REF.search(cap)
         row["ref"] = ref.group(1) if ref else ""
         row["theme"] = themes.get(row["ref"], "")
+        # Plain media fields, no insights scope needed. They carry no reach or shares, but they
+        # are enough to rank posts against each other — which is most of what the ledger is for.
+        row["basic"] = {"likes": m.get("like_count"), "comments": m.get("comments_count")}
 
         try:
             age = (now - datetime.strptime(row["timestamp"], "%Y-%m-%dT%H:%M:%S%z")).days
@@ -190,13 +193,16 @@ def report(ledger, top=10):
     rows = []
     for mid, r in ledger.get("media", {}).items():
         met = r.get("metrics") or {}
+        bas = r.get("basic") or {}
         reach = met.get("reach") or met.get("views") or 0
         shares = met.get("shares") or 0
         saved = met.get("saved") or 0
         rows.append({
             "date": r.get("timestamp", "")[:10], "ref": r.get("ref") or mid[:8],
             "theme": r.get("theme", ""), "reach": reach, "views": met.get("views") or 0,
-            "shares": shares, "saved": saved, "likes": met.get("likes") or 0,
+            "shares": shares, "saved": saved,
+            "likes": met.get("likes") or bas.get("likes") or 0,
+            "comments": met.get("comments") or bas.get("comments") or 0,
             "spr": (shares / reach * 100) if reach else 0.0,
             "link": r.get("permalink", ""),
         })
@@ -204,28 +210,52 @@ def report(ledger, top=10):
         print("no metrics collected yet")
         return rows
 
-    rows.sort(key=lambda r: (r["spr"], r["shares"]), reverse=True)
-    print(f"\n{'date':11}{'ref':16}{'theme':7}{'reach':>7}{'shares':>7}{'saved':>7}"
-          f"{'likes':>7}{'send/reach':>12}")
-    print("-" * 74)
-    for r in rows[:top]:
-        print(f"{r['date']:11}{r['ref']:16}{r['theme']:7}{r['reach']:>7}{r['shares']:>7}"
-              f"{r['saved']:>7}{r['likes']:>7}{r['spr']:>11.2f}%")
+    # Without instagram_manage_insights there is no reach and no shares, so send/reach is
+    # uniformly zero and sorting on it would order the feed by nothing at all. Fall back to
+    # raw engagement, which still ranks posts against each other — and SAY so, because a table
+    # that silently changed what it was ranking by would be worse than no table.
+    engagement_only = not any(r["reach"] for r in rows)
+    if engagement_only:
+        print("\n(no reach/shares — token lacks instagram_manage_insights; "
+              "ranking by likes+comments instead)")
+        rows.sort(key=lambda r: (r["likes"] + r["comments"], r["likes"]), reverse=True)
+    else:
+        rows.sort(key=lambda r: (r["spr"], r["shares"]), reverse=True)
+    def _pad(s, w):                      # Korean refs are double-width; ljust would misalign
+        return s + " " * max(1, w - sum(2 if ord(c) > 0x2E80 else 1 for c in s))
 
-    tot_reach = sum(r["reach"] for r in rows)
-    tot_shares = sum(r["shares"] for r in rows)
-    print(f"\naccount send/reach: {tot_shares}/{tot_reach} = "
-          f"{(tot_shares / tot_reach * 100) if tot_reach else 0:.2f}%   "
-          f"(2%+ is a strong signal; below ~0.5% means the post isn't being forwarded)")
+    print(f"\n{'date':11}{_pad('ref', 18)}{_pad('theme', 8)}{'likes':>6}{'cmts':>6}"
+          f"{'reach':>7}{'shares':>7}{'saved':>7}{'send/reach':>12}")
+    print("-" * 82)
+    for r in rows[:top]:
+        print(f"{r['date']:11}{_pad(r['ref'], 18)}{_pad(r['theme'], 8)}"
+              f"{r['likes']:>6}{r['comments']:>6}{r['reach']:>7}{r['shares']:>7}"
+              f"{r['saved']:>7}{r['spr']:>11.2f}%")
+
+    tot_likes = sum(r["likes"] for r in rows)
+    tot_cmts = sum(r["comments"] for r in rows)
+    print(f"\n{len(rows)} posts: {tot_likes} likes, {tot_cmts} comments "
+          f"({tot_likes / len(rows):.1f} likes/post)")
+    if not engagement_only:
+        tot_reach = sum(r["reach"] for r in rows)
+        tot_shares = sum(r["shares"] for r in rows)
+        print(f"account send/reach: {tot_shares}/{tot_reach} = "
+              f"{(tot_shares / tot_reach * 100) if tot_reach else 0:.2f}%   "
+              f"(2%+ is a strong signal; below ~0.5% means the post isn't being forwarded)")
 
     by_theme = {}
     for r in rows:
-        t = by_theme.setdefault(r["theme"] or "?", [0, 0])
+        t = by_theme.setdefault(r["theme"] or "?", [0, 0, 0])
         t[0] += r["shares"]
         t[1] += r["reach"]
-    ranked = sorted(by_theme.items(), key=lambda kv: -(kv[1][0] / kv[1][1] if kv[1][1] else 0))
-    print("\nby theme (send/reach): " + "  ".join(
-        f"{t}={(s / rc * 100) if rc else 0:.2f}%" for t, (s, rc) in ranked))
+        t[2] += r["likes"] + r["comments"]
+    if engagement_only:
+        ranked = sorted(by_theme.items(), key=lambda kv: -kv[1][2])
+        print("by theme (likes+comments): " + "  ".join(f"{t}={e}" for t, (_, _, e) in ranked))
+    else:
+        ranked = sorted(by_theme.items(), key=lambda kv: -(kv[1][0] / kv[1][1] if kv[1][1] else 0))
+        print("by theme (send/reach): " + "  ".join(
+            f"{t}={(s / rc * 100) if rc else 0:.2f}%" for t, (s, rc, _) in ranked))
 
     days = {k: v for k, v in (ledger.get("daily_followers") or {}).items() if v is not None}
     if days:

@@ -165,8 +165,11 @@ def recent_media(limit=8, ig_user_id=None, token=None):
     carries the verse reference, which is how an old post is matched back to its theme."""
     ig_user_id = ig_user_id or os.environ.get("IG_USER_ID")
     token = token or os.environ.get("IG_ACCESS_TOKEN")
+    # like_count/comments_count are plain media FIELDS, not insights — they need only
+    # instagram_basic, so they keep working when instagram_manage_insights is missing.
     got = _get(f"{GRAPH}/{ig_user_id}/media"
-               f"?fields=id,timestamp,media_product_type,permalink,caption"
+               f"?fields=id,timestamp,media_product_type,permalink,caption,"
+               f"like_count,comments_count"
                f"&limit={int(limit)}&access_token={token}")
     return got.get("data", [])
 
