@@ -148,19 +148,31 @@ def collect(ledger, token=None, ig_user_id=None):
         print(f"{row['timestamp'][:10]} {row['ref'] or mid}")
         row["metrics"] = fetch_media_insights(mid, kind, ledger, token)
 
-    # Account level: the follower curve is the only number that answers "is this working at all".
+    # The follower curve is the only number that answers "is any of this working at all", so it
+    # is read TWICE over. The insights time-series needs instagram_manage_insights, but the plain
+    # profile field needs only instagram_basic — so the curve keeps building one point per run
+    # even while the insights scope is missing.
+    daily = ledger.setdefault("daily_followers", {})
+    try:
+        prof = post_instagram._get(
+            f"{post_instagram.GRAPH}/{ig_user_id}"
+            f"?fields=username,followers_count,media_count&access_token={token}")
+        daily[datetime.now(KST).strftime("%Y-%m-%d")] = prof.get("followers_count")
+        ledger["media_count"] = prof.get("media_count")
+        print(f"followers: {prof.get('followers_count')}  media: {prof.get('media_count')}")
+    except Exception as e:
+        print(f"profile unavailable ({e})")
     try:
         got = post_instagram._get(
             f"{post_instagram.GRAPH}/{ig_user_id}/insights"
             f"?metric=follower_count&period=day&access_token={token}")
-        daily = ledger.setdefault("daily_followers", {})
-        for row in got.get("data", []):
+        for row in got.get("data", []):          # backfills history the profile field can't give
             for v in row.get("values", []):
                 daily[v.get("end_time", "")[:10]] = v.get("value")
     except urllib.error.HTTPError as e:
-        print(f"follower_count unavailable ({e.code}: {_why(e)})")
+        print(f"follower time-series unavailable ({e.code}: {_why(e)})")
     except Exception as e:
-        print(f"follower_count unavailable ({e})")
+        print(f"follower time-series unavailable ({e})")
 
     if any(not v for v in (ledger.get("metrics_ok") or {}).values()):
         print("\nNO METRICS AVAILABLE. Meta answers '(#10) Application does not have permission'\n"
@@ -215,10 +227,12 @@ def report(ledger, top=10):
     print("\nby theme (send/reach): " + "  ".join(
         f"{t}={(s / rc * 100) if rc else 0:.2f}%" for t, (s, rc) in ranked))
 
-    days = ledger.get("daily_followers") or {}
+    days = {k: v for k, v in (ledger.get("daily_followers") or {}).items() if v is not None}
     if days:
         keys = sorted(days)[-14:]
-        print(f"\nfollowers {keys[0]}→{keys[-1]}: {days[keys[0]]} → {days[keys[-1]]}")
+        delta = days[keys[-1]] - days[keys[0]]
+        print(f"\nfollowers {keys[0]}→{keys[-1]}: {days[keys[0]]} → {days[keys[-1]]} "
+              f"({delta:+d})   media: {ledger.get('media_count', '?')}")
     return rows
 
 

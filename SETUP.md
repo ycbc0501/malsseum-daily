@@ -24,7 +24,9 @@ Creator) account linked to a Facebook Page, then a Meta app + access token.
 
 4. **Get your IDs and token** (easiest via the Graph API Explorer)
    - In the app dashboard open *Tools → Graph API Explorer*.
-   - Grant permissions: `instagram_basic`, `instagram_content_publish`,
+   - Grant permissions: `instagram_manage_insights` (required by `insights.py` — without it
+     every metrics call returns `(#10) Application does not have permission`),
+     `instagram_basic`, `instagram_content_publish`,
      `pages_show_list`, `pages_read_engagement`, `business_management`.
    - Get your **Instagram Business account id** (`IG_USER_ID`):
      `GET /me/accounts` → find your Page → `GET /{page-id}?fields=instagram_business_account`.
