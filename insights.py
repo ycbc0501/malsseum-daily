@@ -40,6 +40,7 @@ WANTED = {
              "follows", "profile_visits"],
 }
 FRESH_DAYS = 21          # metrics keep accruing, so keep re-polling recent posts
+THEME_WINDOW = 40        # posts back the theme comparison looks (see report())
 _REF = re.compile(r"\[([^\[\]]+)\]")
 
 
@@ -248,8 +249,15 @@ def report(ledger, top=10):
 
     # PER POST, never totals: a theme that ran six times would otherwise outrank a better theme
     # that ran once, and the table would be measuring the rotation instead of the content.
+    #
+    # And only RECENT posts. Engagement tracks how many followers existed at the time, so a theme
+    # that happened to fall in launch week looks terrible forever: 위로 averaged 5.4 across 12
+    # posts from 2026-06-29..07-04 and 22 on the one posted since — the theme was fine, the
+    # account was three days old. Comparing themes across different account sizes measures age.
+    recent = sorted((r["date"] for r in rows), reverse=True)
+    cutoff = recent[min(THEME_WINDOW, len(recent)) - 1] if recent else ""
     by_theme = {}
-    for r in rows:
+    for r in (r for r in rows if r["date"] >= cutoff):
         t = by_theme.setdefault(r["theme"] or "?", [0, 0, 0, 0])
         t[0] += r["shares"]
         t[1] += r["reach"]
@@ -257,11 +265,11 @@ def report(ledger, top=10):
         t[3] += 1
     if engagement_only:
         ranked = sorted(by_theme.items(), key=lambda kv: -kv[1][2] / kv[1][3])
-        print("by theme (likes+comments per post): " + "  ".join(
+        print(f"by theme (likes+comments per post, last {THEME_WINDOW} posts): " + "  ".join(
             f"{t}={e / n:.1f}(n={n})" for t, (_, _, e, n) in ranked))
     else:
         ranked = sorted(by_theme.items(), key=lambda kv: -(kv[1][0] / kv[1][1] if kv[1][1] else 0))
-        print("by theme (send/reach): " + "  ".join(
+        print(f"by theme (send/reach, last {THEME_WINDOW} posts): " + "  ".join(
             f"{t}={(s / rc * 100) if rc else 0:.2f}%(n={n})" for t, (s, rc, _, n) in ranked))
 
     days = {k: v for k, v in (ledger.get("daily_followers") or {}).items() if v is not None}
