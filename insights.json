@@ -1,7 +1,8 @@
 {
  "daily_followers": {
   "2026-08-06": 186,
-  "2026-08-07": 187
+  "2026-08-07": 187,
+  "2026-08-08": 187
  },
  "media": {
   "17865576858597064": {
@@ -472,6 +473,18 @@
    "theme": "감사",
    "timestamp": "2026-07-27T20:02:54+0000"
   },
+  "18082183040682902": {
+   "basic": {
+    "comments": 1,
+    "likes": 9
+   },
+   "kind": "REELS",
+   "metrics": {},
+   "permalink": "https://www.instagram.com/reel/DbvCMA3lMbI/",
+   "ref": "이사야 40:8",
+   "theme": "인도",
+   "timestamp": "2026-08-07T10:06:14+0000"
+  },
   "18083425604647233": {
    "basic": {
     "comments": 1,
@@ -595,7 +608,7 @@
   "18098864771250562": {
    "basic": {
     "comments": 1,
-    "likes": 3
+    "likes": 20
    },
    "kind": "REELS",
    "metrics": {},
@@ -1015,7 +1028,7 @@
   "18337353793282669": {
    "basic": {
     "comments": 1,
-    "likes": 14
+    "likes": 16
    },
    "kind": "REELS",
    "metrics": {},
@@ -1085,10 +1098,10 @@
    "timestamp": "2026-07-28T10:31:23+0000"
   }
  },
- "media_count": 90,
+ "media_count": 91,
  "metrics_ok": {
   "FEED": [],
   "REELS": []
  },
- "updated": "2026-08-07T09:17:12+09:00"
+ "updated": "2026-08-08T04:17:30+09:00"
 }
