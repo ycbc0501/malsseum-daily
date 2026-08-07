@@ -1,6 +1,7 @@
 {
  "daily_followers": {
-  "2026-08-06": 186
+  "2026-08-06": 186,
+  "2026-08-07": 187
  },
  "media": {
   "17865576858597064": {
@@ -66,7 +67,7 @@
   "17889545238418332": {
    "basic": {
     "comments": 1,
-    "likes": 14
+    "likes": 15
    },
    "kind": "REELS",
    "metrics": {},
@@ -591,6 +592,18 @@
    "theme": "평안",
    "timestamp": "2026-07-07T11:14:17+0000"
   },
+  "18098864771250562": {
+   "basic": {
+    "comments": 1,
+    "likes": 3
+   },
+   "kind": "REELS",
+   "metrics": {},
+   "permalink": "https://www.instagram.com/reel/Dbt8suhiT13/",
+   "ref": "잠언 4:23",
+   "theme": "지혜",
+   "timestamp": "2026-08-06T23:58:58+0000"
+  },
   "18100530731167530": {
    "basic": {
     "comments": 1,
@@ -714,7 +727,7 @@
   "18109419053016739": {
    "basic": {
     "comments": 1,
-    "likes": 13
+    "likes": 14
    },
    "kind": "FEED",
    "metrics": {},
@@ -786,7 +799,7 @@
   "18119393464858825": {
    "basic": {
     "comments": 1,
-    "likes": 13
+    "likes": 14
    },
    "kind": "REELS",
    "metrics": {},
@@ -894,7 +907,7 @@
   "18146104630533959": {
    "basic": {
     "comments": 1,
-    "likes": 13
+    "likes": 15
    },
    "kind": "REELS",
    "metrics": {},
@@ -999,6 +1012,18 @@
    "theme": "은혜",
    "timestamp": "2026-08-04T10:34:09+0000"
   },
+  "18337353793282669": {
+   "basic": {
+    "comments": 1,
+    "likes": 14
+   },
+   "kind": "REELS",
+   "metrics": {},
+   "permalink": "https://www.instagram.com/reel/Dbsg27LjKcK/",
+   "ref": "요한복음 8:12",
+   "theme": "은혜",
+   "timestamp": "2026-08-06T10:36:28+0000"
+  },
   "18362043541209025": {
    "basic": {
     "comments": 1,
@@ -1060,10 +1085,10 @@
    "timestamp": "2026-07-28T10:31:23+0000"
   }
  },
- "media_count": 88,
+ "media_count": 90,
  "metrics_ok": {
   "FEED": [],
   "REELS": []
  },
- "updated": "2026-08-06T18:50:43+09:00"
+ "updated": "2026-08-07T09:17:12+09:00"
 }
