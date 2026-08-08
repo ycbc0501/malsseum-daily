@@ -2,7 +2,8 @@
  "daily_followers": {
   "2026-08-06": 186,
   "2026-08-07": 187,
-  "2026-08-08": 187
+  "2026-08-08": 187,
+  "2026-08-09": 187
  },
  "media": {
   "17865576858597064": {
@@ -68,7 +69,7 @@
   "17889545238418332": {
    "basic": {
     "comments": 1,
-    "likes": 15
+    "likes": 16
    },
    "kind": "REELS",
    "metrics": {},
@@ -413,6 +414,18 @@
    "theme": "담대",
    "timestamp": "2026-07-18T19:59:37+0000"
   },
+  "18069246884718382": {
+   "basic": {
+    "comments": 1,
+    "likes": 15
+   },
+   "kind": "REELS",
+   "metrics": {},
+   "permalink": "https://www.instagram.com/reel/DbwHTVEj8a5/",
+   "ref": "잠언 17:22",
+   "theme": "지혜",
+   "timestamp": "2026-08-07T20:10:05+0000"
+  },
   "18070168769398504": {
    "basic": {
     "comments": 1,
@@ -476,7 +489,7 @@
   "18082183040682902": {
    "basic": {
     "comments": 1,
-    "likes": 9
+    "likes": 11
    },
    "kind": "REELS",
    "metrics": {},
@@ -608,7 +621,7 @@
   "18098864771250562": {
    "basic": {
     "comments": 1,
-    "likes": 20
+    "likes": 21
    },
    "kind": "REELS",
    "metrics": {},
@@ -824,7 +837,7 @@
   "18120568373491610": {
    "basic": {
     "comments": 1,
-    "likes": 7
+    "likes": 8
    },
    "kind": "REELS",
    "metrics": {},
@@ -904,6 +917,18 @@
    "ref": "요한복음 16:33",
    "theme": "담대",
    "timestamp": "2026-07-13T20:11:17+0000"
+  },
+  "18138957031595265": {
+   "basic": {
+    "comments": 1,
+    "likes": 6
+   },
+   "kind": "REELS",
+   "metrics": {},
+   "permalink": "https://www.instagram.com/reel/DbxnwXkiswW/",
+   "ref": "이사야 55:8",
+   "theme": "인도",
+   "timestamp": "2026-08-08T10:13:00+0000"
   },
   "18143388850545402": {
    "basic": {
@@ -1064,7 +1089,7 @@
   "18414051958155259": {
    "basic": {
     "comments": 1,
-    "likes": 11
+    "likes": 12
    },
    "kind": "REELS",
    "metrics": {},
@@ -1098,10 +1123,10 @@
    "timestamp": "2026-07-28T10:31:23+0000"
   }
  },
- "media_count": 91,
+ "media_count": 93,
  "metrics_ok": {
   "FEED": [],
   "REELS": []
  },
- "updated": "2026-08-08T04:17:30+09:00"
+ "updated": "2026-08-09T04:00:15+09:00"
 }
