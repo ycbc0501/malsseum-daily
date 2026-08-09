@@ -3,7 +3,8 @@
   "2026-08-06": 186,
   "2026-08-07": 187,
   "2026-08-08": 187,
-  "2026-08-09": 187
+  "2026-08-09": 187,
+  "2026-08-10": 188
  },
  "media": {
   "17865576858597064": {
@@ -113,6 +114,18 @@
    "ref": "이사야 53:5",
    "theme": "위로",
    "timestamp": "2026-07-04T20:06:10+0000"
+  },
+  "17908530855454299": {
+   "basic": {
+    "comments": 1,
+    "likes": 13
+   },
+   "kind": "REELS",
+   "metrics": {},
+   "permalink": "https://www.instagram.com/reel/Db0MCa8DgZ7/",
+   "ref": "잠언 19:21",
+   "theme": "인도",
+   "timestamp": "2026-08-09T10:08:26+0000"
   },
   "17910038349265735": {
    "basic": {
@@ -810,6 +823,18 @@
    "theme": "사랑",
    "timestamp": "2026-08-03T11:20:42+0000"
   },
+  "18117200332918643": {
+   "basic": {
+    "comments": 1,
+    "likes": 12
+   },
+   "kind": "REELS",
+   "metrics": {},
+   "permalink": "https://www.instagram.com/reel/DbyrRAAlR_g/",
+   "ref": "잠언 18:10",
+   "theme": "지혜",
+   "timestamp": "2026-08-08T20:02:52+0000"
+  },
   "18118499197869926": {
    "basic": {
     "comments": 1,
@@ -921,7 +946,7 @@
   "18138957031595265": {
    "basic": {
     "comments": 1,
-    "likes": 6
+    "likes": 9
    },
    "kind": "REELS",
    "metrics": {},
@@ -1001,6 +1026,18 @@
    "ref": "예레미야 17:7",
    "theme": "믿음",
    "timestamp": "2026-07-11T19:54:13+0000"
+  },
+  "18200469577373007": {
+   "basic": {
+    "comments": 1,
+    "likes": 9
+   },
+   "kind": "FEED",
+   "metrics": {},
+   "permalink": "https://www.instagram.com/p/Dbymo-dlKiK/",
+   "ref": "고린도전서 13:13",
+   "theme": "사랑",
+   "timestamp": "2026-08-08T19:22:07+0000"
   },
   "18206904805349203": {
    "basic": {
@@ -1123,10 +1160,10 @@
    "timestamp": "2026-07-28T10:31:23+0000"
   }
  },
- "media_count": 93,
+ "media_count": 96,
  "metrics_ok": {
   "FEED": [],
   "REELS": []
  },
- "updated": "2026-08-09T04:00:15+09:00"
+ "updated": "2026-08-10T04:02:59+09:00"
 }
