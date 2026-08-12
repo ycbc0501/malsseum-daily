@@ -178,6 +178,26 @@ None of the fallbacks may violate rules 2–10.
 - **The headline number is send/reach**, not likes — see rule 10. Anything that claims to
   improve the account should be checkable against this ledger, and a claim that cannot be
   checked against it is an opinion.
+- **Two tokens, on purpose.** `IG_ACCESS_TOKEN` is a Facebook-login **system-user** token: it
+  never expires and it publishes. It cannot be granted `instagram_manage_insights` without a
+  Business-Manager action gated behind SMS 2FA on a phone number that cannot receive Meta's
+  codes. `IG_INSIGHTS_TOKEN` comes from **Instagram Login** (`ig_login.py`), needs no Facebook
+  account or Page at all, and is **read-only**. `insights.api()` prefers it and reads from
+  `graph.instagram.com`; publishing never touches it. **Never replace the publishing token with
+  it** — the thing that works must keep working.
+- **The 60-day expiry is a machine's problem, not a human's.** Instagram-login tokens last 60
+  days and each refresh resets that to 60, so `refresh-token.yml` refreshes **weekly** — eight
+  chances to fail before anything expires — and opens an issue if it ever fails (rule 1: never
+  silent). The refreshed token is written to a file and masked, never printed: a token in a CI
+  log is a leaked token.
+- **Degrade, don't stop.** With no insights scope there is no reach and no shares, so the report
+  ranks on `like_count`/`comments_count` — plain media fields needing only `instagram_basic` —
+  and says which mode it is in. A table that silently changed what it ranks by would be worse
+  than no table.
+- **Compare like with like.** Engagement tracks how many followers existed at the time, so the
+  theme table looks only at the last `THEME_WINDOW` posts. Ranked over all time, 위로 looked
+  like the worst theme by half; twelve of its thirteen posts were from the account's first six
+  days, and the one posted since was above average. Comparing across account sizes measures age.
 
 ---
 

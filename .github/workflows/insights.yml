@@ -28,6 +28,9 @@ jobs:
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          # Read-only Instagram-login token. When present it is used instead of the publishing
+          # token, because only it can carry the insights scope. Absent → falls back silently.
+          IG_INSIGHTS_TOKEN: ${{ secrets.IG_INSIGHTS_TOKEN }}
         run: python insights.py ${{ inputs.reprobe && '--reprobe' || '' }}
 
       - name: Save the insights ledger

@@ -41,6 +41,29 @@ Creator) account linked to a Facebook Page, then a Meta app + access token.
 
 > Keep `IG_USER_ID` and `IG_ACCESS_TOKEN` — you'll paste them into GitHub secrets below.
 
+6. **Insights token (`IG_INSIGHTS_TOKEN`) — only if step 4 could not grant `instagram_manage_insights`**
+   Insights need that scope, and adding it to a system-user token requires Business Manager,
+   which is gated behind SMS 2FA. If those codes never arrive, use **Instagram Login** instead —
+   it needs no Facebook account and no Page, just the Instagram password:
+
+   - developers.facebook.com (any Facebook account, even a brand-new one) → create an app →
+     add the **Instagram** product → **API setup with Instagram login**.
+   - Copy the **Instagram app ID** and **app secret**, and set an OAuth redirect URI
+     (`https://localhost/` is fine — the page never has to load).
+   - `export IG_APP_ID=... IG_APP_SECRET=...` then:
+
+     ```
+     python3 ig_login.py --auth-url        # open the URL, log in as the IG account, approve
+     python3 ig_login.py --code 'AQB...'   # paste code= from the redirect → 60-day token
+     gh secret set IG_INSIGHTS_TOKEN
+     ```
+
+   - Add a `GH_PAT` secret (a PAT with `repo` scope) so `refresh-token.yml` can rewrite the
+     secret weekly. The built-in `GITHUB_TOKEN` cannot write secrets.
+
+   This token is **read-only and additional**. It never replaces `IG_ACCESS_TOKEN`, which keeps
+   doing the publishing.
+
 ---
 
 ## B. GitHub (the runner + image host)

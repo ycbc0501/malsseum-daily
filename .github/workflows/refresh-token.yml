@@ -1,0 +1,50 @@
+name: Refresh the insights token
+
+# Weekly. The Instagram-login token lasts 60 days and each refresh resets that to 60, so a
+# weekly cadence leaves eight chances to fail before anything actually expires.
+on:
+  schedule:
+    - cron: "0 20 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Refresh
+        env:
+          IG_INSIGHTS_TOKEN: ${{ secrets.IG_INSIGHTS_TOKEN }}
+        run: python refresh_token.py --out token.txt
+
+      - name: Store it back as the secret
+        env:
+          # Needs a PAT with repo scope — the built-in GITHUB_TOKEN cannot write secrets.
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          echo "::add-mask::$(cat token.txt)"   # mask BEFORE it can appear in any later output
+          gh secret set IG_INSIGHTS_TOKEN < token.txt
+          rm -f token.txt
+          echo "secret updated"
+
+      # A token that quietly stops refreshing would go unnoticed until insights died 60 days
+      # later. Rule 1's "never silent" applies here too.
+      - name: Alert on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "insights token refresh failed" \
+            --body "refresh-token.yml failed. The Instagram-login token expires 60 days after
+          its last successful refresh. Re-run this workflow; if it keeps failing, re-issue the
+          token with \`python3 ig_login.py --auth-url\` (see CONTENT_RULE rule 13)."

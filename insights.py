@@ -44,6 +44,21 @@ THEME_WINDOW = 40        # posts back the theme comparison looks (see report())
 _REF = re.compile(r"\[([^\[\]]+)\]")
 
 
+def api():
+    """(base_url, account_path, token) — which door to read the numbers through.
+
+    Two tokens exist on purpose. `IG_ACCESS_TOKEN` is the Facebook-login system-user token that
+    publishes; it never expires but cannot be given the insights scope without a Business-Manager
+    action that is locked behind unreachable SMS 2FA. `IG_INSIGHTS_TOKEN` comes from Instagram
+    Login (ig_login.py), needs no Facebook account at all, and is read-only. When it is present
+    it wins for reading; publishing is never touched either way."""
+    tok = os.environ.get("IG_INSIGHTS_TOKEN")
+    if tok:
+        return "https://graph.instagram.com/v21.0", "me", tok
+    return (post_instagram.GRAPH, os.environ.get("IG_USER_ID"),
+            os.environ.get("IG_ACCESS_TOKEN"))
+
+
 def _themes():
     """verse ref → theme, so posts published long before any bookkeeping existed can still be
     grouped by theme (the ref is printed in every caption)."""
@@ -63,10 +78,11 @@ def _why(e):
         return str(e)
 
 
-def _insights(media_id, metrics, token):
+def _insights(media_id, metrics, token, base=None):
     if not metrics:
         return {}
-    got = post_instagram._get(f"{post_instagram.GRAPH}/{media_id}/insights"
+    base = base or post_instagram.GRAPH
+    got = post_instagram._get(f"{base}/{media_id}/insights"
                               f"?metric={','.join(metrics)}&access_token={token}")
     out = {}
     for row in got.get("data", []):
@@ -75,7 +91,7 @@ def _insights(media_id, metrics, token):
     return out
 
 
-def fetch_media_insights(media_id, kind, ledger, token):
+def fetch_media_insights(media_id, kind, ledger, token, base=None):
     """Metrics for one post, probing which ones this media type actually serves.
 
     Meta rejects the WHOLE request if any single metric is unsupported, so on failure each
@@ -89,14 +105,14 @@ def fetch_media_insights(media_id, kind, ledger, token):
             # still learn nothing, so take the answer and move on until the token changes.
             return {}
         try:
-            return _insights(media_id, ok[kind], token)
+            return _insights(media_id, ok[kind], token, base)
         except Exception as e:
             print(f"  cached metric set failed ({e}) — re-probing")
             del ok[kind]
 
     wanted = WANTED.get(kind, WANTED["FEED"])
     try:
-        got = _insights(media_id, wanted, token)
+        got = _insights(media_id, wanted, token, base)
         ok[kind] = wanted
         return got
     except urllib.error.HTTPError as e:
@@ -107,7 +123,7 @@ def fetch_media_insights(media_id, kind, ledger, token):
     good, out, last = [], {}, ""
     for m in wanted:
         try:
-            out.update(_insights(media_id, [m], token))
+            out.update(_insights(media_id, [m], token, base))
             good.append(m)
         except urllib.error.HTTPError as e:
             last = _why(e)
@@ -118,11 +134,14 @@ def fetch_media_insights(media_id, kind, ledger, token):
     return out
 
 
-def collect(ledger, token=None, ig_user_id=None):
-    token = token or os.environ.get("IG_ACCESS_TOKEN")
-    ig_user_id = ig_user_id or os.environ.get("IG_USER_ID")
+def collect(ledger, token=None, ig_user_id=None, base=None):
+    d_base, d_uid, d_tok = api()
+    base = base or d_base
+    token = token or d_tok
+    ig_user_id = ig_user_id or d_uid
     if not (token and ig_user_id):
-        raise SystemExit("set IG_USER_ID and IG_ACCESS_TOKEN")
+        raise SystemExit("set IG_USER_ID and IG_ACCESS_TOKEN (or IG_INSIGHTS_TOKEN)")
+    print(f"reading via {base} as {ig_user_id}")
 
     themes = _themes()
     media_rows = ledger.setdefault("media", {})
@@ -131,7 +150,11 @@ def collect(ledger, token=None, ig_user_id=None):
     # The whole history, not a recent window: likes/comments arrive with the media list itself,
     # so covering every post costs one request, and per-post insight calls are skipped for
     # anything already settled (FRESH_DAYS) regardless.
-    for m in post_instagram.recent_media(limit=90, ig_user_id=ig_user_id, token=token):
+    listing = post_instagram._get(
+        f"{base}/{ig_user_id}/media"
+        f"?fields=id,timestamp,media_product_type,permalink,caption,like_count,comments_count"
+        f"&limit=90&access_token={token}")
+    for m in listing.get("data", []):
         mid = m["id"]
         row = media_rows.setdefault(mid, {})
         row["timestamp"] = m.get("timestamp", "")
@@ -153,7 +176,7 @@ def collect(ledger, token=None, ig_user_id=None):
         if age > FRESH_DAYS and row.get("metrics"):
             continue                       # settled — stop spending rate limit on it
         print(f"{row['timestamp'][:10]} {row['ref'] or mid}")
-        row["metrics"] = fetch_media_insights(mid, kind, ledger, token)
+        row["metrics"] = fetch_media_insights(mid, kind, ledger, token, base)
 
     # The follower curve is the only number that answers "is any of this working at all", so it
     # is read TWICE over. The insights time-series needs instagram_manage_insights, but the plain
@@ -162,7 +185,7 @@ def collect(ledger, token=None, ig_user_id=None):
     daily = ledger.setdefault("daily_followers", {})
     try:
         prof = post_instagram._get(
-            f"{post_instagram.GRAPH}/{ig_user_id}"
+            f"{base}/{ig_user_id}"
             f"?fields=username,followers_count,media_count&access_token={token}")
         daily[datetime.now(KST).strftime("%Y-%m-%d")] = prof.get("followers_count")
         ledger["media_count"] = prof.get("media_count")
@@ -171,7 +194,7 @@ def collect(ledger, token=None, ig_user_id=None):
         print(f"profile unavailable ({e})")
     try:
         got = post_instagram._get(
-            f"{post_instagram.GRAPH}/{ig_user_id}/insights"
+            f"{base}/{ig_user_id}/insights"
             f"?metric=follower_count&period=day&access_token={token}")
         for row in got.get("data", []):          # backfills history the profile field can't give
             for v in row.get("values", []):
