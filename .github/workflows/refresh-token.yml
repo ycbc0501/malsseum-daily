@@ -21,12 +21,30 @@ jobs:
         with:
           python-version: "3.12"
 
+      # IG_INSIGHTS_TOKEN does not exist until ig_login.py has been run once. Without this
+      # gate the job fails every Monday and files an issue about a token that was never set
+      # up — alert fatigue that would drown the one alert that matters.
+      - name: Is the token configured yet?
+        id: check
+        env:
+          TOK: ${{ secrets.IG_INSIGHTS_TOKEN }}
+          PAT: ${{ secrets.GH_PAT }}
+        run: |
+          if [ -n "$TOK" ] && [ -n "$PAT" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "IG_INSIGHTS_TOKEN/GH_PAT not set — nothing to refresh yet (see SETUP.md step 6)"
+          fi
+
       - name: Refresh
+        if: steps.check.outputs.ready == 'true'
         env:
           IG_INSIGHTS_TOKEN: ${{ secrets.IG_INSIGHTS_TOKEN }}
         run: python refresh_token.py --out token.txt
 
       - name: Store it back as the secret
+        if: steps.check.outputs.ready == 'true'
         env:
           # Needs a PAT with repo scope — the built-in GITHUB_TOKEN cannot write secrets.
           GH_TOKEN: ${{ secrets.GH_PAT }}
@@ -39,7 +57,7 @@ jobs:
       # A token that quietly stops refreshing would go unnoticed until insights died 60 days
       # later. Rule 1's "never silent" applies here too.
       - name: Alert on failure
-        if: failure()
+        if: failure() && steps.check.outputs.ready == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

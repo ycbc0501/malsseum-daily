@@ -61,7 +61,13 @@ def reply_to_new_comments(state, dry_run=True):
 
     posted = state.get("posted_media", {})            # media_id → verse theme
     replied = state.setdefault("replied_comments", [])
-    me = os.environ.get("IG_USERNAME") or post_instagram.username()   # never hardcode the handle
+    me = os.environ.get("IG_USERNAME") or ""       # never hardcode the handle — see rule 10c
+    if not me:
+        try:
+            me = post_instagram.username() or ""
+        except Exception as e:
+            print(f"username lookup failed ({e}) — not DMing, to avoid replying to ourselves")
+            return []
     sent = []
     for media_id, theme in posted.items():
         try:
