@@ -1,4 +1,4 @@
-# THE CONTENT RULE — @to_light_bible constitution
+# THE CONTENT RULE — Saint Seoul (@saintseoul_studio) constitution
 
 The single source of truth for what this account posts and how. **Every change to the pipeline must be
 checked against ALL of these rules before it ships.** If a change would break a rule, the change is
@@ -138,7 +138,12 @@ middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적)
   once, when first seen, and the target is remembered so a stateless cron still honours it. An
   instant reply is the single thing that makes a warm gesture read as a machine.
 - **Exactly one reply per comment**, enforced by the `replied_publicly` ledger — the poller
-  re-sees every comment on every run. Our own hashtag comment is skipped by username. (Named
+  re-sees every comment on every run. Our own hashtag comment is skipped by username.
+- **The @handle is never hardcoded.** It is resolved from the API (`post_instagram.username()`),
+  cached, and the pass is skipped entirely if it cannot be determined — replying to ourselves is
+  worse than not replying. A constant here does not fail loudly when the account is renamed; it
+  just makes the account answer its own hashtag comment 🙏 twice a day. (The 2026-08-13 rename
+  to @saintseoul_studio is what surfaced this. `IG_USER_ID` is numeric and rename-proof.) (Named
   apart from 10b's `replied_comments` on purpose: one records a public reply, the other a DM,
   and a shared name across two files would eventually get them confused.)
 - **No backlog burst.** A comment already older than 24h when first seen is marked handled

@@ -1,6 +1,9 @@
-# @to_light_bible — daily 말씀 auto-poster
+# Saint Seoul (@saintseoul_studio) — daily 말씀 auto-poster
 
-This repo runs a fully hands-off Korean daily Bible-verse Instagram account (@to_light_bible).
+This repo runs a fully hands-off Korean daily Bible-verse Instagram account for the
+**Saint Seoul** brand (@saintseoul_studio, renamed 2026-08-13 from @to_light_bible).
+The numeric `IG_USER_ID` is unchanged by the rename, so nothing in the API path breaks;
+the handle is never hardcoded (`post_instagram.username()`).
 
 **Before making ANY change to the posting pipeline, read [CONTENT_RULE.md](CONTENT_RULE.md) — the
 content constitution — and verify every rule still holds after your change.** If a rule intentionally

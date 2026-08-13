@@ -44,7 +44,20 @@ def poll(state, now=None, dry_run=False):
     """
     import post_instagram
     now = now or time.time()
-    me = os.environ.get("IG_USERNAME", "to_light_bible")
+    # Resolved from the API, never hardcoded — see post_instagram.username(). The last known
+    # handle is cached so a flaky lookup can't turn into replying to ourselves; if we have no
+    # handle at all we skip nothing and would reply to our own comment, so bail instead.
+    me = os.environ.get("IG_USERNAME") or ""
+    if not me:
+        try:
+            me = post_instagram.username() or ""
+            state["me"] = me
+        except Exception as e:
+            me = state.get("me", "")
+            print(f"username lookup failed ({e}) — using cached {me!r}")
+    if not me:
+        print("cannot determine our own handle; skipping this pass rather than self-replying")
+        return [], []
     replied = state.setdefault("replied_publicly", [])
     pending = state.setdefault("pending_replies", {})
     scheduled, sent = [], []

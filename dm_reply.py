@@ -61,7 +61,7 @@ def reply_to_new_comments(state, dry_run=True):
 
     posted = state.get("posted_media", {})            # media_id → verse theme
     replied = state.setdefault("replied_comments", [])
-    me = os.environ.get("IG_USERNAME", "to_light_bible")
+    me = os.environ.get("IG_USERNAME") or post_instagram.username()   # never hardcode the handle
     sent = []
     for media_id, theme in posted.items():
         try:

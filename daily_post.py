@@ -94,7 +94,7 @@ def build_caption(verse, translation):
     from being seen. Measured by `insights.py` (send/reach per post), not assumed."""
     return (f"{verse['text']}\n[{verse['ref']}]\n\n"
             "오늘 이 말씀이 필요한 사람에게 보내주세요 🕊\n"
-            "→ 매일 아침·저녁 @to_light_bible")
+            "→ 매일 아침·저녁 @saintseoul_studio")
 
 
 def _music_family(path):

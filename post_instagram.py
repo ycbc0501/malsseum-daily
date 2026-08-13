@@ -157,6 +157,18 @@ def publish_story(media_url, ig_user_id=None, token=None):
         "creation_id": creation_id, "access_token": token})
 
 
+def username(ig_user_id=None, token=None):
+    """The account's own @handle, read from the API rather than hardcoded.
+
+    Used to skip our own hashtag first-comment when polling comments. It was a constant until
+    the 2026-08-13 rename (to_light_bible → saintseoul_studio) showed why that is a trap: a
+    stale handle here does not fail loudly, it just makes the account reply 🙏 to itself twice
+    a day. The numeric IG_USER_ID never changes on a rename, so this always resolves."""
+    ig_user_id = ig_user_id or os.environ.get("IG_USER_ID")
+    token = token or os.environ.get("IG_ACCESS_TOKEN")
+    return _get(f"{GRAPH}/{ig_user_id}?fields=username&access_token={token}").get("username")
+
+
 def recent_media(limit=8, ig_user_id=None, token=None):
     """The account's most recent media: [{id, timestamp, media_product_type, permalink, caption}].
 

@@ -75,7 +75,7 @@ def main():
     args = ap.parse_args()
 
     if args.auth_url:
-        print("\n1. Open this URL and log in as @to_light_bible, then approve:\n")
+        print("\n1. Open this URL and log in as @saintseoul_studio, then approve:\n")
         print(auth_url())
         print(f"\n2. You will land on {REDIRECT}?code=XXXXX (the page itself will not load —")
         print("   that is fine and expected). Copy the code= value from the address bar.")
