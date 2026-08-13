@@ -4,12 +4,20 @@ The single source of truth for what this account posts and how. **Every change t
 checked against ALL of these rules before it ships.** If a change would break a rule, the change is
 wrong — not the rule. Where a rule names code, the code is the enforcement; the rule is the intent.
 
-Voice: a Korean daily Bible-verse account (말씀) whose whole feeling is **밝고 희망참 (bright & hopeful)**
-— uplifting, warm, peaceful and full of light — while staying **real, reverent and hyperrealistic**
-(경건함 유지). Never dark/gloomy, and never cute, kitschy, twee, saccharine, or fake/CGI. (Direction
-changed 2026-07-23 from the earlier dark/heavy/moody look → generally bright and hopeful; a few
-naturally-darker-but-hopeful scenes — stars, candle, dusk — remain as a small minority for range.)
-Fully hands-off: it runs itself; a human should never need to approve a post.
+Voice: a Korean daily Bible-verse account (말씀) whose whole feeling is **고요함 (quiet & still)** —
+calm, peaceful, tender and reverent — while staying **real and hyperrealistic** (경건함 유지). Never
+cute, kitschy, twee, saccharine, or fake/CGI.
+
+**The criterion is QUIET, not brightness** (direction changed 2026-07-30, superseding the bright-only
+direction of 2026-07-23). A pale dawn sky and a lamp-lit room after dark are **both** on brand; the
+full tonal range is open — night sea, starfield, dusk, a dim interior, blue hour. What is banned is
+**gloom**: ominous, oppressive, bleak, sorrowful, frightening or heavy. A quiet dark is peaceful; a
+gloomy dark is not.
+
+**The 말씀 LEADS; the image accompanies it.** This is the account's ordering rule and it outranks any
+visual ambition. The frame is deliberately under-stated — plain, simple, lots of empty space — because
+a spectacular photograph competes with the verse and wins. Reference: **@dailymayim** (말씀 우선, 일상적
+이고 고요한 사진). Fully hands-off: it runs itself; a human should never need to approve a post.
 
 ---
 
@@ -23,23 +31,34 @@ Fully hands-off: it runs itself; a human should never need to approve a post.
 - **A missed post is never silent:** any failed/cancelled run opens a GitHub issue.
 
 ## 2. Themes — at least 20, always rotating, never overlapping
-- `fetch_higgsfield.SCENE_GROUPS` holds **≥20 distinct visual themes** (currently 25), each bright & hopeful (경건함 유지): sea, forest path, cathedral, misty mountain, rainy street, wheat field, reflection lake, lighthouse, snowfall, canal town, chapel, wilderness, window, river, archway/ruins, blossom, starfield, harbor, winter trees, candle, storm sky, rain pond, shore, waterfall, dusk sky (어스름).
+- `fetch_higgsfield.SCENE_GROUPS` holds **≥20 distinct visual themes** (currently 36) in two families:
+  - **Quiet nature & architecture:** sea, forest path, cathedral, misty mountain, rainy street, wheat field, reflection lake, lighthouse, snowfall, canal town, chapel, wilderness, river, archway/ruins, blossom, starfield, harbor, winter trees, storm sky, rain pond, shore, waterfall, dusk sky (어스름), candle, still water.
+  - **Everyday & intimate** (added 2026-07-30, the @dailymayim register): window light, bedroom, lamp-lit room, flowers in a vase, curtain, desk, café table, alley, city at night, field flowers, country road. This family exists **because it lets the verse lead** — an ordinary room has far less to say than a monumental landscape.
+- **Base prompts name the SUBJECT and weather ONLY — never the time of day, never the brightness.**
+  Tone comes from the rotating `LIGHT` palette. This was always the documented design but was
+  violated in practice: the prompts carried **109 hardcoded tone words** ("bright" 46×, "sunlit" 22×,
+  "sunlight" 20×), which is the real reason the account could only ever look bright — a dark palette
+  would have contradicted the scene text itself. Keep tone words OUT of scene prompts.
 - Themes are **round-robin interleaved** into the flat `SCENES` list so sequential rotation walks through *different* themes; the dict order alternates families (water / dry land / architecture / interior) so neighbours never look alike.
 - `pick_scene()` + the `used_scene_cats` ledger in `state.json` **skip forward past any theme used in the last 2 posts** — a gate rejection or fallback can never cluster the same theme. Invariant: **no two consecutive posts share a theme.**
 
 ## 3. Even the same theme must look substantially different
 When a theme comes round again it must differ by multiple axes:
 - **Base variant:** each theme has ≥2 differently-worded scene prompts.
-- **Light / colour palette:** `LIGHT` (5 options, all bright & hopeful) — bright clear morning, soft luminous daylight, warm golden sunlight, fresh sparkling after-rain, gentle glowing dawn. Keyed on the **monotonic `post_i` counter**; 5 does not divide the ~24-post theme cycle, so a theme cycles through all five palettes across its appearances.
+- **Light / colour palette:** `LIGHT` (**7 options spanning bright → dark**) — clear early morning, soft even daylight, warm low afternoon, pale quiet dawn, last quiet light of dusk, cool blue stillness after sunset, faint light after dark. Keyed on the **monotonic `post_i` counter**; 7 is prime and divides neither 36 (themes) nor 72 (scenes), so a theme never locks onto one tone.
 - **Camera vantage / angle:** `VANTAGE` (4 options) — wide/distant, low eye-level, high looking-out, intimate close.
-- **Scale / grandeur (웅장함):** `SCALE` (3 options) — monumental forms at the edges, vast atmospheric depth, a small element dwarfed to reveal scale. Skipped for the *intimate close* vantage, where "come close" and "be monumental" would contradict each other.
-- These are set in `scene_variation(post_i)` and injected into every prompt. Axes to keep leveraging: colour, angle, narrative, time-of-day feel, season, age/era.
-- Periods are deliberately **coprime** (LIGHT 5 / SCALE 3, VANTAGE every 5th post) so a theme meets a fresh light+scale pairing for 15 posts before any combination recurs.
+- These are set in `scene_variation(post_i)` and injected into every prompt. Periods stay **coprime**: LIGHT every post (7), VANTAGE every 7th post (4), so a theme meets a fresh light+angle pairing for 28 posts before any combination recurs.
 
-**Grandeur must never be bought with legibility.** The verse is the point of the account, so `COMPOSE`'s
-soft-open centre wins every time. Scale is therefore built *outside* the centre — depth, atmospheric
-perspective, immensity at the frame edges, scale contrast — never by parking a huge subject in the
-middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적), alongside @wondervisionary.
+### The 웅장함 (grandeur) axis is RETIRED — 2026-07-30
+`SCALE` is gone. It was the instrument of an image-first post, and this account is verse-first: a
+monumental frame competes with the 말씀 for attention and wins. The @dailymayim reference carries
+almost no monumental imagery — windows, lamps, made beds, stems in a glass — and that is precisely why
+the verse reads as the subject there. **Grandeur is no longer a variation axis**; the everyday/intimate
+scene family in rule 2 replaces it. (@fuezstudio is no longer a reference for this account.)
+
+**Understatement is a requirement, not a preference.** `QUALITY` asks for muted, slightly desaturated,
+low-contrast, filmic colour with plenty of plain empty space — never vivid, glossy, dramatic or
+spectacular. If a render is impressive, it is wrong.
 
 ## 3b. Every post is VIDEO, and every image is HYPERREALISTIC
 - **Production posts are always Reels (.mp4)** — never a static image post. `daily_post.py` always builds and publishes a video via `publish_reel`. (Preview-page stills are illustrations only, not production.)
@@ -86,9 +105,49 @@ middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적)
 - Weekly **theme series** (`THEME_ORDER`) gives the feed meaning.
 - Never post a verse that ends mid-clause (`INCOMPLETE_ENDINGS`).
 
-## 9. Text & format — consistent, centered, readable
-- Verse text is **always centered**, in the **NanumMyeongjo serif** at a fixed size, wrapped so it never splits a verb phrase / modifier-head pair (`generate.py`).
-- Every scene prompt keeps the **center of the frame soft and open** (`COMPOSE`) so the verse is always legible over it.
+## 9. Text & format — verse-first, upper third, adaptive
+- Verse text is **always centered horizontally**, in the **NanumMyeongjo serif** at a fixed size, wrapped so it never splits a verb phrase / modifier-head pair (`generate.py`).
+- **The verse sits in the UPPER THIRD** (`placement = ("center", "top")`, block centred at 30% down), in
+  a **narrow column** (0.68 of width, was 0.85) so lines come out short and stack into a compact centred
+  text object. **That shape — not a bigger font — is what makes the 말씀 the subject.** The reference's
+  type is no larger than ours; its verses lead because of position, emptiness and short lines.
+- **`COMPOSE` keeps the UPPER HALF genuinely empty** and anchors the subject and all texture in the
+  **lower third**, with nothing reaching up into the text area. (Was "soft-open centre" — which put the
+  verse over the busiest part of the frame and is why heavy backing was ever needed.)
+- **On-image citation** is set bare and small — `시편 100:5`, no brackets, 0.52× the verse size. The
+  caption keeps the `[book chapter:verse]` form (rule 10).
+- **Text colour is sampled from the background** (`band_color`): dark text on a light sky, light text on
+  a dark one. Non-negotiable now that `LIGHT` runs from pale dawn to night — white-always was only safe
+  while every scene was forced bright, and white on a pale dawn sky is invisible. Sampling a single
+  still is sound because rule 5 pins the camera and keeps motion barely-there.
+- **Backing is insurance, not the mechanism.** With an empty upper half and adaptive colour, the halo is
+  dialled down to alpha 95 (was 150 — the visible grey smudge). It exists only to save a post when a
+  render ignores `COMPOSE`; a compliant render should look like the reference, text straight on the photo.
+- **The typeface never changes.** NanumMyeongjo, fixed size. Legibility is solved on the IMAGE side
+  (below), never by altering the lettering.
+
+### 9b. The text area is MEASURED, not hoped for
+The verse must sit on **one precisely-contrasting tone**. `COMPOSE` asks the model for a single flat even
+area — decisively light or decisively dark, never a middling mid-grey — but a prompt is a request, not a
+guarantee, so the render is **measured and regenerated** like every other generator output.
+
+- `generate.verse_ink()` renders the **real glyph mask** (geometry only, background-independent), and
+  `text_area_contrast()` measures the candidate background *under exactly those pixels* — not an
+  approximate band.
+- **Worst-case, never the mean.** Which end is "worst" depends on the text colour: against light text the
+  brightest pixels are the danger, against dark text the darkest. Measuring the mean is precisely what
+  hid the 2026-07-26 stained-glass failure (dark average, bright panes under white strokes).
+- Thresholds (`MIN_CONTRAST` 4.5 WCAG AA, `MAX_SPREAD` 22 gray stddev) are **empirical**, calibrated over
+  the 100-photo pool: its best backgrounds score 3–9 spread / 12–19 contrast, its worst 65–75 / ~1.0.
+  Contrast and flatness track each other almost perfectly — they are one property.
+- A flat **mid-grey scores only 3.7 against either text colour** and is correctly rejected. That is why
+  `COMPOSE` demands the tone be decisively light or decisively dark.
+- `daily_post` retries up to **3** renders, advancing `post_i` each time so the light/angle changes
+  rather than re-rolling the same prompt. The **photo-pool fallback is ranked by the same measurement**,
+  so both paths obey one rule.
+- **It never blocks a post.** If all attempts fail it ships with a `WARNING`, the backing carries it, and
+  the measured `text_contrast` / `text_spread` go into `_meta.json` → `metrics.json` (rule 11b) so a bad
+  text area is recorded rather than hidden — and can be correlated with performance.
 - The **photo pool obeys the same soft-centre rule**: `generate.calm_photos()` filters out photos whose
   centre band is too chaotic to carry text (stained glass, dense foliage) before any pick — carousel
   and daily fallback both. And when a busy background does get through, `render()`'s backing strength
@@ -99,9 +158,22 @@ middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적)
 - **Same letter format on every post** — do not change the font, size logic, or centering without a deliberate decision recorded here.
 
 ## 10. Caption & comment
-- **Caption:** verse text + `[book chapter:verse]` reference + a **share ask first, follow ask second**.
-- **The share ask outranks the follow ask, deliberately.** Instagram's stated ranking signals are watch time, **sends per reach** and likes per reach, and a send weighs several times a like in deciding whether to show a post to non-followers. A follow can only come from the already-convinced, so leading with it spends the strongest line of the caption on the weakest signal. Asking someone to forward a 말씀 to a person who needs it is simultaneously the higher-weighted action and the account's honest purpose. Measured per post as send/reach by `insights.py` — if the data says otherwise, change it back and record that here. (Changed 2026-08-05.)
-- **First comment:** the hashtag set (`hashtags.build`). Reference/book handling stays **as it is now** (shown on-image + in caption; hashtags in the comment).
+- **Caption is the 말씀 and its reference. Nothing else.** No CTA, no brand line, no sell.
+- **Everything that talks ABOUT the account lives in the first comment** (`hashtags.first_comment`):
+  one quiet line (`FOLLOW_CTA`) then the five tags. Decided **2026-08-01** on evidence, and it is
+  closer to retiring the CTA than relocating it — which is the honest description:
+  - It was **already invisible**. Instagram folds the caption behind "더 보기", and on a real post
+    the cut landed right after the reference, so the CTA shipped folded away.
+  - It **contradicted the account**. This constitution says the verse leads, and rule 10b says the
+    DM asks for nothing; the caption was the one place that still sold.
+- **A share ask was briefly put back in the caption on 2026-08-05** by a branch that had not seen
+  the 08-01 finding, on the reasoning that sends outrank likes as a ranking signal. That reasoning
+  about *sends* is sound; putting it in the caption is not, because the caption is where it cannot
+  be seen. Removed again 2026-08-13. If a share ask is ever wanted, the first comment is where it
+  can actually be read.
+- **This is measured, not assumed.** `daily_post.py` records `cta_in_caption` into `_meta.json`
+  and `metrics.report()` groups on it — `follows` is the column that settles whether removing it
+  cost anything. Derived from the caption text, never hand-set, so it can never drift from reality.
 - **Exactly 5 hashtags — never more.** Instagram capped posts and reels at 5 in December 2025,
   and the cap counts caption + comments **together**, so putting them in the first comment buys
   no extra slots; over the cap Instagram strips the excess or refuses the publish. `hashtags.MAX`
@@ -127,6 +199,11 @@ middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적)
 - `replied_comments` makes one-per-comment a **hard invariant** (a poller re-sees every comment;
   Meta allows one). Wording rotates via `dm_i` so the account never emits identical text
   repeatedly — same principle as rule 11.
+- The theme of the verse a commenter replied to comes from **`metrics.json`**, not from a
+  `posted_media` ledger. (There was one; it never populated. It was written in `daily_post.py`'s
+  publish block, but the workflow runs `daily_post.py --emit`, which returns before it — the real
+  publish happens in the workflow's `post_instagram.py` step. Anything that must be recorded at
+  publish time has to hang off **that** step, not off `daily_post.py`.)
 - **Not wired up:** no workflow calls `dm_reply`, and `reply_to_new_comments()` defaults to
   dry-run, until `instagram_manage_messages` clears App Review.
 
@@ -157,10 +234,32 @@ middle. Reference for the intended feeling: **@fuezstudio** (웅장 + 사실적)
 `used_clips`, `posted_media` (media id → theme, for 10b), `replied_comments` (10b, DMs), `dm_i`.
 Every rotating resource has a ledger and cycles the whole set before repeating. Perceived sameness counts as a repeat, not just literal file reuse.
 
-**Two ledgers live in their own files, on purpose:** `comments.json` (`replied_publicly`,
-`pending_replies`, `reply_i` — rule 10c) and `insights.json` (rule 13). Both are written by
-crons that run far more often than the poster, and two jobs rebasing the same one-line
+**Ledgers that live in their own files, on purpose:** `comments.json` (`replied_publicly`,
+`pending_replies`, `reply_i` — rule 10c) and `metrics.json` (rule 11b). Both are written by jobs
+that run on a different clock from the poster, and two jobs rebasing the same one-line
 `state.json` is a merge conflict waiting to happen. Separate files never collide.
+
+## 11b. Performance ledger — decisions must be measurable (`metrics.json`)
+- Every no-repeat ledger above answers *"what have we used?"*. None answers *"did it work?"*, so
+  without this file every format argument is taste versus taste. `metrics.py` records one entry
+  per published post: the **inputs we chose** (verse, theme, reel duration, Veo segment count)
+  next to the **outcome Instagram reports** (reach, plays, shares, saves, watch time).
+- Recording inputs beside outcomes is the point — it makes a change measurable *after the fact*
+  without an A/B harness. `python3 metrics.py report` groups by reel length and by theme.
+- **Separate from `state.json` on purpose.** `state.json` is a bounded, rewritten-every-run
+  no-repeat ledger; this is append-only history that must grow. Mixing them would force a choice
+  between truncating history and bloating the hot file.
+- **Reach is the denominator.** The open question is *why so few people see this*; a share rate
+  computed against a tiny reach says nothing about reach itself.
+- Insights are **re-pulled** for `MATURE_DAYS` (14) after publishing — reels accrue views for
+  well over a week, so a single fetch at publish time would record a near-zero and freeze it.
+- Needs `instagram_manage_insights` on the token. Measurement is **`continue-on-error`** in the
+  workflow and `insights()` returns `{}` rather than raising: a metrics failure must never take
+  down a posting run.
+- **`metrics.json` is the one performance ledger.** `insights.py` (added 2026-08-05, before this
+  branch was recovered) solved the same problem a second way; it is kept only as the **collector
+  for the whole back-catalogue and the follower curve**, writing into this same file. Two ledgers
+  measuring one account is how you get two different answers to one question.
 
 ## 12. Fallback chain (stay alive, always on-brand)
 - Image gen down → licensed photo pool (`used_photos` ledger).
@@ -168,21 +267,16 @@ crons that run far more often than the poster, and two jobs rebasing the same on
 - Lyria down → vetted music library (no-repeat).
 None of the fallbacks may violate rules 2–10.
 
-## 13. Measure, don't guess
-- The account ran its first ~70 posts without reading back a single number, so every content
-  decision was an assumption. `insights.py` collects per-post metrics (views, reach, likes,
-  comments, saved, shares) plus the daily follower count into `insights.json` nightly
-  (`.github/workflows/insights.yml`), joined to each post's verse and theme.
+## 13. Reading the numbers back — tokens, backfill, degradation
+Rule 11b defines the ledger. This rule is about *getting the numbers into it*.
+
+- **`metrics.py` records at publish time; `insights.py` backfills and tracks followers.**
+  `insights.py` exists for two gaps only: the ~100 posts published before 11b existed have no
+  entry, and nothing else records the follower count. It **does not re-implement metric
+  fetching** — `post_instagram.insights()` already degrades tier by tier, and two collectors
+  measuring one account is how you get two different answers to one question.
 - **Old posts join by verse reference.** The caption carries `[book chapter:verse]`, so posts
   published long before any bookkeeping existed still resolve to a theme via `verses.json`.
-- **Metric availability is probed, never assumed.** Meta rejects an entire insights request if
-  any single metric is unsupported for that media type, and the supported set changes between
-  API versions. `insights.py` tries the full set, falls back to probing one at a time, and
-  caches the working set per media type in `metrics_ok`. A metric Meta stops serving degrades
-  the report; it must never crash the job.
-- **The headline number is send/reach**, not likes — see rule 10. Anything that claims to
-  improve the account should be checkable against this ledger, and a claim that cannot be
-  checked against it is an opinion.
 - **Two tokens, on purpose.** `IG_ACCESS_TOKEN` is a Facebook-login **system-user** token: it
   never expires and it publishes. It cannot be granted `instagram_manage_insights` without a
   Business-Manager action gated behind SMS 2FA on a phone number that cannot receive Meta's
@@ -192,17 +286,19 @@ None of the fallbacks may violate rules 2–10.
   it** — the thing that works must keep working.
 - **The 60-day expiry is a machine's problem, not a human's.** Instagram-login tokens last 60
   days and each refresh resets that to 60, so `refresh-token.yml` refreshes **weekly** — eight
-  chances to fail before anything expires — and opens an issue if it ever fails (rule 1: never
-  silent). The refreshed token is written to a file and masked, never printed: a token in a CI
-  log is a leaked token.
-- **Degrade, don't stop.** With no insights scope there is no reach and no shares, so the report
-  ranks on `like_count`/`comments_count` — plain media fields needing only `instagram_basic` —
-  and says which mode it is in. A table that silently changed what it ranks by would be worse
-  than no table.
+  chances to fail before anything expires — and opens an issue if it fails (rule 1: never
+  silent). It **skips quietly when the token was never set up**, or it would file that issue
+  every Monday. The refreshed token is written to a file and masked, never printed: a token in
+  a CI log is a leaked token.
+- **Degrade, don't stop.** With no insights scope there is no reach and no shares, so
+  `metrics.report()` falls back to `like_count`/`comments_count` — plain media fields needing
+  only `instagram_basic` — and **says which mode it is in**. A table that silently changed what
+  it ranks by would be worse than no table.
 - **Compare like with like.** Engagement tracks how many followers existed at the time, so the
-  theme table looks only at the last `THEME_WINDOW` posts. Ranked over all time, 위로 looked
-  like the worst theme by half; twelve of its thirteen posts were from the account's first six
-  days, and the one posted since was above average. Comparing across account sizes measures age.
+  degraded theme table looks only at the last `THEME_WINDOW` posts. Ranked over all time, 위로
+  looked like the worst theme by half; twelve of its thirteen posts were from the account's
+  first six days, and the one posted since was above average. Comparing across account sizes
+  measures age, not content.
 
 ---
 

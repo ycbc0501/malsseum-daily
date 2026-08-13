@@ -58,8 +58,13 @@ def reply_to_new_comments(state, dry_run=True):
     which matters because a poller sees the same comment on every pass and Meta allows
     only one. Returns the messages it sent (or would have sent, when dry_run)."""
     import post_instagram
+    import metrics
 
-    posted = state.get("posted_media", {})            # media_id → verse theme
+    # metrics.json is the record of what we actually published (media_id → {ref, theme, ...}),
+    # written by the workflow's `metrics.py record` step. It replaces the old
+    # state["posted_media"] ledger, which never populated: it was written in daily_post.py's
+    # publish block, and the workflow runs daily_post.py with --emit, which returns first.
+    posted = {mid: e.get("theme", "믿음") for mid, e in metrics.load().items()}
     replied = state.setdefault("replied_comments", [])
     me = os.environ.get("IG_USERNAME") or ""       # never hardcode the handle — see rule 10c
     if not me:

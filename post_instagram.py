@@ -203,6 +203,50 @@ def reply(comment_id, message, token=None):
     return _post(f"{GRAPH}/{comment_id}/replies",
                  {"message": message, "access_token": token})
 
+# Insight metrics for a Reel, most→least likely to be supported. The API rejects the WHOLE
+# request if any single metric is unavailable for a media type or version, so we degrade tier by
+# tier instead of guessing: v21 serves `plays`, v22+ renamed it `views`, and the ig_reels_* pair
+# only exists for reels. Better to return the core numbers than to return nothing.
+INSIGHT_TIERS = [
+    ("reach", "likes", "comments", "shares", "saved", "total_interactions",
+     "plays", "ig_reels_avg_watch_time", "ig_reels_video_view_total_time"),
+    ("reach", "likes", "comments", "shares", "saved", "total_interactions", "views"),
+    ("reach", "likes", "comments", "shares", "saved", "total_interactions"),
+    ("reach",),
+]
+
+
+def insights(media_id, token=None):
+    """Performance metrics for one published media → {metric: value}.
+
+    Needs instagram_manage_insights on the token. Returns {} rather than raising if every
+    tier is rejected, so a metrics run can never take down a posting run."""
+    token = token or os.environ.get("IG_ACCESS_TOKEN")
+    last = None
+    for tier in INSIGHT_TIERS:
+        try:
+            got = _get(f"{GRAPH}/{media_id}/insights"
+                       f"?metric={','.join(tier)}&access_token={token}")
+        except Exception as e:
+            last = e
+            body = getattr(e, "file", None)
+            detail = ""
+            if hasattr(e, "read"):
+                try:
+                    detail = e.read().decode()[:200]
+                except Exception:
+                    pass
+            print(f"insights tier {tier[0]}..({len(tier)}) rejected: {e} {detail}")
+            continue
+        out = {}
+        for row in got.get("data", []):
+            vals = row.get("values") or [{}]
+            out[row["name"]] = vals[0].get("value")
+        if out:
+            return out
+    print(f"insights({media_id}): all tiers failed ({last})")
+    return {}
+
 
 def private_reply(comment_id, message, ig_user_id=None, token=None):
     """Send the ONE private reply Meta allows for a comment (Private Replies).
@@ -228,6 +272,9 @@ if __name__ == "__main__":
     ap.add_argument("--carousel", default="", help="comma-separated image URLs for a carousel")
     ap.add_argument("--caption-text", default="", help="caption when using --carousel")
     ap.add_argument("--comment", default="", help="post this as a first comment (hashtags)")
+    ap.add_argument("--story", action="store_true",
+                    help="also publish to Stories (rule 3b) — the flag lives HERE because the "
+                         "workflow publishes from this CLI, not from daily_post.py")
     args = ap.parse_args()
     if args.carousel:
         urls = [u for u in args.carousel.split(",") if u]
@@ -237,5 +284,22 @@ if __name__ == "__main__":
     else:
         result = publish(args.url, args.caption)
     print(result)
+    if isinstance(result, dict) and result.get("id"):
+        # The workflow publishes from HERE, not from daily_post.py (which runs with --emit and
+        # returns before its own publish block). So this is the only place that knows the real
+        # media id — hand it to metrics.py / dm_reply.py via a file rather than losing it.
+        out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
+        os.makedirs(out, exist_ok=True)
+        with open(os.path.join(out, "_media_id.txt"), "w") as f:
+            f.write(result["id"])
+        print("media id →", result["id"])
     if args.comment and isinstance(result, dict) and result.get("id"):
         print("comment:", comment(result["id"], args.comment))
+    if args.story and isinstance(result, dict) and result.get("id"):
+        # Best-effort, and LAST: the feed post has already published, so a story failure must
+        # not fail the run and open a false "missed post" issue.
+        try:
+            first = args.carousel.split(",")[0] if args.carousel else args.url
+            print("story:", publish_story(first))
+        except Exception as e:
+            print(f"story failed ({e}) — feed post already published, continuing")

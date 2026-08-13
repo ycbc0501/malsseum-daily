@@ -11,4 +11,6 @@ changes, update CONTENT_RULE.md in the same commit so it never drifts from the c
 
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_higgsfield.py` (image + gates),
 `fetch_veo.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
-`post_instagram.py` (publish). No-repeat ledgers live in `state.json`.
+`post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually
+publishes in CI). No-repeat ledgers live in `state.json`; performance in `metrics.json`
+(`metrics.py`, backfilled by `insights.py`); comment replies in `comments.json`.

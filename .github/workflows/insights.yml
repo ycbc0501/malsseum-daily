@@ -1,15 +1,10 @@
-name: Collect insights
+name: Backfill metrics + followers
 
 # 03:20 KST daily (18:20 UTC) — after both of the day's posts have had time to settle.
 on:
   schedule:
     - cron: "20 18 * * *"
   workflow_dispatch:
-    inputs:
-      reprobe:
-        description: "Forget which metrics are available and probe again (use after granting the token a new scope)"
-        type: boolean
-        default: false
 
 permissions:
   contents: write
@@ -24,20 +19,20 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Collect per-post metrics and print the report
+      - name: Backfill metrics.json, record followers, print the report
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           # Read-only Instagram-login token. When present it is used instead of the publishing
           # token, because only it can carry the insights scope. Absent → falls back silently.
           IG_INSIGHTS_TOKEN: ${{ secrets.IG_INSIGHTS_TOKEN }}
-        run: python insights.py ${{ inputs.reprobe && '--reprobe' || '' }}
+        run: python insights.py
 
-      - name: Save the insights ledger
+      - name: Save the ledgers
         run: |
           git config user.name "malsseum-bot"
           git config user.email "malsseum-bot@users.noreply.github.com"
-          git add insights.json
-          git commit -m "insights: daily metrics" || { echo "nothing to commit"; exit 0; }
+          git add metrics.json followers.json
+          git commit -m "metrics: daily backfill + follower curve" || { echo "nothing to commit"; exit 0; }
           git pull --rebase --autostash origin main || true
           git push

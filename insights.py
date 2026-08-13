@@ -1,57 +1,43 @@
 #!/usr/bin/env python3
 """
-Read the account's own numbers back — the loop that turns posting into learning.
+Backfill `metrics.json` for posts published before metrics.py existed, and track followers.
 
-The account published 67 posts before this existed and never looked at a single metric, so
-every content decision was a guess. This collects per-post metrics into `insights.json`,
-joined to what the pipeline knows about each post (verse, theme), and prints a ranked report.
+`metrics.py` is the performance ledger (rule 11b) and it records a post at publish time. That
+leaves two gaps this file fills, and nothing else:
 
-Ranking is by **shares per reach**, not likes: Instagram's stated ranking signals are watch
-time, sends per reach and likes per reach, and a send carries several times the weight of a
-like in deciding whether to show a post to non-followers. For this account that is not a
-growth hack — a 말씀 someone forwards to a friend having a hard day IS the point.
+  1. The ~100 posts published before that ledger existed have no entry at all.
+  2. Nothing records the follower count, which is the only number that answers "is any of this
+     working?" — and unlike media insights it needs no special scope.
 
-Metric availability differs by media type and changes with API versions, so the metric set is
-PROBED once and the working set remembered — a metric Meta stops serving degrades the report
-instead of crashing the job.
+This deliberately does NOT re-implement metric fetching: `post_instagram.insights()` already
+degrades tier by tier, and two collectors measuring one account is how you get two different
+answers to one question (rule 11b).
 
-    python3 insights.py              # collect + append, then print the report
-    python3 insights.py --report     # print the report from the stored ledger, fetch nothing
+    python3 insights.py            # backfill metrics.json + record today's follower count
 """
 
-import argparse
 import json
 import os
-import re
-import urllib.error
 from datetime import datetime, timedelta, timezone
 
+import metrics
 import post_instagram
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-LEDGER = os.path.join(HERE, "insights.json")
+FOLLOWERS = os.path.join(HERE, "followers.json")
 KST = timezone(timedelta(hours=9))
-
-# Superset per media type; whatever Meta rejects is dropped on the first probe and remembered.
-WANTED = {
-    "REELS": ["views", "reach", "likes", "comments", "saved", "shares", "total_interactions",
-              "ig_reels_avg_watch_time", "ig_reels_video_view_total_time"],
-    "FEED": ["views", "reach", "likes", "comments", "saved", "shares", "total_interactions",
-             "follows", "profile_visits"],
-}
-FRESH_DAYS = 21          # metrics keep accruing, so keep re-polling recent posts
-THEME_WINDOW = 40        # posts back the theme comparison looks (see report())
+import re
 _REF = re.compile(r"\[([^\[\]]+)\]")
 
 
 def api():
-    """(base_url, account_path, token) — which door to read the numbers through.
+    """(base_url, account_path, token) — which door to read through.
 
-    Two tokens exist on purpose. `IG_ACCESS_TOKEN` is the Facebook-login system-user token that
-    publishes; it never expires but cannot be given the insights scope without a Business-Manager
-    action that is locked behind unreachable SMS 2FA. `IG_INSIGHTS_TOKEN` comes from Instagram
-    Login (ig_login.py), needs no Facebook account at all, and is read-only. When it is present
-    it wins for reading; publishing is never touched either way."""
+    `IG_ACCESS_TOKEN` is the Facebook-login system-user token that publishes; it never expires
+    but cannot be granted `instagram_manage_insights` without a Business-Manager action gated
+    behind SMS 2FA that does not arrive. `IG_INSIGHTS_TOKEN` comes from Instagram Login
+    (`ig_login.py`), needs no Facebook account, and is read-only. When present it wins for
+    READING. Publishing never touches it."""
     tok = os.environ.get("IG_INSIGHTS_TOKEN")
     if tok:
         return "https://graph.instagram.com/v21.0", "me", tok
@@ -60,8 +46,8 @@ def api():
 
 
 def _themes():
-    """verse ref → theme, so posts published long before any bookkeeping existed can still be
-    grouped by theme (the ref is printed in every caption)."""
+    """verse ref → theme, so posts predating any bookkeeping still resolve (the caption
+    carries the reference)."""
     try:
         with open(os.path.join(HERE, "verses.json"), encoding="utf-8") as f:
             return {v["ref"]: v.get("theme", "") for v in json.load(f)["verses"]}
@@ -69,263 +55,83 @@ def _themes():
         return {}
 
 
-def _why(e):
-    """Meta puts the actual reason in the error body, so an HTTPError alone says nothing
-    useful — 'usable metrics = NONE' without a reason sends you looking for the wrong bug."""
-    try:
-        return json.loads(e.read().decode()).get("error", {}).get("message", str(e))
-    except Exception:
-        return str(e)
+def backfill(limit=90):
+    """Give every recent post an entry in metrics.json, filling what we can actually read.
 
-
-def _insights(media_id, metrics, token, base=None):
-    if not metrics:
-        return {}
-    base = base or post_instagram.GRAPH
-    got = post_instagram._get(f"{base}/{media_id}/insights"
-                              f"?metric={','.join(metrics)}&access_token={token}")
-    out = {}
-    for row in got.get("data", []):
-        vals = row.get("values") or [{}]
-        out[row["name"]] = vals[0].get("value")
-    return out
-
-
-def fetch_media_insights(media_id, kind, ledger, token, base=None):
-    """Metrics for one post, probing which ones this media type actually serves.
-
-    Meta rejects the WHOLE request if any single metric is unsupported, so on failure each
-    metric is tried alone and the survivors are cached per media type — the slow path runs
-    once, not on every poll."""
-    ok = ledger.setdefault("metrics_ok", {})
-    if kind in ok:
-        if not ok[kind]:
-            # Probed to nothing already — usually a token missing instagram_manage_insights.
-            # Re-probing per post would spend ~9 requests each against a 200/hour budget and
-            # still learn nothing, so take the answer and move on until the token changes.
-            return {}
-        try:
-            return _insights(media_id, ok[kind], token, base)
-        except Exception as e:
-            print(f"  cached metric set failed ({e}) — re-probing")
-            del ok[kind]
-
-    wanted = WANTED.get(kind, WANTED["FEED"])
-    try:
-        got = _insights(media_id, wanted, token, base)
-        ok[kind] = wanted
-        return got
-    except urllib.error.HTTPError as e:
-        print(f"  {kind}: full metric set rejected ({e.code}: {_why(e)}) — probing one at a time")
-    except Exception as e:
-        print(f"  {kind}: full metric set failed ({e}) — probing one at a time")
-
-    good, out, last = [], {}, ""
-    for m in wanted:
-        try:
-            out.update(_insights(media_id, [m], token, base))
-            good.append(m)
-        except urllib.error.HTTPError as e:
-            last = _why(e)
-        except Exception as e:
-            last = str(e)
-    ok[kind] = good
-    print(f"  {kind}: usable metrics = {good or 'NONE'}" + (f" — last error: {last}" if not good else ""))
-    return out
-
-
-def collect(ledger, token=None, ig_user_id=None, base=None):
-    d_base, d_uid, d_tok = api()
-    base = base or d_base
-    token = token or d_tok
-    ig_user_id = ig_user_id or d_uid
-    if not (token and ig_user_id):
+    Inputs (ref, theme) come from the caption; outcomes come from post_instagram.insights().
+    When the token lacks the insights scope that returns {}, so `like_count`/`comments_count`
+    are recorded instead — plain media fields, no scope needed. Partial truth beats none, and
+    the entry says which it is."""
+    base, uid, token = api()
+    if not (uid and token):
         raise SystemExit("set IG_USER_ID and IG_ACCESS_TOKEN (or IG_INSIGHTS_TOKEN)")
-    print(f"reading via {base} as {ig_user_id}")
+    print(f"reading via {base} as {uid}")
 
-    themes = _themes()
-    media_rows = ledger.setdefault("media", {})
-    now = datetime.now(timezone.utc)
-
-    # The whole history, not a recent window: likes/comments arrive with the media list itself,
-    # so covering every post costs one request, and per-post insight calls are skipped for
-    # anything already settled (FRESH_DAYS) regardless.
+    themes, data = _themes(), metrics.load()
     listing = post_instagram._get(
-        f"{base}/{ig_user_id}/media"
+        f"{base}/{uid}/media"
         f"?fields=id,timestamp,media_product_type,permalink,caption,like_count,comments_count"
-        f"&limit=90&access_token={token}")
+        f"&limit={int(limit)}&access_token={token}")
+
+    added = filled = 0
     for m in listing.get("data", []):
-        mid = m["id"]
-        row = media_rows.setdefault(mid, {})
-        row["timestamp"] = m.get("timestamp", "")
-        row["permalink"] = m.get("permalink", "")
-        kind = "REELS" if m.get("media_product_type") == "REELS" else "FEED"
-        row["kind"] = kind
-        cap = m.get("caption") or ""
-        ref = _REF.search(cap)
-        row["ref"] = ref.group(1) if ref else ""
-        row["theme"] = themes.get(row["ref"], "")
-        # Plain media fields, no insights scope needed. They carry no reach or shares, but they
-        # are enough to rank posts against each other — which is most of what the ledger is for.
-        row["basic"] = {"likes": m.get("like_count"), "comments": m.get("comments_count")}
+        entry = data.setdefault(m["id"], {})
+        if not entry:
+            added += 1
+        ref = _REF.search(m.get("caption") or "")
+        entry.setdefault("ref", ref.group(1) if ref else "")
+        entry.setdefault("theme", themes.get(entry.get("ref", ""), ""))
+        entry.setdefault("permalink", m.get("permalink", ""))
+        entry.setdefault("kind", m.get("media_product_type", ""))
+        if m.get("timestamp"):
+            entry.setdefault("published", m["timestamp"])
+        got = entry.get("insights") or {}
+        if not got:
+            try:
+                got = post_instagram.insights(m["id"], token) or {}
+            except Exception as e:
+                print(f"  insights({m['id']}) failed: {e}")
+                got = {}
+            # No scope → no reach/shares. These two are plain fields and always readable, so
+            # record them rather than storing an empty dict and calling it measured.
+            got.setdefault("likes", m.get("like_count"))
+            got.setdefault("comments", m.get("comments_count"))
+            entry["insights"] = got
+            filled += 1
+    metrics.save(data)
+    print(f"backfill: {added} new entr(ies), {filled} filled, {len(data)} total")
+    return data
 
-        try:
-            age = (now - datetime.strptime(row["timestamp"], "%Y-%m-%dT%H:%M:%S%z")).days
-        except Exception:
-            age = 0
-        if age > FRESH_DAYS and row.get("metrics"):
-            continue                       # settled — stop spending rate limit on it
-        print(f"{row['timestamp'][:10]} {row['ref'] or mid}")
-        row["metrics"] = fetch_media_insights(mid, kind, ledger, token, base)
 
-    # The follower curve is the only number that answers "is any of this working at all", so it
-    # is read TWICE over. The insights time-series needs instagram_manage_insights, but the plain
-    # profile field needs only instagram_basic — so the curve keeps building one point per run
-    # even while the insights scope is missing.
-    daily = ledger.setdefault("daily_followers", {})
+def followers():
+    """Today's follower count → followers.json. `followers_count` is a plain profile field:
+    it needs only instagram_basic, so the curve keeps building even while the insights scope
+    is out of reach."""
+    base, uid, token = api()
     try:
         prof = post_instagram._get(
-            f"{base}/{ig_user_id}"
-            f"?fields=username,followers_count,media_count&access_token={token}")
-        daily[datetime.now(KST).strftime("%Y-%m-%d")] = prof.get("followers_count")
-        ledger["media_count"] = prof.get("media_count")
-        print(f"followers: {prof.get('followers_count')}  media: {prof.get('media_count')}")
+            f"{base}/{uid}?fields=username,followers_count,media_count&access_token={token}")
     except Exception as e:
         print(f"profile unavailable ({e})")
+        return {}
     try:
-        got = post_instagram._get(
-            f"{base}/{ig_user_id}/insights"
-            f"?metric=follower_count&period=day&access_token={token}")
-        for row in got.get("data", []):          # backfills history the profile field can't give
-            for v in row.get("values", []):
-                daily[v.get("end_time", "")[:10]] = v.get("value")
-    except urllib.error.HTTPError as e:
-        print(f"follower time-series unavailable ({e.code}: {_why(e)})")
-    except Exception as e:
-        print(f"follower time-series unavailable ({e})")
-
-    if any(not v for v in (ledger.get("metrics_ok") or {}).values()):
-        print("\nNO METRICS AVAILABLE. Meta answers '(#10) Application does not have permission'\n"
-              "for every insights call, which means IG_ACCESS_TOKEN is missing the\n"
-              "instagram_manage_insights scope. Everything else here works — publishing,\n"
-              "comments and captions only need the scopes the token already has.\n"
-              "Fix: reissue the token with instagram_manage_insights added, update the\n"
-              "IG_ACCESS_TOKEN repo secret, then run `python3 insights.py --reprobe` once\n"
-              "(the empty result is cached deliberately, so it will not retry on its own).")
-    ledger["updated"] = datetime.now(KST).isoformat(timespec="seconds")
-    return ledger
-
-
-def report(ledger, top=10):
-    rows = []
-    for mid, r in ledger.get("media", {}).items():
-        met = r.get("metrics") or {}
-        bas = r.get("basic") or {}
-        reach = met.get("reach") or met.get("views") or 0
-        shares = met.get("shares") or 0
-        saved = met.get("saved") or 0
-        rows.append({
-            "date": r.get("timestamp", "")[:10], "ref": r.get("ref") or mid[:8],
-            "theme": r.get("theme", ""), "reach": reach, "views": met.get("views") or 0,
-            "shares": shares, "saved": saved,
-            "likes": met.get("likes") or bas.get("likes") or 0,
-            "comments": met.get("comments") or bas.get("comments") or 0,
-            "spr": (shares / reach * 100) if reach else 0.0,
-            "link": r.get("permalink", ""),
-        })
-    if not rows:
-        print("no metrics collected yet")
-        return rows
-
-    # Without instagram_manage_insights there is no reach and no shares, so send/reach is
-    # uniformly zero and sorting on it would order the feed by nothing at all. Fall back to
-    # raw engagement, which still ranks posts against each other — and SAY so, because a table
-    # that silently changed what it was ranking by would be worse than no table.
-    engagement_only = not any(r["reach"] for r in rows)
-    if engagement_only:
-        print("\n(no reach/shares — token lacks instagram_manage_insights; "
-              "ranking by likes+comments instead)")
-        rows.sort(key=lambda r: (r["likes"] + r["comments"], r["likes"]), reverse=True)
-    else:
-        rows.sort(key=lambda r: (r["spr"], r["shares"]), reverse=True)
-    def _pad(s, w):                      # Korean refs are double-width; ljust would misalign
-        return s + " " * max(1, w - sum(2 if ord(c) > 0x2E80 else 1 for c in s))
-
-    print(f"\n{'date':11}{_pad('ref', 18)}{_pad('theme', 8)}{'likes':>6}{'cmts':>6}"
-          f"{'reach':>7}{'shares':>7}{'saved':>7}{'send/reach':>12}")
-    print("-" * 82)
-    for r in rows[:top]:
-        print(f"{r['date']:11}{_pad(r['ref'], 18)}{_pad(r['theme'], 8)}"
-              f"{r['likes']:>6}{r['comments']:>6}{r['reach']:>7}{r['shares']:>7}"
-              f"{r['saved']:>7}{r['spr']:>11.2f}%")
-
-    tot_likes = sum(r["likes"] for r in rows)
-    tot_cmts = sum(r["comments"] for r in rows)
-    print(f"\n{len(rows)} posts: {tot_likes} likes, {tot_cmts} comments "
-          f"({tot_likes / len(rows):.1f} likes/post)")
-    if not engagement_only:
-        tot_reach = sum(r["reach"] for r in rows)
-        tot_shares = sum(r["shares"] for r in rows)
-        print(f"account send/reach: {tot_shares}/{tot_reach} = "
-              f"{(tot_shares / tot_reach * 100) if tot_reach else 0:.2f}%   "
-              f"(2%+ is a strong signal; below ~0.5% means the post isn't being forwarded)")
-
-    # PER POST, never totals: a theme that ran six times would otherwise outrank a better theme
-    # that ran once, and the table would be measuring the rotation instead of the content.
-    #
-    # And only RECENT posts. Engagement tracks how many followers existed at the time, so a theme
-    # that happened to fall in launch week looks terrible forever: 위로 averaged 5.4 across 12
-    # posts from 2026-06-29..07-04 and 22 on the one posted since — the theme was fine, the
-    # account was three days old. Comparing themes across different account sizes measures age.
-    recent = sorted((r["date"] for r in rows), reverse=True)
-    cutoff = recent[min(THEME_WINDOW, len(recent)) - 1] if recent else ""
-    by_theme = {}
-    for r in (r for r in rows if r["date"] >= cutoff):
-        t = by_theme.setdefault(r["theme"] or "?", [0, 0, 0, 0])
-        t[0] += r["shares"]
-        t[1] += r["reach"]
-        t[2] += r["likes"] + r["comments"]
-        t[3] += 1
-    if engagement_only:
-        ranked = sorted(by_theme.items(), key=lambda kv: -kv[1][2] / kv[1][3])
-        print(f"by theme (likes+comments per post, last {THEME_WINDOW} posts): " + "  ".join(
-            f"{t}={e / n:.1f}(n={n})" for t, (_, _, e, n) in ranked))
-    else:
-        ranked = sorted(by_theme.items(), key=lambda kv: -(kv[1][0] / kv[1][1] if kv[1][1] else 0))
-        print(f"by theme (send/reach, last {THEME_WINDOW} posts): " + "  ".join(
-            f"{t}={(s / rc * 100) if rc else 0:.2f}%(n={n})" for t, (s, rc, _, n) in ranked))
-
-    days = {k: v for k, v in (ledger.get("daily_followers") or {}).items() if v is not None}
-    if days:
-        keys = sorted(days)[-14:]
-        delta = days[keys[-1]] - days[keys[0]]
-        print(f"\nfollowers {keys[0]}→{keys[-1]}: {days[keys[0]]} → {days[keys[-1]]} "
-              f"({delta:+d})   media: {ledger.get('media_count', '?')}")
-    return rows
-
-
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--report", action="store_true", help="print the stored ledger, fetch nothing")
-    ap.add_argument("--reprobe", action="store_true",
-                    help="forget which metrics are available and probe again "
-                         "(run this after granting the token a new scope)")
-    args = ap.parse_args()
-
-    try:
-        with open(LEDGER, encoding="utf-8") as f:
-            ledger = json.load(f)
+        with open(FOLLOWERS, encoding="utf-8") as f:
+            curve = json.load(f)
     except Exception:
-        ledger = {}
-    if args.reprobe:
-        ledger.pop("metrics_ok", None)
-        print("metric availability forgotten — probing from scratch")
-    if not args.report:
-        collect(ledger)
-        with open(LEDGER, "w", encoding="utf-8") as f:
-            json.dump(ledger, f, ensure_ascii=False, indent=1, sort_keys=True)
-    report(ledger)
+        curve = {}
+    curve[datetime.now(KST).strftime("%Y-%m-%d")] = prof.get("followers_count")
+    with open(FOLLOWERS, "w", encoding="utf-8") as f:
+        json.dump(curve, f, ensure_ascii=False, indent=1, sort_keys=True)
+
+    days = sorted(k for k, v in curve.items() if v is not None)
+    if days:
+        first, last = days[0], days[-1]
+        print(f"followers {first}→{last}: {curve[first]} → {curve[last]} "
+              f"({curve[last] - curve[first]:+d})   media: {prof.get('media_count')}")
+    return curve
 
 
 if __name__ == "__main__":
-    main()
+    backfill()
+    followers()
+    metrics.report()

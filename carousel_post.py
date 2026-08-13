@@ -45,8 +45,8 @@ def main():
     prefix = os.path.join(posts, f"carousel-{date_str}")
     slides = carousel.build_slides(verse, photo, prefix)
     rels = [os.path.relpath(s, generate.HERE) for s in slides]
-    caption = f"{verse['text']}\n[{verse['ref']}]"
-    tags = hashtags.build(theme)
+    caption = f"{verse['text']}\n[{verse['ref']}]"   # 캡션은 말씀과 출처만 (규칙 10)
+    tags = hashtags.first_comment(theme)   # 안내 한 줄 + 해시태그 5개
     print(f"carousel: [{theme}] {verse['ref']}  ({len(rels)} slides)")
 
     with open(os.path.join(generate.OUT_DIR, "_carousel.txt"), "w") as f:

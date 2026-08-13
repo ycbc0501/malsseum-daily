@@ -401,6 +401,105 @@ def band_color(img, top, block_h, cw, col_left, col_w):
     return fg, shadow, busy
 
 
+def _rel_luma(gray):
+    """WCAG relative luminance of an 8-bit GRAY value. For a neutral value R=G=B, and the
+    three WCAG coefficients sum to 1, so the linearised channel *is* the luminance."""
+    c = gray / 255.0
+    return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+
+
+def _contrast(g1, g2):
+    """WCAG contrast ratio between two 8-bit gray values (order-independent, 1.0–21.0)."""
+    l1, l2 = _rel_luma(g1), _rel_luma(g2)
+    hi, lo = max(l1, l2), min(l1, l2)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+def _pct_from_hist(hist, pct):
+    """The gray value at percentile `pct` of a 256-bin masked histogram."""
+    total = sum(hist)
+    if not total:
+        return 0
+    want, acc = total * pct / 100.0, 0
+    for v, n in enumerate(hist):
+        acc += n
+        if acc >= want:
+            return v
+    return 255
+
+
+def verse_ink(verse, canvas=REEL, placement=("center", "top"), ss=2, grow=0):
+    """The alpha mask of exactly the pixels the verse + citation will ink, at native size.
+
+    Geometry only — it does NOT depend on the background, which is what lets us measure a
+    candidate background *under the real glyphs* before committing to it. `grow` dilates the
+    mask by that many pixels so the immediate margin around each stroke is judged too (a
+    stroke sitting 1px from a bright edge is still unreadable)."""
+    tmp = os.path.join(OUT_DIR, "_ink_probe.png")
+    os.makedirs(OUT_DIR, exist_ok=True)
+    render_text_overlay(verse, tmp, canvas=canvas, placement=placement, ss=ss, bg=None,
+                        ink_only=True)
+    mask = Image.open(tmp).getchannel("A")
+    if grow:
+        mask = mask.filter(ImageFilter.MaxFilter(grow if grow % 2 else grow + 1))
+    return mask
+
+
+def text_area_contrast(bg, mask, canvas=REEL, worst_pct=2.0):
+    """How readable is `bg` under exactly the glyphs in `mask`?
+
+    Returns (worst_contrast, uniformity, mean_gray, fg).
+
+    `worst_contrast` is measured at the WORST-CASE end of the inked pixels, not the mean —
+    that distinction is the whole point. The 2026-07-26 stained-glass failure was a window
+    whose *mean* was dark (so it selected white text and the weakest backing) while its
+    bright panes sat directly under the white strokes. Which end is "worst" depends on the
+    text colour: against light text the brightest background pixels are the danger, against
+    dark text the darkest ones are.
+
+    `uniformity` is the gray stddev of the inked area. Low means "one flat tone", which is
+    exactly the condition asked for — a single precisely-contrasting colour behind the verse."""
+    cw, ch = canvas
+    img = cover_crop(bg if isinstance(bg, Image.Image) else Image.open(bg), cw, ch)
+    gray = img.convert("L")
+    m = mask.resize((cw, ch), Image.LANCZOS).point(lambda a: 255 if a > 96 else 0)
+    hist = gray.histogram(m)
+    if not sum(hist):
+        return 0.0, 0.0, 0.0, (250, 248, 244)
+    st = ImageStat.Stat(gray, m)
+    mean, sd = st.mean[0], st.stddev[0]
+    # Text colour follows the SAME rule the renderer uses, so the gate judges what will ship.
+    light_bg = mean > 150
+    fg = (44, 40, 36) if light_bg else (250, 248, 244)
+    fg_gray = ImageStat.Stat(Image.new("RGB", (1, 1), fg).convert("L")).mean[0]
+    worst_gray = _pct_from_hist(hist, worst_pct if light_bg else 100.0 - worst_pct)
+    return _contrast(worst_gray, fg_gray), sd, mean, fg
+
+
+# The verse must sit on ONE precisely-contrasting tone. Thresholds are empirical, measured over the
+# 100-photo pool under the real glyph mask:
+#   · MIN_CONTRAST 4.5 — WCAG AA for normal text (large-text AA is only 3.0; we hold the stricter
+#     line because this is the whole point of the account). 29/100 stock photos clear it; a render
+#     that actually obeys COMPOSE's "one flat even tone" clears it easily.
+#   · MAX_SPREAD 22 — gray stddev under the glyphs. The pool's best backgrounds sit at 3–9 and its
+#     worst at 65–75, and contrast tracks it almost perfectly: "flat" and "readable" are one property.
+# A flat mid-grey is the pathological case — it scores only 3.7 against either text colour — which is
+# why COMPOSE demands the tone be decisively light or decisively dark.
+MIN_CONTRAST = 4.5
+MAX_SPREAD = 22.0
+
+
+def text_area_ok(bg, mask, canvas=REEL, min_contrast=MIN_CONTRAST, max_spread=MAX_SPREAD):
+    """(ok, reason, stats) — is `bg` clean enough under the real glyphs to carry the verse?"""
+    c, sd, mean, fg = text_area_contrast(bg, mask, canvas)
+    stats = {"contrast": round(c, 2), "spread": round(sd, 1), "mean": round(mean, 1), "fg": fg}
+    if c < min_contrast:
+        return False, f"contrast {c:.2f} < {min_contrast}", stats
+    if sd > max_spread:
+        return False, f"text area not flat (spread {sd:.1f} > {max_spread})", stats
+    return True, "ok", stats
+
+
 def soft_scrim(cw, ch, col_left, col_w, top_y, block_h, line_h, color, alpha=120):
     """A soft, feathered darkening/brightening behind the text block so it stays
     legible over busy backgrounds (no hard box — just a gentle glow)."""
@@ -442,10 +541,21 @@ def _even_cloud(base, alpha, cap, size, color):
     return Image.alpha_composite(base, layer)
 
 
-def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "middle"), ss=2):
-    """Transparent PNG of the verse (white text + even dark shadow, upright source) to
-    composite OVER a moving video clip. White is used because a clip's brightness varies
-    frame to frame, so adaptive dark text isn't safe; the even shadow keeps it legible.
+def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "top"), ss=2, bg=None,
+                        ink_only=False):
+    """Transparent PNG of the verse to composite OVER a moving video clip.
+
+    Verse-first layout (2026-07-30, @dailymayim reference): the block sits in the UPPER
+    THIRD over the empty part of the frame, in a NARROW column so the lines come out short
+    and stack into a compact centred text object — that shape, not a larger font, is what
+    makes the 말씀 read as the subject rather than a caption.
+
+    `bg` is the background still. Text colour is sampled from it (dark text on a light sky,
+    light text on a dark one) instead of always being white. White-always was safe while
+    every scene was forced bright, but the LIGHT palette now runs from pale dawn to night,
+    and white on a pale dawn sky is invisible. Sampling one still is sound here because
+    rule 5 pins the camera and keeps motion barely-there, so the band's brightness hardly
+    moves across the clip.
 
     Rendered at `ss`× and LANCZOS-downsampled so the serif edges stay smooth and clean
     (no jaggies) when the overlay is composited on top of the video — and, crucially, the
@@ -457,7 +567,8 @@ def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "midd
     verse_size = (44 if canvas == REEL else 40) * ss
     mx = int(cw * 0.08)
     if halign == "center":
-        col_w = int(cw * (0.85 if canvas == REEL else 0.80))
+        # Narrower than the old 0.85: short lines are the reference's signature.
+        col_w = int(cw * (0.68 if canvas == REEL else 0.66))
         col_left = (cw - col_w) // 2
     else:
         col_w = int(cw * 0.60)
@@ -466,11 +577,16 @@ def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "midd
     probe = ImageDraw.Draw(Image.new("RGB", (cw, ch)))
     font, lines, line_h, size = fit_verse(probe, verse["text"], col_w, verse_size,
                                           lines=verse.get("lines"))
-    src_font = load_font(SERIF, max(22, int(size * 0.62)))
+    src_font = load_font(SERIF, max(20, int(size * 0.52)))
     src_h = sum(src_font.getmetrics())
     gap = int(line_h * 0.45)
     verse_h = len(lines) * line_h
-    top_y = ch // 2 - verse_h // 2
+    if valign == "top":
+        # Upper third, measured from the block's CENTRE so a 2-line and a 5-line verse sit at
+        # the same optical height instead of drifting down as the verse gets longer.
+        top_y = max(int(ch * 0.06), int(ch * 0.30) - verse_h // 2)
+    else:
+        top_y = ch // 2 - verse_h // 2
 
     def line_x(w):
         if halign == "left":
@@ -479,7 +595,16 @@ def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "midd
             return col_left + col_w - w
         return (cw - w) // 2
 
+    # Sample the actual background band (incl. the source line) so a pale sky gets dark text.
     fg, shadow_c = (250, 248, 244), (0, 0, 0)
+    if bg is not None:
+        try:
+            src = bg if isinstance(bg, Image.Image) else Image.open(bg)
+            band = cover_crop(src, cw, ch)
+            fg, shadow_c, _busy = band_color(band, top_y, verse_h + gap + src_h,
+                                             cw, col_left, col_w)
+        except Exception as e:                         # legibility insurance, never a hard fail
+            print(f"overlay: background sample failed ({e}) → white text")
     txt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
     td = ImageDraw.Draw(txt)
     y = top_y
@@ -489,13 +614,21 @@ def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "midd
         y += line_h
     srctxt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
     sd = ImageDraw.Draw(srctxt)
-    src_text = f"[{verse['ref']}]"
+    # No brackets on the image — the reference sets the citation bare ("이사야 41:10"). The caption
+    # keeps its "[book chapter:verse]" form (rule 10); this is the on-image line only.
+    src_text = verse["ref"]
     sw = text_w(sd, src_text, src_font)
-    sd.text((line_x(sw), y + gap), src_text, font=src_font, fill=(228, 225, 219, 255))
+    # The reference sets the reference line quieter than the verse — same colour, lower presence.
+    sd.text((line_x(sw), y + gap), src_text, font=src_font, fill=fg + (205,))
 
+    # Backing is now INSURANCE, not the legibility mechanism. COMPOSE demands an empty upper half
+    # and the text colour adapts to it, so the heavy 150-alpha cloud that produced the visible grey
+    # smudge is dialled back to a faint halo — enough to save a post if the render ignores COMPOSE,
+    # light enough that a compliant render looks like the reference: text straight on the photo.
     out = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
-    out = _even_cloud(out, txt.getchannel("A"), 150, size, shadow_c)
-    out = _even_cloud(out, srctxt.getchannel("A"), 150, size, shadow_c)
+    if not ink_only:          # ink_only → bare glyph alpha, for verse_ink()'s measuring mask
+        out = _even_cloud(out, txt.getchannel("A"), 95, size, shadow_c)
+        out = _even_cloud(out, srctxt.getchannel("A"), 95, size, shadow_c)
     out = Image.alpha_composite(out, txt)
     out = Image.alpha_composite(out, srctxt)
     if ss != 1:                                        # …then downsample to native → crisp edges
@@ -691,14 +824,21 @@ def pick_photos():
                   if f.lower().endswith((".jpg", ".jpeg", ".png")))
 
 
-def center_busy(path, canvas=FEED):
-    """How hostile a photo's centre is to overlaid text: stddev of the centered band
-    where the verse sits. High = chaotic detail (stained glass, dense foliage)."""
+def center_busy(path, canvas=FEED, valign="top"):
+    """How hostile a photo is to overlaid text: gray stddev of the band where the verse sits.
+    High = chaotic detail (stained glass, dense foliage).
+
+    The band follows `valign`, because the verse moved to the UPPER THIRD on 2026-07-30 — this
+    used to measure the dead centre unconditionally, which after that change was scoring a
+    region the text no longer occupies. `text_area_contrast()` is the precise test (it measures
+    the real glyph mask); this stays as the cheap pre-filter that needs no verse."""
     cw, ch = canvas
     col_w = int(cw * 0.80)
     col_left = (cw - col_w) // 2
+    mid = int(ch * 0.30) if valign == "top" else ch // 2
     base = cover_crop(Image.open(path), cw, ch)
-    reg = base.convert("L").crop((col_left, ch // 2 - 140, col_left + col_w, ch // 2 + 140))
+    reg = base.convert("L").crop((col_left, max(0, mid - 160), col_left + col_w,
+                                  min(ch, mid + 160)))
     return ImageStat.Stat(reg).stddev[0]
 
 

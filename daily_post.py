@@ -83,18 +83,15 @@ def save_state(s):
 
 
 def build_caption(verse, translation):
-    """Verse + reference, then a SHARE ask first and a follow ask second.
+    """The caption is the 말씀 and its reference. Nothing else.
 
-    The order is deliberate and it is the whole caption strategy. Instagram's stated ranking
-    signals are watch time, sends per reach and likes per reach, and a send weighs several times
-    a like when deciding whether to show the post to people who don't follow the account — so
-    asking for a follow (which only the already-convinced can give) spends the strongest line of
-    the caption on the weakest signal. Asking someone to forward a 말씀 to a friend who needs it
-    is both the higher-weighted action and the honest purpose of the account; the follow follows
-    from being seen. Measured by `insights.py` (send/reach per post), not assumed."""
-    return (f"{verse['text']}\n[{verse['ref']}]\n\n"
-            "오늘 이 말씀이 필요한 사람에게 보내주세요 🕊\n"
-            "→ 매일 아침·저녁 @saintseoul_studio")
+    Everything that talks ABOUT the account — the follow line — lives in the first comment
+    (`hashtags.first_comment`). Decided 2026-08-01 on evidence: Instagram folds the caption
+    behind "더 보기", and on a real post the cut landed right after the reference, so a CTA
+    there shipped invisible. It also contradicted the constitution, which says the verse leads
+    and the account never sells. (A share ask was briefly put back here on 2026-08-05 by a
+    branch that had not seen this finding; it is removed again for the same two reasons.)"""
+    return f"{verse['text']}\n[{verse['ref']}]"
 
 
 def _music_family(path):
@@ -181,7 +178,9 @@ def main():
     # REEL (text always centered — reads best in motion). Two background sources, alternated
     # for variety: (a) real Pexels footage (clouds/fields, gently moving) with a white-text
     # overlay, and (b) a Nano Banana still with a subtle Ken Burns zoom (adaptive color).
-    placement = ("center", "middle")
+    # Verse-first (2026-07-30): the verse sits in the UPPER third over the empty part of the frame,
+    # and COMPOSE anchors the subject in the lower third to leave that space genuinely open.
+    placement = ("center", "top")
     rel_path = f"output/posts/{date_str}.mp4"
     out_mp4 = os.path.join(generate.HERE, rel_path)
     # MUSIC: generate a UNIQUE instrumental per post with Lyria (never the same music twice, and
@@ -209,8 +208,21 @@ def main():
     scene_cats = state.setdefault("used_scene_cats", [])
     # Skip forward past any theme used in the last 2 posts so the feed never clusters (e.g. 3 water scenes).
     scene_i, scene_cat = fetch_higgsfield.pick_scene(scene_i, scene_cats)
+    # The verse must land on ONE precisely-contrasting tone. COMPOSE asks the model for a flat even
+    # area, but a prompt is a request, not a guarantee — so we MEASURE the render under the real glyph
+    # mask and regenerate when it fails. Same shape as the composition and motion gates: the pipeline
+    # never trusts a generator it can check. Attempts are bounded by rule 1's build budget.
+    ink = generate.verse_ink(verse, canvas=generate.REEL, placement=placement, grow=5)
+    AREA_TRIES = 3
     try:
-        fetch_higgsfield.generate_checked(bg, scene_i, placement, aspect="9:16", var_t=post_i)
+        for attempt in range(1, AREA_TRIES + 1):
+            fetch_higgsfield.generate_checked(bg, scene_i, placement, aspect="9:16", var_t=post_i)
+            ok, why, stats = generate.text_area_ok(bg, ink, canvas=generate.REEL)
+            print(f"text-area gate attempt {attempt}: {why} "
+                  f"(contrast {stats['contrast']}, spread {stats['spread']}, mean {stats['mean']})")
+            if ok:
+                break
+            post_i += 1        # a different light/angle next try, not the same prompt again
         state["scene_i"] = scene_i + 1
         state["post_i"] = post_i + 1
         scene_cats.append(scene_cat)
@@ -220,12 +232,23 @@ def main():
         print(f"higgsfield failed ({e}) → photo pool fallback")
         used_photos = state.setdefault("used_photos", [])
         pool_p = [p for p in photos if os.path.basename(p) not in used_photos] or photos
-        photo = pool_p[n % len(pool_p)] if pool_p else None
-        if photo:
+        # Rank the fallback pool by the SAME measurement, so the photo path obeys the same rule
+        # instead of a looser proxy. Ledger order still wins; this only breaks ties among unused.
+        if pool_p:
+            scored = sorted(pool_p, key=lambda p: -generate.text_area_contrast(
+                p, ink, canvas=generate.REEL)[0])
+            photo = scored[0]
             used_photos.append(os.path.basename(photo))
+            c, sd, mean, _fg = generate.text_area_contrast(photo, ink, canvas=generate.REEL)
+            print(f"photo fallback: {os.path.basename(photo)} (contrast {c:.2f}, spread {sd:.1f})")
     generate.cover_crop(Image.open(photo or bg), *generate.REEL).save(bg, "PNG")
     overlay = os.path.join(generate.OUT_DIR, "_overlay.png")
-    generate.render_text_overlay(verse, overlay, canvas=generate.REEL, placement=placement)
+    # Final measurement of what actually shipped — recorded in _meta.json so metrics.py can correlate
+    # legibility with performance, and visible in the log even when the gate had to give up.
+    area_ok, area_why, area_stats = generate.text_area_ok(bg, ink, canvas=generate.REEL)
+    if not area_ok:
+        print(f"WARNING: shipping with an imperfect text area ({area_why}) — backing carries it")
+    generate.render_text_overlay(verse, overlay, canvas=generate.REEL, placement=placement, bg=bg)
     # Veo → REAL motion at NATIVE speed (no slow-mo: stretching made it coarse). An automatic motion
     # gate rejects an over-animated clip (racing/timelapse clouds or churning water): retry once, and
     # only if it is STILL too fast fall back to a calm still — a bad-motion clip can never post itself.
@@ -234,6 +257,7 @@ def main():
     # clip library, calm sits at 1.7/0.35 and frantic city at 7.3/0.4, so the bar now sits just
     # above calm instead of halfway to frantic.
     MOTION_MAX, SKY_MAX = 2.0, 0.45
+    n_segments = 0          # recorded in _meta.json so metrics.py can measure length changes
     try:
         import fetch_veo
         clip = os.path.join(generate.OUT_DIR, "_veo.mp4")
@@ -280,6 +304,7 @@ def main():
             joined = make_video.chain_clips(
                 segments, os.path.join(generate.OUT_DIR, "_veo_long.mp4"))
             make_video.build_reel_native(joined, overlay, audio, out_mp4)
+            n_segments = len(segments)
             print(f"reel(veo native, {len(segments)} segment(s), "
                   f"overall {ov:.2f}, sky {sky:.2f}): {verse['ref']}")
         else:
@@ -294,7 +319,7 @@ def main():
     print(f"music={os.path.basename(audio) if audio else 'none'}")
 
     caption = build_caption(verse, data.get("translation", ""))
-    tags = hashtags.build(verse.get("theme", "믿음"))
+    tags = hashtags.first_comment(verse.get("theme", "믿음"))   # 안내 한 줄 + 해시태그 5개
     # record what we used so it NEVER repeats
     state["used_verses"].append(verse["ref"])
     save_state(state)
@@ -304,6 +329,24 @@ def main():
         f.write(caption)
     with open(os.path.join(generate.OUT_DIR, "_comment.txt"), "w", encoding="utf-8") as f:
         f.write(tags)  # hashtags go in the first comment, not the caption
+    # What we CHOSE for this post. metrics.py pairs it with what Instagram reports, so a format
+    # change (reel length, theme) becomes a measurable number instead of an opinion. Written here
+    # because the publish itself happens later, in the workflow's post_instagram.py step.
+    with open(os.path.join(generate.OUT_DIR, "_meta.json"), "w", encoding="utf-8") as f:
+        json.dump({"ref": verse["ref"], "theme": verse.get("theme", "믿음"),
+                   "date": date_str, "format": "reel",
+                   "segments": n_segments,
+                   "duration": round(make_video._duration(out_mp4), 2),
+                   # legibility of what actually shipped, so metrics.py can correlate a clean
+                   # text area with performance instead of us assuming it matters
+                   "text_contrast": area_stats["contrast"],
+                   "text_spread": area_stats["spread"],
+                   # The follow CTA left the caption on 2026-08-01 (rule 10). metrics.report()
+                   # groups on this, so the change is answerable later instead of argued about;
+                   # `follows` is the column that settles it. Derived, never hand-set — if the
+                   # caption ever carries the CTA again this flips on its own.
+                   "cta_in_caption": hashtags.FOLLOW_CTA in caption},
+                  f, ensure_ascii=False)
 
     if args.dry_run or args.emit:
         print("\n--- caption ---\n" + caption + "\n--- comment ---\n" + tags)
@@ -317,21 +360,24 @@ def main():
     print("published:", result)
     if isinstance(result, dict) and result.get("id"):
         print("comment:", post_instagram.comment(result["id"], tags))
-        # Also to Stories. `share_to_feed` on the reel only puts it in the profile GRID, so
-        # without this the account has no story presence at all. Best-effort: a story that
-        # fails must never fail the post that already published.
-        try:
+        # NOTE: in production this branch never runs — the workflow calls daily_post.py with
+        # --emit (which returns above) and publishes via post_instagram.py, whose CLI does the
+        # story + metrics recording. This path exists for a local end-to-end publish, so it
+        # must do the SAME things, not a second set of things.
+        try:                                   # story is best-effort; the feed post already went
             print("story:", post_instagram.publish_story(url))
         except Exception as e:
             print(f"story failed ({e}) — feed post already published, continuing")
-        # Remember which verse each post carries, so the one private reply we're allowed to
-        # send a commenter can carry the 기도문 for THAT verse's theme (dm_reply.py). Bounded
-        # to ~20: Meta's private-reply window is 7 days, which is 14 posts at 2/day.
+        # Which verse each post carries, so dm_reply.py can look up its theme. Bounded to ~20:
+        # Meta's private-reply window is 7 days, which is 14 posts at 2/day.
         posted = state.setdefault("posted_media", {})
         posted[result["id"]] = verse.get("theme", "믿음")
         for old in list(posted)[:-20]:
             del posted[old]
         save_state(state)
+        import metrics
+        metrics.record(result["id"], json.load(
+            open(os.path.join(generate.OUT_DIR, "_meta.json"), encoding="utf-8")))
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-The post's hashtag set — five tags, fixed per theme.
+The post's FIRST COMMENT — five hashtags fixed per theme, plus the one quiet line about
+the account (`first_comment`). The caption itself carries only the reference and the verse.
 
 Instagram capped posts and reels at **5 hashtags** in December 2025, and the cap counts
 caption and comments together (the first-comment placement buys no extra slots), so five
@@ -39,11 +40,31 @@ for _theme, _set in SETS.items():
     assert len(_tags) == len(set(_tags)) == MAX, f"{_theme}: {len(_tags)} tags, need {MAX}"
 
 
+# Moved out of the caption 2026-08-01. Two reasons, one of them evidence:
+#   · It was already invisible. Instagram truncates the caption at ~125 chars behind "더 보기", and on
+#     a real post the cut landed right after the reference — so the CTA shipped folded away. Putting
+#     it in the first comment is therefore closer to RETIRING it than relocating it, and that is the
+#     honest description of this change.
+#   · It contradicted the account. The constitution says the 말씀 leads and rule 10b says the DM asks
+#     for nothing; selling in the caption was the one place that still did.
+# Kept (rather than deleted) so the account still states what it is to anyone who does look, and so
+# `follows` / `profile_visits` in metrics.json can show whether removing it cost anything.
+FOLLOW_CTA = "매일 아침·저녁, 마음에 닿는 말씀을 전합니다 🕊"
+
+
 def build(theme):
     """The five hashtags for a `theme` verse."""
     return SETS.get(theme) or SETS["믿음"]
 
 
+def first_comment(theme):
+    """Everything that goes in the post's first comment: the quiet line about the account,
+    then the five tags. The caption itself carries ONLY the reference and the verse."""
+    return f"{FOLLOW_CTA}\n\n{build(theme)}"
+
+
 if __name__ == "__main__":
     for theme in SETS:
         print(f"{theme}  {build(theme)}")
+    print("\n--- first comment ---")
+    print(first_comment("감사"))

@@ -67,16 +67,33 @@ jobs:
           echo "URL: $URL"
           CMT="$(cat output/_comment.txt)"
           if [[ "$FILE" == *.mp4 ]]; then
-            python post_instagram.py "$URL" "$(cat output/_caption.txt)" --reel --comment "$CMT"
+            python post_instagram.py "$URL" "$(cat output/_caption.txt)" --reel --comment "$CMT" --story
           else
-            python post_instagram.py "$URL" "$(cat output/_caption.txt)" --comment "$CMT"
+            python post_instagram.py "$URL" "$(cat output/_caption.txt)" --comment "$CMT" --story
           fi
+
+      # Record what we published, then re-pull insights for recent posts. Reels keep accruing
+      # views for over a week, so a single fetch at publish time would freeze a near-zero —
+      # `refresh` re-reads everything younger than metrics.MATURE_DAYS on every run.
+      # continue-on-error: measurement must never fail a posting run.
+      - name: Record performance metrics
+        continue-on-error: true
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: |
+          python metrics.py record
+          python metrics.py refresh
+          python metrics.py report
 
       - name: Save no-repeat ledger
         run: |
           git config user.name "malsseum-bot"
           git config user.email "malsseum-bot@users.noreply.github.com"
-          git add state.json
+          # `|| true` per path: a missing metrics.json must not fail the run and open a
+          # false "missed post" issue when the post itself published fine.
+          git add state.json || true
+          git add metrics.json || true
           git commit -m "ledger update" || { echo "nothing to commit"; exit 0; }
           git pull --rebase --autostash origin main || true
           git push

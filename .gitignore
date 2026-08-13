@@ -21,3 +21,8 @@ videos/
 
 # quarantined audio (verify license before use)
 music/*.bak
+
+# Syncthing conflict copies. A duplicate file under .github/workflows/ is not cosmetic —
+# GitHub Actions would run it too, and the account would post FOUR times a day.
+*.sync-conflict-*
+.syncthing.*.tmp

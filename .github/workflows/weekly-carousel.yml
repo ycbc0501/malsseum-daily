@@ -44,4 +44,4 @@ jobs:
         run: |
           echo "URLS: $URLS"
           python post_instagram.py --carousel "$URLS" \
-            --caption-text "$(cat output/_caption.txt)" --comment "$(cat output/_comment.txt)"
+            --caption-text "$(cat output/_caption.txt)" --comment "$(cat output/_comment.txt)" --story
