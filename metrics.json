@@ -352,7 +352,12 @@
   "date": "2026-08-14",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 3,
+   "likes": 14
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcBCzn_ibwg/",
   "published": "2026-08-14T18:58:44+09:00",
   "ref": "로마서 8:28",
   "segments": 2,
@@ -550,7 +555,12 @@
   "date": "2026-08-14",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 23
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/Db_kM2IArCp/",
   "published": "2026-08-14T05:12:00+09:00",
   "ref": "잠언 16:3",
   "segments": 2,
