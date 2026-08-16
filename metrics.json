@@ -379,7 +379,12 @@
   "date": "2026-08-16",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 11
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcGL-KKk-CH/",
   "published": "2026-08-16T18:54:49+09:00",
   "ref": "시편 119:105",
   "segments": 2,
@@ -846,7 +851,12 @@
   "date": "2026-08-16",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 18
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcEr-e9il1A/",
   "published": "2026-08-16T04:56:13+09:00",
   "ref": "예레미야 29:11",
   "segments": 2,
@@ -919,6 +929,17 @@
   "published": "2026-08-10T19:55:08+0000",
   "ref": "잠언 27:17",
   "theme": "지혜"
+ },
+ "18121114900845867": {
+  "insights": {
+   "comments": 1,
+   "likes": 8
+  },
+  "kind": "FEED",
+  "permalink": "https://www.instagram.com/p/DcEnaAxH10t/",
+  "published": "2026-08-15T19:15:06+0000",
+  "ref": "시편 1:2",
+  "theme": "인도"
  },
  "18125735776735990": {
   "insights": {
