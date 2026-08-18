@@ -887,7 +887,12 @@
   "date": "2026-08-18",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 18
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcLW7VelbHD/",
   "published": "2026-08-18T19:06:51+09:00",
   "ref": "히브리서 13:8",
   "segments": 2,
@@ -1114,7 +1119,12 @@
   "date": "2026-08-18",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 24
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcJ3a0ujBYy/",
   "published": "2026-08-18T05:12:06+09:00",
   "ref": "갈라디아서 2:20",
   "segments": 2,
