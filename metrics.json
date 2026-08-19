@@ -466,7 +466,12 @@
   "date": "2026-08-19",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 5
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcN72QfkeJb/",
   "published": "2026-08-19T19:08:15+09:00",
   "ref": "고린도후서 5:17",
   "segments": 2,
@@ -1309,7 +1314,12 @@
   "date": "2026-08-19",
   "duration": 7.67,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 3,
+   "likes": 19
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcMabFzgcwn/",
   "published": "2026-08-19T04:56:42+09:00",
   "ref": "사도행전 16:31",
   "segments": 1,
