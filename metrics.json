@@ -674,7 +674,12 @@
   "date": "2026-08-20",
   "duration": 7.67,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 5,
+   "likes": 10
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcQfXkIDt5E/",
   "published": "2026-08-20T18:56:39+09:00",
   "ref": "베드로전서 2:9",
   "segments": 1,
@@ -1367,7 +1372,12 @@
   "date": "2026-08-20",
   "duration": 7.67,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 15
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcO_lt0iXoO/",
   "published": "2026-08-20T04:59:48+09:00",
   "ref": "에베소서 2:8",
   "segments": 1,
