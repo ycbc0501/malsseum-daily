@@ -370,7 +370,12 @@
   "date": "2026-08-21",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 13
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcTET3UgMae/",
   "published": "2026-08-21T18:59:02+09:00",
   "ref": "빌립보서 4:19",
   "segments": 2,
@@ -1049,7 +1054,12 @@
   "date": "2026-08-21",
   "duration": 24.0,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 3,
+   "likes": 21
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcRkQkZkXXy/",
   "published": "2026-08-21T04:59:21+09:00",
   "ref": "요한복음 8:12",
   "segments": 0,
