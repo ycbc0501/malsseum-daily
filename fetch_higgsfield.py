@@ -278,18 +278,40 @@ def pick_scene(start, recent_cats, avoid=2):
             return i, SCENE_CATS[i]
     i = start % n
     return i, SCENE_CATS[i]
+# Scene families that happen INDOORS. They need different composition language: an interior has
+# no sky and no horizon, and asking for "a clear cloudless sky" in the upper half of a bedroom is
+# a contradiction the image model resolves by GRAFTING AN OUTDOOR SKY ABOVE THE ROOM — a
+# physically impossible composite (published 2026-08-2x, 에베소서 2:8). The instruction caused the
+# defect; the gate could not catch it because every clause there was written for landscapes.
+# cafe_table is deliberately NOT here — a terrace and a garden lawn are OUTDOORS, and telling
+# them "there is no sky" would break the one thing that scene needs.
+INTERIOR_CATS = {"window_light", "bedroom", "lamp_room", "desk"}
+
+# What the empty upper half IS, per scene type — substituted into COMPOSE.
+EMPTY_AREA = {
+    False: "a clear cloudless sky, a plain wall, still water or soft haze, whatever suits THIS scene",
+    True: "the room's OWN plain wall or ceiling continuing upward — this is an INTERIOR, so there "
+          "is NO sky, NO horizon and NO outdoor view above the room, and nothing outdoors may "
+          "appear in the upper half",
+}
+ANCHOR = {
+    False: "a low horizon, the ground, the furniture, the flowers, the rooftops all sit along the "
+           "bottom edge",
+    True: "the furniture, the bed, the desk, the lamp, the sill all sit along the bottom edge, with "
+          "the bare wall of the same room rising behind them",
+}
+
+
 COMPOSE = {
     ("center", "top"): "COMPOSITION: the UPPER HALF of the frame must be genuinely EMPTY and must be "
-        "ONE SINGLE FLAT EVEN TONE — a clear cloudless sky, a plain wall, still water or soft haze, "
-        "whatever suits THIS scene. That area carries the verse, so it has to be one continuous "
+        "ONE SINGLE FLAT EVEN TONE — {empty_area}. That area carries the verse, so it has to be one continuous "
         "unbroken colour: NO texture, NO pattern, NO detail, NO bright patches or hotspots, NO dark "
         "blotches, no strong edges, no sun disc or glare, no scattered cloud, nothing crossing it. A "
         "smooth, barely-perceptible gradient of the SAME colour is fine; two different tones meeting "
         "there is not. That tone must be decisively LIGHT (a pale, near-white sky or wall) or "
         "decisively DARK (a deep, near-black sky or wall) — never a middling mid-grey, which no text "
         "colour can sit on. Anchor the subject and every detailed or textured "
-        "element in the LOWER THIRD: a low horizon, the ground, the furniture, the flowers, the "
-        "rooftops all sit along the bottom edge, and NOTHING (no branch, no tree, no post, no "
+        "element in the LOWER THIRD: {anchor}, and NOTHING (no branch, no tree, no post, no "
         "building, no bird) reaches up into the empty upper half. Aim for a lot of plain negative "
         "space — an under-stated, quiet, restrained photograph rather than an impressive one. It must "
         "be ONE single natural photograph filling the whole frame — NEVER a framed picture, inset, "
@@ -382,6 +404,11 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
     scene = SCENES[index % len(SCENES)]
     variation = scene_variation(index if var_t is None else var_t)
     compose = COMPOSE.get(tuple(placement), COMPOSE[("center", "middle")])
+    # An interior has no sky and no horizon. Filling the same landscape wording for a bedroom is
+    # what produced the room-with-a-sky-above composite, so the empty area and the anchor are
+    # chosen by scene family, not assumed.
+    indoors = SCENE_CATS[index % len(SCENES)] in INTERIOR_CATS
+    compose = compose.format(empty_area=EMPTY_AREA[indoors], anchor=ANCHOR[indoors])
     prompt = f"A cinematic, genuine real photograph of {scene}, {variation}. {compose} {COMPOSE_SAFE} {EVENTONE} {QUALITY} {NOTEXT}"
 
     if model == "gemini":
@@ -424,6 +451,12 @@ _CHECK_PROMPT = (
     "artificial or 'rendered' rather than photographed, flag it. Do not flag a real photo merely for "
     "moody or dim light.\n"
     "5) Obviously impossible, duplicated, melted or badly warped major structures.\n"
+    "6) IMPOSSIBLE INDOOR/OUTDOOR COMPOSITE: the lower part is clearly an INTERIOR (a room, "
+    "furniture, a bed, a desk, a table, a floor) while the upper part is an OUTDOOR sky, clouds, "
+    "landscape or open air that could not physically be there — i.e. open sky sitting directly "
+    "above a room with no ceiling, wall or window to justify it. A window or open door showing a "
+    "view is CORRECT and must not be flagged; what is wrong is outdoors appearing where the room's "
+    "own wall or ceiling should be.\n"
     "Do NOT flag: a normal single-horizon landscape/seascape, artistic blur, bokeh, mist, grain, dark "
     "or moody light, or a CORRECT (properly inverted) reflection.\n"
     "Reply ONLY as JSON: {\"ok\": true, \"reason\": \"\"} if it looks physically plausible, or "

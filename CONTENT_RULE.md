@@ -72,6 +72,20 @@ spectacular. If a render is impressive, it is wrong.
 - ONE horizon; sky above, ground/water below. **No** stacked/doubled scenes, **no** two water surfaces, **no** vertical mirror (upside-down land hanging from the top), **no** framed-inset/collage/photo-in-photo.
 - Any reflection is a **physically-correct upside-down mirror** (roofs point down) — never a second upright "town in the water."
 - Water falls **down** (waterfalls), etc. Enforced by the `EVENTONE` prompt rule **and** the VLM composition gate.
+- **An interior has no sky and no horizon — and the composition instruction must say so.**
+  `COMPOSE` asks for an empty single-tone upper half and for detail anchored low. Filled with the
+  landscape wording ("a clear cloudless sky", "a low horizon") for a *bedroom*, that is a
+  contradiction, and the image model resolves it by **grafting an outdoor sky above the room** —
+  a physically impossible composite. `generate_background()` therefore picks the empty-area and
+  anchor wording by scene family (`INTERIOR_CATS`, `EMPTY_AREA`, `ANCHOR`): indoors the empty area
+  is the room's own wall or ceiling, and there is no horizon. **The instruction caused the defect,
+  not the model.** (Added 2026-08-21 after 에베소서 2:8 published as a room with sky above it.
+  `cafe_table` is deliberately outdoors — a terrace needs its sky.)
+- **When a scene family is added, the gate must be extended in the same change.** The five original
+  gate clauses were all written for landscapes ("two horizons", "two bodies of water"), so when the
+  07-30 direction added interior families nothing described a room-with-sky and it passed. Clause 6
+  now covers indoor/outdoor composites — a window or open door showing a view is correct; outdoors
+  where the wall or ceiling should be is not.
 - **Composition gate:** `check_composition()` (gemini-2.5-pro, `_CHECK_PROMPT`) inspects every render for vertical-mirror / stacked-duplicate / wrong-reflection / fake-CGI / warped structures; `generate_checked()` regenerates up to 3×. Best-effort (never blocks a post on a flaky check), but it is the substitute for a human eye — keep it strict without false-flagging normal single-horizon landscapes.
 
 ## 5. Motion — real-time, calm, never fast
