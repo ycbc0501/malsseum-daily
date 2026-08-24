@@ -612,7 +612,12 @@
   "date": "2026-08-24",
   "duration": 24.0,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 3,
+   "likes": 26
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcZUPzHjvEn/",
   "published": "2026-08-24T05:12:56+09:00",
   "ref": "야고보서 1:5",
   "segments": 0,
@@ -1183,7 +1188,12 @@
   "date": "2026-08-24",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 10
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcazCBAle9Z/",
   "published": "2026-08-24T19:01:05+09:00",
   "ref": "전도서 3:1",
   "segments": 2,
