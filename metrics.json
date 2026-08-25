@@ -1166,7 +1166,12 @@
   "date": "2026-08-25",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 7
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcdXx0OjDpl/",
   "published": "2026-08-25T19:00:49+09:00",
   "ref": "잠언 4:23",
   "segments": 2,
@@ -1365,7 +1370,12 @@
   "date": "2026-08-25",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 18
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/Dcb4oR9DddG/",
   "published": "2026-08-25T05:09:22+09:00",
   "ref": "미가 6:8",
   "segments": 2,
