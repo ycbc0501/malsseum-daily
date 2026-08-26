@@ -134,7 +134,12 @@
   "date": "2026-08-26",
   "duration": 24.0,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 13
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcedWU6jBGt/",
   "published": "2026-08-26T05:08:38+09:00",
   "ref": "시편 90:12",
   "segments": 0,
@@ -348,6 +353,17 @@
   "published": "2026-06-29T06:15:57+0000",
   "ref": "마태복음 11:28",
   "theme": "위로"
+ },
+ "18014130926937697": {
+  "insights": {
+   "comments": 1,
+   "likes": 0
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DchBswqnEBz/",
+  "published": "2026-08-26T20:03:49+0000",
+  "ref": "잠언 18:10",
+  "theme": "지혜"
  },
  "18017715977909524": {
   "insights": {
@@ -858,7 +874,12 @@
   "date": "2026-08-26",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 15
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/Dcf-ErWHd6s/",
   "published": "2026-08-26T19:13:51+09:00",
   "ref": "잠언 17:22",
   "segments": 2,
