@@ -359,7 +359,12 @@
   "date": "2026-08-28",
   "duration": 24.0,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 0
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DckP1BgAoHK/",
   "published": "2026-08-28T11:06:07+09:00",
   "ref": "잠언 18:10",
   "segments": 0,
