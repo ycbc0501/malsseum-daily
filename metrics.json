@@ -1026,6 +1026,19 @@
   "ref": "시편 103:1",
   "theme": "감사"
  },
+ "18110300927038398": {
+  "cta_in_caption": false,
+  "date": "2026-08-30",
+  "duration": 15.33,
+  "format": "reel",
+  "insights": {},
+  "published": "2026-08-30T05:21:44+09:00",
+  "ref": "잠언 22:6",
+  "segments": 2,
+  "text_contrast": 11.76,
+  "text_spread": 2.7,
+  "theme": "지혜"
+ },
  "18110922982797165": {
   "insights": {
    "comments": 1,
