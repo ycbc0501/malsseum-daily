@@ -1271,7 +1271,12 @@
   "date": "2026-08-29",
   "duration": 24.0,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 2
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcmwWmiE7wg/",
   "published": "2026-08-29T10:28:34+09:00",
   "ref": "잠언 27:17",
   "segments": 0,
