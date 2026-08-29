@@ -1031,7 +1031,12 @@
   "date": "2026-08-30",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 1
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcoyCF8ieEG/",
   "published": "2026-08-30T05:21:44+09:00",
   "ref": "잠언 22:6",
   "segments": 2,
@@ -1677,7 +1682,12 @@
   "date": "2026-08-29",
   "duration": 7.67,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 4
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcoDfVWFFJ3/",
   "published": "2026-08-29T22:35:13+09:00",
   "ref": "잠언 15:1",
   "segments": 1,
