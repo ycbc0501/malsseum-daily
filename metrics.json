@@ -763,6 +763,17 @@
   "ref": "시편 46:10",
   "theme": "평안"
  },
+ "18091787783223800": {
+  "insights": {
+   "comments": 1,
+   "likes": 4
+  },
+  "kind": "FEED",
+  "permalink": "https://www.instagram.com/p/Dco5N_DFG-p/",
+  "published": "2026-08-29T21:23:26+0000",
+  "ref": "잠언 27:17",
+  "theme": "지혜"
+ },
  "18093297284386876": {
   "cta_in_caption": false,
   "date": "2026-08-20",
@@ -1367,7 +1378,12 @@
   "date": "2026-08-31",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 1
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcrXgKLj3VJ/",
   "published": "2026-08-31T05:27:42+09:00",
   "ref": "이사야 53:5",
   "segments": 2,
@@ -1535,7 +1551,12 @@
   "date": "2026-08-30",
   "duration": 24.0,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 3
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcqoPSpDLao/",
   "published": "2026-08-30T22:34:36+09:00",
   "ref": "여호수아 1:9",
   "segments": 0,
