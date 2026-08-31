@@ -1689,7 +1689,12 @@
   "date": "2026-09-01",
   "duration": 7.67,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 1
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcuJXZ_j3aa/",
   "published": "2026-09-01T07:21:51+09:00",
   "ref": "마태복음 11:28",
   "segments": 1,
