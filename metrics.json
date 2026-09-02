@@ -260,7 +260,12 @@
   "date": "2026-09-02",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 9
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DcyPcB7kcBI/",
   "published": "2026-09-02T21:32:08+09:00",
   "ref": "시편 30:5",
   "segments": 2,
@@ -1445,7 +1450,12 @@
   "date": "2026-09-03",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 1
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/DczF5XgEtc1/",
   "published": "2026-09-03T05:27:42+09:00",
   "ref": "시편 73:26",
   "segments": 2,
