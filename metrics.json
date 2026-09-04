@@ -946,7 +946,12 @@
   "date": "2026-09-04",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 6
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/Dc3Y0SgEejx/",
   "published": "2026-09-04T21:30:01+09:00",
   "ref": "시편 42:11",
   "segments": 2,
