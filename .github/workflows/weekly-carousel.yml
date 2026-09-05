@@ -1,9 +1,14 @@
 name: Weekly 말씀 carousel
 
-# Sunday ~04:00 KST (Sat 19:00 UTC). A 3-slide carousel: 말씀 → 묵상 → 기도.
+# Sunday ~11:00 KST (Sun 02:00 UTC). A 3-slide carousel: 말씀 → 묵상 → 기도.
+#
+# Was Sat 19:00 UTC, which landed the carousel at 04:15-06:22 KST Sunday — minutes from the 05:00
+# KST reel. Two posts of ours in the same few minutes split their own reach and read as a burst,
+# and on 08-22 and 08-29 the carousel also picked the verse the reel had just used. The verse
+# collision is fixed in carousel_post.py; this moves the two posts apart in time as well.
 on:
   schedule:
-    - cron: "0 19 * * 6"
+    - cron: "0 2 * * 0"
   workflow_dispatch:
 
 permissions:

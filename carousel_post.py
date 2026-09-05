@@ -36,7 +36,23 @@ def main():
     week = datetime.now(KST).isocalendar()[1]
     theme = THEME_ORDER[week % len(THEME_ORDER)]
     pool = [v for v in verses if v.get("theme") == theme] or verses
-    verse = pool[week % len(pool)]
+    # The carousel used to take pool[week % len(pool)] blind, with no idea what the daily reels had
+    # just posted — so it re-published 마태복음 28:20 14 hours after the reel (08-22) and 잠언 27:17
+    # 11 hours after (08-29). Two posts of the same verse in one day is exactly the duplicate that
+    # gets the whole account demoted (rule 10d), so walk forward past anything Instagram already has.
+    import daily_post
+    recent = set(daily_post.published_refs(limit=14))
+    start = week % len(pool)
+    verse = pool[start]
+    for step in range(len(pool)):
+        cand = pool[(start + step) % len(pool)]
+        if cand["ref"] not in recent:
+            verse = cand
+            if step:
+                print(f"skipped {step} verse(s) already on the feed → {verse['ref']}")
+            break
+    else:
+        print("every verse in this theme is already on the feed — posting the scheduled one anyway")
     photo = photos[week % len(photos)] if photos else None
 
     date_str = datetime.now(KST).strftime("%Y-%m-%d")
