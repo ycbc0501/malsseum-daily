@@ -742,7 +742,12 @@
   "date": "2026-09-05",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 3
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/Dc53eo5gYf9/",
   "published": "2026-09-05T20:36:21+09:00",
   "ref": "시편 62:1",
   "segments": 2,
@@ -1857,7 +1862,12 @@
   "date": "2026-09-06",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 0
+  },
+  "kind": "REELS",
+  "permalink": "https://www.instagram.com/reel/Dc6xY11E8LC/",
   "published": "2026-09-06T05:02:12+09:00",
   "ref": "고린도전서 16:14",
   "segments": 2,
