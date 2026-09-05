@@ -243,6 +243,25 @@ guarantee, so the render is **measured and regenerated** like every other genera
 - Polled every 10 minutes by `.github/workflows/comment-reply.yml`. GitHub's scheduler drifts
   (see rule 1), so the ~30 min target is best-effort, never a guarantee.
 
+## 10d. A published post must never be lost, and must never be published twice
+- **Instagram is the source of truth, not the local ledger.** `daily_post.published_refs()` reads
+  the account's own captions before picking a verse, so a ledger that failed to save cannot cause
+  a repeat. The ledger is an optimisation; the account is the record.
+- **The ledger save must survive concurrent bots.** `state.json` / `metrics.json` are single-line
+  machine-written JSON and several workflows push them. `git pull --rebase` conflicts on that one
+  line; `|| true` then hid it, left the repo mid-rebase and the push died — **after the post had
+  already gone out.** `ledger_merge.py` resolves them semantically (dict union, list union,
+  counters take max) and the step retries 5× with `if: always()`.
+- **One slot, one post.** Hourly crons across a 5-hour lead window; a run claims the slot only
+  inside `(0, CLAIM_WINDOW_MIN]` minutes before target, which with hourly spacing is provably
+  exactly one run. `--catchup` on the last cron posts late only when the whole chain fired late
+  (`CATCHUP_AFTER_MIN`). `slot_already_filled()` asks Instagram as the final backstop.
+- **Why this is a content rule and not an ops detail:** on 2026-08-26 the ledger was lost, 잠언
+  18:10 went out again on 08-28 and 잠언 27:17 twice on 08-29. Reach fell from ~350 views to ~50
+  and did not recover, because Meta demotes repeated/unoriginal content at the ACCOUNT level, not
+  the post level. A duplicate is not a cosmetic slip — it is the most expensive defect this
+  pipeline can ship.
+
 ## 11. No-repeat ledgers (all in `state.json`, committed back after each run)
 `used_verses`, `used_music`, `used_scene_cats`, `scene_i`, `post_i`, `music_i`, `used_photos`,
 `used_clips`, `posted_media` (media id → theme, for 10b), `replied_comments` (10b, DMs), `dm_i`.

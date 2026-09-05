@@ -56,16 +56,96 @@ THEME_ORDER = ["위로", "평안", "담대", "믿음", "감사", "사랑", "인�
 SEGMENTS = 2
 
 
-def wait_until_target(jitter_s, hour=5):
+# The claim window, in minutes before the target. It is exactly the cron spacing on purpose:
+# with hourly crons, one and only one run in the chain can ever land inside (0, 60], so two runs
+# can never claim the same slot concurrently and double-post. A run that arrives after the target
+# claims nothing — unless it is the LAST cron of the chain (--catchup), which posts late rather
+# than let the slot go empty.
+CLAIM_WINDOW_MIN = 60
+
+# The chain spans 4 hours (first cron to last). If the target has passed by at least that much,
+# every cron in the chain fired late and none of them could claim, so the slot really is empty and
+# --catchup posts it late. Any smaller lateness means an earlier cron DID claim it, and the catchup
+# run must stand down rather than publish a second copy.
+CATCHUP_AFTER_MIN = 240
+
+
+def wait_until_target(jitter_s, hour=5, catchup=False):
+    """Sleep until the target hour. Returns False if this run is too early to claim the slot.
+
+    2026-08-28: GitHub's scheduler went from ~30 min late to 4-5 HOURS late. The old design was
+    one cron fired 2h early plus a wait, so a 4h delay meant the target had already passed and
+    the post went out at whatever hour the runner happened to start — 19:00 KST posts landed at
+    21:30, 22:35, even 10:28. Reach fell from ~350 views to ~50 and did not recover.
+
+    The fix is a CHAIN of hourly crons across the lead window. Each run asks how far it is from
+    the target: too early and it exits in seconds so a later, closer cron takes the slot; near or
+    past the target it posts. That absorbs several hours of scheduler drift at the cost of a few
+    seconds per skipped run, instead of one run idling for hours against the job timeout."""
     now = datetime.now(KST)
     target = now.replace(hour=hour, minute=0, second=0, microsecond=0)
     target += timedelta(seconds=random.randint(-jitter_s, jitter_s))
     delay = (target - now).total_seconds()
-    if delay > 0:
-        print(f"sleeping {int(delay)}s → posting at {target:%Y-%m-%d %H:%M:%S} KST")
-        time.sleep(delay)
-    else:
-        print(f"target {target:%H:%M:%S} KST already passed → posting now")
+    if delay > CLAIM_WINDOW_MIN * 60:
+        print(f"{delay/60:.0f} min before {target:%H:%M} KST — too early, leaving the slot to a later cron")
+        return False
+    if delay <= 0:
+        late = -delay / 60
+        if not (catchup and late >= CATCHUP_AFTER_MIN):
+            print(f"{late:.0f} min past {target:%H:%M} KST — an earlier cron owns this slot, standing down")
+            return False
+        print(f"target {target:%H:%M:%S} KST passed by {late:.0f} min and the whole chain fired late → posting late")
+        return True
+    print(f"sleeping {int(delay)}s → posting at {target:%Y-%m-%d %H:%M:%S} KST")
+    time.sleep(delay)
+    return True
+
+
+def slot_already_filled(hour):
+    """True if this half of the day already has a post on Instagram (KST).
+
+    The guard that makes the cron chain safe, and the last line of defence against the duplicate
+    that started this: even with the ledger lost AND several crons firing, the account itself
+    says whether the slot is taken. Morning owns 00:00-11:59 KST, evening 12:00-23:59."""
+    try:
+        import post_instagram
+        today = datetime.now(KST).date()
+        want_pm = hour >= 12
+        for m in post_instagram.recent_media(limit=8):
+            ts = m.get("timestamp") or ""
+            when = datetime.strptime(ts[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc).astimezone(KST)
+            if when.date() == today and (when.hour >= 12) == want_pm:
+                print(f"{'evening' if want_pm else 'morning'} slot already posted at {when:%H:%M} KST ({m.get('permalink')}) → skipping")
+                return True
+        return False
+    except Exception as e:
+        print(f"slot check failed ({e}) — proceeding rather than skipping a post")
+        return False
+
+
+def published_refs(limit=25):
+    """Verse refs Instagram itself says we already posted, newest first.
+
+    The local `used_verses` ledger is committed by the LAST workflow step, so a run that
+    published and then lost the ledger push (a rebase conflict against a concurrently pushing
+    bot — 2026-08-26) leaves the post live and the ledger stale, and the next run happily picks
+    the SAME verse and the SAME scene. That shipped 잠언 18:10 twice (08-26, 08-28) and
+    잠언 27:17 twice (08-29), and duplicate posts get the whole ACCOUNT demoted, not just the
+    repeat. So the ledger is no longer trusted alone: the account's own captions are the truth.
+
+    Best-effort — if the API call fails we fall back to the ledger rather than skip the post."""
+    import re
+    try:
+        import post_instagram
+        refs = []
+        for m in post_instagram.recent_media(limit=limit):
+            found = re.search(r"\[([^\[\]]+)\]", m.get("caption") or "")
+            if found:
+                refs.append(found.group(1).strip())
+        return refs
+    except Exception as e:
+        print(f"published_refs failed ({e}) — falling back to the local ledger alone")
+        return []
 
 
 def load_state():
@@ -145,10 +225,16 @@ def main():
     ap.add_argument("--emit", action="store_true")
     ap.add_argument("--jitter", type=int, default=600)
     ap.add_argument("--hour", type=int, default=5)   # 5 = morning, 19 = evening (KST)
+    # Set on the LAST cron of each chain only: it posts late rather than leave the slot empty.
+    ap.add_argument("--catchup", action="store_true")
     args = ap.parse_args()
 
     if not args.now:
-        wait_until_target(args.jitter, args.hour)
+        if not wait_until_target(args.jitter, args.hour, args.catchup) or slot_already_filled(args.hour):
+            # Nothing to publish. The workflow reads this file and skips the remaining steps.
+            os.makedirs(generate.OUT_DIR, exist_ok=True)
+            open(os.path.join(generate.OUT_DIR, "_skip"), "w").close()
+            return
 
     with open(os.path.join(generate.HERE, "verses.json"), encoding="utf-8") as f:
         data = json.load(f)
@@ -158,6 +244,13 @@ def main():
     photos = generate.calm_photos(generate.pick_photos())   # fallback backgrounds if Higgsfield is unavailable (calm centres only — the verse must stay legible)
 
     state = load_state()
+    # Trust Instagram over the local ledger — see published_refs().
+    live = published_refs()
+    if live:
+        added = [r for r in live if r not in state["used_verses"]]
+        if added:
+            print(f"ledger was missing {len(added)} published verse(s) → recovered from Instagram: {added}")
+            state["used_verses"].extend(added)
     unused = [v for v in verses if v["ref"] not in state["used_verses"]]
     if not unused:                       # whole pool shown → start a new cycle
         state["used_verses"] = []
