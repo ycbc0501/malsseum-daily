@@ -42,6 +42,11 @@ def main():
     # gets the whole account demoted (rule 10d), so walk forward past anything Instagram already has.
     import daily_post
     recent = set(daily_post.published_refs(limit=14))
+    # metrics.json remembers every publish date, so prefer whatever has been gone longest —
+    # published_refs only sees the last 14 posts, and 마태복음 11:28 (one of the ten Instagram
+    # flagged as 퍼온 콘텐츠 on 09-06) sat just outside that window.
+    ago = daily_post.last_published()
+    pool = sorted(pool, key=lambda v: ago.get(v["ref"], ""))
     start = week % len(pool)
     verse = pool[start]
     for step in range(len(pool)):
