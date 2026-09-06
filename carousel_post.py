@@ -45,19 +45,20 @@ def main():
     # metrics.json remembers every publish date, so prefer whatever has been gone longest —
     # published_refs only sees the last 14 posts, and 마태복음 11:28 (one of the ten Instagram
     # flagged as 퍼온 콘텐츠 on 09-06) sat just outside that window.
+    # Oldest first, and take the oldest — the week offset that used to pick the slide is gone.
+    # Kept alongside the sort it walked to index week%len(pool), i.e. the MOST recently published
+    # verse in the theme, and picked 시편 126:5 — one of the ten Instagram flagged on 09-06.
     ago = daily_post.last_published()
     pool = sorted(pool, key=lambda v: ago.get(v["ref"], ""))
-    start = week % len(pool)
-    verse = pool[start]
-    for step in range(len(pool)):
-        cand = pool[(start + step) % len(pool)]
+    verse = pool[0]
+    for step, cand in enumerate(pool):
         if cand["ref"] not in recent:
             verse = cand
             if step:
                 print(f"skipped {step} verse(s) already on the feed → {verse['ref']}")
             break
     else:
-        print("every verse in this theme is already on the feed — posting the scheduled one anyway")
+        print("every verse in this theme is already on the feed — posting the oldest anyway")
     photo = photos[week % len(photos)] if photos else None
 
     date_str = datetime.now(KST).strftime("%Y-%m-%d")
