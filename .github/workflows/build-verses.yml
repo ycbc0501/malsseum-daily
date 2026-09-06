@@ -1,0 +1,33 @@
+name: Rebuild the verse pool
+
+# Manual, one-shot. Reads the full 개역개정 text, filters it, has Gemini judge every survivor
+# one by one, and commits the result. Run it after changing build_verses.py — never hand-edit
+# verses.json, because hand-editing is what put 27 non-verbatim verses in the old pool.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build and verify
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python build_verses.py --verify --write
+      - name: Commit the new pool
+        run: |
+          git config user.name "malsseum-bot"
+          git config user.email "malsseum-bot@users.noreply.github.com"
+          git add verses.json
+          git diff --cached --quiet && { echo "no change"; exit 0; }
+          git commit -m "verses: rebuild the pool from the full 개역개정 text"
+          git pull --rebase --autostash origin main || true
+          git push
