@@ -196,6 +196,174 @@ SCENE_GROUPS = {
         "an empty road curving away between fields toward a far horizon",
         "a quiet lane running between hedgerows into open country",
     ],
+    # ── everyday & intimate (expanded 2026-09-06) ──
+    # The pool was 36 themes / 72 sentences, so the SAME scene description came back every 36 days
+    # while the verse pool now lasts a year. @dailymayim (34k followers, bio "일상에 흐르는 하나님
+    # 말씀") is built on ordinary objects — a dessert on a table at night, a window, a cup — not on
+    # landscapes, and that is the half we were thinnest in. Rule 3's 고요함 still governs: quiet,
+    # muted, everyday, never grand.
+    "tea_cup": [
+        "a plain cup of tea on a bare table, steam rising slowly",
+        "a single mug left on a wooden table, the drink still warm",
+    ],
+    "open_book": [
+        "an open book resting face-up on a quiet table, pages still",
+        "a worn book lying open beside a folded cloth",
+    ],
+    "bread_table": [
+        "a small loaf of bread on a plain board, nothing else on the table",
+        "a simple plate with a piece of bread, left on a bare table",
+    ],
+    "morning_table": [
+        "a bare breakfast table by a window, one plate set and untouched",
+        "an empty kitchen table with a single bowl, early light across it",
+    ],
+    "folded_laundry": [
+        "a neat stack of folded white linen on a plain surface",
+        "clean folded cloth resting on the corner of a quiet table",
+    ],
+    "stairwell": [
+        "a plain indoor stairway with a bare wall rising beside it",
+        "a quiet flight of stairs, the wall above them empty",
+    ],
+    "doorway": [
+        "a simple open doorway with a still room beyond it",
+        "a plain door standing ajar, the room past it quiet and bare",
+    ],
+    "shelf": [
+        "a nearly empty shelf with one small object left on it",
+        "a plain wooden shelf holding a single folded cloth",
+    ],
+    "clock": [
+        "a plain wall clock on a bare wall, its face simple",
+        "a small clock resting on a quiet shelf, the wall behind it empty",
+    ],
+    "coat_hook": [
+        "a single coat hanging on a hook against a plain wall",
+        "one scarf left on a hook, the wall beside it bare",
+    ],
+    "key_bowl": [
+        "a small dish holding a set of keys on a bare surface",
+        "a shallow bowl with a few coins, left on a quiet table",
+    ],
+    "letter": [
+        "a folded letter resting unopened on a plain table",
+        "a single envelope lying on a bare wooden surface",
+    ],
+    "sparrow": [
+        "a small sparrow resting on a bare branch, perfectly still",
+        "one small bird sitting quietly on a plain railing",
+    ],
+    "cat_window": [
+        "a cat curled asleep on a windowsill, the room quiet",
+        "a small animal resting still beside a plain window",
+    ],
+    "stone_path": [
+        "a narrow stone path running between low quiet grass",
+        "a simple worn footpath leading gently away",
+    ],
+    "wooden_bench": [
+        "an empty wooden bench standing alone in a quiet place",
+        "a plain bench with no one on it, the ground bare around it",
+    ],
+    "hanging_lamp": [
+        "a single pendant lamp hanging low over an empty table",
+        "one bare bulb glowing softly above a quiet room",
+    ],
+    "potted_plant": [
+        "a small potted plant on a plain sill, its leaves still",
+        "one modest green plant standing alone on a bare surface",
+    ],
+    "wool_blanket": [
+        "a folded wool blanket draped over the arm of a quiet chair",
+        "a soft throw left neatly over the back of a plain seat",
+    ],
+    "bowl_of_fruit": [
+        "a few pieces of fruit resting in a plain bowl on a bare table",
+        "a single apple left on a wooden surface, nothing else near",
+    ],
+    "washed_dishes": [
+        "clean dishes stacked to dry beside a quiet sink",
+        "a single washed bowl resting on a plain draining board",
+    ],
+    "sewing": [
+        "a spool of thread and a folded cloth on a quiet table",
+        "simple needlework left resting on a bare surface",
+    ],
+    "shoes_by_door": [
+        "a pair of plain shoes set neatly beside a quiet doorway",
+        "one pair of worn shoes resting on a bare floor",
+    ],
+    "umbrella_stand": [
+        "a single closed umbrella leaning in a quiet entryway",
+        "one folded umbrella resting against a plain wall",
+    ],
+    "wall_shadow": [
+        "soft window shadows falling across a plain empty wall",
+        "quiet light and shadow resting on a bare interior wall",
+    ],
+    "linen_curtain": [
+        "a pale linen curtain hanging still in a quiet room",
+        "a soft curtain drawn nearly closed, the room beyond calm",
+    ],
+    "wooden_floor": [
+        "a bare wooden floor with soft light lying across it",
+        "an empty room's plain floorboards, nothing standing on them",
+    ],
+    "paper_notes": [
+        "a few blank sheets of paper resting on a quiet desk",
+        "a plain notebook lying closed on a bare table",
+    ],
+    "water_glass": [
+        "a single glass of water standing on a plain table",
+        "one clear glass left on a quiet wooden surface",
+    ],
+    "basket": [
+        "a simple woven basket resting empty on a bare floor",
+        "one plain basket set quietly in the corner of a room",
+    ],
+
+    # ── quiet outdoors, everyday scale (not monumental) ──
+    "garden_gate": [
+        "a low wooden gate standing open onto a quiet garden",
+        "a simple gate at the end of a plain path",
+    ],
+    "clothesline": [
+        "white cloth hanging still on a line in quiet air",
+        "plain laundry drying motionless on a simple line",
+    ],
+    "picket_fence": [
+        "a low fence running along a quiet grass verge",
+        "a plain wooden fence with still fields beyond it",
+    ],
+    "well": [
+        "an old stone well standing quietly in an open space",
+        "a simple water well with nothing moving around it",
+    ],
+    "stepping_stones": [
+        "flat stepping stones crossing very shallow still water",
+        "a few stones set across a quiet, barely moving stream",
+    ],
+    "hedgerow": [
+        "a low green hedge running beside a quiet lane",
+        "a simple hedgerow with an empty path along it",
+    ],
+    "orchard": [
+        "a few fruit trees standing quietly in an open orchard",
+        "an orchard row with still grass beneath the trees",
+    ],
+    "haystack": [
+        "a single round bale resting in a quiet cut field",
+        "one haystack standing alone in an open meadow",
+    ],
+    "boat_moored": [
+        "a small wooden boat moored still at a quiet bank",
+        "one rowing boat resting motionless against a low jetty",
+    ],
+    "bridge_small": [
+        "a small stone footbridge over very still water",
+        "a simple wooden bridge crossing a quiet narrow stream",
+    ],
     "still_water": [
         "a wide expanse of perfectly flat water meeting a low horizon",
         "shallow still water reaching away toward a distant shoreline",
@@ -285,7 +453,18 @@ def pick_scene(start, recent_cats, avoid=2):
 # defect; the gate could not catch it because every clause there was written for landscapes.
 # cafe_table is deliberately NOT here — a terrace and a garden lawn are OUTDOORS, and telling
 # them "there is no sky" would break the one thing that scene needs.
-INTERIOR_CATS = {"window_light", "bedroom", "lamp_room", "desk"}
+INTERIOR_CATS = {
+    "window_light", "bedroom", "lamp_room", "desk",
+    # Added with the 2026-09-06 everyday expansion. Every one of these sits INSIDE a room, so the
+    # same trap applies: tell a tea cup on a table that the upper half should be "a clear cloudless
+    # sky" and the model puts a sky above the kitchen. Adding scenes without adding them here is
+    # how the 에베소서 2:8 composite happened in the first place.
+    "tea_cup", "open_book", "bread_table", "morning_table", "folded_laundry", "stairwell",
+    "doorway", "shelf", "clock", "coat_hook", "key_bowl", "letter", "cat_window", "hanging_lamp",
+    "potted_plant", "wool_blanket", "bowl_of_fruit", "washed_dishes", "sewing", "shoes_by_door",
+    "umbrella_stand", "wall_shadow", "linen_curtain", "wooden_floor", "paper_notes", "water_glass",
+    "basket",
+}
 
 # What the empty upper half IS, per scene type — substituted into COMPOSE.
 EMPTY_AREA = {

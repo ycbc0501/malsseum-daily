@@ -300,6 +300,20 @@ that run on a different clock from the poster, and two jobs rebasing the same on
 - Lyria down → vetted music library (no-repeat).
 None of the fallbacks may violate rules 2–10.
 
+## 12a. The scene pool must last as long as the verse pool
+- 36 themes / 72 sentences meant the **same scene description returned every 36 days** while the
+  verse pool now runs a year. Images are regenerated each time so no file is ever reused, but the
+  same prompt twice in five weeks produces two frames that read as the same post — and this account
+  is already under a reach restriction for repeated content.
+- Expanded 2026-09-06 to **76 themes / 152 sentences (76 days)**, weighted toward the everyday:
+  a cup, an open book, folded linen, shoes by a door, a sparrow on a rail. @dailymayim (34k
+  followers, bio 일상에 흐르는 하나님 말씀) is built on ordinary objects rather than landscapes,
+  and that is where our pool was thinnest — 8 interiors against 64 landscapes.
+- **Adding an interior scene means adding it to `INTERIOR_CATS` in the same change.** Rule 4 spells
+  out why: without it the composition instruction asks a kitchen table for "a clear cloudless sky"
+  in the upper half and the model paints one above the room.
+- Still short of the verse pool's year. Grow it further before growing anything else.
+
 ## 12b. The verse pool — verbatim, and large enough that it never wraps
 - **개역개정, exactly as printed.** No trimming, no joining, no smoothing, no modernising. On
   2026-09-06 an audit against the full text found **27 of the old 98 were not 개역개정**: 잠언
