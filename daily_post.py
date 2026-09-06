@@ -148,6 +148,27 @@ def published_refs(limit=25):
         return []
 
 
+def last_published():
+    """{verse ref: latest publish date} across every post we have ever recorded.
+
+    The cycle used to reset by emptying used_verses, which made the pool wrap every 49 days and
+    re-publish a verse whose caption was byte-identical to one from seven weeks earlier. Instagram
+    read ten of those as 퍼온 콘텐츠 and restricted the account's reach. metrics.json remembers all
+    of it, so even after a reset the oldest verse is chosen instead of the first one in the file."""
+    try:
+        with open(os.path.join(generate.HERE, "metrics.json"), encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception as e:
+        print(f"metrics.json unreadable ({e}) — falling back to ledger order alone")
+        return {}
+    seen = {}
+    for post in data.values():
+        ref, when = post.get("ref"), (post.get("published") or "")[:10]
+        if ref and when:
+            seen[ref] = max(seen.get(ref, ""), when)
+    return seen
+
+
 def load_state():
     try:
         s = json.load(open(STATE))
@@ -255,6 +276,10 @@ def main():
     if not unused:                       # whole pool shown → start a new cycle
         state["used_verses"] = []
         unused = verses
+    # Oldest first. Within the cycle everything here is unpublished and this changes nothing; after
+    # a reset it is what stops the pool replaying its own order seven weeks later.
+    ago = last_published()
+    unused.sort(key=lambda v: ago.get(v["ref"], ""))
     # this week's theme → draw from it (fall back to any unused if its verses run out)
     theme = THEME_ORDER[datetime.now(KST).isocalendar()[1] % len(THEME_ORDER)]
     pool = [v for v in unused if v.get("theme") == theme] or unused
@@ -262,7 +287,8 @@ def main():
     # MAY repeat; only VERSES never repeat (the used_verses ledger guarantees that).
     book = lambda r: r.rsplit(" ", 1)[0]
     used_books = Counter(book(r) for r in state["used_verses"])
-    verse = min(pool, key=lambda v: (used_books[book(v["ref"])], verses.index(v)))
+    verse = min(pool, key=lambda v: (ago.get(v["ref"], ""), used_books[book(v["ref"])],
+                                     verses.index(v)))
     n = len(state["used_verses"])
     date_str = datetime.now(KST).strftime("%Y-%m-%d")
     posts = os.path.join(generate.HERE, "output", "posts")
