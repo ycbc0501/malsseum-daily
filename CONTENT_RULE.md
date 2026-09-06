@@ -300,6 +300,27 @@ that run on a different clock from the poster, and two jobs rebasing the same on
 - Lyria down → vetted music library (no-repeat).
 None of the fallbacks may violate rules 2–10.
 
+## 12b. The verse pool — verbatim, and large enough that it never wraps
+- **개역개정, exactly as printed.** No trimming, no joining, no smoothing, no modernising. On
+  2026-09-06 an audit against the full text found **27 of the old 98 were not 개역개정**: 잠언
+  19:21 read 굳게 where the text reads 완전히, 시편 34:18 had 충심으로 deleted from the middle of
+  the sentence, 예레미야 29:11 was reworded. They had been presented as 개역개정 for months. For a
+  Bible account, misquoting scripture is a worse failure than any reach problem.
+- **verses.json is generated, never hand-edited.** `build_verses.py` selects from the full text and
+  the `Rebuild the verse pool` workflow writes the file. Hand-editing is what produced the 27.
+- **The pool must outlast the account's memory.** 98 verses at two posts a day wrapped every 49
+  days, so captions repeated word-for-word every seven weeks. Instagram flagged ten of those
+  repeats as 퍼온 콘텐츠 and restricted the account's reach: it stopped being recommended to
+  non-followers, and views fell from ~350 to ~50. **Pool size is a content rule, not a nicety** —
+  keep it big enough that no verse returns inside a year.
+- **Selection excludes what a morning verse cannot be:** the law and chronicle books, 욥기 (most of
+  it is his friends being wrong, quoted accurately), judgment oracles, imprecatory prayers,
+  narrative fragments, and anything needing a name or an event to make sense.
+- **A lexicon proposes; a judge decides.** Keywords cannot tell a promise from an oracle — 시편
+  69:22 ("그들의 평안이 덫이 되게 하소서") scores as 평안 — so every candidate is judged
+  individually for whether it stands alone, the same way renders pass the composition gate. A
+  batch that errors is dropped whole: an unverified verse never enters the pool.
+
 ## 13. Reading the numbers back — tokens, backfill, degradation
 Rule 11b defines the ledger. This rule is about *getting the numbers into it*.
 
