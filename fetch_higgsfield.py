@@ -173,8 +173,8 @@ SCENE_GROUPS = {
         "pale linen curtains hanging still across a tall window",
     ],
     "desk": [
-        "a plain wooden desk beside a window, a closed book and a cup left on it",
-        "a bare writing desk with a single notebook, a chair pushed in",
+        "a plain wooden desk beside a window, a single cup left on it",
+        "a bare writing desk with nothing on it, a chair pushed in",
     ],
     "cafe_table": [
         "two simple chairs and a small round table on a quiet empty terrace",
@@ -205,12 +205,6 @@ SCENE_GROUPS = {
     "tea_cup": [
         "a plain cup of tea on a bare table, steam rising slowly",
         "a single mug left on a wooden table, the drink still warm",
-    ],
-    # A book left OPEN makes the model render pages of writing, and it renders writing as
-    # nonsense. Closed, it is the same quiet object with nothing to garble.
-    "closed_book": [
-        "a single closed book resting on a quiet table, its cover plain and unmarked",
-        "a worn book lying closed beside a folded cloth, no lettering on it",
     ],
     "bread_table": [
         "a small loaf of bread on a plain board, nothing else on the table",
@@ -250,9 +244,10 @@ SCENE_GROUPS = {
         "a small dish holding a set of keys on a bare surface",
         "a shallow bowl with a few coins, left on a quiet table",
     ],
-    "envelope": [
-        "a plain unmarked envelope resting on a bare table, nothing written on it",
-        "a blank folded paper lying on a quiet wooden surface, no writing",
+    # No paper of any kind, in any state. Paper is the surface the model writes on.
+    "small_dish": [
+        "a small empty ceramic dish resting on a bare table",
+        "one shallow plain bowl left on a quiet wooden surface",
     ],
     "sparrow": [
         "a small sparrow resting on a bare branch, perfectly still",
@@ -314,9 +309,12 @@ SCENE_GROUPS = {
         "a bare wooden floor with soft light lying across it",
         "an empty room's plain floorboards, nothing standing on them",
     ],
-    "paper_notes": [
-        "a few blank sheets of paper resting on a quiet desk",
-        "a plain notebook lying closed on a bare table",
+    # Paper of any kind — sheets, notebooks, books — is dropped entirely. Even blank or closed it
+    # is the surface the model most wants to write on, and a book adds nothing a cloth or a cup
+    # does not already say.
+    "linen_cloth": [
+        "a plain folded cloth resting on a quiet table, nothing else near it",
+        "a soft square of linen left on a bare wooden surface",
     ],
     "water_glass": [
         "a single glass of water standing on a plain table",
@@ -463,11 +461,11 @@ INTERIOR_CATS = {
     # same trap applies: tell a tea cup on a table that the upper half should be "a clear cloudless
     # sky" and the model puts a sky above the kitchen. Adding scenes without adding them here is
     # how the 에베소서 2:8 composite happened in the first place.
-    "tea_cup", "closed_book", "bread_table", "morning_table", "folded_laundry", "stairwell",
-    "doorway", "shelf", "candle_still", "coat_hook", "key_bowl", "envelope", "cat_window",
+    "tea_cup", "bread_table", "morning_table", "folded_laundry", "stairwell",
+    "doorway", "shelf", "candle_still", "coat_hook", "key_bowl", "small_dish", "cat_window",
     "hanging_lamp",
     "potted_plant", "wool_blanket", "bowl_of_fruit", "washed_dishes", "sewing", "shoes_by_door",
-    "umbrella_stand", "wall_shadow", "linen_curtain", "wooden_floor", "paper_notes", "water_glass",
+    "umbrella_stand", "wall_shadow", "linen_curtain", "wooden_floor", "linen_cloth", "water_glass",
     "basket",
 }
 
@@ -562,7 +560,7 @@ QUALITY = ("It is HYPERREALISTIC — completely indistinguishable from a GENUINE
            "is — grass, foliage and ground vary in height, colour and density, never a uniform "
            "repeating carpet, and there is no airbrushed smoothness and no halo around edges. "
            "Real and quietly moving — an image that feels honest and calm.")
-NOTEXT = ("There are no visible human faces, and absolutely no text, letters, words, captions, numbers, "
+NOTEXT = ("There is NO PERSON anywhere in the frame — no face, no figure, no silhouette, no hand, no arm, no reflection of a person, not even far away, out of focus or turned away. NOBODY. And absolutely no text, letters, words, captions, numbers, "
           "signs, watermark or logo anywhere. It is a single full-bleed photograph that completely fills "
           "the image, edge to edge.")
 
@@ -641,7 +639,12 @@ _CHECK_PROMPT = (
     "above a room with no ceiling, wall or window to justify it. A window or open door showing a "
     "view is CORRECT and must not be flagged; what is wrong is outdoors appearing where the room's "
     "own wall or ceiling should be.\n"
-    "7) ANY WRITING: letters, words, numbers, handwriting, print on a page, a shop sign, a label, "
+    "7) ANY PERSON: a face, a body, a silhouette, a hand, an arm, a leg, or a person reflected in "
+    "glass or water — anywhere in the frame, at any distance, however blurred, cropped or turned "
+    "away. AI-made faces and hands look wrong and break the stillness the post depends on. An "
+    "empty chair, an empty bench or empty shoes are CORRECT — the absence of people is the point; "
+    "what is wrong is a person being in the picture at all.\n"
+    "8) ANY WRITING: letters, words, numbers, handwriting, print on a page, a shop sign, a label, "
     "a book spine, a clock face, a watermark or a logo — ANYWHERE in the frame, however small, "
     "blurred or partial. Image models render writing as broken nonsense, and one line of garbled "
     "text tells a viewer instantly that nobody made this. Reject even if it is tiny or out of "

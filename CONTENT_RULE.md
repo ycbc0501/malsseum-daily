@@ -21,6 +21,11 @@ a spectacular photograph competes with the verse and wins. Reference: **@dailyma
 
 ---
 
+> **[RULES.md](RULES.md) is the authority.** This document is the reasoning, the history and the
+> measurements behind those rules — why each one exists, what broke when it did not, and what was
+> measured. Read RULES.md before changing anything; read this when you need to know why a rule is
+> there. Where the two disagree, RULES.md wins and this file is the one that is out of date.
+
 ## 1. Cadence — twice a day, forever
 - **Two posts daily: 05:00 and 19:00 KST** (±10 min jitter). GitHub Actions cron (`.github/workflows/daily-post.yml`), which fires early and then `daily_post.py` waits for the exact target time.
 - Never more, never fewer. Both posts follow every rule below.
