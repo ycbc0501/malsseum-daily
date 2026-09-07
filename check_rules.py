@@ -33,6 +33,15 @@ def checks():
     yield "A4 impossible physics (gate)", "vertical mirror" in gate and "stacked duplicate" in gate
     yield "A5 no sky indoors (gate)", "indoor/outdoor composite" in gate
     yield "A6 no CGI look (gate)", "fake / cgi" in gate
+    # Dark is allowed and must stay allowed — three of the seven light phrases are after sunset,
+    # and the gate is told explicitly not to flag dark or moody light. What is banned is the
+    # feeling, not the light level.
+    yield "A7 dark light stays allowed", (
+        "dark or moody light" in gate
+        and any("after dark" in l for l in hf.LIGHT)
+        and "dim is fine" in hf.QUALITY)
+    yield "A7 dread is still banned", all(
+        w in hf.QUALITY for w in ("gloomy", "ominous", "bleak"))
     yield "A  a rejected render retries on a different scene", "index + a - 1" in (
         HERE / "fetch_higgsfield.py").read_text()
     yield "B1 verses are verbatim (generated, not hand-written)", (HERE / "build_verses.py").exists()
