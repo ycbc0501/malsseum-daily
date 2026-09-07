@@ -27,6 +27,19 @@ on:
     - cron: "0 9 * * *"
   workflow_dispatch:
 
+# ONE run per slot, serialised by GitHub itself. On 2026-09-06 the 08:00 cron fired 69 minutes
+# late and the 09:00 cron fired 52 minutes late, so BOTH landed inside the 60-minute claim window,
+# both slept to 19:00 KST, both asked Instagram whether the slot was taken at the same instant,
+# both got "no", and 데살로니가후서 2:17 went out twice five minutes apart. The claim-window proof
+# assumed every cron is delayed by the same amount; GitHub delays each one differently, so no
+# scheduling rule can make the claim unique. A queue can.
+#
+# cancel-in-progress: false — the waiting run must not kill the one that is already posting. It
+# starts after that run finishes, finds the target long past, and stands down on its own.
+concurrency:
+  group: daily-post-${{ contains(fromJSON('["0 5 * * *","0 6 * * *","0 7 * * *","0 8 * * *","0 9 * * *"]'), github.event.schedule) && '19' || '5' }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
   issues: write
@@ -84,8 +97,35 @@ jobs:
             | while read -r a; do gh release delete-asset media "$a" -y || true; done
           echo "FILE=$FILE" >> "$GITHUB_ENV"
 
-      - name: Publish to Instagram
+      # Last line of defence. The queue should make this unreachable, but a duplicate post is the
+      # single most expensive thing this pipeline can ship, so the slot is re-checked after the
+      # build — seconds before publishing rather than minutes.
+      - name: Re-check the slot right before publishing
+        id: recheck
         if: steps.build.outputs.skip != 'true'
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          TARGET_HOUR: ${{ contains(fromJSON('["0 5 * * *","0 6 * * *","0 7 * * *","0 8 * * *","0 9 * * *"]'), github.event.schedule) && '19' || '5' }}
+        run: |
+          # exit 1 = slot taken (skip), exit 0 = free, anything else = the check itself broke.
+          # A broken check must not silently swallow the post — the queue is the real guard, so
+          # fall open and publish, loudly.
+          set +e
+          python -c "import sys, daily_post; sys.exit(1 if daily_post.slot_already_filled(int('$TARGET_HOUR')) else 0)"
+          rc=$?
+          set -e
+          if [ "$rc" -eq 1 ]; then
+            echo "another run filled this slot while we were building — not publishing"
+            echo "taken=true" >> "$GITHUB_OUTPUT"
+          elif [ "$rc" -ne 0 ]; then
+            echo "::warning::slot re-check failed (exit $rc) — publishing anyway, the queue still guards this"
+          else
+            echo "slot still free"
+          fi
+
+      - name: Publish to Instagram
+        if: steps.build.outputs.skip != 'true' && steps.recheck.outputs.taken != 'true'
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
@@ -104,7 +144,7 @@ jobs:
       # `refresh` re-reads everything younger than metrics.MATURE_DAYS on every run.
       # continue-on-error: measurement must never fail a posting run.
       - name: Record performance metrics
-        if: steps.build.outputs.skip != 'true'
+        if: steps.build.outputs.skip != 'true' && steps.recheck.outputs.taken != 'true'
         continue-on-error: true
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
