@@ -11,6 +11,13 @@ on:
     - cron: "0 2 * * 0"
   workflow_dispatch:
 
+# Same queue as the daily post, for the same reason: two runs of one slot must never both
+# publish. The carousel had no guard at all — not a queue, not a slot check — so a retried or
+# double-fired run would simply have posted twice.
+concurrency:
+  group: weekly-carousel
+  cancel-in-progress: false
+
 permissions:
   contents: write
 

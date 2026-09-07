@@ -169,6 +169,28 @@ def last_published():
     return seen
 
 
+def carousel_posted_today():
+    """True if a non-Reel post already went out today (KST) — the carousel's own slot guard.
+
+    slot_already_filled() splits the day in half for the two reels, and the carousel runs at 11:00
+    KST inside the morning half, so it cannot reuse that test without skipping every week. What it
+    must not do is publish a SECOND carousel, which is the same failure that put 데살로니가후서
+    2:17 out twice: the workflow had no queue and no guard of any kind."""
+    try:
+        import post_instagram
+        today = datetime.now(KST).date()
+        for m in post_instagram.recent_media(limit=8):
+            when = datetime.strptime((m.get("timestamp") or "")[:19], "%Y-%m-%dT%H:%M:%S")
+            when = when.replace(tzinfo=timezone.utc).astimezone(KST)
+            if when.date() == today and (m.get("media_product_type") or "").upper() != "REELS":
+                print(f"a carousel already went out at {when:%H:%M} KST ({m.get('permalink')}) → skipping")
+                return True
+        return False
+    except Exception as e:
+        print(f"carousel slot check failed ({e}) — proceeding rather than skipping a post")
+        return False
+
+
 def load_state():
     try:
         s = json.load(open(STATE))

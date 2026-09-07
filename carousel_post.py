@@ -41,6 +41,8 @@ def main():
     # 11 hours after (08-29). Two posts of the same verse in one day is exactly the duplicate that
     # gets the whole account demoted (rule 10d), so walk forward past anything Instagram already has.
     import daily_post
+    if daily_post.carousel_posted_today():
+        return
     recent = set(daily_post.published_refs(limit=14))
     # metrics.json remembers every publish date, so prefer whatever has been gone longest —
     # published_refs only sees the last 14 posts, and 마태복음 11:28 (one of the ten Instagram
