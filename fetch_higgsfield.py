@@ -173,7 +173,7 @@ SCENE_GROUPS = {
         "pale linen curtains hanging still across a tall window",
     ],
     "desk": [
-        "a plain wooden desk beside a window, an open book and a cup left on it",
+        "a plain wooden desk beside a window, a closed book and a cup left on it",
         "a bare writing desk with a single notebook, a chair pushed in",
     ],
     "cafe_table": [
@@ -206,9 +206,11 @@ SCENE_GROUPS = {
         "a plain cup of tea on a bare table, steam rising slowly",
         "a single mug left on a wooden table, the drink still warm",
     ],
-    "open_book": [
-        "an open book resting face-up on a quiet table, pages still",
-        "a worn book lying open beside a folded cloth",
+    # A book left OPEN makes the model render pages of writing, and it renders writing as
+    # nonsense. Closed, it is the same quiet object with nothing to garble.
+    "closed_book": [
+        "a single closed book resting on a quiet table, its cover plain and unmarked",
+        "a worn book lying closed beside a folded cloth, no lettering on it",
     ],
     "bread_table": [
         "a small loaf of bread on a plain board, nothing else on the table",
@@ -234,9 +236,11 @@ SCENE_GROUPS = {
         "a nearly empty shelf with one small object left on it",
         "a plain wooden shelf holding a single folded cloth",
     ],
-    "clock": [
-        "a plain wall clock on a bare wall, its face simple",
-        "a small clock resting on a quiet shelf, the wall behind it empty",
+    # A clock face is numerals, and numerals come out mangled. Dropped for a candle, which is the
+    # same quiet mark of passing time with nothing to misprint.
+    "candle_still": [
+        "a single unlit candle standing on a bare surface, the wall behind it plain",
+        "one short candle resting on a quiet shelf, nothing else around it",
     ],
     "coat_hook": [
         "a single coat hanging on a hook against a plain wall",
@@ -246,9 +250,9 @@ SCENE_GROUPS = {
         "a small dish holding a set of keys on a bare surface",
         "a shallow bowl with a few coins, left on a quiet table",
     ],
-    "letter": [
-        "a folded letter resting unopened on a plain table",
-        "a single envelope lying on a bare wooden surface",
+    "envelope": [
+        "a plain unmarked envelope resting on a bare table, nothing written on it",
+        "a blank folded paper lying on a quiet wooden surface, no writing",
     ],
     "sparrow": [
         "a small sparrow resting on a bare branch, perfectly still",
@@ -459,8 +463,9 @@ INTERIOR_CATS = {
     # same trap applies: tell a tea cup on a table that the upper half should be "a clear cloudless
     # sky" and the model puts a sky above the kitchen. Adding scenes without adding them here is
     # how the 에베소서 2:8 composite happened in the first place.
-    "tea_cup", "open_book", "bread_table", "morning_table", "folded_laundry", "stairwell",
-    "doorway", "shelf", "clock", "coat_hook", "key_bowl", "letter", "cat_window", "hanging_lamp",
+    "tea_cup", "closed_book", "bread_table", "morning_table", "folded_laundry", "stairwell",
+    "doorway", "shelf", "candle_still", "coat_hook", "key_bowl", "envelope", "cat_window",
+    "hanging_lamp",
     "potted_plant", "wool_blanket", "bowl_of_fruit", "washed_dishes", "sewing", "shoes_by_door",
     "umbrella_stand", "wall_shadow", "linen_curtain", "wooden_floor", "paper_notes", "water_glass",
     "basket",
@@ -636,6 +641,12 @@ _CHECK_PROMPT = (
     "above a room with no ceiling, wall or window to justify it. A window or open door showing a "
     "view is CORRECT and must not be flagged; what is wrong is outdoors appearing where the room's "
     "own wall or ceiling should be.\n"
+    "7) ANY WRITING: letters, words, numbers, handwriting, print on a page, a shop sign, a label, "
+    "a book spine, a clock face, a watermark or a logo — ANYWHERE in the frame, however small, "
+    "blurred or partial. Image models render writing as broken nonsense, and one line of garbled "
+    "text tells a viewer instantly that nobody made this. Reject even if it is tiny or out of "
+    "focus. Reject a page or a sign that is clearly MEANT to carry writing even when the marks are "
+    "illegible smudges.\n"
     "Do NOT flag: a normal single-horizon landscape/seascape, artistic blur, bokeh, mist, grain, dark "
     "or moody light, or a CORRECT (properly inverted) reflection.\n"
     "Reply ONLY as JSON: {\"ok\": true, \"reason\": \"\"} if it looks physically plausible, or "
@@ -665,16 +676,26 @@ def check_composition(image_path):
 
 
 def generate_checked(dest, index=0, placement=("center", "middle"), aspect="3:4", attempts=3, var_t=None):
-    """Generate a background AND vision-check its composition; regenerate (up to `attempts`) if the
-    checker flags a stacked/duplicated scene or a wrong reflection. Returns the last render either
-    way (best-effort — never raises just because the checker was unhappy)."""
+    """Generate a background AND vision-check it; regenerate (up to `attempts`) if the checker
+    flags it. Returns (path, index_used) — the caller records index_used so the scene ledger stays
+    honest about which scene actually shipped.
+
+    Retrying the SAME scene is the wrong move for some rejections. A café terrace or a city street
+    puts a shop sign in frame, the model renders the sign as broken lettering, and a fresh draw of
+    that same scene does it again — three attempts, three rejects, and the old code published the
+    third one anyway. So each retry moves to the NEXT scene, and only the light/angle changes on
+    the first retry. Still best-effort: after every attempt it returns the last render rather than
+    fail a post, but by then it has tried genuinely different subjects."""
+    used = index
     for a in range(1, attempts + 1):
-        generate_background(dest, index, placement, aspect=aspect, var_t=var_t)
+        used = (index + a - 1) % len(SCENES)
+        generate_background(dest, used, placement, aspect=aspect,
+                            var_t=(var_t if var_t is None else var_t + a - 1))
         ok, reason = check_composition(dest)
-        print(f"composition check {a}/{attempts}: ok={ok} :: {reason}")
+        print(f"composition check {a}/{attempts} (scene {used} {SCENE_CATS[used]}): ok={ok} :: {reason}")
         if ok:
-            return dest
-    return dest
+            return dest, used
+    return dest, used
 
 
 def _gemini_key():

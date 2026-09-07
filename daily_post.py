@@ -357,7 +357,13 @@ def main():
     AREA_TRIES = 3
     try:
         for attempt in range(1, AREA_TRIES + 1):
-            fetch_higgsfield.generate_checked(bg, scene_i, placement, aspect="9:16", var_t=post_i)
+            # generate_checked may walk to a different scene when the checker keeps rejecting
+            # (a café sign renders as broken lettering no matter how often you redraw it), so it
+            # reports which scene actually shipped and the ledger records THAT, not the one we asked
+            # for — otherwise the same scene comes round again far too early.
+            bg, scene_i = fetch_higgsfield.generate_checked(
+                bg, scene_i, placement, aspect="9:16", var_t=post_i)
+            scene_cat = fetch_higgsfield.SCENE_CATS[scene_i]
             ok, why, stats = generate.text_area_ok(bg, ink, canvas=generate.REEL)
             print(f"text-area gate attempt {attempt}: {why} "
                   f"(contrast {stats['contrast']}, spread {stats['spread']}, mean {stats['mean']})")

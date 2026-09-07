@@ -86,6 +86,21 @@ spectacular. If a render is impressive, it is wrong.
   07-30 direction added interior families nothing described a room-with-sky and it passed. Clause 6
   now covers indoor/outdoor composites — a window or open door showing a view is correct; outdoors
   where the wall or ceiling should be is not.
+- **No writing in the background, ever — and it is CHECKED, not just requested.** `NOTEXT` has
+  always asked for no letters, numbers, signs, watermarks or logos, but until 2026-09-07 nothing
+  verified it: the word "text" appeared in `_CHECK_PROMPT` only inside "texture". Image models
+  render writing as broken nonsense, and one line of garbled lettering tells a viewer instantly
+  that no one made this — which costs the post the only thing it has. Gate clause 7 rejects any
+  writing anywhere in the frame, however small, blurred or partial, including a page or sign that
+  is merely MEANT to carry writing.
+- **Scenes must not invite writing.** An open book becomes pages of nonsense; a clock face becomes
+  mangled numerals; an addressed envelope becomes a scrawl. Those three were replaced with a closed
+  book, an unlit candle and a blank envelope — the same quiet objects with nothing to misprint.
+- **A rejected render retries on a DIFFERENT scene.** A café terrace or a city street puts a shop
+  sign in frame every time, so redrawing the same prompt three times fails three times and the old
+  code published the third one regardless. `generate_checked()` now advances the scene each attempt
+  and reports which one actually shipped, so the ledger records what was published rather than what
+  was requested.
 - **Composition gate:** `check_composition()` (gemini-2.5-pro, `_CHECK_PROMPT`) inspects every render for vertical-mirror / stacked-duplicate / wrong-reflection / fake-CGI / warped structures; `generate_checked()` regenerates up to 3×. Best-effort (never blocks a post on a flaky check), but it is the substitute for a human eye — keep it strict without false-flagging normal single-horizon landscapes.
 
 ## 5. Motion — real-time, calm, never fast
