@@ -161,11 +161,20 @@ def make_slowmo(clip, out, target=60.0, max_factor=3.0):
     return out
 
 
-def motion_score(clip):
-    """(overall, sky) mean per-frame luma change — a proxy for how fast the clip moves.
-    `sky` measures only the top 45% of the frame, which catches racing/timelapse clouds that
-    the global score misses (soft clouds barely move the global luma even while streaking by).
-    Used as an automatic gate so an over-animated Veo clip can never post itself."""
+def motion_score(clip, stride=1.0):
+    """(overall, sky) luma change measured ONE SECOND apart — how fast the clip looks, not how
+    fast it ticks.
+
+    This compared ADJACENT frames until 2026-09-08, and adjacent frames at 30fps are 1/30 of a
+    second apart. Smooth motion barely moves in 1/30s no matter how fast it crosses the frame, so
+    the score was near-blind to the thing it existed to catch: five published clips scored 0.206 to
+    0.763 against a limit of 2.0, and the gate had never once fired, while the account owner was
+    watching clouds race and a waterfall run like a shower head. Measured a second apart the SAME
+    five clips score 1.652 to 4.516 — seven to eight times the signal.
+
+    A viewer judges speed over about a second, which is what `stride` is. `sky` is the top 45%,
+    where racing clouds live; for a tall subject like a waterfall it catches that too.
+    """
     def _avg(vf):
         out = subprocess.run([FFMPEG, "-i", clip, "-vf", vf, "-an", "-f", "null", "-"],
                              capture_output=True, text=True).stderr
@@ -177,8 +186,11 @@ def motion_score(clip):
                 except ValueError:
                     pass
         return sum(vals) / len(vals) if vals else 0.0
+    # fps=N resamples to N frames per second FIRST, so tblend then differences frames `stride`
+    # apart instead of consecutive ones.
+    sample = f"fps={1.0 / stride:g},"
     base = "tblend=all_mode=difference,signalstats,metadata=print:key=lavfi.signalstats.YAVG"
-    return _avg(base), _avg("crop=iw:ih*0.45:0:0," + base)
+    return _avg(sample + base), _avg("crop=iw:ih*0.45:0:0," + sample + base)
 
 
 def build_reel_native(video, overlay_png, audio, out, volume=0.4, duration=None):

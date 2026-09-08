@@ -62,6 +62,15 @@ def checks():
         and "cloudless sky" in hf.COMPOSE[("center", "top")].format(
             empty_area=hf.EMPTY_AREA[True], anchor=hf.ANCHOR[True])]
     yield "F3 text area is measured, not assumed", hasattr(generate, "text_area_ok")
+    # Motion must be measured a second apart, not frame to frame — see RULES.md E2.
+    import inspect
+    import make_video
+    src = inspect.getsource(make_video.motion_score)
+    yield "E2 motion measured one second apart", "stride" in src and "fps=" in src
+    daily_src = (HERE / "daily_post.py").read_text()
+    yield "E3 gate selects the calmest rather than rejecting", (
+        "MOTION_HARD" in daily_src and "MOTION_HARD and sky <= SKY_HARD" in daily_src)
+    yield "E4 continuation segments retry too", daily_src.count("for attempt in (1, 2)") >= 1
 
 
 def main():

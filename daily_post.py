@@ -403,7 +403,17 @@ def main():
     # churning water through (published reels the account owner flagged). Scored against the local
     # clip library, calm sits at 1.7/0.35 and frantic city at 7.3/0.4, so the bar now sits just
     # above calm instead of halfway to frantic.
-    MOTION_MAX, SKY_MAX = 2.0, 0.45
+    # TWO bars, not one. The old single threshold was a hard reject that fell back to a STILL
+    # image, so tightening it would have replaced every reel with a photograph — and a threshold
+    # loose enough to avoid that never fired at all. Recalibrated 2026-09-08 for the one-second
+    # motion metric (make_video.motion_score): five published clips measure 1.65-4.52 overall and
+    # 0.32-1.24 sky, and the account owner called at least two of them far too fast.
+    #   TARGET — what calm looks like. Reaching it stops the retries early.
+    #   HARD   — frantic beyond rescue. ONLY this falls back to a still.
+    # Between the two we publish the CALMEST take we got, because a still photograph is a worse
+    # answer than slightly-too-lively motion.
+    MOTION_MAX, SKY_MAX = 1.5, 0.35
+    MOTION_HARD, SKY_HARD = 8.0, 4.0
     n_segments = 0          # recorded in _meta.json so metrics.py can measure length changes
     try:
         import fetch_veo
@@ -422,26 +432,38 @@ def main():
                 shutil.copyfile(clip, best)
             if ov <= MOTION_MAX and sky <= SKY_MAX:
                 break
-        if ov <= MOTION_MAX and sky <= SKY_MAX:
+        if ov <= MOTION_HARD and sky <= SKY_HARD:
+            if ov > MOTION_MAX or sky > SKY_MAX:
+                print(f"veo above target (overall {ov:.2f}>{MOTION_MAX}, sky {sky:.2f}>{SKY_MAX}) "
+                      f"→ publishing the calmest of 3 anyway; a still would be worse")
             # Chain from the CALMEST take, not the last one generated — `clip` holds whatever
             # attempt ran most recently, which may be the frantic one we rejected.
             segments = [best]
-            # Extend, one segment at a time. A continuation gets ONE attempt and no retry: if it
-            # errors or comes back too fast we publish the segments that already passed, so a bad
-            # continuation costs us length but never the post. The motion gate applies to every
-            # segment, so a frantic continuation can no more post itself than a frantic opening.
+            # Extend, one segment at a time. The continuation gets the SAME best-of-N treatment as
+            # the opening — it used to get one attempt and be dropped if it missed the bar, which
+            # under the recalibrated target would have cut every reel from 15.3s to 7.7s. A short
+            # reel is its own defect (it loops before the verse can be read), so the continuation is
+            # kept unless it is frantic beyond rescue.
             for seg in range(2, SEGMENTS + 1):
                 seed = os.path.join(generate.OUT_DIR, f"_veo{seg}_seed.png")
                 nxt = os.path.join(generate.OUT_DIR, f"_veo{seg}.mp4")
+                seg_best = os.path.join(generate.OUT_DIR, f"_veo{seg}_best.mp4")
+                s_ov = s_sky = 99.0
                 try:
                     make_video.last_frame(segments[-1], seed)
-                    fetch_veo.animate(seed, nxt, prompt=fetch_veo.CONTINUE + fetch_veo.MOTION)
-                    s_ov, s_sky = make_video.motion_score(nxt)
-                    print(f"veo segment {seg}: overall {s_ov:.2f}, sky {s_sky:.2f}")
-                    if s_ov > MOTION_MAX or s_sky > SKY_MAX:
-                        print(f"veo segment {seg} too fast → keeping {len(segments)} segment(s)")
+                    for attempt in (1, 2):
+                        fetch_veo.animate(seed, nxt, prompt=fetch_veo.CONTINUE + fetch_veo.MOTION)
+                        o, sk = make_video.motion_score(nxt)
+                        print(f"veo segment {seg} attempt {attempt}: overall {o:.2f}, sky {sk:.2f}")
+                        if max(o / MOTION_MAX, sk / SKY_MAX) < max(s_ov / MOTION_MAX, s_sky / SKY_MAX):
+                            s_ov, s_sky = o, sk
+                            shutil.copyfile(nxt, seg_best)
+                        if s_ov <= MOTION_MAX and s_sky <= SKY_MAX:
+                            break
+                    if s_ov > MOTION_HARD or s_sky > SKY_HARD:
+                        print(f"veo segment {seg} frantic beyond rescue → keeping {len(segments)} segment(s)")
                         break
-                    segments.append(nxt)
+                    segments.append(seg_best)
                 except Exception as e:
                     print(f"veo segment {seg} failed ({e}) → keeping {len(segments)} segment(s)")
                     break
@@ -455,7 +477,7 @@ def main():
             print(f"reel(veo native, {len(segments)} segment(s), "
                   f"overall {ov:.2f}, sky {sky:.2f}): {verse['ref']}")
         else:
-            print(f"veo still too fast (overall {ov:.2f}, sky {sky:.2f}) → calm still fallback")
+            print(f"veo frantic beyond rescue (overall {ov:.2f}, sky {sky:.2f}) → calm still fallback")
             make_video.build_reel_still(bg, overlay, audio, out_mp4, duration=24)
             print(f"reel(still-fallback): {verse['ref']}")
     except Exception as e:
