@@ -414,6 +414,9 @@ def main():
     # answer than slightly-too-lively motion.
     MOTION_MAX, SKY_MAX = 1.5, 0.35
     MOTION_HARD, SKY_HARD = 8.0, 4.0
+    # Defined up here so the still-fallback and exception paths still write a meaningful _meta.json.
+    ov = sky = 0.0
+    motion_attempts = 0
     n_segments = 0          # recorded in _meta.json so metrics.py can measure length changes
     try:
         import fetch_veo
@@ -423,7 +426,9 @@ def main():
         # Three tries, KEEPING THE CALMEST rather than the first one that squeaks under the bar —
         # otherwise a tighter threshold just buys more still fallbacks instead of better motion.
         for attempt in (1, 2, 3):
-            fetch_veo.animate(bg, clip)                          # AI image → real motion
+            # Escalate the demand each try rather than redraw the same request — see fetch_veo.CALMER.
+            motion_attempts = attempt
+            fetch_veo.animate(bg, clip, prompt=fetch_veo.MOTION + fetch_veo.CALMER[attempt - 1])
             o, s = make_video.motion_score(clip)
             print(f"veo motion attempt {attempt}: overall {o:.2f}, sky {s:.2f}")
             # A clip is only as calm as its WORST axis, so rank on the larger of the two ratios.
@@ -452,7 +457,8 @@ def main():
                 try:
                     make_video.last_frame(segments[-1], seed)
                     for attempt in (1, 2):
-                        fetch_veo.animate(seed, nxt, prompt=fetch_veo.CONTINUE + fetch_veo.MOTION)
+                        fetch_veo.animate(seed, nxt, prompt=fetch_veo.CONTINUE + fetch_veo.MOTION
+                                          + fetch_veo.CALMER[attempt - 1])
                         o, sk = make_video.motion_score(nxt)
                         print(f"veo segment {seg} attempt {attempt}: overall {o:.2f}, sky {sk:.2f}")
                         if max(o / MOTION_MAX, sk / SKY_MAX) < max(s_ov / MOTION_MAX, s_sky / SKY_MAX):
@@ -510,6 +516,12 @@ def main():
                    # text area with performance instead of us assuming it matters
                    "text_contrast": area_stats["contrast"],
                    "text_spread": area_stats["spread"],
+                   # How fast the reel that SHIPPED actually moves, measured a second apart. The
+                   # account owner has reported racing clouds for weeks and the only evidence was
+                   # their eye; recording it makes "is this getting calmer" a number we can read
+                   # back per post instead of a judgement we keep re-litigating.
+                   "motion": round(ov, 3), "motion_sky": round(sky, 3),
+                   "motion_attempts": motion_attempts,
                    # The follow CTA left the caption on 2026-08-01 (rule 10). metrics.report()
                    # groups on this, so the change is answerable later instead of argued about;
                    # `follows` is the column that settles it. Derived, never hand-set — if the

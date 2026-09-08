@@ -71,6 +71,11 @@ def checks():
     yield "E3 gate selects the calmest rather than rejecting", (
         "MOTION_HARD" in daily_src and "MOTION_HARD and sky <= SKY_HARD" in daily_src)
     yield "E4 continuation segments retry too", daily_src.count("for attempt in (1, 2)") >= 1
+    import fetch_veo
+    yield "E3 retries escalate the demand", (
+        len(fetch_veo.CALMER) == 3 and "FROZEN PHOTOGRAPH" in fetch_veo.CALMER[2]
+        and daily_src.count("fetch_veo.CALMER[attempt - 1]") == 2)
+    yield "E8 shipped motion is recorded", '"motion": round(ov, 3)' in daily_src
 
 
 def main():

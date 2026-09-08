@@ -34,6 +34,25 @@ MOTION = ("REAL-TIME footage at normal 1x playback speed — this is NOT a timel
           "move noticeably). Everything already in the frame stays present the whole time — nothing "
           "appears, grows, pops in, flickers or morphs. Calm, slow, serene, real-time — like a "
           "photograph gently breathing at natural speed.")
+# Retrying with the SAME prompt is three draws from one distribution: if Veo over-animates skies
+# for this image — and it does; a candle on a windowsill came back with the clouds outside racing,
+# scoring 1.24 on a 0.35 sky target — then all three takes are fast and "keep the calmest" barely
+# helps. So each retry escalates the demand instead of resampling it. Index 0 is the plain MOTION
+# prompt; 1 and 2 are appended to it.
+CALMER = [
+    "",
+    (" MOTION MUST BE EVEN SMALLER THAN DESCRIBED ABOVE. Reduce every movement to roughly a "
+     "quarter of what you would normally animate. The sky is COMPLETELY STATIC — clouds, haze and "
+     "mist do not move, drift, roll or change shape AT ALL, not even slightly. Only the smallest "
+     "surface detail moves: a flame wavers a little, water shimmers faintly in place without "
+     "travelling, a leaf twitches once. Nothing crosses the frame."),
+    (" THIS IS ALMOST A FROZEN PHOTOGRAPH. Animate the barest possible trace of life and NOTHING "
+     "else. The sky, clouds, mist and fog are ENTIRELY MOTIONLESS — treat them as painted onto a "
+     "still backdrop. Water does not flow or travel; at most its surface glimmers on the spot. "
+     "Nothing drifts, nothing slides, nothing moves across the frame in any direction. If in "
+     "doubt, animate LESS. A viewer should have to look closely to be sure it is moving at all."),
+]
+
 # Prefixed to MOTION when animating the tail frame of an earlier segment, so the segments read as
 # ONE continuous shot rather than two takes of the same place. Length has to come from Veo itself
 # (CONTENT_RULE 6) — this is the "genuine continuation" that rule allows, as opposed to a loop.
