@@ -1,0 +1,32 @@
+name: Probe recent_media
+on: { workflow_dispatch: }
+permissions: { contents: read }
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: |
+          python - <<'PY'
+          import os, json, urllib.request, urllib.error
+          GRAPH="https://graph.facebook.com/v21.0"
+          uid=os.environ["IG_USER_ID"]; tok=os.environ["IG_ACCESS_TOKEN"]
+          def try_fields(label, fields):
+              url=f"{GRAPH}/{uid}/media?fields={fields}&limit=3&access_token={tok}"
+              try:
+                  d=json.load(urllib.request.urlopen(url, timeout=30))
+                  print(f"  OK   {label}: {len(d.get('data',[]))} items")
+              except urllib.error.HTTPError as e:
+                  body=e.read().decode()[:220]
+                  print(f"  FAIL {label}: {e.code} {body}")
+          try_fields("현재 코드 그대로", "id,timestamp,media_product_type,permalink,caption,like_count,comments_count")
+          for f in ["id","id,timestamp","id,timestamp,permalink","id,timestamp,caption",
+                    "id,media_product_type","id,like_count","id,comments_count"]:
+              try_fields(f, f)
+          PY
