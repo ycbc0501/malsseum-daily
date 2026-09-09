@@ -139,16 +139,6 @@ jobs:
             python post_instagram.py "$URL" "$(cat output/_caption.txt)" --comment "$CMT" --story
           fi
 
-      - name: Tell Telegram it went out
-        if: steps.build.outputs.skip != 'true' && steps.recheck.outputs.taken != 'true'
-        continue-on-error: true
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          python notify.py --posted output/_meta.json \
-            "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-
       # Record what we published, then re-pull insights for recent posts. Reels keep accruing
       # views for over a week, so a single fetch at publish time would freeze a near-zero —
       # `refresh` re-reads everything younger than metrics.MATURE_DAYS on every run.

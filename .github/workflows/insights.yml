@@ -28,11 +28,22 @@ jobs:
           IG_INSIGHTS_TOKEN: ${{ secrets.IG_INSIGHTS_TOKEN }}
         run: python insights.py
 
+      # Silent unless something is actually wrong. A daily "it posted" message was noise; this
+      # only speaks when engagement falls off a cliff, posts stop, or several in a row get no
+      # response at all. Backtested against the August collapse: no false alarm on any healthy
+      # day, first alert 08-29 — eight days before it was noticed by eye.
+      - name: Watch for a drop
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python watch.py
+
       - name: Save the ledgers
         run: |
           git config user.name "malsseum-bot"
           git config user.email "malsseum-bot@users.noreply.github.com"
-          git add metrics.json followers.json
+          git add metrics.json followers.json watch.json
           git commit -m "metrics: daily backfill + follower curve" || { echo "nothing to commit"; exit 0; }
           git pull --rebase --autostash origin main || true
           git push

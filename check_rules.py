@@ -76,10 +76,15 @@ def checks():
         len(fetch_veo.CALMER) == 3 and "FROZEN PHOTOGRAPH" in fetch_veo.CALMER[2]
         and daily_src.count("fetch_veo.CALMER[attempt - 1]") == 2)
     yield "E8 shipped motion is recorded", '"motion": round(ov, 3)' in daily_src
-    yield "G1 telegram alert cannot fail a post", (
-        "notify.py --posted" in daily
-        and "continue-on-error: true" in daily
+    insights = (HERE / ".github/workflows/insights.yml").read_text()
+    yield "G1 alerts only on trouble, not every post", (
+        "notify.py --posted" not in daily and "python watch.py" in insights)
+    yield "G1 an alert cannot fail a post", (
+        "continue-on-error: true" in insights
         and "not configured" in (HERE / "notify.py").read_text())
+    watch = (HERE / "watch.py").read_text()
+    yield "G1 watcher covers drop, dead and silence", all(
+        k in watch for k in ('"drop"', '"dead"', '"silence"')) and "COOLDOWN_DAYS" in watch
 
 
 def main():
