@@ -270,6 +270,26 @@ def insights(media_id, token=None):
             out[row["name"]] = vals[0].get("value")
         if out:
             return out
+
+    # Every bundle was rejected. A bundle is all-or-nothing: ask for six metrics and one
+    # unsupported name blanks the other five. Until 2026-09-09 every tier that carried
+    # `views` also carried `reach`, so the account went 156 posts with nothing but likes
+    # and comments recorded while the app itself was showing a view count on each post.
+    # So fall back to asking for each metric ALONE and keeping whatever answers.
+    out = {}
+    for metric in ("views", "reach", "shares", "saved", "total_interactions"):
+        try:
+            got = _get(f"{GRAPH}/{media_id}/insights"
+                       f"?metric={metric}&access_token={token}")
+        except Exception as e:
+            last = e
+            continue
+        for row in got.get("data", []):
+            vals = row.get("values") or [{}]
+            out[row["name"]] = vals[0].get("value")
+    if out:
+        print(f"insights({media_id}): bundles failed, salvaged {sorted(out)} one at a time")
+        return out
     print(f"insights({media_id}): all tiers failed ({last})")
     return {}
 

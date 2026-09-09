@@ -81,6 +81,26 @@ def record(media_id=None, meta=None):
     return media_id
 
 
+def published_kst(entry):
+    """`published` as an aware KST datetime, or None.
+
+    Two writers fill this field and they disagree on zone: record() below stamps local KST
+    (`+09:00`) while the insights.py backfill copies Instagram's own timestamp (`+0000`).
+    Both are unambiguous, so nothing is lost — but anything that reads the raw string and
+    assumes one zone is silently 9 hours out, which made an early read of this ledger put
+    the 19:00 KST posts in the small hours. Always go through here."""
+    raw = (entry.get("published") or "").strip()
+    if not raw:
+        return None
+    try:                                  # fromisoformat only learned "+0000" in 3.11
+        t = datetime.fromisoformat(raw.replace("+0000", "+00:00"))
+    except ValueError:
+        return None
+    if t.tzinfo is None:                  # legacy naive rows were written in KST
+        t = t.replace(tzinfo=KST)
+    return t.astimezone(KST)
+
+
 def refresh(token=None, days=MATURE_DAYS):
     """Re-pull insights for every post younger than `days`. Never raises: a metrics failure
     must not be able to break a posting run."""
@@ -89,15 +109,18 @@ def refresh(token=None, days=MATURE_DAYS):
     now = datetime.now(KST)
     touched = 0
     for media_id, entry in data.items():
-        try:
-            pub = datetime.fromisoformat(entry.get("published", ""))
-        except Exception:
-            pub = now
+        pub = published_kst(entry) or now
         if (now - pub).days > days:
             continue                      # numbers have settled; stop spending calls on it
         got = post_instagram.insights(media_id, token)
         if got:
-            entry["insights"] = got
+            # MERGE, never replace. likes/comments arrive from the plain media fields (and
+            # from the insights.py backfill for the ~100 pre-ledger posts), while reach and
+            # views arrive from the insights endpoint, which may answer with only a subset.
+            # Assigning the subset used to delete the engagement numbers we already had.
+            merged = dict(entry.get("insights") or {})
+            merged.update({k: v for k, v in got.items() if v is not None})
+            entry["insights"] = merged
             entry["fetched"] = now.isoformat(timespec="seconds")
             touched += 1
             print(f"  {media_id} {entry.get('ref', '?'):<14} "
@@ -133,22 +156,48 @@ def _engagement_only(data):
         likes, cmts = ins.get("likes"), ins.get("comments")
         if not isinstance(likes, (int, float)):
             continue
-        rows.append((e.get("published", "")[:10], e.get("theme") or "?",
+        when = published_kst(e)
+        rows.append((when.isoformat() if when else "", when.hour if when else None,
+                     e.get("theme") or "?",
                      likes + (cmts if isinstance(cmts, (int, float)) else 0)))
     if not rows:
         return
     rows.sort()
-    total = sum(r[2] for r in rows)
+    total = sum(r[3] for r in rows)
     print(f"\n{len(rows)} post(s) with likes/comments — avg {total / len(rows):.1f} per post")
     recent = rows[-THEME_WINDOW:]
     by = {}
-    for _, theme, eng in recent:
+    for _, _, theme, eng in recent:
         b = by.setdefault(theme, [0, 0])
         b[0] += eng
         b[1] += 1
     ranked = sorted(by.items(), key=lambda kv: -kv[1][0] / kv[1][1])
     print(f"by theme (likes+comments per post, last {len(recent)} posts): "
           + "  ".join(f"{t}={e / n:.1f}(n={n})" for t, (e, n) in ranked))
+
+    # Which slot earns its place. The two daily slots are a real cost — twice the Veo spend,
+    # twice the chance of tripping a duplicate — so they have to be compared, in KST, on the
+    # same window the theme table uses.
+    slots = {}
+    for _, hour, _, eng in recent:
+        if hour is None:
+            continue
+        name = "아침 04-11" if 4 <= hour < 12 else ("낮 12-16" if 12 <= hour < 17 else "저녁 17-24")
+        s = slots.setdefault(name, [0, 0])
+        s[0] += eng
+        s[1] += 1
+    if slots:
+        print(f"by slot KST (last {len(recent)} posts): "
+              + "  ".join(f"{k}={e / n:.1f}(n={n})" for k, (e, n) in sorted(slots.items())))
+
+    # The account's own trend. A theme table cannot show a decline that hits every theme.
+    months = {}
+    for iso, _, _, eng in rows:
+        if iso:
+            m = months.setdefault(iso[:7], [0, 0])
+            m[0] += eng
+            m[1] += 1
+    print("by month: " + "  ".join(f"{k}={e / n:.1f}(n={n})" for k, (e, n) in sorted(months.items())))
 
 
 def report():
