@@ -62,6 +62,10 @@ def checks():
         and "cloudless sky" in hf.COMPOSE[("center", "top")].format(
             empty_area=hf.EMPTY_AREA[True], anchor=hf.ANCHOR[True])]
     yield "F3 text area is measured, not assumed", hasattr(generate, "text_area_ok")
+    ig = (HERE / "post_instagram.py").read_text()
+    yield "H0 API errors carry the API's reason", "detail.get('message')" in ig
+    yield "H0b transient publish failures retry", (
+        "MediaProcessingError" in ig and "with_retry" in ig)
     # Motion must be measured a second apart, not frame to frame — see RULES.md E2.
     import inspect
     import make_video

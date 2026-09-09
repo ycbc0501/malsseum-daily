@@ -12,15 +12,41 @@ The image must be at a PUBLIC URL — the Graph API fetches it; it can't take a 
 import json
 import os
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
 GRAPH = "https://graph.facebook.com/v21.0"
 
 
+class MediaProcessingError(RuntimeError):
+    """Instagram accepted the container and then failed to process the media.
+
+    Usually transient — error 2207076 ("Media upload has failed") is Instagram failing to fetch or
+    transcode a video that is perfectly valid, and the same file succeeds moments later. It used to
+    raise SystemExit, so one hiccup lost the whole post: on 2026-09-09 the evening reel was built,
+    passed every gate, and died here with no second attempt."""
+
+
 def _get(url):
-    with urllib.request.urlopen(url, timeout=60) as r:
-        return json.load(r)
+    """GET, and on failure raise with the API's OWN explanation attached.
+
+    urllib raises "HTTP Error 400: Bad Request" and drops the response body, which is where Meta
+    puts the actual reason — the wrong field, an expired token, a rate limit. Every guard in this
+    repo catches that exception and degrades quietly, so for weeks the logs said only
+    "slot check failed (HTTP Error 400)" and there was nothing to act on. The body is the message."""
+    try:
+        with urllib.request.urlopen(url, timeout=60) as r:
+            return json.load(r)
+    except urllib.error.HTTPError as e:
+        try:
+            detail = json.loads(e.read().decode())["error"]
+            raise RuntimeError(
+                f"HTTP {e.code}: {detail.get('message')} "
+                f"(type={detail.get('type')}, code={detail.get('code')}, "
+                f"subcode={detail.get('error_subcode')})") from None
+        except (ValueError, KeyError):
+            raise
 
 
 def _post(url, params):
@@ -84,10 +110,10 @@ def publish_reel(video_url, caption, ig_user_id=None, token=None):
         if code == "FINISHED":
             break
         if code == "ERROR":
-            raise SystemExit(f"reel processing error: {status}")
+            raise MediaProcessingError(f"reel processing error: {status}")
         time.sleep(5)
     else:
-        raise SystemExit("reel processing timed out")
+        raise MediaProcessingError("reel processing timed out")
 
     return _post(f"{GRAPH}/{ig_user_id}/media_publish", {
         "creation_id": creation_id,
@@ -276,13 +302,27 @@ if __name__ == "__main__":
                     help="also publish to Stories (rule 3b) — the flag lives HERE because the "
                          "workflow publishes from this CLI, not from daily_post.py")
     args = ap.parse_args()
+    # Instagram's media processing fails transiently — the 2026-09-09 evening reel was built,
+    # passed every gate, and was lost to a single error 2207076 with no second attempt. Each retry
+    # builds a FRESH container, because a container that errored cannot be revived.
+    def with_retry(publish_fn, tries=3):
+        for attempt in range(1, tries + 1):
+            try:
+                return publish_fn()
+            except MediaProcessingError as e:
+                if attempt == tries:
+                    raise SystemExit(f"{e} — gave up after {tries} attempts")
+                wait = attempt * 30
+                print(f"publish attempt {attempt}/{tries} failed ({e}) → retrying in {wait}s")
+                time.sleep(wait)
+
     if args.carousel:
         urls = [u for u in args.carousel.split(",") if u]
-        result = publish_carousel(urls, args.caption_text or args.url)
+        result = with_retry(lambda: publish_carousel(urls, args.caption_text or args.url))
     elif args.reel:
-        result = publish_reel(args.url, args.caption)
+        result = with_retry(lambda: publish_reel(args.url, args.caption))
     else:
-        result = publish(args.url, args.caption)
+        result = with_retry(lambda: publish(args.url, args.caption))
     print(result)
     if isinstance(result, dict) and result.get("id"):
         # The workflow publishes from HERE, not from daily_post.py (which runs with --emit and
