@@ -139,6 +139,16 @@ jobs:
             python post_instagram.py "$URL" "$(cat output/_caption.txt)" --comment "$CMT" --story
           fi
 
+      - name: Tell Telegram it went out
+        if: steps.build.outputs.skip != 'true' && steps.recheck.outputs.taken != 'true'
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python notify.py --posted output/_meta.json \
+            "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
       # Record what we published, then re-pull insights for recent posts. Reels keep accruing
       # views for over a week, so a single fetch at publish time would freeze a near-zero —
       # `refresh` re-reads everything younger than metrics.MATURE_DAYS on every run.
@@ -190,6 +200,8 @@ jobs:
         if: (failure() || cancelled()) && steps.build.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TARGET_HOUR: ${{ contains(fromJSON('["0 5 * * *","0 6 * * *","0 7 * * *","0 8 * * *","0 9 * * *"]'), github.event.schedule) && '19' || '5' }}
         run: |
           gh issue create \
@@ -201,3 +213,6 @@ jobs:
           If the job hit the 180-min timeout, check the timing budget comment in
           \`.github/workflows/daily-post.yml\` — wait + build must fit inside it." \
             || echo "could not open issue"
+          TARGET_HOUR="${TARGET_HOUR}" python notify.py \
+            "❌ ${TARGET_HOUR}:00 KST 게시 실패 — ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            || true

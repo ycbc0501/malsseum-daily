@@ -76,6 +76,10 @@ def checks():
         len(fetch_veo.CALMER) == 3 and "FROZEN PHOTOGRAPH" in fetch_veo.CALMER[2]
         and daily_src.count("fetch_veo.CALMER[attempt - 1]") == 2)
     yield "E8 shipped motion is recorded", '"motion": round(ov, 3)' in daily_src
+    yield "G1 telegram alert cannot fail a post", (
+        "notify.py --posted" in daily
+        and "continue-on-error: true" in daily
+        and "not configured" in (HERE / "notify.py").read_text())
 
 
 def main():
