@@ -83,8 +83,16 @@ def checks():
         "continue-on-error: true" in insights
         and "not configured" in (HERE / "notify.py").read_text())
     watch = (HERE / "watch.py").read_text()
-    yield "G1 watcher covers drop, dead and silence", all(
-        k in watch for k in ('"drop"', '"dead"', '"silence"')) and "COOLDOWN_DAYS" in watch
+    yield "G1 watcher covers drop, dead and missed slots", (
+        '"drop"' in watch and '"dead"' in watch and 'f"missed-' in watch
+        and "COOLDOWN_DAYS" in watch)
+    yield "G1 missed slots are judged per slot, within GRACE_H", (
+        "SLOTS = (5, 19)" in watch and "GRACE_H = 2" in watch)
+    yield "G1 missed slots ask Instagram, not the ledger", "published_times" in watch and (
+        "post_instagram" in watch)
+    yield "G1 the watcher runs often enough to be timely", len(
+        [l for l in (HERE / ".github/workflows/watch.yml").read_text().splitlines()
+         if "cron:" in l]) >= 4
 
 
 def main():

@@ -1,0 +1,56 @@
+name: Watch for trouble
+
+# The engagement check rides the daily metrics backfill, but a MISSED POST has to be caught within
+# a couple of hours, not the next morning. These crons are spread across the day so at least one
+# lands soon after each slot's 2-hour deadline (07:00 and 21:00 KST) even with GitHub's scheduler
+# running hours late — which is exactly the failure this alert exists to report.
+on:
+  schedule:
+    - cron: "0 22 * * *"   # 07:00 KST — morning slot deadline
+    - cron: "0 0 * * *"    # 09:00 KST
+    - cron: "0 3 * * *"    # 12:00 KST
+    - cron: "0 12 * * *"   # 21:00 KST — evening slot deadline
+    - cron: "0 14 * * *"   # 23:00 KST
+    - cron: "0 17 * * *"   # 02:00 KST
+  workflow_dispatch:
+
+# Never two at once — they share the cooldown file and would double-send.
+concurrency:
+  group: watch
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check
+        env:
+          # Asked of Instagram, not of the local ledger — a post that published but failed to save
+          # its ledger must not be reported as missing.
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python watch.py
+
+      - name: Remember what was already reported
+        run: |
+          git config user.name "malsseum-bot"
+          git config user.email "malsseum-bot@users.noreply.github.com"
+          git add watch.json || true
+          git diff --cached --quiet && exit 0
+          git commit -m "watch: alert state"
+          for i in 1 2 3; do
+            git fetch origin main && git rebase origin/main --autostash && git push && exit 0
+            sleep $((i * 5))
+          done
+          echo "::warning::could not save watch state — an alert may repeat"
