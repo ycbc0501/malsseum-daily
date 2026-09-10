@@ -10,7 +10,19 @@ protection I kept reporting as working had never once run.
 An AST walk collects every os.environ key a module reads, transitively through its imports, and
 compares that against the env the workflow step provides. Run from check_rules.py.
 """
-import ast, os, re, sys, pathlib, yaml
+import ast
+import os
+import re
+import sys
+import pathlib
+
+try:
+    import yaml
+except ImportError:
+    # Exit 2, not 0. "I could not check" must never be reported as "it is fine" — that is the
+    # same silent-degradation habit that let the dead guards run for weeks.
+    print("audit_env: pyyaml is required to parse the workflows — pip install pyyaml")
+    raise SystemExit(2)
 HERE = pathlib.Path(".")
 MODS = {p.stem: p for p in HERE.glob("*.py")}
 
@@ -45,6 +57,11 @@ ALLOWED = {
     ("comment-reply.yml", "IG_USERNAME"),      # falls back to the API, then to cached state
 }
 
+# Static-analysis jobs import the pipeline modules to read their source and never call an API, so
+# the transitive-import model over-reports them. This is the model's known blind spot, written
+# down rather than quietly special-cased: anything listed here must make NO network calls.
+STATIC_ONLY = {"checks.yml"}
+
 problems = []
 for wf in sorted(HERE.glob(".github/workflows/*.yml")):
     d = yaml.safe_load(wf.read_text())
@@ -57,6 +74,8 @@ for wf in sorted(HERE.glob(".github/workflows/*.yml")):
             for m in re.findall(r"(?:^|[|&;]\s*|\n\s*)python3?\s+(?:-m\s+)?([a-z_]+)\.py", run):
                 need = reads(m)
                 missing = {k for k in need if k not in given and k.startswith(("IG_","GEMINI","HF_","PEXELS","TELEGRAM","GH_"))}
+                if wf.name in STATIC_ONLY:
+                    continue
                 missing -= {k for k in missing if (wf.name, k) in ALLOWED}
                 if missing:
                     problems.append((wf.name, (step.get("name") or "?")[:38], m, sorted(missing)))

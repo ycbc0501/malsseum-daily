@@ -7,6 +7,7 @@ after touching the pipeline, and add a check here whenever a rule is added to RU
 import json
 import pathlib
 import re
+import sys
 
 import daily_post
 import fetch_higgsfield as hf
@@ -101,6 +102,21 @@ def checks():
 
 def main():
     failed = []
+    # The env audit is a separate script because it needs a YAML parser; run it here so one
+    # command answers "is everything still enforced". Its failure mode — a workflow that does not
+    # pass the credentials its code reads — is the most expensive one in this repo, because it
+    # fails silently and every guard degrades without saying so.
+    import subprocess
+    env_ok = subprocess.run([sys.executable, str(HERE / "audit_env.py")],
+                            capture_output=True, text=True)
+    if env_ok.returncode == 2:
+        print(f"  CANNOT VERIFY  workflow env audit — {env_ok.stdout.strip()}")
+        failed.append("workflow env audit (could not run)")
+    elif env_ok.returncode != 0:
+        print(env_ok.stdout)
+        failed.append("workflow env audit")
+    else:
+        print("  PASS  workflow steps pass the env their code reads")
     for name, passed in checks():
         print(f"  {'PASS' if passed else 'FAIL'}  {name}")
         if not passed:

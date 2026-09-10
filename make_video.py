@@ -30,6 +30,12 @@ def _ffmpeg():
 
 FFMPEG = _ffmpeg()
 
+# NOTE: make_slowmo() and make_boomerang() used to live here and were deleted 2026-09-10.
+# RULES.md E2 bans slow-motion and reverse playback outright, and nothing called either of
+# them — a ready-made implementation of a banned behaviour is a loaded gun, not documentation.
+# Length comes from Veo continuations (rule E), never from replaying or stretching frames.
+
+
 
 def build_reel_still(bg_png, overlay_png, audio, out, duration=20):
     """Still background → Reel, done in the RIGHT order: zoom the BACKGROUND first
@@ -126,7 +132,7 @@ def chain_clips(clips, out, tail=TAIL):
 def _duration(path):
     """Clip duration in seconds. Uses ffprobe if present, otherwise parses `ffmpeg -i` —
     GitHub runners ship only the bundled ffmpeg (via imageio-ffmpeg), NOT a standalone
-    ffprobe, so relying on ffprobe made make_slowmo crash and the Veo path fall back to a
+    ffprobe, so relying on ffprobe crashed the duration probe and the Veo path fell back to a
     zoom. This works with just ffmpeg."""
     exe = shutil.which("ffprobe")
     if exe:
@@ -144,22 +150,6 @@ def _duration(path):
         h, mnt, s = m.groups()
         return int(h) * 3600 + int(mnt) * 60 + float(s)
     return 0.0
-
-
-def make_slowmo(clip, out, target=60.0, max_factor=3.0):
-    """Slow the clip down (no reverse) to fill ~target seconds — serene, natural motion.
-    Slowdown is capped (max_factor) so it never gets too choppy."""
-    dur = _duration(clip) or 12.0
-    factor = min(max(target / dur, 1.0), max_factor)
-    subprocess.run([
-        FFMPEG, "-y", "-i", clip,
-        "-vf", f"setpts={factor:.3f}*PTS",
-        "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
-        "-preset", "fast", "-crf", "16",
-        out,
-    ], check=True, capture_output=True)
-    return out
-
 
 def motion_score(clip, stride=1.0):
     """(overall, sky) luma change measured ONE SECOND apart — how fast the clip looks, not how
@@ -195,7 +185,7 @@ def motion_score(clip, stride=1.0):
 
 def build_reel_native(video, overlay_png, audio, out, volume=0.4, duration=None):
     """Veo clip at NATIVE speed (no slow-mo, no loop) + static text overlay + gentle music.
-    Native speed is the whole point: stretching the clip (make_slowmo) dropped the effective
+    Native speed is the whole point: stretching the clip dropped the effective
     frame rate and made motion look coarse/juddery, so we play Veo's real-time motion as-is and
     just crop to 9:16, overlay the verse, and mix the hymn in softly (volume<1)."""
     dur = duration or (_duration(video) or 8.0)
@@ -212,20 +202,6 @@ def build_reel_native(video, overlay_png, audio, out, volume=0.4, duration=None)
     ]
     subprocess.run(cmd, check=True, capture_output=True)
     return out
-
-
-def make_boomerang(clip, out):
-    """Forward + reverse → a seamless loop (~2× the clip length, no jump cut)."""
-    subprocess.run([
-        FFMPEG, "-y", "-i", clip,
-        "-filter_complex", "[0:v]split[a][b];[b]reverse[r];[a][r]concat=n=2:v=1[v]",
-        "-map", "[v]", "-an",
-        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
-        "-preset", "fast", "-crf", "16",
-        out,
-    ], check=True, capture_output=True)
-    return out
-
 
 def build_reel(video, overlay_png, audio, out, duration=60):
     """Background video (boomerang, looped/cropped to 9:16) + text overlay + music → MP4."""

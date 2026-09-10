@@ -1,0 +1,27 @@
+name: Checks
+
+# Every push. The audits only help if they run without being remembered — the dead duplicate
+# guards survived weeks precisely because nothing checked them.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps
+        run: pip install pyyaml pillow kiwipiepy imageio-ffmpeg
+      - name: Everything still compiles
+        run: python -m compileall -q .
+      - name: Rules are enforced, and workflows pass the env their code reads
+        run: python check_rules.py
