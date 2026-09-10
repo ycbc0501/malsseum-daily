@@ -194,7 +194,15 @@ def carousel_posted_today():
 def load_state():
     try:
         s = json.load(open(STATE))
-    except Exception:
+    except FileNotFoundError:
+        s = {}
+    except Exception as e:
+        # A MISSING ledger is normal — first run, fresh clone. A ledger that exists and
+        # cannot be read is a different thing entirely, and treating both as "empty" means
+        # every no-repeat guarantee silently disappears with nothing in the log to say so.
+        print(f"WARNING: {STATE} exists but could not be read ({e}) — starting from an EMPTY "
+              f"ledger. Verse/scene/music no-repeat history is gone for this run; "
+              f"published_refs() is the only thing standing between this and a duplicate.")
         s = {}
     s.setdefault("used_verses", [])   # verse refs already posted (never repeat)
     s.setdefault("used_clips", [])    # Pexels video ids already used (never repeat)

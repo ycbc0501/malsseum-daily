@@ -28,6 +28,18 @@ import urllib.parse
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+class MissingCredential(RuntimeError):
+    """A key or secret is not configured.
+
+    A LIBRARY function must never raise SystemExit. Callers wrap these in
+    `except Exception` and document themselves as best-effort — check_composition says
+    "on ANY error returns (True, ...)" — but SystemExit is not an Exception, so a missing
+    key sailed straight through the handler and killed the post. Same shape as the story
+    error that failed a run after the feed post had already published (2026-09-10).
+    SystemExit belongs in main(), nowhere else."""
+
 PHOTO_DIR = os.path.join(HERE, "photos")
 CREDITS = os.path.join(PHOTO_DIR, "credits.json")
 
@@ -64,7 +76,7 @@ def get_key(provider):
     if not key:
         url = {"unsplash": "https://unsplash.com/developers",
                "pexels": "https://www.pexels.com/api/"}[provider]
-        raise SystemExit(
+        raise MissingCredential(
             f"Missing {provider} key.\n"
             f"  1) Get a free key at {url}\n"
             f"  2) Save it to {provider}_key.txt here (or export {env})\n"

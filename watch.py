@@ -46,7 +46,14 @@ def _load(path, default):
     try:
         with open(path, encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except FileNotFoundError:
+        return default
+    except Exception as e:
+        # A MISSING ledger is normal — first run, fresh clone. A ledger that exists and
+        # cannot be read is a different thing entirely, and treating both as "empty" means
+        # every no-repeat guarantee silently disappears with nothing in the log to say so.
+        print(f"WARNING: {path} exists but could not be read ({e}) — this check is now "
+              f"running on nothing and may alert, or stay silent, for the wrong reason.")
         return default
 
 

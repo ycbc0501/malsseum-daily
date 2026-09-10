@@ -40,7 +40,15 @@ def load():
     try:
         with open(FILE, encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except FileNotFoundError:
+        return {}
+    except Exception as e:
+        # A MISSING ledger is normal — first run, fresh clone. A ledger that exists and
+        # cannot be read is a different thing entirely, and treating both as "empty" means
+        # every no-repeat guarantee silently disappears with nothing in the log to say so.
+        print(f"WARNING: {FILE} exists but could not be read ({e}) — every reader of this "
+              f"file (oldest-verse-first selection, the drop watcher) now sees an account that "
+              f"has never posted.")
         return {}
 
 

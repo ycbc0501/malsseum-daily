@@ -14,6 +14,18 @@ import urllib.parse
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+class MissingCredential(RuntimeError):
+    """A key or secret is not configured.
+
+    A LIBRARY function must never raise SystemExit. Callers wrap these in
+    `except Exception` and document themselves as best-effort — check_composition says
+    "on ANY error returns (True, ...)" — but SystemExit is not an Exception, so a missing
+    key sailed straight through the handler and killed the post. Same shape as the story
+    error that failed a run after the feed post had already published (2026-09-10).
+    SystemExit belongs in main(), nowhere else."""
+
 VIDEO_DIR = os.path.join(HERE, "videos")
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) malsseum-bot/1.0"
 
@@ -37,7 +49,7 @@ def get_key():
     if not key and os.path.exists(kf):
         key = open(kf).read().strip()
     if not key:
-        raise SystemExit("Missing Pexels key (pexels_key.txt or PEXELS_API_KEY)")
+        raise MissingCredential("Missing Pexels key (pexels_key.txt or PEXELS_API_KEY)")
     return key
 
 

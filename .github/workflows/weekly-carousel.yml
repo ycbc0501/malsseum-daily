@@ -34,6 +34,16 @@ jobs:
         run: pip install pillow kiwipiepy
 
       - name: Build the 3 slides
+        env:
+          # carousel_post.py asks Instagram whether this verse is already on the feed and whether a
+          # carousel already went out today. With no credentials both calls failed and both guards
+          # silently fell back — the same defect that disabled the reel's guards (RULES.md C4).
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          HF_API_KEY: ${{ secrets.HF_API_KEY }}
+          HF_API_SECRET: ${{ secrets.HF_API_SECRET }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: python carousel_post.py --emit
 
       - name: Host slides on a GitHub Release

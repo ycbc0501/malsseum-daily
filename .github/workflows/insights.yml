@@ -35,6 +35,10 @@ jobs:
       - name: Watch for a drop
         continue-on-error: true
         env:
+          # watch.py asks Instagram which slots actually published — without these it falls back to
+          # metrics.json and would report a post as missing when its ledger push failed.
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python watch.py

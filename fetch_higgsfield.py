@@ -13,6 +13,18 @@ import time
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+class MissingCredential(RuntimeError):
+    """A key or secret is not configured.
+
+    A LIBRARY function must never raise SystemExit. Callers wrap these in
+    `except Exception` and document themselves as best-effort — check_composition says
+    "on ANY error returns (True, ...)" — but SystemExit is not an Exception, so a missing
+    key sailed straight through the handler and killed the post. Same shape as the story
+    error that failed a run after the feed post had already published (2026-09-10).
+    SystemExit belongs in main(), nowhere else."""
+
 MODEL = "gemini"        # default backend: Nano Banana Pro (photoreal, clean, respects "no text")
 GEMINI_MODEL = "gemini-3-pro-image"
 VISION_MODEL = "gemini-2.5-pro"   # vision model that inspects the render for composition flaws
@@ -575,7 +587,7 @@ def _credentials():
             elif line.startswith("HF_API_SECRET="):
                 sec = line.split("=", 1)[1].strip()
     if not (key and sec):
-        raise SystemExit("Missing HF_API_KEY / HF_API_SECRET")
+        raise MissingCredential("Missing HF_API_KEY / HF_API_SECRET")
     return f"{key}:{sec}"
 
 
@@ -709,7 +721,7 @@ def _gemini_key():
             if line.startswith("GEMINI_API_KEY="):
                 key = line.split("=", 1)[1].strip()
     if not key:
-        raise SystemExit("Missing GEMINI_API_KEY")
+        raise MissingCredential("Missing GEMINI_API_KEY")
     return key
 
 
