@@ -44,10 +44,7 @@ jobs:
         run: python watch.py
 
       - name: Save the ledgers
-        run: |
-          git config user.name "malsseum-bot"
-          git config user.email "malsseum-bot@users.noreply.github.com"
-          git add metrics.json followers.json watch.json
-          git commit -m "metrics: daily backfill + follower curve" || { echo "nothing to commit"; exit 0; }
-          git pull --rebase --autostash origin main || true
-          git push
+        # One implementation for every ledger — see save_ledger.sh. The old
+        # `git pull --rebase || true; git push` is what lost the 08-26 ledger.
+        run: >-
+          bash save_ledger.sh 'ledgers: metrics + followers' metrics.json followers.json watch.json

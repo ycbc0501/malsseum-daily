@@ -43,14 +43,7 @@ jobs:
         run: python watch.py
 
       - name: Remember what was already reported
-        run: |
-          git config user.name "malsseum-bot"
-          git config user.email "malsseum-bot@users.noreply.github.com"
-          git add watch.json || true
-          git diff --cached --quiet && exit 0
-          git commit -m "watch: alert state"
-          for i in 1 2 3; do
-            git fetch origin main && git rebase origin/main --autostash && git push && exit 0
-            sleep $((i * 5))
-          done
-          echo "::warning::could not save watch state — an alert may repeat"
+        # One implementation for every ledger — see save_ledger.sh. The old
+        # `git pull --rebase || true; git push` is what lost the 08-26 ledger.
+        run: >-
+          bash save_ledger.sh 'watch alert state' watch.json

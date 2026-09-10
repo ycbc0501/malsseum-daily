@@ -23,11 +23,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python build_verses.py --verify --write
       - name: Commit the new pool
-        run: |
-          git config user.name "malsseum-bot"
-          git config user.email "malsseum-bot@users.noreply.github.com"
-          git add verses.json
-          git diff --cached --quiet && { echo "no change"; exit 0; }
-          git commit -m "verses: rebuild the pool from the full 개역개정 text"
-          git pull --rebase --autostash origin main || true
-          git push
+        # One implementation for every ledger — see save_ledger.sh. The old
+        # `git pull --rebase || true; git push` is what lost the 08-26 ledger.
+        run: >-
+          bash save_ledger.sh 'verses: rebuilt pool' verses.json
