@@ -413,7 +413,11 @@ def main():
     # Between the two we publish the CALMEST take we got, because a still photograph is a worse
     # answer than slightly-too-lively motion.
     MOTION_MAX, SKY_MAX = 1.5, 0.35
-    MOTION_HARD, SKY_HARD = 8.0, 4.0
+    # Raised 8.0/4.0 → 20.0/20.0 on 2026-09-10. Those numbers came from five clips scoring
+    # 1.65-4.52, and the very next frantic scene measured 13.4/8.6/16.6 — the calmest take was
+    # 8.61 and the post went out as a STILL PHOTOGRAPH. Rule E4 already says a still is the worse
+    # answer; HARD is meant for a clip that is broken, not merely lively.
+    MOTION_HARD, SKY_HARD = 20.0, 20.0
     # Defined up here so the still-fallback and exception paths still write a meaningful _meta.json.
     ov = sky = 0.0
     motion_attempts = 0

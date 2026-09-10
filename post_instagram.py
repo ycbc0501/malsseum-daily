@@ -174,10 +174,10 @@ def publish_story(media_url, ig_user_id=None, token=None):
         if code == "FINISHED":
             break
         if code == "ERROR":
-            raise SystemExit(f"story processing error: {status}")
+            raise MediaProcessingError(f"story processing error: {status}")
         time.sleep(5)
     else:
-        raise SystemExit("story processing timed out")
+        raise MediaProcessingError("story processing timed out")
 
     return _post(f"{GRAPH}/{ig_user_id}/media_publish", {
         "creation_id": creation_id, "access_token": token})
@@ -341,5 +341,8 @@ if __name__ == "__main__":
         try:
             first = args.carousel.split(",")[0] if args.carousel else args.url
             print("story:", publish_story(first))
-        except Exception as e:
+        except (Exception, SystemExit) as e:
+            # SystemExit is NOT an Exception, so this used to escape and fail the whole run AFTER
+            # the feed post had published — 2026-09-10, a story error marked a successful post as
+            # a failure and skipped its metrics.
             print(f"story failed ({e}) — feed post already published, continuing")

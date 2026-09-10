@@ -26,6 +26,11 @@ on:
     - cron: "0 8 * * *"
     - cron: "0 9 * * *"
   workflow_dispatch:
+    inputs:
+      force:
+        description: "Publish immediately, ignoring the slot window (use to fill a missed post)"
+        type: boolean
+        default: false
 
 # ONE run per slot, serialised by GitHub itself. On 2026-09-06 the 08:00 cron fired 69 minutes
 # late and the 09:00 cron fired 52 minutes late, so BOTH landed inside the 60-minute claim window,
@@ -68,14 +73,24 @@ jobs:
       - name: Wait for target time (05:00 or 19:00 KST ±10), build the Reel (Nano Banana Pro + music)
         id: build
         env:
+          # published_refs() and slot_already_filled() run in THIS step and both talk to Instagram.
+          # Without these they got access_token=None and every call came back "Cannot parse access
+          # token", so the duplicate guards silently fell back to the local ledger — the exact
+          # protection they exist to provide has never once been active.
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
           HF_API_SECRET: ${{ secrets.HF_API_SECRET }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          # A manual run defaults to the 05:00 slot and would normally stand down because that
+          # time has passed. `force` skips the wait and the slot check so a missed post can be
+          # filled by hand — 2026-09-09's evening reel was lost and there was no way to publish it.
+          FORCE: ${{ inputs.force && '--now' || '' }}
           CATCHUP: "${{ (github.event.schedule == '0 19 * * *' || github.event.schedule == '0 9 * * *') && '--catchup' || '' }}"
           TARGET_HOUR: ${{ contains(fromJSON('["0 5 * * *","0 6 * * *","0 7 * * *","0 8 * * *","0 9 * * *"]'), github.event.schedule) && '19' || '5' }}
         run: |
-          python daily_post.py --emit --jitter 600 --hour "$TARGET_HOUR" $CATCHUP
+          python daily_post.py --emit --jitter 600 --hour "$TARGET_HOUR" $CATCHUP $FORCE
           # No _skip file means a reel was built and the publish steps should run.
           if [ -f output/_skip ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
