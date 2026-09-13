@@ -13,6 +13,11 @@ on:
     - cron: "0 14 * * *"   # 23:00 KST
     - cron: "0 17 * * *"   # 02:00 KST
   workflow_dispatch:
+    inputs:
+      test:
+        description: "Send a test alert to confirm the channel works"
+        type: boolean
+        default: false
 
 # Never two at once — they share the cooldown file and would double-send.
 concurrency:
@@ -40,7 +45,7 @@ jobs:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python watch.py
+        run: python watch.py ${{ inputs.test && '--test' || '' }}
 
       - name: Remember what was already reported
         # One implementation for every ledger — see save_ledger.sh. The old

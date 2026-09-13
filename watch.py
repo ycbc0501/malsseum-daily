@@ -19,6 +19,7 @@ Run daily from the metrics workflow, after the backfill has refreshed the number
 import datetime
 import json
 import os
+import sys
 import statistics
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -150,6 +151,17 @@ def findings():
 
 
 def main():
+    # `watch.py --test` proves the alert path end to end without waiting for something to break.
+    # The channel was switched twice and each time the only proof it worked was a real failure
+    # arriving — or, twice, not arriving.
+    if "--test" in sys.argv:
+        import notify
+        now = datetime.datetime.now(KST)
+        ok = notify.send(f"🔔 알림 경로 확인 — {now:%m/%d %H:%M} KST\n"
+                         f"평소엔 조용하고, 게시 누락·좋아요 급락·반응 없음일 때만 옵니다.")
+        print("test alert sent" if ok else "test alert NOT sent — check TELEGRAM_* secrets")
+        return 0 if ok else 1
+
     state = _load(STATE, {})
     today = datetime.datetime.now(KST).date()
     sent = []
