@@ -83,21 +83,31 @@ def wait_until_target(jitter_s, hour=5, catchup=False):
     past the target it posts. That absorbs several hours of scheduler drift at the cost of a few
     seconds per skipped run, instead of one run idling for hours against the job timeout."""
     now = datetime.now(KST)
-    target = now.replace(hour=hour, minute=0, second=0, microsecond=0)
-    target += timedelta(seconds=random.randint(-jitter_s, jitter_s))
-    delay = (target - now).total_seconds()
+    # WHO CLAIMS is decided on the exact slot time, never on the jittered one. Jitter used to move
+    # the target and the claim window moved with it, so the runs disagreed about their own
+    # deadline: on 2026-09-13 the 03:51 run measured itself against 04:58 ("67 min early, leaving
+    # it to a later cron") and the 04:59 run against 04:55 ("4 min past, an earlier cron owns
+    # this"). Nobody claimed and the morning post never happened. With hourly crons and an exact
+    # slot, the delays are exactly 60, 120, 180... apart, so the (0, CLAIM_WINDOW_MIN] window holds
+    # one run and only one — the property the chain is built on.
+    slot = now.replace(hour=hour, minute=0, second=0, microsecond=0)
+    delay = (slot - now).total_seconds()
     if delay > CLAIM_WINDOW_MIN * 60:
-        print(f"{delay/60:.0f} min before {target:%H:%M} KST — too early, leaving the slot to a later cron")
+        print(f"{delay/60:.0f} min before {slot:%H:%M} KST — too early, leaving the slot to a later cron")
         return False
     if delay <= 0:
         late = -delay / 60
         if not (catchup and late >= CATCHUP_AFTER_MIN):
-            print(f"{late:.0f} min past {target:%H:%M} KST — an earlier cron owns this slot, standing down")
+            print(f"{late:.0f} min past {slot:%H:%M} KST — an earlier cron owns this slot, standing down")
             return False
-        print(f"target {target:%H:%M:%S} KST passed by {late:.0f} min and the whole chain fired late → posting late")
+        print(f"slot {slot:%H:%M:%S} KST passed by {late:.0f} min and the whole chain fired late → posting late")
         return True
-    print(f"sleeping {int(delay)}s → posting at {target:%Y-%m-%d %H:%M:%S} KST")
-    time.sleep(delay)
+    # Jitter applies only to WHEN we post, so the feed is not stamped at exactly 05:00:00 daily.
+    # It cannot move the claim, so it cannot open a gap between two runs.
+    target = slot + timedelta(seconds=random.randint(-jitter_s, jitter_s))
+    wait = max(0.0, (target - datetime.now(KST)).total_seconds())
+    print(f"sleeping {int(wait)}s → posting at {target:%Y-%m-%d %H:%M:%S} KST")
+    time.sleep(wait)
     return True
 
 
