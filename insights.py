@@ -55,6 +55,17 @@ def _themes():
         return {}
 
 
+def _is_young(published):
+    """Is this post still accumulating? Only young posts are worth spending scoped calls on.
+
+    Reads through metrics.published_kst() because the field carries two zones (metrics.py
+    writes KST, this file copies Instagram's UTC) and a raw read is silently 9 hours out."""
+    when = metrics.published_kst({"published": published or ""})
+    if not when:
+        return False
+    return (datetime.now(KST) - when).days <= metrics.MATURE_DAYS
+
+
 def backfill(limit=90):
     """Give every recent post an entry in metrics.json, filling what we can actually read.
 
@@ -73,7 +84,8 @@ def backfill(limit=90):
         f"?fields=id,timestamp,media_product_type,permalink,caption,like_count,comments_count"
         f"&limit={int(limit)}&access_token={token}")
 
-    added = filled = 0
+    added = filled = empties = 0
+    skip_insights = False
     for m in listing.get("data", []):
         entry = data.setdefault(m["id"], {})
         if not entry:
@@ -85,17 +97,43 @@ def backfill(limit=90):
         entry.setdefault("kind", m.get("media_product_type", ""))
         if m.get("timestamp"):
             entry.setdefault("published", m["timestamp"])
-        got = entry.get("insights") or {}
-        if not got:
+        got = dict(entry.get("insights") or {})
+        was = dict(got)
+
+        # likes/comments ride along in the listing above — no extra call, no scope. Take the
+        # fresh value ALWAYS, not just the first time. `if not got:` used to skip an entry the
+        # moment it held anything, which froze every post at its day-one snapshot: a reel that
+        # gained likes over the following week was recorded as if it never did.
+        for key, field in (("likes", "like_count"), ("comments", "comments_count")):
+            if m.get(field) is not None:
+                got[key] = m[field]
+
+        # The scoped metrics (views, reach) cost a call each, so only chase them where they
+        # are still missing and still moving. `views` is the number the account is judged by;
+        # an entry that has likes but no views is not measured, it is half-measured.
+        young = _is_young(entry.get("published"))
+        if young and "views" not in got and not skip_insights:
             try:
-                got = post_instagram.insights(m["id"], token) or {}
+                fresh = post_instagram.insights(m["id"], token) or {}
             except Exception as e:
                 print(f"  insights({m['id']}) failed: {e}")
-                got = {}
-            # No scope → no reach/shares. These two are plain fields and always readable, so
-            # record them rather than storing an empty dict and calling it measured.
-            got.setdefault("likes", m.get("like_count"))
-            got.setdefault("comments", m.get("comments_count"))
+                fresh = {}
+            # MERGE. A partial answer must never delete what we already had — the same
+            # mistake metrics.refresh() made until 2026-09-09.
+            got.update({k: v for k, v in fresh.items() if v is not None})
+            if fresh:
+                empties = 0
+            else:
+                empties += 1
+                # The token has no insights scope (or Meta is rate-limiting). Asking 90 more
+                # times in the same run cannot change that, and burning the call budget is how
+                # the 400s that blinded the duplicate guards started.
+                if empties >= 3:
+                    skip_insights = True
+                    print("  insights unavailable (3 empty in a row) — skipping the rest of "
+                          "this run. Set IG_INSIGHTS_TOKEN (see ig_login.py) to record views.")
+
+        if got != was:
             entry["insights"] = got
             filled += 1
     metrics.save(data)
