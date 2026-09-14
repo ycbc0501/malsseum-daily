@@ -120,6 +120,10 @@ def refresh(token=None, days=MATURE_DAYS):
             # Assigning the subset used to delete the engagement numbers we already had.
             merged = dict(entry.get("insights") or {})
             merged.update({k: v for k, v in got.items() if v is not None})
+            # A real answer supersedes a hand-entered one, and the marker has to go with it —
+            # otherwise the ledger keeps saying "typed in by hand" about an API number.
+            if got.get("views") is not None:
+                merged.pop("views_manual", None)
             entry["insights"] = merged
             entry["fetched"] = now.isoformat(timespec="seconds")
             touched += 1
@@ -244,11 +248,42 @@ def report():
     group("theme", "verse theme")
 
 
+def note_views(which, count):
+    """Record a view count read off the app by hand → True if it landed.
+
+    The API cannot give us this: the publishing token's app lacks
+    instagram_manage_insights (`(#10) Application does not have permission`), so all 166 posts
+    carry likes and comments only while every post visibly shows a view count in the app. That
+    gap is not cosmetic — 2026-08-27's reach restriction is a DISTRIBUTION event, and likes are
+    a lagging, noisy proxy for distribution. Until IG_INSIGHTS_TOKEN exists (see ig_login.py),
+    a number typed in by hand beats no number at all.
+
+    Marked `views_manual` so nothing later mistakes it for something the API returned, and so
+    `refresh()` overwriting it with a real value is an improvement rather than a conflict."""
+    data = load()
+    for media_id, entry in data.items():
+        if which in (media_id, entry.get("permalink", ""), entry.get("ref", "")) or \
+           which in entry.get("permalink", ""):
+            ins = entry.setdefault("insights", {})
+            ins["views"] = int(count)
+            ins["views_manual"] = True
+            save(data)
+            print(f"{entry.get('ref', media_id)}: views={count} (hand-entered)")
+            return True
+    print(f"no post matching {which!r} — pass a ref (\"신명기 1:29\"), a permalink or a media id")
+    return False
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "report"
     if cmd == "record":
         record()
     elif cmd == "refresh":
         refresh()
+    elif cmd == "views":
+        # python3 metrics.py views "신명기 1:29" 59
+        if len(sys.argv) < 4:
+            raise SystemExit('usage: metrics.py views "<ref|permalink|media id>" <count>')
+        sys.exit(0 if note_views(sys.argv[2], sys.argv[3]) else 1)
     else:
         report()
