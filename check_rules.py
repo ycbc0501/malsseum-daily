@@ -5,6 +5,7 @@ A rule written down but not enforced is worse than no rule: it reads as a guaran
 after touching the pipeline, and add a check here whenever a rule is added to RULES.md.
 """
 import json
+import os
 import pathlib
 import re
 import sys
@@ -75,6 +76,15 @@ def checks():
         and "cloudless sky" in hf.COMPOSE[("center", "top")].format(
             empty_area=hf.EMPTY_AREA[True], anchor=hf.ANCHOR[True])]
     yield "F3 text area is measured, not assumed", hasattr(generate, "text_area_ok")
+    # B5 — the caption switch must stay off by default. If this ever passes because someone set
+    # the variable in a workflow, rule B-5 has been changed in the code without being changed in
+    # this file, which is the drift RULES.md exists to prevent.
+    import reflection
+    os.environ.pop("CAPTION_REFLECTION", None)
+    yield "B5 the caption line is off unless rule B-5 is rewritten", (
+        not reflection.enabled()
+        and "CAPTION_REFLECTION" not in daily
+        and "CAPTION_REFLECTION" not in carousel_wf)
     ig = (HERE / "post_instagram.py").read_text()
     yield "H0 API errors carry the API's reason", "detail.get('message')" in ig
     yield "H0b transient publish failures retry", (

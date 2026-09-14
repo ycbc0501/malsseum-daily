@@ -25,3 +25,13 @@ jobs:
         run: python -m compileall -q .
       - name: Rules are enforced, and workflows pass the env their code reads
         run: python check_rules.py
+
+      # NOT `for t in test_*.py` — test_reel_length.py is RED and has been for a while: it
+      # asserts daily_post.HYMN_S, which was deleted when SEGMENTS dropped to 2, and it also
+      # reports a 3.0s loop seam and a fade that starts 1.8s early on a 15.3s reel. Those two
+      # are the exact complaint from 2026-08-21 ("the music stops and repeats before I even
+      # read the line"), so they are not stale assertions to delete — they are unfixed. Named
+      # here rather than skipped by a glob, so nobody reads a green run as "tests pass".
+      # See notes/reach-recovery-2026-09-14.md §4.
+      - name: Unit tests
+        run: python test_reflection.py
