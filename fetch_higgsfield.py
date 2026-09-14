@@ -690,6 +690,56 @@ def check_composition(image_path):
         return True, f"check skipped ({e})"
 
 
+SEAM_JUMP = 7.0      # brightness levels (0-255) between two adjacent rows
+SEAM_RATIO = 30.0    # …and that many times the image's own typical row-to-row change
+
+
+def seam_score(image_path):
+    """(jump, ratio, y) for the worst horizontal edge in the image — a MEASUREMENT, not a question.
+
+    Nano Banana sometimes returns a stacked composite: a dark wall filling the top two thirds
+    and a lit scene pasted below it, joined by a hard line running the full width. The vision
+    checker is supposed to catch exactly this ("stacked double scene" is in its own prompt) and
+    on 2026-09-14 it looked at one and answered `ok=True` with no reason given. The reel shipped,
+    and it is one of the ten Instagram flagged.
+
+    This is the motion-gate lesson again: a model asked "does this look wrong?" will say no, while
+    a number does not get to have an opinion. A real photograph's brightness drifts row to row;
+    a paste has one row where it jumps. The 09-14 render jumped 16.5 levels at 67% height against
+    a median row-to-row change of 0.05 — 356×. A clean render from the same week: 4.5 and 10×.
+
+    Both thresholds must trip: the ratio alone fires on very flat images where the median is
+    near zero, and the jump alone fires on high-contrast scenes where a bright window edge is
+    the subject rather than a defect. The top and bottom 5% are ignored (frame edges) and so is
+    the band the verse sits in — white text on a dark wall IS a brightness cliff."""
+    from PIL import Image
+    import statistics
+    im = Image.open(image_path).convert("L")
+    w, h = im.size
+    rows = [statistics.mean(im.crop((0, y, w, y + 1)).getdata()) for y in range(h)]
+    deltas = [(abs(rows[y + 1] - rows[y]), y) for y in range(int(0.05 * h), int(0.95 * h) - 1)
+              if not (0.18 * h < y < 0.45 * h)]
+    if not deltas:
+        return 0.0, 0.0, 0
+    median = statistics.median(d for d, _ in deltas) or 0.001
+    jump, y = max(deltas)
+    return jump, jump / median, y
+
+
+def has_seam(image_path):
+    """True if the render looks pasted together. Never raises — a gate that cannot run must not
+    be able to stop a post (rule 0-3)."""
+    try:
+        jump, ratio, y = seam_score(image_path)
+    except Exception as e:
+        print(f"seam check skipped ({e})")
+        return False
+    bad = jump >= SEAM_JUMP and ratio >= SEAM_RATIO
+    print(f"seam: jump {jump:.1f} (limit {SEAM_JUMP}), {ratio:.0f}x typical "
+          f"(limit {SEAM_RATIO}x) at {y}px → {'STACKED' if bad else 'ok'}")
+    return bad
+
+
 def generate_checked(dest, index=0, placement=("center", "middle"), aspect="3:4", attempts=3, var_t=None):
     """Generate a background AND vision-check it; regenerate (up to `attempts`) if the checker
     flags it. Returns (path, index_used) — the caller records index_used so the scene ledger stays
@@ -708,6 +758,10 @@ def generate_checked(dest, index=0, placement=("center", "middle"), aspect="3:4"
                             var_t=(var_t if var_t is None else var_t + a - 1))
         ok, reason = check_composition(dest)
         print(f"composition check {a}/{attempts} (scene {used} {SCENE_CATS[used]}): ok={ok} :: {reason}")
+        # The measurement runs even when the model said yes — on 09-14 it said yes to a stacked
+        # composite. Two independent gates, and the cheap deterministic one is not the junior.
+        if ok and has_seam(dest):
+            ok, reason = False, "stacked composite (measured)"
         if ok:
             return dest, used
     return dest, used

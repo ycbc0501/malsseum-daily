@@ -34,4 +34,6 @@ jobs:
       # here rather than skipped by a glob, so nobody reads a green run as "tests pass".
       # See notes/reach-recovery-2026-09-14.md §4.
       - name: Unit tests
-        run: python test_reflection.py
+        run: |
+          python test_reflection.py
+          python test_seam.py

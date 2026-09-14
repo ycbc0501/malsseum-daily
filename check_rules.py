@@ -76,6 +76,13 @@ def checks():
         and "cloudless sky" in hf.COMPOSE[("center", "top")].format(
             empty_area=hf.EMPTY_AREA[True], anchor=hf.ANCHOR[True])]
     yield "F3 text area is measured, not assumed", hasattr(generate, "text_area_ok")
+    # A5b — the seam gate must be MEASURED and must run even when the model said yes, because on
+    # 2026-09-14 the model said yes to a stacked composite and it shipped.
+    yield "A5b stacked composites are measured, not asked about", hasattr(hf, "has_seam")
+    yield "A5b the seam gate runs even when the model approves", (
+        "if ok and has_seam(dest)" in (HERE / "fetch_higgsfield.py").read_text())
+    yield "A5b both thresholds must trip", (
+        hf.SEAM_JUMP >= 5.0 and hf.SEAM_RATIO >= 20.0)
     # B5 — the caption line is ON as of 2026-09-14, in BOTH publishing paths. A reflection that
     # reached the reel and not the carousel would leave half the account exactly as unoriginal as
     # before, which is the failure this rule exists to prevent.
