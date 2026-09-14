@@ -305,20 +305,27 @@ def main():
     photos = generate.calm_photos(generate.pick_photos())   # fallback backgrounds if Higgsfield is unavailable (calm centres only — the verse must stay legible)
 
     state = load_state()
-    # Trust Instagram over the local ledger — see published_refs().
-    live = published_refs()
-    if live:
-        added = [r for r in live if r not in state["used_verses"]]
-        if added:
-            print(f"ledger was missing {len(added)} published verse(s) → recovered from Instagram: {added}")
-            state["used_verses"].extend(added)
+    # Trust Instagram over the local ledger — see published_refs(). Two recovery sources, and
+    # the ledger needs BOTH: published_refs() asks Instagram but only sees the last 25 posts,
+    # while metrics.json remembers every post ever recorded but is written by a different job.
+    #
+    # On 2026-09-14 state.json held 62 used_verses against 166 published posts and 119 distinct
+    # refs — the ledger had been emptied by old cycle resets and never rebuilt, so ~57 already-
+    # published verses were sitting in the eligible pool. The account was under a 퍼온 콘텐츠
+    # reach restriction at the time for exactly that: 47 verses had gone out more than once.
+    ago = last_published()
+    known = list(dict.fromkeys(published_refs() + sorted(ago)))
+    added = [r for r in known if r not in state["used_verses"]]
+    if added:
+        print(f"ledger was missing {len(added)} published verse(s) → recovered "
+              f"(Instagram + metrics.json): {added[:10]}{' …' if len(added) > 10 else ''}")
+        state["used_verses"].extend(added)
     unused = [v for v in verses if v["ref"] not in state["used_verses"]]
     if not unused:                       # whole pool shown → start a new cycle
         state["used_verses"] = []
         unused = verses
     # Oldest first. Within the cycle everything here is unpublished and this changes nothing; after
     # a reset it is what stops the pool replaying its own order seven weeks later.
-    ago = last_published()
     unused.sort(key=lambda v: ago.get(v["ref"], ""))
     # this week's theme → draw from it (fall back to any unused if its verses run out)
     theme = THEME_ORDER[datetime.now(KST).isocalendar()[1] % len(THEME_ORDER)]

@@ -52,15 +52,20 @@ def main():
     # verse in the theme, and picked 시편 126:5 — one of the ten Instagram flagged on 09-06.
     ago = daily_post.last_published()
     pool = sorted(pool, key=lambda v: ago.get(v["ref"], ""))
+    # NEVER published beats longest-ago. Preferring the oldest was only ever a tie-breaker for
+    # a pool that had run out, but it was doing the choosing: on 2026-09-14 the account was
+    # still under a 퍼온 콘텐츠 restriction and the ledger showed 47 verses published more than
+    # once, so "it has been a while" is not good enough — a repeat is a repeat to Instagram.
     verse = pool[0]
     for step, cand in enumerate(pool):
-        if cand["ref"] not in recent:
+        if cand["ref"] not in recent and cand["ref"] not in ago:
             verse = cand
             if step:
-                print(f"skipped {step} verse(s) already on the feed → {verse['ref']}")
+                print(f"skipped {step} verse(s) already published → {verse['ref']}")
             break
     else:
-        print("every verse in this theme is already on the feed — posting the oldest anyway")
+        print("every verse in this theme has been published before — posting the oldest, "
+              "which means a repeat. Widen verses.json for this theme.")
     photo = photos[week % len(photos)] if photos else None
 
     date_str = datetime.now(KST).strftime("%Y-%m-%d")

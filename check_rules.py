@@ -55,6 +55,18 @@ def checks():
         "if: always()" in daily and (HERE / "ledger_merge.py").exists())
     yield "C6 oldest-first (reel)", hasattr(daily_post, "last_published")
     yield "C6 oldest-first (carousel)", "last_published" in carousel
+    # C7 — the ledger must be rebuilt from BOTH sources on every run, and a verse that has ever
+    # been published must be excluded rather than merely sorted last. 62 ledger entries against
+    # 166 published posts is how 47 verses went out twice.
+    dp = (HERE / "daily_post.py").read_text()
+    yield "C7 ledger rebuilt from Instagram AND metrics.json", (
+        "published_refs() + sorted(ago)" in dp)
+    yield "C7 an already-published verse is excluded (carousel)", (
+        'cand["ref"] not in ago' in carousel)
+    state_refs = set(json.loads((HERE / "state.json").read_text()).get("used_verses", []))
+    ever = {(e.get("ref") or "").strip()
+            for e in json.loads((HERE / "metrics.json").read_text()).values()}
+    yield "C7 the ledger knows every verse already published", not (ever - {""}) - state_refs
     yield "D  every INTERIOR_CATS entry is a real scene", not [
         c for c in hf.INTERIOR_CATS if c not in hf.SCENE_GROUPS]
     yield "D  no interior is asked for a sky", not [
