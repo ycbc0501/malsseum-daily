@@ -269,6 +269,20 @@ def insights(media_id, token=None):
             vals = row.get("values") or [{}]
             out[row["name"]] = vals[0].get("value")
         if out:
+            # A tier can succeed and still carry no `views` — tiers 3 and 4 do not ask for
+            # it, so a token that only clears those would report reach forever and never
+            # the one number the account is actually judged by. Ask for it alone and merge;
+            # a rejection here costs one call and changes nothing.
+            if "views" not in out:
+                try:
+                    got = _get(f"{GRAPH}/{media_id}/insights"
+                               f"?metric=views&access_token={token}")
+                    for row in got.get("data", []):
+                        vals = row.get("values") or [{}]
+                        out[row["name"]] = vals[0].get("value")
+                except Exception as e:
+                    print(f"insights({media_id}): tier {tier[0]}..({len(tier)}) had no "
+                          f"views and asking alone failed: {e}")
             return out
 
     # Every bundle was rejected. A bundle is all-or-nothing: ask for six metrics and one
