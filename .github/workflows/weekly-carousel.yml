@@ -44,6 +44,8 @@ jobs:
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
           HF_API_SECRET: ${{ secrets.HF_API_SECRET }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          # Same as the reel — see daily-post.yml. The carousel is flagged by the same detector.
+          CAPTION_REFLECTION: "1"
         run: python carousel_post.py --emit
 
       - name: Host slides on a GitHub Release

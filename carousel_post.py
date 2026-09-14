@@ -74,7 +74,10 @@ def main():
     prefix = os.path.join(posts, f"carousel-{date_str}")
     slides = carousel.build_slides(verse, photo, prefix)
     rels = [os.path.relpath(s, generate.HERE) for s in slides]
-    caption = f"{verse['text']}\n[{verse['ref']}]"   # 캡션은 말씀과 출처만 (규칙 10)
+    # ONE caption builder for both post types (RULES 0-4). This used to format the string here,
+    # which meant the reel and the carousel could drift — and on 2026-09-14 they would have:
+    # the reflection line added for B-5 would have reached the reel only.
+    caption = daily_post.build_caption(verse, "")
     tags = hashtags.first_comment(theme)   # 안내 한 줄 + 해시태그 5개
     print(f"carousel: [{theme}] {verse['ref']}  ({len(rels)} slides)")
 

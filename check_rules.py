@@ -76,15 +76,23 @@ def checks():
         and "cloudless sky" in hf.COMPOSE[("center", "top")].format(
             empty_area=hf.EMPTY_AREA[True], anchor=hf.ANCHOR[True])]
     yield "F3 text area is measured, not assumed", hasattr(generate, "text_area_ok")
-    # B5 — the caption switch must stay off by default. If this ever passes because someone set
-    # the variable in a workflow, rule B-5 has been changed in the code without being changed in
-    # this file, which is the drift RULES.md exists to prevent.
+    # B5 — the caption line is ON as of 2026-09-14, in BOTH publishing paths. A reflection that
+    # reached the reel and not the carousel would leave half the account exactly as unoriginal as
+    # before, which is the failure this rule exists to prevent.
     import reflection
+    yield "B5 the caption line is enabled (reel)", "CAPTION_REFLECTION" in daily
+    yield "B5 the caption line is enabled (carousel)", "CAPTION_REFLECTION" in carousel_wf
+    yield "B5 one caption builder for both post types", "build_caption" in carousel
+    # …and it must still be unable to break a post: no key, no network, a line that breaks the
+    # register — all of those have to end as the verse-only caption rather than an exception.
     os.environ.pop("CAPTION_REFLECTION", None)
-    yield "B5 the caption line is off unless rule B-5 is rewritten", (
+    verse = {"text": "여호와는 나의 목자시니 내게 부족함이 없으리로다", "ref": "시편 23:1"}
+    yield "B5 a failed reflection still produces a caption", (
         not reflection.enabled()
-        and "CAPTION_REFLECTION" not in daily
-        and "CAPTION_REFLECTION" not in carousel_wf)
+        and daily_post.build_caption(verse, "") == f"{verse['text']}\n[{verse['ref']}]")
+    yield "B5 the line is one quiet sentence, not a sermon", (
+        reflection.MAX_CHARS <= 60 and reflection._clean("오늘도 힘내세요.") is None
+        and reflection._clean("이 말씀을 붙들고 오늘을 삽시다.") is None)
     ig = (HERE / "post_instagram.py").read_text()
     yield "H0 API errors carry the API's reason", "detail.get('message')" in ig
     yield "H0b transient publish failures retry", (
