@@ -21,6 +21,7 @@ def checks():
     gate = hf._CHECK_PROMPT.lower()
     notext = hf.NOTEXT.lower()
     daily = (HERE / ".github/workflows/daily-post.yml").read_text()
+    daily_post_src = (HERE / "daily_post.py").read_text()
     carousel_wf = (HERE / ".github/workflows/weekly-carousel.yml").read_text()
     carousel = (HERE / "carousel_post.py").read_text()
     scenes = [s for items in hf.SCENE_GROUPS.values() for s in items]
@@ -49,6 +50,9 @@ def checks():
     yield "B1 verses are verbatim (generated, not hand-written)", (HERE / "build_verses.py").exists()
     yield "B3 pool lasts a year at 2/day", len(verses) / 2 > 330
     yield "C2 reel queue", "concurrency:" in daily
+    yield "C2b a late run needs evidence, not a schedule argument", (
+        'slot_state' in daily_post_src and '"unknown"' in daily_post_src
+        and "LATE_LIMIT_MIN" in daily_post_src)
     yield "C2 carousel queue", "concurrency:" in carousel_wf
     yield "C3 slot re-checked just before publishing", "Re-check the slot right before" in daily
     yield "C4 Instagram is the source of truth", hasattr(daily_post, "published_refs")

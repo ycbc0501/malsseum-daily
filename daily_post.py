@@ -59,18 +59,16 @@ SEGMENTS = 2
 # The claim window, in minutes before the target. It is exactly the cron spacing on purpose:
 # with hourly crons, one and only one run in the chain can ever land inside (0, 60], so two runs
 # can never claim the same slot concurrently and double-post. A run that arrives after the target
-# claims nothing — unless it is the LAST cron of the chain (--catchup), which posts late rather
-# than let the slot go empty.
+# claims nothing on the schedule alone; a late run may still fill the slot, but only against
+# positive evidence from Instagram that it is empty (see wait_until_target).
 CLAIM_WINDOW_MIN = 60
 
-# The chain spans 4 hours (first cron to last). If the target has passed by at least that much,
-# every cron in the chain fired late and none of them could claim, so the slot really is empty and
-# --catchup posts it late. Any smaller lateness means an earlier cron DID claim it, and the catchup
-# run must stand down rather than publish a second copy.
-CATCHUP_AFTER_MIN = 240
+# How late a run may still fill an empty slot. Past this it is no longer that slot's post — a
+# 05:00 reel going out at 14:00 is worse than none, and the other slot is closer anyway.
+LATE_LIMIT_MIN = 6 * 60
 
 
-def wait_until_target(jitter_s, hour=5, catchup=False):
+def wait_until_target(jitter_s, hour=5):
     """Sleep until the target hour. Returns False if this run is too early to claim the slot.
 
     2026-08-28: GitHub's scheduler went from ~30 min late to 4-5 HOURS late. The old design was
@@ -97,10 +95,25 @@ def wait_until_target(jitter_s, hour=5, catchup=False):
         return False
     if delay <= 0:
         late = -delay / 60
-        if not (catchup and late >= CATCHUP_AFTER_MIN):
-            print(f"{late:.0f} min past {slot:%H:%M} KST — an earlier cron owns this slot, standing down")
+        if late > LATE_LIMIT_MIN:
+            print(f"{late/60:.1f}h past {slot:%H:%M} KST — too late to be this slot's post, standing down")
             return False
-        print(f"slot {slot:%H:%M:%S} KST passed by {late:.0f} min and the whole chain fired late → posting late")
+        # Whether an earlier cron "owns" this slot is not something the schedule can be trusted to
+        # answer. GitHub fires the evening chain one to four hours late and drops most of it: over
+        # the last week only 2-4 of the 5 evening crons ran at all, and on the days when none
+        # landed inside the claim window nobody posted (09-13, 09-14). So ask the account instead.
+        # An empty slot is an empty slot no matter which cron is asking; "unknown" is not evidence,
+        # and a late run has nothing but evidence, so it stands down. The concurrency queue and the
+        # pre-publish re-check stop two runs from racing into the same empty slot.
+        state = slot_state(hour)
+        if state == "filled":
+            print(f"{late:.0f} min past {slot:%H:%M} KST and the slot is already posted → standing down")
+            return False
+        if state == "unknown":
+            print(f"{late:.0f} min past {slot:%H:%M} KST and cannot confirm the slot is empty "
+                  f"→ standing down rather than risk a duplicate")
+            return False
+        print(f"{late:.0f} min past {slot:%H:%M} KST and the slot is still empty → filling it")
         return True
     # Jitter applies only to WHEN we post, so the feed is not stamped at exactly 05:00:00 daily.
     # It cannot move the claim, so it cannot open a gap between two runs.
@@ -111,12 +124,13 @@ def wait_until_target(jitter_s, hour=5, catchup=False):
     return True
 
 
-def slot_already_filled(hour):
-    """True if this half of the day already has a post on Instagram (KST).
+def slot_state(hour):
+    """"filled" | "empty" | "unknown" — what Instagram says about this half of the day (KST).
 
-    The guard that makes the cron chain safe, and the last line of defence against the duplicate
-    that started this: even with the ledger lost AND several crons firing, the account itself
-    says whether the slot is taken. Morning owns 00:00-11:59 KST, evening 12:00-23:59."""
+    The three answers matter separately. An ON-TIME run may publish on "unknown", because the
+    schedule already says the slot is its own and refusing would miss a post over a flaky API call.
+    A LATE run may not: it has no schedule claim, only the evidence, so without evidence it stands
+    down. Morning owns 00:00-11:59 KST, evening 12:00-23:59."""
     try:
         import post_instagram
         today = datetime.now(KST).date()
@@ -125,12 +139,18 @@ def slot_already_filled(hour):
             ts = m.get("timestamp") or ""
             when = datetime.strptime(ts[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc).astimezone(KST)
             if when.date() == today and (when.hour >= 12) == want_pm:
-                print(f"{'evening' if want_pm else 'morning'} slot already posted at {when:%H:%M} KST ({m.get('permalink')}) → skipping")
-                return True
-        return False
+                print(f"{'evening' if want_pm else 'morning'} slot already posted at {when:%H:%M} KST "
+                      f"({m.get('permalink')})")
+                return "filled"
+        return "empty"
     except Exception as e:
-        print(f"slot check failed ({e}) — proceeding rather than skipping a post")
-        return False
+        print(f"slot check failed ({e})")
+        return "unknown"
+
+
+def slot_already_filled(hour):
+    """Kept for the workflow's pre-publish re-check, which only cares about "definitely taken"."""
+    return slot_state(hour) == "filled"
 
 
 def published_refs(limit=25):
@@ -300,12 +320,13 @@ def main():
     ap.add_argument("--emit", action="store_true")
     ap.add_argument("--jitter", type=int, default=600)
     ap.add_argument("--hour", type=int, default=5)   # 5 = morning, 19 = evening (KST)
-    # Set on the LAST cron of each chain only: it posts late rather than leave the slot empty.
-    ap.add_argument("--catchup", action="store_true")
+    # --catchup is accepted and ignored: the chain no longer needs a designated latecomer, because
+    # a late run now asks the account whether the slot is empty instead of inferring it.
+    ap.add_argument("--catchup", action="store_true", help=argparse.SUPPRESS)
     args = ap.parse_args()
 
     if not args.now:
-        if not wait_until_target(args.jitter, args.hour, args.catchup) or slot_already_filled(args.hour):
+        if not wait_until_target(args.jitter, args.hour) or slot_already_filled(args.hour):
             # Nothing to publish. The workflow reads this file and skips the remaining steps.
             os.makedirs(generate.OUT_DIR, exist_ok=True)
             open(os.path.join(generate.OUT_DIR, "_skip"), "w").close()
