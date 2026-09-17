@@ -274,7 +274,7 @@ def note_views(which, count):
     return False
 
 
-def note_flag(refs, flagged=True):
+def note_flag(refs, flagged=True, basis=None):
     """Record which posts Instagram lists under 퍼온 콘텐츠 → count of rows that landed.
 
     Instagram exposes this list ONLY in the app (계정 상태 → 도달 → 퍼온 콘텐츠); no API field
@@ -296,7 +296,15 @@ def note_flag(refs, flagged=True):
     for which in refs:
         for media_id, entry in data.items():
             if which in (media_id, entry.get("ref", "")) or which in entry.get("permalink", ""):
-                entry["reposted_flag"] = {"flagged": bool(flagged), "checked": today}
+                rec = {"flagged": bool(flagged), "checked": today}
+                # HOW we know, when it wasn't simply read off the screen. An inference is
+                # allowed in this ledger — 시편 4:8 is only known to be absent because both of
+                # its neighbours in a newest-first list were present and it was not — but an
+                # inference that gets stored looking like an observation is how a guess becomes
+                # a fact three sessions later.
+                if basis:
+                    rec["basis"] = basis
+                entry["reposted_flag"] = rec
                 hit += 1
                 print(f"  {entry.get('ref', media_id):<16} "
                       f"{'FLAGGED 퍼온 콘텐츠' if flagged else 'not in the list'} (checked {today})")
@@ -332,14 +340,26 @@ def flag_report(since="2026-09-10"):
         state = "?" if not f else ("YES" if f["flagged"] else "no")
         print(f"{pub.strftime('%m-%d %H:%M KST'):<17} {(entry.get('kind') or '?')[:5]:<6} "
               f"{str(entry.get('ref'))[:18]:<18} {'on' if pub >= REFLECTION_SINCE else 'off':<13} {state}")
-    known = [e for _, e in rows if e.get("reposted_flag")]
+    known = [(t, e) for t, e in rows if e.get("reposted_flag")]
     if known:
-        on = [e for _, e in rows if _ >= REFLECTION_SINCE and e.get("reposted_flag")]
-        off = [e for _, e in rows if _ < REFLECTION_SINCE and e.get("reposted_flag")]
+        print()
+        on = [e for t, e in known if t >= REFLECTION_SINCE]
+        off = [e for t, e in known if t < REFLECTION_SINCE]
         for label, group in (("caption line ON ", on), ("caption line OFF", off)):
             if group:
                 n = sum(1 for e in group if e["reposted_flag"]["flagged"])
                 print(f"{label}: {n}/{len(group)} flagged")
+        # The axis the caption experiment cannot see. Every flagged post so far is a reel, and
+        # reels are ~87% of everything the account posts — so this split is only worth reading
+        # once a FEED post has actually been looked for in the list and recorded either way.
+        for kind in ("REELS", "FEED"):
+            g = [e for _, e in known if (e.get("kind") or "") == kind]
+            if g:
+                n = sum(1 for e in g if e["reposted_flag"]["flagged"])
+                print(f"{kind:<16}: {n}/{len(g)} flagged")
+        for _, e in known:
+            if e["reposted_flag"].get("basis"):
+                print(f"  ! {e.get('ref')}: {e['reposted_flag']['basis']}")
     else:
         print("\nno post has been checked against the app list yet — "
               'python3 metrics.py flagged "<ref>" …')

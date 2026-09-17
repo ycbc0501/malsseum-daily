@@ -74,6 +74,14 @@ check("an unknown ref matches nothing and says so", hits == [0])
 got = with_ledger(LEDGER, lambda: metrics.note_flag(["전도서 11:4", "시편 4:8"]))
 check("multiple refs in one call", all("reposted_flag" in got[k] for k in ("111", "222")))
 
+# An inference and an observation must not be stored identically. 시편 4:8 is "not flagged"
+# only because the posts either side of it in a newest-first list were listed and it wasn't —
+# that is worth recording and worth never mistaking for someone having scrolled the whole list.
+got = with_ledger(LEDGER, lambda: metrics.note_flag(["시편 4:8"], flagged=False, basis="inferred"))
+check("a basis is stored when given", got["222"]["reposted_flag"].get("basis") == "inferred")
+got = with_ledger(LEDGER, lambda: metrics.note_flag(["시편 4:8"], flagged=False))
+check("no basis key when it was read off the screen", "basis" not in got["222"]["reposted_flag"])
+
 print("\nreport")
 # The report must not crash on a ledger where nothing has been checked yet — that is its
 # state on every fresh clone, and it is also the state it has to invite action from.
