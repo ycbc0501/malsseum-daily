@@ -16,6 +16,7 @@ These files are dicts, not prose, so the correct resolution is semantic, not tex
 Usage: ledger_merge.py OURS THEIRS OUT
 """
 import json
+import os
 import sys
 
 
@@ -41,6 +42,22 @@ def merge(ours, theirs):
     return ours                            # ours is the fresher write
 
 
+def _style(path):
+    """The json.dump keywords the file's OWN writer uses.
+
+    Each ledger already has one writer that shapes it: metrics.json comes from
+    `metrics.save()` (indent=1, sorted keys), state.json from `daily_post.save_state()`
+    (compact, one line). Merging with a different shape rewrites every byte of the file, so
+    the next ledger commit is a 2,400-line diff and ANY concurrent push conflicts on the
+    whole file instead of on the one entry that actually changed — which is exactly the
+    whole-file conflict this script exists to prevent (2026-09-17).
+
+    Unknown ledgers keep the historical compact form."""
+    if os.path.basename(path) == "metrics.json":
+        return {"indent": 1, "sort_keys": True}
+    return {}
+
+
 def load(path):
     try:
         with open(path, encoding="utf-8") as f:
@@ -56,7 +73,7 @@ def main(ours_p, theirs_p, out_p):
         return 0
     result = ours if theirs is None else theirs if ours is None else merge(ours, theirs)
     with open(out_p, "w", encoding="utf-8") as f:
-        json.dump(result, f, ensure_ascii=False)
+        json.dump(result, f, ensure_ascii=False, **_style(out_p))
     print(f"{out_p}: merged")
     return 0
 
