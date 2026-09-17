@@ -106,10 +106,64 @@ def published_times():
     return out
 
 
-def findings():
-    """[(key, message)] — key identifies the episode so it is not re-sent every day."""
+REPLY_CAP = 500          # comment_reply.py keeps only the last 500 answered ids
+REPLY_SLACK = 2          # a send that lands but errors on the way back is a real single retry
+
+
+def reply_counters():
+    """(replies sent ever, comments answered) from comments.json → (None, None) if unreadable."""
+    c = _load(os.path.join(HERE, "comments.json"), {})
+    answered = c.get("replied_publicly")
+    if not isinstance(answered, list) or "reply_i" not in c:
+        return None, None
+    return c.get("reply_i"), len(answered)
+
+
+def _reply_divergence(prev):
+    """Are we sending more replies than there are comments to answer?
+
+    `reply_i` counts replies SENT; `replied_publicly` counts comments ANSWERED. One reply per
+    comment means the two advance together. They did not: between 09-14 and 09-17 the poller
+    replied to the SAME comment on every run — 🙏 / 아멘🙏 alternating, every few hours for
+    three days — because ledger_merge.py cannot express a deletion and kept resurrecting the
+    finished queue entry (see notes §9). 27 sends against 9 answered comments.
+
+    Nothing was watching, which is why it ran for three days and was found in the app by the
+    account owner. The bug itself is fixed in comment_reply.py; this exists because the NEXT
+    double-send will have some other cause, and the symptom is identical.
+
+    Measured as growth since the last run, not as a total — the 18 historical duplicates are
+    already spent, and an alert that fires forever about the past is an alert nobody reads."""
+    sent, answered = reply_counters()
+    if sent is None or answered >= REPLY_CAP:
+        return None                       # unreadable, or the answered list is at its cap
+    before = (prev or {}).get("_reply_counters") or {}
+    if "sent" not in before:
+        return None                       # first sighting — nothing to compare against yet
+    d_sent = sent - before["sent"]
+    d_answered = answered - before["answered"]
+    extra = d_sent - d_answered
+    if d_sent <= 0 or extra <= REPLY_SLACK:
+        return None
+    return ("reply-dup",
+            f"⚠️ 댓글 답글이 중복 발송되고 있습니다\n"
+            f"보낸 답글 +{d_sent} 인데 새로 답한 댓글은 +{d_answered} "
+            f"(중복 {extra}건)\n"
+            f"comment-reply 워크플로를 멈추고 comments.json 의 pending_replies 를 확인하세요")
+
+
+def findings(prev=None):
+    """[(key, message)] — key identifies the episode so it is not re-sent every day.
+
+    `prev` is the watcher's own state, read ONLY. Nothing here may mutate it: main() calls this
+    twice per run (once to send, once to work out which episodes are still live) and a counter
+    advanced inside would be counted twice."""
     now = datetime.datetime.now(KST)
     found = []
+
+    dup = _reply_divergence(prev)
+    if dup:
+        found.append(dup)
 
     # A 30-hour silence rule was far too loose for an account that posts twice a day: the morning
     # slot could vanish and nothing would be said until the evening one did too. Each slot is
@@ -165,7 +219,7 @@ def main():
     state = _load(STATE, {})
     today = datetime.datetime.now(KST).date()
     sent = []
-    for key, message in findings():
+    for key, message in findings(state):
         last = state.get(key)
         if last:
             try:
@@ -179,11 +233,16 @@ def main():
             state[key] = today.isoformat()
             sent.append(key)
         print(f"{key}: {message.splitlines()[0]}")
-    # Clear an episode once it stops firing, so the next one alerts immediately.
-    live = {k for k, _ in findings()}
+    # Clear an episode once it stops firing, so the next one alerts immediately. Keys starting
+    # with "_" are not episodes — they are the watcher's own memory (the reply counters it
+    # measures growth against), and wiping them every run would silence that check forever.
+    live = {k for k, _ in findings(state)}
     for key in list(state):
-        if key not in live:
+        if key not in live and not key.startswith("_"):
             del state[key]
+    sent_n, answered_n = reply_counters()
+    if sent_n is not None:
+        state["_reply_counters"] = {"sent": sent_n, "answered": answered_n}
     with open(STATE, "w", encoding="utf-8") as f:
         json.dump(state, f, ensure_ascii=False)
     if not sent:

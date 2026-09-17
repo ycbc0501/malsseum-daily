@@ -102,5 +102,61 @@ state = {"replied_publicly": [], "pending_replies": {}, "me": "saintseoul_studio
 sent = run(state, mine, NOW)
 check("we never reply to ourselves", sent == [] and state["pending_replies"] == {})
 
+# ── the watcher ──────────────────────────────────────────────────────────────────────────
+# The loop ran for three days and was found by the account owner in the app, not by us. The
+# bug is fixed above; this checks that the SYMPTOM is now watched, because the next
+# double-send will have a different cause and will look exactly the same.
+import json as _json
+import os as _os
+import tempfile as _tempfile
+
+import watch
+
+
+def with_comments(rows, prev):
+    """Point watch.py at a throwaway comments.json → its divergence verdict."""
+    d = _tempfile.mkdtemp()
+    with open(_os.path.join(d, "comments.json"), "w", encoding="utf-8") as f:
+        _json.dump(rows, f)
+    real, watch.HERE = watch.HERE, d
+    try:
+        return watch._reply_divergence(prev)
+    finally:
+        watch.HERE = real
+
+
+print("\nwatcher")
+
+# The real numbers: 9 comments answered, 27 replies sent. Between two watch runs the bug sent
+# four more replies and answered nothing new.
+BEFORE = {"_reply_counters": {"sent": 23, "answered": 9}}
+got = with_comments({"replied_publicly": ["c"] * 9, "reply_i": 27}, BEFORE)
+check("four sends with no new comment answered alerts", got is not None)
+check("the alert names the duplicate count", bool(got) and "중복 4건" in got[1])
+
+# One reply per comment is the healthy shape and must stay silent.
+check("one reply per comment is silent",
+      with_comments({"replied_publicly": ["c"] * 13, "reply_i": 27}, BEFORE) is None)
+
+# A send that landed but errored on the way back gets retried once. Not worth waking anyone.
+check("a single extra send is within slack",
+      with_comments({"replied_publicly": ["c"] * 10, "reply_i": 25}, BEFORE) is None)
+
+# First sighting has no baseline — it must not alert about the 18 historical duplicates.
+check("no alert before a baseline exists",
+      with_comments({"replied_publicly": ["c"] * 9, "reply_i": 27}, {}) is None)
+
+# At the 500 cap the answered list stops growing, so the comparison is meaningless.
+check("no false alarm once the answered list is capped",
+      with_comments({"replied_publicly": ["c"] * 500, "reply_i": 900},
+                    {"_reply_counters": {"sent": 800, "answered": 500}}) is None)
+
+# The watcher's own memory must survive the episode cleanup that runs every pass.
+_state = {"missed-2026-09-14-19": "2026-09-15", "_reply_counters": {"sent": 1, "answered": 1}}
+for _k in list(_state):
+    if _k not in set() and not _k.startswith("_"):
+        del _state[_k]
+check("underscore keys survive the episode sweep", "_reply_counters" in _state)
+
 print(f"\n{len(FAIL)} failure(s)" if FAIL else "\nall good")
 sys.exit(1 if FAIL else 0)
