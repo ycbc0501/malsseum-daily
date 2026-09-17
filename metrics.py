@@ -274,6 +274,77 @@ def note_views(which, count):
     return False
 
 
+def note_flag(refs, flagged=True):
+    """Record which posts Instagram lists under 퍼온 콘텐츠 → count of rows that landed.
+
+    Instagram exposes this list ONLY in the app (계정 상태 → 도달 → 퍼온 콘텐츠); no API field
+    carries it. So it reaches us as screenshots, and a screenshot is not a ledger — the
+    2026-09-14 restriction has already been re-diagnosed three times because each new picture
+    replaced the last one in memory instead of accumulating next to it.
+
+    This is the FASTEST signal the account has. Likes need ~36h to mature and a week to
+    separate from noise; the flag is attached within hours of publishing (2026-09-17: a post
+    13 hours old was already listed). That turns "did the change work?" from a weekly
+    argument into a per-post reading.
+
+    `flagged=False` is not the absence of a record — it is the positive statement "this post
+    was looked for in the list and was not there", which is the only way a negative ever
+    becomes evidence."""
+    data = load()
+    today = datetime.now(KST).date().isoformat()
+    hit = 0
+    for which in refs:
+        for media_id, entry in data.items():
+            if which in (media_id, entry.get("ref", "")) or which in entry.get("permalink", ""):
+                entry["reposted_flag"] = {"flagged": bool(flagged), "checked": today}
+                hit += 1
+                print(f"  {entry.get('ref', media_id):<16} "
+                      f"{'FLAGGED 퍼온 콘텐츠' if flagged else 'not in the list'} (checked {today})")
+                break
+        else:
+            print(f"  no post matching {which!r} — pass a ref (\"신명기 1:29\"), permalink or media id")
+    if hit:
+        save(data)
+    return hit
+
+
+# When the one original sentence started shipping in captions (RULES B-5, commit efec853
+# 2026-09-15 00:05 KST; first post carrying it was 09-15 05:19). Posts either side of this
+# line are the only before/after the account has for that change.
+REFLECTION_SINCE = datetime(2026, 9, 15, 0, 5, tzinfo=KST)
+
+
+def flag_report(since="2026-09-10"):
+    """Line up each post's inputs against whether Instagram flagged it — the table that says
+    which axis (caption text, format, length) actually moves the classifier."""
+    data = load()
+    cut = datetime.fromisoformat(since).replace(tzinfo=KST)
+    rows = []
+    for media_id, entry in data.items():
+        pub = published_kst(entry)
+        if not pub or pub < cut:
+            continue
+        rows.append((pub, entry))
+    rows.sort()
+    print(f"{'published':<17} {'kind':<6} {'ref':<18} {'caption line':<13} flagged?")
+    for pub, entry in rows:
+        f = entry.get("reposted_flag")
+        state = "?" if not f else ("YES" if f["flagged"] else "no")
+        print(f"{pub.strftime('%m-%d %H:%M KST'):<17} {(entry.get('kind') or '?')[:5]:<6} "
+              f"{str(entry.get('ref'))[:18]:<18} {'on' if pub >= REFLECTION_SINCE else 'off':<13} {state}")
+    known = [e for _, e in rows if e.get("reposted_flag")]
+    if known:
+        on = [e for _, e in rows if _ >= REFLECTION_SINCE and e.get("reposted_flag")]
+        off = [e for _, e in rows if _ < REFLECTION_SINCE and e.get("reposted_flag")]
+        for label, group in (("caption line ON ", on), ("caption line OFF", off)):
+            if group:
+                n = sum(1 for e in group if e["reposted_flag"]["flagged"])
+                print(f"{label}: {n}/{len(group)} flagged")
+    else:
+        print("\nno post has been checked against the app list yet — "
+              'python3 metrics.py flagged "<ref>" …')
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "report"
     if cmd == "record":
@@ -285,5 +356,13 @@ if __name__ == "__main__":
         if len(sys.argv) < 4:
             raise SystemExit('usage: metrics.py views "<ref|permalink|media id>" <count>')
         sys.exit(0 if note_views(sys.argv[2], sys.argv[3]) else 1)
+    elif cmd in ("flagged", "notflagged"):
+        # python3 metrics.py flagged "데살로니가후서 3:3" "고린도전서 2:16" …
+        # python3 metrics.py notflagged "시편 4:8"      ← looked for it, it was NOT listed
+        if len(sys.argv) < 3:
+            raise SystemExit(f'usage: metrics.py {cmd} "<ref|permalink|media id>" [more refs…]')
+        sys.exit(0 if note_flag(sys.argv[2:], flagged=(cmd == "flagged")) else 1)
+    elif cmd == "flagreport":
+        flag_report(*sys.argv[2:3])
     else:
         report()
