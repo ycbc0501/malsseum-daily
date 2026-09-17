@@ -364,10 +364,15 @@
   "date": "2026-09-17",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 6
+  },
+  "kind": "REELS",
   "motion": 8.545,
   "motion_attempts": 3,
   "motion_sky": 4.575,
+  "permalink": "https://www.instagram.com/reel/DdYnOgbkfZG/",
   "published": "2026-09-17T19:10:44+09:00",
   "ref": "요한일서 5:14",
   "segments": 2,
@@ -607,7 +612,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 2
+   "likes": 7
   },
   "kind": "REELS",
   "motion": 3.609,
@@ -693,10 +698,15 @@
   "date": "2026-09-18",
   "duration": 15.33,
   "format": "reel",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 1
+  },
+  "kind": "REELS",
   "motion": 3.769,
   "motion_attempts": 3,
   "motion_sky": 1.955,
+  "permalink": "https://www.instagram.com/reel/DdZs4iEj-HP/",
   "published": "2026-09-18T05:19:22+09:00",
   "ref": "마태복음 10:31",
   "segments": 2,
@@ -711,7 +721,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 10,
+   "likes": 11,
    "views": 59,
    "views_manual": true
   },
@@ -1034,7 +1044,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 3
+   "likes": 6
   },
   "kind": "REELS",
   "motion": 1.049,
@@ -1353,7 +1363,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 7
+   "likes": 8
   },
   "kind": "REELS",
   "motion": 1.429,
@@ -1429,7 +1439,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 15
+   "likes": 17
   },
   "kind": "REELS",
   "motion": 2.72,
@@ -1741,7 +1751,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 2
+   "likes": 3
   },
   "kind": "REELS",
   "motion": 3.495,
