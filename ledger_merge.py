@@ -9,6 +9,15 @@ the same line and stop with a conflict. `|| true` then swallowed it, the repo wa
 stale one and re-posted the same verse with the same scene (잠언 18:10 on 08-26 and 08-28,
 잠언 27:17 twice on 08-29). Duplicate posts get the whole account demoted.
 
+A DELETION CANNOT BE EXPRESSED HERE. The merge cannot tell "ours removed this key" from
+"ours never had it", so a union always restores a key the remote still carries. Every ledger
+in this repo is append-only (used_verses, used_clips, metrics rows, counters) with ONE
+exception: `pending_replies` in comments.json is a work queue, and removing a finished item
+is the whole point. That deletion was silently undone on every run, so comment_reply.py kept
+replying to the same comment every few hours for days (2026-09-17). The fix lives there —
+`replied_publicly` is the authority and a resurrected queue entry is dropped on sight.
+BEFORE ADDING A LEDGER THAT DELETES, read that code: this file will not honour it.
+
 These files are dicts, not prose, so the correct resolution is semantic, not textual:
   · dict  → union of keys; OURS wins a shared key (we just wrote it, so it is fresher)
   · list  → theirs first, then anything of ours they lack — order kept, no duplicates

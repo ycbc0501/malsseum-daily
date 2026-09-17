@@ -38,3 +38,4 @@ jobs:
           python test_reflection.py
           python test_seam.py
           python test_flag_ledger.py
+          python test_comment_reply.py

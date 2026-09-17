@@ -87,6 +87,18 @@ def poll(state, now=None, dry_run=False):
             scheduled.append((c["id"], pending[c["id"]] - now))
 
     for cid, due in sorted(pending.items(), key=lambda kv: kv[1]):
+        # `replied` is the authority, not `pending`. A queue entry cannot survive its own
+        # completion here, but it DOES survive the ledger merge: save_ledger.sh resets onto
+        # origin/main and calls ledger_merge.py, which UNIONS dict keys — so a key we deleted
+        # comes straight back from the remote copy, which still has it. That is a fixed point:
+        # every run re-replied to the same comment, alternating 🙏 / 아멘🙏, once per run for
+        # as long as the cron fired (26 replies to one comment by 2026-09-17, found by the
+        # account owner in the app). One comment getting a reply every few hours is the exact
+        # bot behaviour the 30-minute delay above exists to avoid.
+        if cid in replied:
+            del pending[cid]
+            print(f"{cid}: already replied — dropping a resurrected queue entry")
+            continue
         if due > now:
             continue
         text = REPLIES[state.get("reply_i", 0) % len(REPLIES)]
