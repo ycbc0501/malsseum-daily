@@ -36,6 +36,14 @@ def checks():
     yield "A4 impossible physics (gate)", "vertical mirror" in gate and "stacked duplicate" in gate
     yield "A5 no sky indoors (gate)", "indoor/outdoor composite" in gate
     yield "A6 no CGI look (gate)", "fake / cgi" in gate
+    yield "A  the ANIMATION is inspected, not only the still", (
+        "clip_survives_inspection" in daily_post_src and "frame_at" in
+        (HERE / "make_video.py").read_text())
+    yield "A2b composition asks for scene, not a painted panel", (
+        "FLAT EVEN TONE" not in hf.COMPOSE[("center", "top")]
+        and "NOT a flat panel" in hf.COMPOSE[("center", "top")])
+    gen = (HERE / "generate.py").read_text()
+    yield "F5 exactly two type sizes", "SMALL_RATIO" in gen and "MAX_LINES_AT_FULL" in gen
     # Dark is allowed and must stay allowed — three of the seven light phrases are after sunset,
     # and the gate is told explicitly not to flag dark or moody light. What is banned is the
     # feeling, not the light level.

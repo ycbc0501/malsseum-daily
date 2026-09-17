@@ -483,10 +483,10 @@ INTERIOR_CATS = {
 
 # What the empty upper half IS, per scene type — substituted into COMPOSE.
 EMPTY_AREA = {
-    False: "a clear cloudless sky, a plain wall, still water or soft haze, whatever suits THIS scene",
-    True: "the room's OWN plain wall or ceiling continuing upward — this is an INTERIOR, so there "
-          "is NO sky, NO horizon and NO outdoor view above the room, and nothing outdoors may "
-          "appear in the upper half",
+    False: "open sky, soft haze, mist or calm water, whatever genuinely belongs to THIS scene",
+    True: "the room's OWN wall or ceiling continuing upward, lit as the rest of the room is — this "
+          "is an INTERIOR, so there is NO sky, NO horizon and NO outdoor view above the room, and "
+          "nothing outdoors may appear in the upper half",
 }
 ANCHOR = {
     False: "a low horizon, the ground, the furniture, the flowers, the rooftops all sit along the "
@@ -497,20 +497,21 @@ ANCHOR = {
 
 
 COMPOSE = {
-    ("center", "top"): "COMPOSITION: the UPPER HALF of the frame must be genuinely EMPTY and must be "
-        "ONE SINGLE FLAT EVEN TONE — {empty_area}. That area carries the verse, so it has to be one continuous "
-        "unbroken colour: NO texture, NO pattern, NO detail, NO bright patches or hotspots, NO dark "
-        "blotches, no strong edges, no sun disc or glare, no scattered cloud, nothing crossing it. A "
-        "smooth, barely-perceptible gradient of the SAME colour is fine; two different tones meeting "
-        "there is not. That tone must be decisively LIGHT (a pale, near-white sky or wall) or "
-        "decisively DARK (a deep, near-black sky or wall) — never a middling mid-grey, which no text "
-        "colour can sit on. Anchor the subject and every detailed or textured "
-        "element in the LOWER THIRD: {anchor}, and NOTHING (no branch, no tree, no post, no "
-        "building, no bird) reaches up into the empty upper half. Aim for a lot of plain negative "
-        "space — an under-stated, quiet, restrained photograph rather than an impressive one. It must "
-        "be ONE single natural photograph filling the whole frame — NEVER a framed picture, inset, "
-        "border, panel, photo-within-a-photo, polaroid or collage; the whole image is one continuous "
-        "scene. Show each subject only ONCE, never duplicated or mirrored.",
+    ("center", "top"): "COMPOSITION: leave the UPPER HALF of the frame OPEN and UNCLUTTERED, "
+        "because the verse is placed there. That area must be part of the real scene — {empty_area} "
+        "— NOT a flat panel added on top of a photograph. Do not paint a band, a block of colour, a "
+        "backdrop or a card across the top; there must be NO straight horizontal edge dividing the "
+        "picture into two zones, and no area that looks like a wall, blackboard or sheet laid over "
+        "the image. It is ONE photograph throughout. Keep that upper area SIMPLE and calm, with "
+        "gentle natural variation only — soft cloud, haze, the fall of light on a wall — no busy "
+        "detail, no hard edges, no sun disc or glare, and nothing crossing it. Its brightness should "
+        "read as clearly LIGHT or clearly DARK rather than a middling grey, so the verse can sit on "
+        "it. Anchor the subject and the detailed, textured elements LOW: {anchor}, and nothing "
+        "reaches up into the open upper area. Aim for a lot of quiet negative space — an "
+        "under-stated, restrained photograph rather than an impressive one. It must be ONE single "
+        "natural photograph filling the whole frame — NEVER a framed picture, inset, border, panel, "
+        "photo-within-a-photo, polaroid or collage. Show each subject only ONCE, never duplicated "
+        "or mirrored.",
     # Kept so an older call site can't crash, but production uses ("center", "top") — see rule 9.
     ("center", "middle"): "COMPOSITION: compose so the CENTER of the frame — where the verse will sit — "
         "stays soft, open and easy to read text over (open sky, soft mist, calm water or gentle "

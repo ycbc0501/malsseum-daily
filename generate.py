@@ -375,14 +375,29 @@ def balanced_split(draw, text, font, max_w):
     return best[1] if best else _greedy(draw, words, font, max_w)
 
 
+# TWO sizes and no others. A long verse used to keep the one size and spill into a third line
+# that barely held two or three words, which reads as a mistake rather than a line. The account
+# owner asked for exactly this on 2026-09-18: the normal size, or one clearly smaller size that
+# fits three lines properly. Nothing in between, so the type never looks arbitrary.
+SMALL_RATIO = 0.80          # 44 → 35 on the reel, 40 → 32 on the feed
+MAX_LINES_AT_FULL = 2       # a third line at full size is the shape being avoided
+
+
 def fit_verse(draw, text, max_w, size, lines=None):
-    """FIXED font size. Manual `lines` (verses.json) win; otherwise a scored balanced
-    split chooses natural, well-proportioned lines. Size never changes."""
-    font = load_font(SERIF, size)
-    line_h = int(size * 1.6)
+    """Two fixed sizes. Manual `lines` (verses.json) win; otherwise a scored balanced split
+    chooses natural lines, and a verse that needs a third one drops to the smaller size."""
     if lines:                                        # hand-tuned override in verses.json
-        return font, lines, line_h, size
-    return font, balanced_split(draw, text, font, max_w), line_h, size
+        font = load_font(SERIF, size)
+        return font, lines, int(size * 1.6), size
+    font = load_font(SERIF, size)
+    split = balanced_split(draw, text, font, max_w)
+    if len(split) <= MAX_LINES_AT_FULL:
+        return font, split, int(size * 1.6), size
+    small = max(22, int(size * SMALL_RATIO))
+    sfont = load_font(SERIF, small)
+    ssplit = balanced_split(draw, text, sfont, max_w)
+    print(f"verse needs {len(split)} lines at {size}px → {small}px in {len(ssplit)} lines")
+    return sfont, ssplit, int(small * 1.6), small
 
 
 # ----- adaptive color & placement ----------------------------------------------

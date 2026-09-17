@@ -153,6 +153,33 @@ def slot_already_filled(hour):
     return slot_state(hour) == "filled"
 
 
+def clip_survives_inspection(clip, tag=""):
+    """Look at what the ANIMATION produced, not just the still it started from.
+
+    The composition gate has always run on the frame handed TO Veo. Veo then changes the scene —
+    it has walked a person into frame on an account whose rules say no people at all, poured water
+    sideways, and dissolved the empty upper band the verse sits on (measured: 21% of frame height
+    at 0s, 0% by 9s). None of that was ever looked at. Sampling the middle and the end catches
+    drift that the opening frame cannot show.
+
+    Best-effort: any failure to inspect returns True, because a flaky checker must not cost a post.
+    """
+    import fetch_higgsfield
+    dur = make_video._duration(clip) or 8.0
+    for when, where in ((dur * 0.5, "middle"), (max(0.0, dur - 0.6), "end")):
+        png = os.path.join(generate.OUT_DIR, f"_inspect_{where}.png")
+        try:
+            make_video.frame_at(clip, when, png)
+            ok, why = fetch_higgsfield.check_composition(png)
+        except Exception as e:
+            print(f"  clip inspection skipped at {where} ({e})")
+            continue
+        print(f"  clip {tag}{where} frame: ok={ok} :: {why}")
+        if not ok:
+            return False
+    return True
+
+
 def published_refs(limit=25):
     """Verse refs Instagram itself says we already posted, newest first.
 
@@ -487,6 +514,7 @@ def main():
         clip = os.path.join(generate.OUT_DIR, "_veo.mp4")
         best = os.path.join(generate.OUT_DIR, "_veo_best.mp4")
         ov = sky = 99.0
+        best_score = float("inf")
         # Three tries, KEEPING THE CALMEST rather than the first one that squeaks under the bar —
         # otherwise a tighter threshold just buys more still fallbacks instead of better motion.
         for attempt in (1, 2, 3):
@@ -496,10 +524,14 @@ def main():
             o, s = make_video.motion_score(clip)
             print(f"veo motion attempt {attempt}: overall {o:.2f}, sky {s:.2f}")
             # A clip is only as calm as its WORST axis, so rank on the larger of the two ratios.
-            if max(o / MOTION_MAX, s / SKY_MAX) < max(ov / MOTION_MAX, sky / SKY_MAX):
-                ov, sky = o, s
+            # Rank on the worst axis, but a take that Veo has spoiled cannot win however calm it
+            # is — a person walking through a still scene is not a motion problem.
+            clean = clip_survives_inspection(clip, tag=f"attempt {attempt} ")
+            score = max(o / MOTION_MAX, s / SKY_MAX) + (0 if clean else 1000)
+            if score < best_score:
+                best_score, ov, sky = score, o, s
                 shutil.copyfile(clip, best)
-            if ov <= MOTION_MAX and sky <= SKY_MAX:
+            if clean and ov <= MOTION_MAX and sky <= SKY_MAX:
                 break
         if ov <= MOTION_HARD and sky <= SKY_HARD:
             if ov > MOTION_MAX or sky > SKY_MAX:

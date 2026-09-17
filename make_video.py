@@ -80,6 +80,20 @@ def extract_frame(video, out_png, at=0.8):
     return out_png
 
 
+def frame_at(video, seconds, out_png):
+    """One frame at `seconds`, cropped to 9:16 — for inspecting what the ANIMATION turned into.
+
+    Every gate in this pipeline used to look at the still that went INTO Veo and nothing looked at
+    what came out, so whatever Veo introduced shipped unseen: a person walking through a scene that
+    is supposed to have nobody in it, water pouring the wrong way, and the flat upper band shrinking
+    away to nothing over the length of the clip."""
+    subprocess.run([
+        FFMPEG, "-y", "-ss", f"{max(0.0, seconds):.3f}", "-i", video,
+        "-vf", _COVER, "-frames:v", "1", out_png,
+    ], check=True, capture_output=True)
+    return out_png
+
+
 def last_frame(video, out_png, back=TAIL):
     """The frame `back` seconds BEFORE the end — the seed for a Veo continuation.
 
