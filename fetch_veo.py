@@ -32,6 +32,18 @@ MOTION = (
 # Prefixed to MOTION when animating the tail frame of an earlier segment, so the segments read as
 # ONE continuous shot rather than two takes of the same place. Length has to come from Veo itself
 # (CONTENT_RULE 6) — this is the "genuine continuation" that rule allows, as opposed to a loop.
+# Retrying with the SAME prompt is three draws from one distribution: if Veo over-animates a given
+# image it will do so again. So each retry escalates the demand. Index 0 is the plain prompt.
+CALMER = [
+    "",
+    (" Even less motion than that — about a quarter of what you would normally animate. Sky, cloud "
+     "and mist are completely static. Only the smallest surface detail moves, in place, without "
+     "travelling across the frame."),
+    (" Almost a frozen photograph: the barest trace of life and nothing else. Sky, cloud, mist and "
+     "water do not travel at all. A viewer should have to look closely to be sure it moves. If in "
+     "doubt, animate LESS."),
+]
+
 CONTINUE = ("This is a DIRECT CONTINUATION of one single continuous shot, resuming from the exact "
             "frame provided. The scene, framing, composition, colour and light are already correct "
             "and must stay identical — the motion simply carries on from where it left off. There is "
