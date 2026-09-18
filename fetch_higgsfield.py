@@ -507,7 +507,11 @@ COMPOSE = {
         "FRAMING: the verse is placed across the UPPER HALF, so leave that area open and simple — "
         "{empty_area}. Keep it calm: gentle "
         "natural variation only, no busy detail, no glare or sun disc, nothing crossing it. Let it "
-        "read as clearly light or clearly dark rather than a middling grey. Put the subject and all "
+        "read as DECISIVELY LIGHT (a pale, luminous sky or a bright wall) or DECISIVELY DARK "
+        "(deep dusk, a wall in shadow) — never a middling grey, because the verse is set over it "
+        "and must separate from it. That is about BRIGHTNESS only: it stays a real photographed "
+        "surface with its own natural variation, never flattened or evened out. "
+        "Put the subject and all "
         "textured detail LOW: {anchor}, and let nothing reach up into the open area. {one_horizon}"
         "Plenty of quiet negative space — restrained rather than impressive.",
     ("center", "middle"):
