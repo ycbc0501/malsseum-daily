@@ -16,38 +16,30 @@ laws is RULES.md section A; check_rules.py asserts the two agree.
 
 # The absolute laws. Every prompt carries these verbatim, image and video alike.
 LAW = (
-    "ABSOLUTE RULES, no exceptions:\n"
-    "1. NO WRITING of any kind. No letters, words, numbers, handwriting, print, signs, labels, "
-    "book spines, clock faces, watermarks or logos, anywhere in the frame, however small or "
-    "blurred. Nothing that is merely MEANT to carry writing either.\n"
-    "2. NO PEOPLE, and no PART of a person. No face, body, silhouette, hand, arm, leg, foot, or a "
-    "person reflected in glass or water. Not at a distance, not out of focus, not turned away, not "
-    "cropped at the edge. Nobody. An empty chair, an empty bench or a pair of shoes with no one in "
-    "them is correct — the absence of people is the point.\n"
-    "3. NATURE ONLY, OBEYING ITS OWN LAWS. Show only what occurs naturally in the physical world, "
-    "behaving exactly as it does there. Everything must be consistent with ordinary physics: "
-    "gravity, light, motion, reflection, scale and proportion all behave as they really do. "
-    "Nothing invented, impossible, fantastical, surreal or science-fictional; nothing that could "
-    "not be found and filmed as it is.\n"
-    "4. IT MUST LOOK FILMED, NOT MADE. Anyone seeing it should take it for an unedited recording "
-    "of a real place — something a person found and pointed a camera at. It must never look "
-    "generated, composited or retouched: no 3D or CGI look, no digital painting, no plastic or "
-    "artificial surfaces, no impossibly perfect symmetry, and nothing added on top of the picture "
-    "such as a panel, band or backdrop, or a hard straight edge dividing it into zones. "
-    "One continuous, unedited photograph throughout."
+    "ABSOLUTE RULES:\n"
+    "1. NO WRITING anywhere in frame — no letters, numbers, signs, labels, watermarks or logos, "
+    "however small or blurred, and nothing that is merely meant to carry writing.\n"
+    "2. NO PEOPLE and no part of one — no face, body, silhouette, hand, limb or reflection of a "
+    "person, at any distance, however blurred or cropped. An empty chair or empty shoes are right; "
+    "the absence of people is the point.\n"
+    "3. NATURE ONLY, obeying its own laws — only what occurs naturally and behaves as it really "
+    "does, consistent with ordinary physics. Nothing invented, impossible or fantastical; nothing "
+    "that could not simply be found and filmed.\n"
+    "4. FILMED, NOT MADE — it must read as an unedited recording of a real place, never generated, "
+    "composited or retouched. No CGI or digital-painting look, and nothing laid on top of the "
+    "picture: no panel, band or backdrop, no straight edge cutting it into zones."
 )
 
 # Terms for the negativePrompt field, where the model supports one. Same laws, stated as things to
 # exclude — a negative prompt is a different lever from an instruction and both are worth using.
+# For the negativePrompt field. Kept short and non-overlapping: this used to be concatenated onto
+# fetch_veo.NEG and the two listed "text, people, watermark, logo" twice over.
 NEG_TERMS = (
-    "text, letters, words, numbers, handwriting, captions, subtitles, signage, labels, watermark, "
-    "logo, "
-    "person, people, man, woman, child, face, hands, arms, legs, feet, silhouette, crowd, figure, "
-    "reflection of a person, "
-    "3d render, cgi, video game, digital painting, illustration, plastic, glossy, artificial, "
-    "surreal, fantasy, sci-fi, dreamlike, impossible architecture, floating objects, "
-    "collage, photo within a photo, inset, border, panel, backdrop, flat colour band, "
-    "hard horizontal seam, split screen, two horizons, mirrored, duplicated"
+    "text, letters, numbers, signage, watermark, logo, "
+    "person, people, face, hands, limbs, silhouette, crowd, reflection of a person, "
+    "3d render, cgi, digital painting, illustration, plastic, glossy, surreal, fantasy, "
+    "collage, inset, border, panel, backdrop, flat colour band, hard seam, split screen, "
+    "two horizons, mirrored, duplicated"
 )
 
 

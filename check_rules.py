@@ -38,7 +38,8 @@ def checks():
         yield f"A law {n} is in the image prompt", marker in img
         yield f"A law {n} is in the video prompt", marker in vid
     yield "A laws apply to every frame of the video", "EVERY FRAME" in vid
-    yield "A law 2 covers parts of a person", all(w in law for w in ("hand", "arm", "silhouette"))
+    yield "A law 2 covers parts of a person", all(
+        w in law for w in ("hand", "limb", "silhouette", "reflection of a person"))
     yield "A prohibitions are not duplicated into the framing block", not any(
         w in hf.COMPOSE[("center", "top")] for w in ("CGI", "watermark", "no person"))
     yield "A1 no people (prompt)", "no people" in notext and "silhouette" in notext
@@ -59,7 +60,7 @@ def checks():
         w not in hf.COMPOSE[("center", "top")]
         for w in ("FLAT EVEN TONE", "unbroken colour", "NO texture"))
     yield "A2b the law forbids a pasted panel and a hard seam", (
-        "panel, band or backdrop" in law and "hard straight edge" in law)
+        "panel, band or backdrop" in law and "straight edge cutting it into zones" in law)
     gen = (HERE / "generate.py").read_text()
     yield "F5 exactly two type sizes", "SMALL_RATIO" in gen and "MAX_LINES_AT_FULL" in gen
     # Dark is allowed and must stay allowed — three of the seven light phrases are after sunset,

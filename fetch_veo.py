@@ -23,35 +23,11 @@ API = "https://generativelanguage.googleapis.com/v1beta"
 # sits on) never shifts AND the scene never looks frantic. Veo's fast tier tends to over-animate,
 # so the prompt pushes hard toward "a living photograph that only breathes" — the fast waves /
 # rushing traffic came from asking for too much motion, not from any speed bug downstream.
-MOTION = ("REAL-TIME footage at normal 1x playback speed — this is NOT a timelapse, NOT sped up, NOT "
-          "fast-forwarded or accelerated in any way. The whole clip shows only about EIGHT SECONDS of "
-          "real time, so almost nothing changes over its length: in eight real seconds clouds do not "
-          "visibly move, and the sea only laps gently a few times. Play everything at true real-world "
-          "speed. The camera is completely locked: no pan, no zoom, no camera move. Animate ONLY the "
-          "small, natural motion that genuinely happens in eight real seconds — water surface ripples and "
-          "shimmers softly and slowly, a faint mist drifts a little, light glimmers subtly, leaves or "
-          "grass barely stir. Clouds stay essentially still (eight seconds is far too short for clouds to "
-          "move noticeably). Everything already in the frame stays present the whole time — nothing "
-          "appears, grows, pops in, flickers or morphs. Calm, slow, serene, real-time — like a "
-          "photograph gently breathing at natural speed.")
-# Retrying with the SAME prompt is three draws from one distribution: if Veo over-animates skies
-# for this image — and it does; a candle on a windowsill came back with the clouds outside racing,
-# scoring 1.24 on a 0.35 sky target — then all three takes are fast and "keep the calmest" barely
-# helps. So each retry escalates the demand instead of resampling it. Index 0 is the plain MOTION
-# prompt; 1 and 2 are appended to it.
-CALMER = [
-    "",
-    (" MOTION MUST BE EVEN SMALLER THAN DESCRIBED ABOVE. Reduce every movement to roughly a "
-     "quarter of what you would normally animate. The sky is COMPLETELY STATIC — clouds, haze and "
-     "mist do not move, drift, roll or change shape AT ALL, not even slightly. Only the smallest "
-     "surface detail moves: a flame wavers a little, water shimmers faintly in place without "
-     "travelling, a leaf twitches once. Nothing crosses the frame."),
-    (" THIS IS ALMOST A FROZEN PHOTOGRAPH. Animate the barest possible trace of life and NOTHING "
-     "else. The sky, clouds, mist and fog are ENTIRELY MOTIONLESS — treat them as painted onto a "
-     "still backdrop. Water does not flow or travel; at most its surface glimmers on the spot. "
-     "Nothing drifts, nothing slides, nothing moves across the frame in any direction. If in "
-     "doubt, animate LESS. A viewer should have to look closely to be sure it is moving at all."),
-]
+MOTION = (
+    "REAL-TIME at 1x speed, never a timelapse or sped up. The camera is locked — no pan, no zoom, "
+    "no move — and the scene is almost still: only the smallest movement that eight real seconds "
+    "would actually contain, like a photograph breathing. Nothing enters, leaves, grows or changes."
+)
 
 # Prefixed to MOTION when animating the tail frame of an earlier segment, so the segments read as
 # ONE continuous shot rather than two takes of the same place. Length has to come from Veo itself
@@ -63,14 +39,16 @@ CONTINUE = ("This is a DIRECT CONTINUATION of one single continuous shot, resumi
             "colour grade, and nothing enters or leaves the frame. A viewer must not be able to tell "
             "where the previous footage ended and this begins. ")
 
-NEG = ("timelapse, time-lapse, sped up, speed up, fast-forward, accelerated motion, fast playback, "
-       "fast motion, fast movement, fast-moving clouds, racing clouds, drifting clouds, streaming "
-       "clouds, moving clouds, cloud movement, rushing water, crashing waves, flowing water, "
-       "streaming water, running water, strong current, swirling water, rolling waves, "
-       "choppy water, fast-moving cars, speeding cars, busy traffic, energetic movement, churning, "
-       "turbulence, text, letters, words, watermark, logo, people, person, camera pan, camera zoom, "
-       "camera shake, hard cut, scene change, morphing, warping, distortion, sudden changes, popping "
-       "in, flickering, elements appearing or disappearing, growing, blooming, jump cut, strobing")
+# Speed and camera only. What may not APPEAR lives in content_law.NEG_TERMS and is appended at
+# send time — naming it in both places is how this string ended up listing "text", "people",
+# "watermark" and "logo" twice each.
+NEG = ("timelapse, sped up, fast-forward, accelerated motion, fast movement, "
+       "fast-moving clouds, racing clouds, moving clouds, "
+       "rushing water, crashing waves, flowing water, strong current, rolling waves, churning, "
+       "turbulence, busy traffic, energetic movement, "
+       "camera pan, camera zoom, camera shake, hard cut, scene change, jump cut, "
+       "morphing, warping, sudden changes, popping in, flickering, "
+       "elements appearing or disappearing, growing, strobing")
 
 
 def animate(still_png, dest, aspect="9:16", prompt=MOTION, timeout_s=420, poll_s=10):
