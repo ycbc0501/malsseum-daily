@@ -166,6 +166,15 @@ def checks():
         len(fetch_veo.CALMER) == 3 and "frozen photograph" in fetch_veo.CALMER[2].lower()
         and daily_src.count("fetch_veo.CALMER[attempt - 1]") == 2)
     yield "E8 shipped motion is recorded", '"motion": round(ov, 3)' in daily_src
+    # A gate that silently stopped running must be a number, not a log line. Posts ship with
+    # gate_ran / gate_skipped so "was this checked at all" is answerable afterwards.
+    yield "H0c a gate that never ran is recorded and warned about", (
+        '"gate_ran"' in daily_src and "never reached the model" in daily_src
+        and "GATE_RAN" in (HERE / "fetch_higgsfield.py").read_text())
+    # The clip inspection must see the RAW Veo output. If it ever ran after the verse was
+    # composited it would reject every take for containing writing — verified by measurement.
+    yield "A2f clip inspection runs before the verse is composited", (
+        daily_src.index("clip_survives_inspection(clip") < daily_src.index("build_reel_native"))
     insights = (HERE / ".github/workflows/insights.yml").read_text()
     yield "G1 alerts only on trouble, not every post", (
         "notify.py --posted" not in daily and "python watch.py" in insights)

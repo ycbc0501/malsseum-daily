@@ -637,6 +637,11 @@ _CHECK_PROMPT = (
     "{\"ok\": false, \"reason\": \"<short reason>\"} if any flaw above is present.")
 
 
+# Counts how often the gate actually reached the model, so a run where every check quietly failed
+# is a number rather than a line in a log nobody reads. Reset by generate_checked per render.
+GATE_RAN = [0, 0]      # [ran, skipped]
+
+
 def check_composition(image_path):
     """Ask a Gemini vision model whether the render has a physically-impossible composition (stacked
     double scene / wrong-way reflection / duplicated structure). Returns (ok: bool, reason: str).
@@ -654,8 +659,10 @@ def check_composition(image_path):
         data = json.load(urllib.request.urlopen(req, timeout=90))
         txt = data["candidates"][0]["content"]["parts"][0]["text"]
         j = json.loads(txt)
+        GATE_RAN[0] += 1
         return bool(j.get("ok", True)), str(j.get("reason", ""))[:200]
     except Exception as e:
+        GATE_RAN[1] += 1
         return True, f"check skipped ({e})"
 
 

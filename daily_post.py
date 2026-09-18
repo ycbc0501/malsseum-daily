@@ -532,6 +532,7 @@ def main():
     ov = sky = 0.0
     motion_attempts = 0
     spoiled = False
+    import fetch_higgsfield
     n_segments = 0          # recorded in _meta.json so metrics.py can measure length changes
     try:
         import fetch_veo
@@ -561,6 +562,10 @@ def main():
         # A scene Veo spoils every time would otherwise ship silently: the best-of-N still picks
         # one, and nothing said that all of them broke a rule. Recorded as well as printed, so
         # "which scenes can Veo not animate cleanly" becomes answerable from metrics.json.
+        ran, skipped = fetch_higgsfield.GATE_RAN
+        if ran == 0 and skipped:
+            print(f"WARNING: the composition gate never reached the model ({skipped} attempts all "
+                  f"errored) — this post shipped with NO image check at all")
         spoiled = best_score >= 1000
         if spoiled:
             print(f"WARNING: every take of scene {scene_cat} had something the rules forbid "
@@ -666,6 +671,10 @@ def main():
                    "motion_attempts": motion_attempts,
                    # True when no take passed the clip inspection — see the WARNING above.
                    "clip_spoiled": bool(spoiled),
+                   # How many gate calls actually reached the model vs errored out. A post with
+                   # gate_ran 0 was published unchecked, which must be visible as a number.
+                   "gate_ran": fetch_higgsfield.GATE_RAN[0],
+                   "gate_skipped": fetch_higgsfield.GATE_RAN[1],
                    "scene": scene_cat,
                    # The follow CTA left the caption on 2026-08-01 (rule 10). metrics.report()
                    # groups on this, so the change is answerable later instead of argued about;
