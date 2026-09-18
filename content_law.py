@@ -22,9 +22,9 @@ LAW = (
     "2. NO PEOPLE and no part of one — no face, body, silhouette, hand, limb or reflection of a "
     "person, at any distance, however blurred or cropped. An empty chair or empty shoes are right; "
     "the absence of people is the point.\n"
-    "3. NATURE ONLY, obeying its own laws — only what occurs naturally and behaves as it really "
-    "does, consistent with ordinary physics. Nothing invented, impossible or fantastical; nothing "
-    "that could not simply be found and filmed.\n"
+    "3. REAL THINGS ONLY, behaving as they really do — an ordinary place or object that exists in "
+    "the world, obeying ordinary physics: gravity, light, motion, reflection, scale. Nothing "
+    "invented, impossible or fantastical; nothing that could not simply be found and filmed.\n"
     "4. FILMED, NOT MADE — it must read as an unedited recording of a real place, never generated, "
     "composited or retouched. No CGI or digital-painting look, and nothing laid on top of the "
     "picture: no panel, band or backdrop, no straight edge cutting it into zones."
@@ -45,7 +45,8 @@ NEG_TERMS = (
 
 def for_image(scene, variation, framing):
     """The complete still prompt: what to photograph, how it is lit, how it is framed, and the law."""
-    return (f"A genuine photograph, taken on a real camera in a real place: {scene}, {variation}.\n\n"
+    look = variation.strip().rstrip(".")
+    return (f"A genuine photograph, taken on a real camera in a real place: {scene}, {look}.\n\n"
             f"{framing}\n\n{LAW}")
 
 

@@ -488,22 +488,28 @@ EMPTY_AREA = {
           "is an INTERIOR, so there is NO sky, NO horizon and NO outdoor view above the room, and "
           "nothing outdoors may appear in the upper half",
 }
+# Only an outdoor frame has a horizon. Saying "one horizon only" to an interior contradicts the
+# same sentence's "there is NO horizon" — the interior prompt was carrying both.
+ONE_HORIZON = {False: "One horizon only. ", True: ""}
+
 ANCHOR = {
-    False: "a low horizon, the ground, the furniture, the flowers, the rooftops all sit along the "
-           "bottom edge",
-    True: "the furniture, the bed, the desk, the lamp, the sill all sit along the bottom edge, with "
-          "the bare wall of the same room rising behind them",
+    # Named objects used to be listed here — furniture, flowers, rooftops — and they were sent with
+    # EVERY scene, so an open seascape was being told to put furniture along its bottom edge. Say
+    # where things go, never what things are; the scene sentence is the only place that decides.
+    False: "the horizon sits low and whatever the scene contains rests along the bottom edge",
+    True: "whatever the room contains rests along the bottom edge, with the bare wall of that same "
+          "room rising behind it",
 }
 
 
 COMPOSE = {
     ("center", "top"):
         "FRAMING: the verse is placed across the UPPER HALF, so leave that area open and simple — "
-        "{empty_area}, genuinely part of this scene and photographed as such. Keep it calm: gentle "
+        "{empty_area}. Keep it calm: gentle "
         "natural variation only, no busy detail, no glare or sun disc, nothing crossing it. Let it "
         "read as clearly light or clearly dark rather than a middling grey. Put the subject and all "
-        "textured detail LOW: {anchor}, and let nothing reach up into the open area. One horizon "
-        "only. Plenty of quiet negative space — restrained rather than impressive.",
+        "textured detail LOW: {anchor}, and let nothing reach up into the open area. {one_horizon}"
+        "Plenty of quiet negative space — restrained rather than impressive.",
     ("center", "middle"):
         "FRAMING: keep the CENTRE of the frame open and simple, because the verse sits there. Place "
         "the subject and any tall elements low or to the sides, well clear of the middle. One "
@@ -521,8 +527,8 @@ QUALITY = (
     "soft daylight, late dusk or faint light after dark are all welcome and dim is fine, but never "
     "gloomy, ominous, oppressive, bleak or sorrowful. Colour is MUTED and gentle, slightly "
     "desaturated, low in contrast, with a soft filmic quality and subtle grain — restrained, like a "
-    "quiet film photograph, not vivid, glossy or dramatic. Understated and simple: plenty of plain "
-    "empty space, few elements, nothing showy. Shot on a full-frame camera with a normal prime "
+    "quiet film photograph, not vivid, glossy or dramatic. Understated and simple: "
+    "few elements, nothing showy. Shot on a full-frame camera with a normal prime "
     "lens — natural depth of field with the far distance falling gently out of focus, believable "
     "lens character, and the slight imperfection of a real photograph. Detail is UNEVEN and organic "
     "the way nature actually is: grass and foliage vary in height, colour and density, never a "
@@ -555,7 +561,8 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
     # what produced the room-with-a-sky-above composite, so the empty area and the anchor are
     # chosen by scene family, not assumed.
     indoors = SCENE_CATS[index % len(SCENES)] in INTERIOR_CATS
-    compose = compose.format(empty_area=EMPTY_AREA[indoors], anchor=ANCHOR[indoors])
+    compose = compose.format(empty_area=EMPTY_AREA[indoors], anchor=ANCHOR[indoors],
+                             one_horizon=ONE_HORIZON[indoors])
     # Built from content_law, which is the ONE place the prohibitions live. Four separate blocks
     # used to repeat them in different words and contradict each other — COMPOSE demanded a flat
     # even tone across the upper half while EVENTONE forbade any hard seam, and the model resolved
@@ -609,12 +616,16 @@ _CHECK_PROMPT = (
     "above a room with no ceiling, wall or window to justify it. A window or open door showing a "
     "view is CORRECT and must not be flagged; what is wrong is outdoors appearing where the room's "
     "own wall or ceiling should be.\n"
-    "7) ANY PERSON: a face, a body, a silhouette, a hand, an arm, a leg, or a person reflected in "
+    "7) A FLAT ADDED BAND: part of the frame — typically the top — is a flat, even area of colour "
+    "with no photographic texture, meeting the rest of the picture along a straight horizontal "
+    "edge, as though a panel, board or sheet had been laid over the photograph. A real open sky or "
+    "a real plain wall has subtle variation and no ruled edge; this does not. Reject it.\n"
+    "8) ANY PERSON: a face, a body, a silhouette, a hand, an arm, a leg, or a person reflected in "
     "glass or water — anywhere in the frame, at any distance, however blurred, cropped or turned "
     "away. AI-made faces and hands look wrong and break the stillness the post depends on. An "
     "empty chair, an empty bench or empty shoes are CORRECT — the absence of people is the point; "
     "what is wrong is a person being in the picture at all.\n"
-    "8) ANY WRITING: letters, words, numbers, handwriting, print on a page, a shop sign, a label, "
+    "9) ANY WRITING: letters, words, numbers, handwriting, print on a page, a shop sign, a label, "
     "a book spine, a clock face, a watermark or a logo — ANYWHERE in the frame, however small, "
     "blurred or partial. Image models render writing as broken nonsense, and one line of garbled "
     "text tells a viewer instantly that nobody made this. Reject even if it is tiny or out of "

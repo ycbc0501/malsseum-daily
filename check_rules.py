@@ -34,7 +34,7 @@ def checks():
     img = content_law.for_image("scene", "look", "framing")
     vid = content_law.for_video("motion")
     for n, marker in ((1, "NO WRITING"), (2, "NO PEOPLE"),
-                      (3, "NATURE ONLY"), (4, "FILMED, NOT MADE")):
+                      (3, "REAL THINGS ONLY"), (4, "FILMED, NOT MADE")):
         yield f"A law {n} is in the image prompt", marker in img
         yield f"A law {n} is in the video prompt", marker in vid
     yield "A laws apply to every frame of the video", "EVERY FRAME" in vid
@@ -56,6 +56,22 @@ def checks():
         (HERE / "make_video.py").read_text())
     # The framing block must not demand a flat plane (that produced the painted panel), and the
     # law must be the thing forbidding one.
+    # Every defect the account owner reported must be something the GATE can see, not only
+    # something the prompt asks for. Requesting is not checking — that distinction is the whole
+    # lesson of 09-14 and 09-17.
+    yield "A2c the gate itself rejects a flat added band", "flat added band" in gate.lower()
+    # Assembled prompts must not contradict themselves. The interior prompt carried both
+    # "there is NO horizon" and "One horizon only".
+    for indoors in (True, False):
+        text = hf.COMPOSE[("center", "top")].format(
+            empty_area=hf.EMPTY_AREA[indoors], anchor=hf.ANCHOR[indoors],
+            one_horizon=hf.ONE_HORIZON[indoors])
+        yield (f"A2d {'interior' if indoors else 'exterior'} prompt is self-consistent",
+               not (indoors and "horizon only" in text))
+    # The scene sentence is the only thing that names objects; the framing must not inject any.
+    yield "A2e framing names no objects of its own", not any(
+        w in hf.ANCHOR[False] + hf.ANCHOR[True]
+        for w in ("furniture", "flowers", "rooftops", "the bed", "the lamp"))
     yield "A2b framing does not demand a flat plane", all(
         w not in hf.COMPOSE[("center", "top")]
         for w in ("FLAT EVEN TONE", "unbroken colour", "NO texture"))
@@ -105,7 +121,8 @@ def checks():
         i for i in range(len(hf.SCENES))
         if hf.SCENE_CATS[i] in hf.INTERIOR_CATS
         and "cloudless sky" in hf.COMPOSE[("center", "top")].format(
-            empty_area=hf.EMPTY_AREA[True], anchor=hf.ANCHOR[True])]
+            empty_area=hf.EMPTY_AREA[True], anchor=hf.ANCHOR[True],
+            one_horizon=hf.ONE_HORIZON[True])]
     yield "F3 text area is measured, not assumed", hasattr(generate, "text_area_ok")
     # A5b — the seam gate must be MEASURED and must run even when the model said yes, because on
     # 2026-09-14 the model said yes to a stacked composite and it shipped.
