@@ -19,7 +19,8 @@ HERE = pathlib.Path(__file__).parent
 
 def checks():
     gate = hf._CHECK_PROMPT.lower()
-    notext = hf.NOTEXT.lower()
+    import content_law
+    notext = content_law.LAW.lower()
     daily = (HERE / ".github/workflows/daily-post.yml").read_text()
     daily_post_src = (HERE / "daily_post.py").read_text()
     carousel_wf = (HERE / ".github/workflows/weekly-carousel.yml").read_text()
@@ -27,9 +28,22 @@ def checks():
     scenes = [s for items in hf.SCENE_GROUPS.values() for s in items]
     verses = json.load(open(HERE / "verses.json"))["verses"]
 
-    yield "A1 no people (prompt)", "no person" in notext and "silhouette" in notext
+    # The four laws exist once, in content_law.LAW, and BOTH prompts must carry them. Asserting it
+    # here is the point: the video prompt went months without any of them.
+    law = content_law.LAW
+    img = content_law.for_image("scene", "look", "framing")
+    vid = content_law.for_video("motion")
+    for n, marker in ((1, "NO WRITING"), (2, "NO PEOPLE"),
+                      (3, "ONLY WHAT CAN REALLY HAPPEN"), (4, "FILMED, NOT MADE")):
+        yield f"A law {n} is in the image prompt", marker in img
+        yield f"A law {n} is in the video prompt", marker in vid
+    yield "A laws apply to every frame of the video", "EVERY FRAME" in vid
+    yield "A law 2 covers parts of a person", all(w in law for w in ("hand", "arm", "silhouette"))
+    yield "A prohibitions are not duplicated into the framing block", not any(
+        w in hf.COMPOSE[("center", "top")] for w in ("CGI", "watermark", "no person"))
+    yield "A1 no people (prompt)", "no people" in notext and "silhouette" in notext
     yield "A1 no people (gate)", "any person" in gate
-    yield "A2 no writing (prompt)", "no text" in notext and "watermark" in notext
+    yield "A2 no writing (prompt)", "no writing" in notext and "watermark" in notext
     yield "A2 no writing (gate)", "any writing" in gate
     yield "A3 no books or paper in any scene", not [
         s for s in scenes if re.search(r"book|\bpaper\b|notebook|envelope", s, re.I)]
@@ -39,9 +53,13 @@ def checks():
     yield "A  the ANIMATION is inspected, not only the still", (
         "clip_survives_inspection" in daily_post_src and "frame_at" in
         (HERE / "make_video.py").read_text())
-    yield "A2b composition asks for scene, not a painted panel", (
-        "FLAT EVEN TONE" not in hf.COMPOSE[("center", "top")]
-        and "NOT a flat panel" in hf.COMPOSE[("center", "top")])
+    # The framing block must not demand a flat plane (that produced the painted panel), and the
+    # law must be the thing forbidding one.
+    yield "A2b framing does not demand a flat plane", all(
+        w not in hf.COMPOSE[("center", "top")]
+        for w in ("FLAT EVEN TONE", "unbroken colour", "NO texture"))
+    yield "A2b the law forbids a pasted panel and a hard seam", (
+        "pasted-on panel" in law and "hard straight seam" in law)
     gen = (HERE / "generate.py").read_text()
     yield "F5 exactly two type sizes", "SMALL_RATIO" in gen and "MAX_LINES_AT_FULL" in gen
     # Dark is allowed and must stay allowed — three of the seven light phrases are after sunset,

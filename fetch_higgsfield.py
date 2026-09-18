@@ -497,85 +497,37 @@ ANCHOR = {
 
 
 COMPOSE = {
-    ("center", "top"): "COMPOSITION: leave the UPPER HALF of the frame OPEN and UNCLUTTERED, "
-        "because the verse is placed there. That area must be part of the real scene — {empty_area} "
-        "— NOT a flat panel added on top of a photograph. Do not paint a band, a block of colour, a "
-        "backdrop or a card across the top; there must be NO straight horizontal edge dividing the "
-        "picture into two zones, and no area that looks like a wall, blackboard or sheet laid over "
-        "the image. It is ONE photograph throughout. Keep that upper area SIMPLE and calm, with "
-        "gentle natural variation only — soft cloud, haze, the fall of light on a wall — no busy "
-        "detail, no hard edges, no sun disc or glare, and nothing crossing it. Its brightness should "
-        "read as clearly LIGHT or clearly DARK rather than a middling grey, so the verse can sit on "
-        "it. Anchor the subject and the detailed, textured elements LOW: {anchor}, and nothing "
-        "reaches up into the open upper area. Aim for a lot of quiet negative space — an "
-        "under-stated, restrained photograph rather than an impressive one. It must be ONE single "
-        "natural photograph filling the whole frame — NEVER a framed picture, inset, border, panel, "
-        "photo-within-a-photo, polaroid or collage. Show each subject only ONCE, never duplicated "
-        "or mirrored.",
-    # Kept so an older call site can't crash, but production uses ("center", "top") — see rule 9.
-    ("center", "middle"): "COMPOSITION: compose so the CENTER of the frame — where the verse will sit — "
-        "stays soft, open and easy to read text over (open sky, soft mist, calm water or gentle "
-        "out-of-focus blur, whatever suits THIS scene). Keep the main subject and any tall elements "
-        "(trees, buildings, branches) LOW in the frame or off to the sides, well clear of the centre, so "
-        "nothing crosses the middle where the text goes. It must be ONE single natural photograph filling "
-        "the whole frame — NEVER a framed picture, inset, border, panel, photo-within-a-photo, polaroid "
-        "or collage; the whole image is one continuous scene. Show each subject only ONCE, never "
-        "duplicated or mirrored, and never dead-centre.",
-    ("left", "middle"): "Leave the left and central part of the photo calm and simple for the overlaid "
-        "text (soft sky, light, water or a quiet background); place the main subject toward the right "
-        "and lower part of the photo, keeping the text area clear.",
-    ("right", "middle"): "Leave the right and central part of the photo calm and simple for the overlaid "
-        "text (soft sky, light, water or a quiet background); place the main subject toward the left "
-        "and lower part of the photo, keeping the text area clear.",
+    ("center", "top"):
+        "FRAMING: the verse is placed across the UPPER HALF, so leave that area open and simple — "
+        "{empty_area}, genuinely part of this scene and photographed as such. Keep it calm: gentle "
+        "natural variation only, no busy detail, no glare or sun disc, nothing crossing it. Let it "
+        "read as clearly light or clearly dark rather than a middling grey. Put the subject and all "
+        "textured detail LOW: {anchor}, and let nothing reach up into the open area. One horizon "
+        "only. Plenty of quiet negative space — restrained rather than impressive.",
+    ("center", "middle"):
+        "FRAMING: keep the CENTRE of the frame open and simple, because the verse sits there. Place "
+        "the subject and any tall elements low or to the sides, well clear of the middle. One "
+        "horizon only. Quiet, restrained, plenty of negative space.",
+    ("left", "middle"):
+        "FRAMING: keep the left and centre open and simple for the verse; place the subject toward "
+        "the lower right. One horizon only.",
+    ("right", "middle"):
+        "FRAMING: keep the right and centre open and simple for the verse; place the subject toward "
+        "the lower left. One horizon only.",
 }
-EVENTONE = ("Render ONE single, continuous, real photograph — one coherent scene with ONE horizon line "
-            "only. It must NOT be split or stacked into two scenes: NEVER two horizons, NEVER a second "
-            "body of water, second lake, second sky or second landscape above or below the first, NEVER a "
-            "mirrored, doubled or repeated view, and never a framed picture, inset, panel, collage, "
-            "photo-within-a-photo or any hard horizontal seam. There is only one sky and (if any) one "
-            "water surface, in their natural real-world places — sky above, ground or water below, a "
-            "single horizon. The TOP of the frame is sky or open space — NEVER an upside-down mirror of "
-            "the bottom: no upside-down trees, mountains, cliffs or land hanging down from the top edge, "
-            "and no top-bottom kaleidoscope symmetry. "
-            "Compose it so the calm, soft, open area where the verse sits (soft sky, "
-            "gentle haze, calm water or quiet out-of-focus light) falls naturally across the middle of "
-            "this ONE scene — reached organically, never by pasting a second scene into the centre. "
-            "If any water (puddle, canal, lake, wet street) reflects something, the reflection MUST be a "
-            "physically-correct UPSIDE-DOWN MIRROR image directly below the real object — rooftops and "
-            "buildings in the reflection point DOWNWARD, inverted — NEVER a second upright building, town "
-            "or scene sitting the right way up in the water.")
-COMPOSE_SAFE = ("Keep it a real, natural, uncluttered composition — one continuous photograph, simple and "
-                "restrained, with only a few elements. Do not let any object crowd or reach into the open "
-                "upper part of the frame where the text goes; keep the subject and all busy detail along "
-                "the BOTTOM of the frame.")
-QUALITY = ("It is HYPERREALISTIC — completely indistinguishable from a GENUINE real photograph taken "
-           "with a real camera — with real depth and a quiet sense of hope, grace and reverence "
-           "(peaceful and true — never cute, kitschy, saccharine, twee or fantastical). "
-           # 고요함, not brightness: the criterion is whether the frame is CALM. A dim lamp-lit room is
-           # on brand; a gloomy or foreboding one is not. Understatement is required, because the verse
-           # is the subject and a spectacular photograph steals the post.
-           "The mood is QUIET and STILL. Natural light suited to THIS scene at whatever hour it "
-           "belongs to — soft daylight, late dusk or faint light after dark are all welcome, and dim "
-           "is fine — but it is never gloomy, ominous, oppressive, bleak, sorrowful or frightening. "
-           "Colour is MUTED and gentle, slightly desaturated, low in contrast, with a soft filmic "
-           "quality and a subtle grain — restrained, like a quiet film photograph, NOT vivid, "
-           "saturated, glossy, dramatic or spectacular. Understated and simple: plenty of plain empty "
-           "space, few elements, nothing showy. Natural photographic detail, real texture and "
-           "true-to-life colour. It must look like an ACTUAL photograph a person took — absolutely NOT "
-           "a glossy 3D render, CGI, a video-game frame, a digital painting, or a plasticky/artificial "
-           "AI image. "
-           # Realism has to be asked for as what a real LENS does, not merely declared — a plain
-           # subject (an empty field, a bare hillside) has no complexity to hide the AI tells behind.
-           # This is about believability, not brightness, so it survives the 07-30 muted direction.
-           "It was shot on a full-frame camera with a normal prime lens: natural depth of field with "
-           "the far distance falling gently out of focus, believable lens character, and the slight "
-           "imperfection of a real photograph. Detail is UNEVEN and organic the way nature actually "
-           "is — grass, foliage and ground vary in height, colour and density, never a uniform "
-           "repeating carpet, and there is no airbrushed smoothness and no halo around edges. "
-           "Real and quietly moving — an image that feels honest and calm.")
-NOTEXT = ("There is NO PERSON anywhere in the frame — no face, no figure, no silhouette, no hand, no arm, no reflection of a person, not even far away, out of focus or turned away. NOBODY. And absolutely no text, letters, words, captions, numbers, "
-          "signs, watermark or logo anywhere. It is a single full-bleed photograph that completely fills "
-          "the image, edge to edge.")
+QUALITY = (
+    "The mood is QUIET and STILL, with a sense of hope and reverence — peaceful and true, never "
+    "cute, kitschy or saccharine. Natural light belonging to THIS scene at whatever hour it is: "
+    "soft daylight, late dusk or faint light after dark are all welcome and dim is fine, but never "
+    "gloomy, ominous, oppressive, bleak or sorrowful. Colour is MUTED and gentle, slightly "
+    "desaturated, low in contrast, with a soft filmic quality and subtle grain — restrained, like a "
+    "quiet film photograph, not vivid, glossy or dramatic. Understated and simple: plenty of plain "
+    "empty space, few elements, nothing showy. Shot on a full-frame camera with a normal prime "
+    "lens — natural depth of field with the far distance falling gently out of focus, believable "
+    "lens character, and the slight imperfection of a real photograph. Detail is UNEVEN and organic "
+    "the way nature actually is: grass and foliage vary in height, colour and density, never a "
+    "uniform repeating carpet, with no airbrushed smoothness and no halo around edges."
+)
 
 
 def _credentials():
@@ -604,7 +556,12 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
     # chosen by scene family, not assumed.
     indoors = SCENE_CATS[index % len(SCENES)] in INTERIOR_CATS
     compose = compose.format(empty_area=EMPTY_AREA[indoors], anchor=ANCHOR[indoors])
-    prompt = f"A cinematic, genuine real photograph of {scene}, {variation}. {compose} {COMPOSE_SAFE} {EVENTONE} {QUALITY} {NOTEXT}"
+    # Built from content_law, which is the ONE place the prohibitions live. Four separate blocks
+    # used to repeat them in different words and contradict each other — COMPOSE demanded a flat
+    # even tone across the upper half while EVENTONE forbade any hard seam, and the model resolved
+    # that by painting a panel onto the photograph (RULES.md A).
+    import content_law
+    prompt = content_law.for_image(scene, f"{variation}. {QUALITY}", compose)
 
     if model == "gemini":
         return _gemini(prompt, dest, aspect=aspect)

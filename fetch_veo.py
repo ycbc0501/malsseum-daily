@@ -78,9 +78,14 @@ def animate(still_png, dest, aspect="9:16", prompt=MOTION, timeout_s=420, poll_s
     to `dest`. Raises on error/timeout so callers can fall back to a zoom still."""
     key = hf._gemini_key()
     img_b64 = base64.b64encode(open(still_png, "rb").read()).decode()
-    body = {"instances": [{"prompt": prompt,
+    import content_law
+    # The still went through every gate and then Veo introduced what the gates forbid — a person
+    # walking in, water pouring sideways, the empty upper band dissolving. The motion prompt had
+    # never carried the laws at all: no mention of hands, of CGI, of physics, of looking filmed.
+    body = {"instances": [{"prompt": content_law.for_video(prompt),
                            "image": {"bytesBase64Encoded": img_b64, "mimeType": "image/png"}}],
-            "parameters": {"aspectRatio": aspect, "negativePrompt": NEG}}
+            "parameters": {"aspectRatio": aspect,
+                           "negativePrompt": NEG + ", " + content_law.NEG_TERMS}}
     url = f"{API}/models/{VEO_MODEL}:predictLongRunning?key={key}"
     req = urllib.request.Request(url, data=json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json"}, method="POST")
