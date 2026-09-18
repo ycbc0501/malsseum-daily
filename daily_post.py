@@ -3,7 +3,7 @@
 Daily 말씀 Reel — the hands-off orchestrator.
 
 Each day: waits for 05:00 KST ±10 min, picks the next verse + a unique hymn, generates an
-AI background, animates it with Veo into ~16s of real motion (two chained ~8s continuations,
+AI background, animates it with Veo into ~30s of real motion (four chained ~8s continuations,
 played forward at native speed — never looped or reversed), overlays the verse (always
 centered), mixes the hymn in softly, and publishes a Reel (shown in the profile grid via
 share_to_feed) plus a Story.
@@ -49,11 +49,30 @@ THEME_ORDER = ["위로", "평안", "담대", "믿음", "감사", "사랑", "인�
 
 # How many chained Veo segments make up one reel. Veo's fast tier caps a single generation at
 # ~8s, so length is built by animating each segment's tail frame into the next and playing them
-# forward once (CONTENT_RULE 6 — never a loop, never a reverse). 2 ≈ 16s.
-# Raising this is a TIMING-BUDGET decision, not a free knob: each segment is another Veo call
-# (~2-6 min), rule 1 leaves only ~50 min of build time after the scheduler wait, and past ~30s
-# the reel outlasts Lyria's hymn and the music would have to loop.
-SEGMENTS = 2
+# forward once (CONTENT_RULE 6 — never a loop, never a reverse). Each segment nets ~7.7s after
+# the tail trim, so 4 ≈ 30s.
+#
+# Raised 2 → 4 on 2026-08-21. At SEGMENTS=2 the reel measured 15.33s, which Instagram loops
+# roughly every 15 seconds — and because the audio fades out over the last 1.8s and back in over
+# the first 1.2s, one fifth of every play was music leaving or arriving. The account owner
+# reported it as "the music stops and repeats before I even read the line". The hymn Lyria
+# returns is 30s, so HALF of it was being discarded while the reel restarted twice inside it.
+#
+# Raising this is still a TIMING-BUDGET decision, not a free knob: each segment is another Veo
+# call (~2-6 min) against rule 1's ~50 min of build time. CHAIN_DEADLINE_S below is what makes
+# it safe — length gives way to the clock, the post never does.
+SEGMENTS = 4
+
+# Lyria returns a 30s clip (fetch_lyria.MODEL). The reel is capped here so it can never outlast
+# the hymn: past 30s the music would have to loop, and a loop seam landing mid-verse is the
+# defect this whole change exists to remove (rules 6 and 7).
+HYMN_S = 30.0
+
+# Wall-clock ceiling for the entire Veo phase — the up-to-3 gate attempts AND the continuations.
+# SEGMENTS=4 multiplies the number of slow Veo calls, so on a slow day the chain could otherwise
+# push the build past rule 1's window and cost the POST. When the budget runs out we publish the
+# segments that already passed the motion gate, exactly as a failed continuation does.
+CHAIN_DEADLINE_S = 28 * 60
 
 
 # The claim window, in minutes before the target. It is exactly the cron spacing on purpose:
@@ -423,6 +442,10 @@ def main():
     except Exception as e:
         print(f"lyria failed ({e}) → library fallback")
         audio = pick_music(state)   # no-repeat, family-interleaved fallback
+    # The reel is never allowed to outrun its own soundtrack — past that point ffmpeg's
+    # `-stream_loop -1` would restart the track mid-verse, which is the seam rule 7 forbids.
+    # Measured, not assumed: a Lyria hymn is 30s but a library fallback is some other length.
+    audio_dur = (make_video._duration(audio) if audio else None) or HYMN_S
     # EVERY post: a wondervisionary-style AI background → REAL Veo motion (water/mist/clouds/plants
     # move, camera locked so the verse stays put) → crisp centred verse + a unique gentle hymn.
     # Scenes walk a dedicated sequential counter so none repeats until the whole set is used.
@@ -508,6 +531,7 @@ def main():
     # Defined up here so the still-fallback and exception paths still write a meaningful _meta.json.
     ov = sky = 0.0
     motion_attempts = 0
+    spoiled = False
     n_segments = 0          # recorded in _meta.json so metrics.py can measure length changes
     try:
         import fetch_veo
@@ -515,6 +539,7 @@ def main():
         best = os.path.join(generate.OUT_DIR, "_veo_best.mp4")
         ov = sky = 99.0
         best_score = float("inf")
+        veo_t0 = time.monotonic()   # covers the gate attempts too, not just the continuations
         # Three tries, KEEPING THE CALMEST rather than the first one that squeaks under the bar —
         # otherwise a tighter threshold just buys more still fallbacks instead of better motion.
         for attempt in (1, 2, 3):
@@ -533,6 +558,13 @@ def main():
                 shutil.copyfile(clip, best)
             if clean and ov <= MOTION_MAX and sky <= SKY_MAX:
                 break
+        # A scene Veo spoils every time would otherwise ship silently: the best-of-N still picks
+        # one, and nothing said that all of them broke a rule. Recorded as well as printed, so
+        # "which scenes can Veo not animate cleanly" becomes answerable from metrics.json.
+        spoiled = best_score >= 1000
+        if spoiled:
+            print(f"WARNING: every take of scene {scene_cat} had something the rules forbid "
+                  f"(person, writing, impossible physics) — publishing the least bad one")
         if ov <= MOTION_HARD and sky <= SKY_HARD:
             if ov > MOTION_MAX or sky > SKY_MAX:
                 print(f"veo above target (overall {ov:.2f}>{MOTION_MAX}, sky {sky:.2f}>{SKY_MAX}) "
@@ -546,6 +578,11 @@ def main():
             # reel is its own defect (it loops before the verse can be read), so the continuation is
             # kept unless it is frantic beyond rescue.
             for seg in range(2, SEGMENTS + 1):
+                spent = time.monotonic() - veo_t0
+                if spent > CHAIN_DEADLINE_S:
+                    print(f"veo chaining hit the {CHAIN_DEADLINE_S // 60} min budget after "
+                          f"{spent / 60:.1f} min → keeping {len(segments)} segment(s)")
+                    break
                 seed = os.path.join(generate.OUT_DIR, f"_veo{seg}_seed.png")
                 nxt = os.path.join(generate.OUT_DIR, f"_veo{seg}.mp4")
                 seg_best = os.path.join(generate.OUT_DIR, f"_veo{seg}_best.mp4")
@@ -574,17 +611,26 @@ def main():
             # backwards reads as fake). Length comes from Veo itself, not from replaying frames.
             joined = make_video.chain_clips(
                 segments, os.path.join(generate.OUT_DIR, "_veo_long.mp4"))
-            make_video.build_reel_native(joined, overlay, audio, out_mp4)
+            # Cap at the hymn. Four good segments run ~31s, just past Lyria's 30s clip, and the
+            # ~1s of looped music that would poke out the end is the seam rule 7 exists to avoid.
+            # A short chain (gate or clock cut it early) passes through unchanged.
+            joined_dur = make_video._duration(joined) or 0.0
+            make_video.build_reel_native(joined, overlay, audio, out_mp4,
+                                         duration=min(joined_dur, audio_dur) or None)
             n_segments = len(segments)
             print(f"reel(veo native, {len(segments)} segment(s), "
                   f"overall {ov:.2f}, sky {sky:.2f}): {verse['ref']}")
         else:
             print(f"veo frantic beyond rescue (overall {ov:.2f}, sky {sky:.2f}) → calm still fallback")
-            make_video.build_reel_still(bg, overlay, audio, out_mp4, duration=24)
+            # Same length as the chained reel, and never longer than the hymn — a fallback that
+            # runs 24s while the music is 30s used to hand the two branches different shapes.
+            make_video.build_reel_still(bg, overlay, audio, out_mp4,
+                                        duration=min(HYMN_S, audio_dur))
             print(f"reel(still-fallback): {verse['ref']}")
     except Exception as e:
         print(f"veo motion failed ({e}) → background-zoom still")
-        make_video.build_reel_still(bg, overlay, audio, out_mp4, duration=24)
+        make_video.build_reel_still(bg, overlay, audio, out_mp4,
+                                    duration=min(HYMN_S, audio_dur))
         print(f"reel(still): {verse['ref']}")
 
     print(f"music={os.path.basename(audio) if audio else 'none'}")
@@ -618,6 +664,9 @@ def main():
                    # back per post instead of a judgement we keep re-litigating.
                    "motion": round(ov, 3), "motion_sky": round(sky, 3),
                    "motion_attempts": motion_attempts,
+                   # True when no take passed the clip inspection — see the WARNING above.
+                   "clip_spoiled": bool(spoiled),
+                   "scene": scene_cat,
                    # The follow CTA left the caption on 2026-08-01 (rule 10). metrics.report()
                    # groups on this, so the change is answerable later instead of argued about;
                    # `follows` is the column that settles it. Derived, never hand-set — if the

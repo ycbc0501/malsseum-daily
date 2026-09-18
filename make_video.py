@@ -63,7 +63,9 @@ def build_reel_still(bg_png, overlay_png, audio, out, duration=20):
         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30", "-preset", "slow", "-crf", "16",
         "-maxrate", "12M", "-bufsize", "24M",
         "-c:a", "aac", "-b:a", "192k", "-t", str(duration),
-        "-af", f"volume=0.4,afade=t=in:st=0:d=1,afade=t=out:st={max(0.0, duration - 1.5):.2f}:d=1.5",
+        # Same short fades as build_reel_native, for the same reason: a reel loops, so a long
+        # fade-out meets the next play's fade-in and is heard as the music stopping (rule 7).
+        "-af", f"volume=0.4,afade=t=in:st=0:d=0.6,afade=t=out:st={max(0.0, duration - 0.8):.2f}:d=0.8",
         "-movflags", "+faststart",
         out,
     ]
@@ -211,7 +213,12 @@ def build_reel_native(video, overlay_png, audio, out, volume=0.4, duration=None)
         "-filter_complex", fc, "-map", "[v]", "-map", "2:a",
         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30", "-preset", "slow", "-crf", "17",
         "-maxrate", "12M", "-bufsize", "24M", "-c:a", "aac", "-b:a", "192k", "-t", f"{dur:.2f}",
-        "-af", f"volume={volume},afade=t=in:st=0:d=1.2,afade=t=out:st={max(0.0, dur - 1.8):.2f}:d=1.8",
+        # Short fades on purpose. Instagram loops a reel forever, so the fade-out and the next
+        # play's fade-in sit back to back and the viewer hears one continuous dip to silence at
+        # every seam. At 1.8s + 1.2s that dip was 3 seconds long and, on a 15s reel, arrived
+        # while they were still reading — reported 2026-08-21 as "the music stops and repeats".
+        # 0.8 + 0.6 keeps the ends from clicking without opening a hole in the middle of the loop.
+        "-af", f"volume={volume},afade=t=in:st=0:d=0.6,afade=t=out:st={max(0.0, dur - 0.8):.2f}:d=0.8",
         "-movflags", "+faststart", out,
     ]
     subprocess.run(cmd, check=True, capture_output=True)
