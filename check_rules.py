@@ -34,7 +34,7 @@ def checks():
     img = content_law.for_image("scene", "look", "framing")
     vid = content_law.for_video("motion")
     for n, marker in ((1, "NO WRITING"), (2, "NO PEOPLE"),
-                      (3, "ONLY WHAT CAN REALLY HAPPEN"), (4, "FILMED, NOT MADE")):
+                      (3, "NATURE ONLY"), (4, "FILMED, NOT MADE")):
         yield f"A law {n} is in the image prompt", marker in img
         yield f"A law {n} is in the video prompt", marker in vid
     yield "A laws apply to every frame of the video", "EVERY FRAME" in vid
@@ -59,7 +59,7 @@ def checks():
         w not in hf.COMPOSE[("center", "top")]
         for w in ("FLAT EVEN TONE", "unbroken colour", "NO texture"))
     yield "A2b the law forbids a pasted panel and a hard seam", (
-        "pasted-on panel" in law and "hard straight seam" in law)
+        "panel, band or backdrop" in law and "hard straight edge" in law)
     gen = (HERE / "generate.py").read_text()
     yield "F5 exactly two type sizes", "SMALL_RATIO" in gen and "MAX_LINES_AT_FULL" in gen
     # Dark is allowed and must stay allowed — three of the seven light phrases are after sunset,
