@@ -109,7 +109,9 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 4
+   "likes": 4,
+   "views": 57,
+   "views_manual": true
   },
   "kind": "REELS",
   "motion": 1.947,
@@ -137,7 +139,10 @@
   "gate_passed": true,
   "gate_ran": 7,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "views": 199,
+   "views_manual": true
+  },
   "motion": 8.968,
   "motion_attempts": 3,
   "motion_sky": 1.467,
@@ -387,7 +392,9 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 8
+   "likes": 8,
+   "views": 103,
+   "views_manual": true
   },
   "kind": "REELS",
   "motion": 8.545,
@@ -633,7 +640,9 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 7
+   "likes": 7,
+   "views": 142,
+   "views_manual": true
   },
   "kind": "REELS",
   "motion": 3.609,
@@ -721,7 +730,9 @@
   "format": "reel",
   "insights": {
    "comments": 3,
-   "likes": 13
+   "likes": 13,
+   "views": 222,
+   "views_manual": true
   },
   "kind": "REELS",
   "motion": 3.769,
@@ -743,7 +754,7 @@
   "insights": {
    "comments": 1,
    "likes": 11,
-   "views": 59,
+   "views": 79,
    "views_manual": true
   },
   "kind": "REELS",
@@ -1065,7 +1076,9 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 6
+   "likes": 6,
+   "views": 123,
+   "views_manual": true
   },
   "kind": "REELS",
   "motion": 1.049,
@@ -1384,7 +1397,9 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 8
+   "likes": 8,
+   "views": 64,
+   "views_manual": true
   },
   "kind": "REELS",
   "motion": 1.429,
@@ -1460,7 +1475,9 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 17
+   "likes": 17,
+   "views": 107,
+   "views_manual": true
   },
   "kind": "REELS",
   "motion": 2.72,
@@ -1772,7 +1789,9 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 3
+   "likes": 3,
+   "views": 65,
+   "views_manual": true
   },
   "kind": "REELS",
   "motion": 3.495,
@@ -1826,7 +1845,9 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 8
+   "likes": 8,
+   "views": 74,
+   "views_manual": true
   },
   "kind": "REELS",
   "motion": 0.543,
@@ -1877,7 +1898,9 @@
  "18135835636533896": {
   "insights": {
    "comments": 16,
-   "likes": 16
+   "likes": 16,
+   "views": 133,
+   "views_manual": true
   },
   "kind": "FEED",
   "permalink": "https://www.instagram.com/p/DdOA2BCkbLS/",
