@@ -546,7 +546,11 @@ def main():
     ov = sky = 0.0
     motion_attempts = 0
     spoiled = False
-    import fetch_higgsfield
+    # NO `import fetch_higgsfield` here. The module is imported at the top of the file, and a
+    # local import anywhere in this function makes the name local for the WHOLE function —
+    # so pick_scene() ~90 lines above raised UnboundLocalError and every run from 09-18 19:00
+    # to 09-19 19:00 died after building the reel. Python accepts this at compile time; only
+    # running it finds it.
     n_segments = 0          # recorded in _meta.json so metrics.py can measure length changes
     try:
         import fetch_veo
