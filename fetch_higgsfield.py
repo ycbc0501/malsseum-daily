@@ -230,17 +230,9 @@ SCENE_GROUPS = {
         "a neat stack of folded white linen on a plain surface",
         "clean folded cloth resting on the corner of a quiet table",
     ],
-    "stairwell": [
-        "a plain indoor stairway with a bare wall rising beside it",
-        "a quiet flight of stairs, the wall above them empty",
-    ],
     "doorway": [
         "a simple open doorway with a still room beyond it",
         "a plain door standing ajar, the room past it quiet and bare",
-    ],
-    "shelf": [
-        "a nearly empty shelf with one small object left on it",
-        "a plain wooden shelf holding a single folded cloth",
     ],
     # A clock face is numerals, and numerals come out mangled. Dropped for a candle, which is the
     # same quiet mark of passing time with nothing to misprint.
@@ -309,18 +301,6 @@ SCENE_GROUPS = {
         "a single closed umbrella leaning in a quiet entryway",
         "one folded umbrella resting against a plain wall",
     ],
-    "wall_shadow": [
-        "soft window shadows falling across a plain empty wall",
-        "quiet light and shadow resting on a bare interior wall",
-    ],
-    "linen_curtain": [
-        "a pale linen curtain hanging still in a quiet room",
-        "a soft curtain drawn nearly closed, the room beyond calm",
-    ],
-    "wooden_floor": [
-        "a bare wooden floor with soft light lying across it",
-        "an empty room's plain floorboards, nothing standing on them",
-    ],
     # Paper of any kind — sheets, notebooks, books — is dropped entirely. Even blank or closed it
     # is the surface the model most wants to write on, and a book adds nothing a cloth or a cup
     # does not already say.
@@ -386,14 +366,69 @@ SCENE_GROUPS = {
 
 # Round-robin interleave: one scene from each theme per pass, so SCENES[i], SCENES[i+1]… cycle
 # through DIFFERENT themes. SCENE_CATS[i] is the theme of SCENES[i] (used by the no-repeat ledger).
-SCENES, SCENE_CATS = [], []
-_round = 0
-while any(len(v) > _round for v in SCENE_GROUPS.values()):
-    for _cat, _items in SCENE_GROUPS.items():
-        if _round < len(_items):
-            SCENES.append(_items[_round])
-            SCENE_CATS.append(_cat)
-    _round += 1
+# Walking SCENE_GROUPS in dict order put every interior together, because the 30 everyday scenes
+# were appended as one block: the sequence held FOURTEEN interiors in a row, which is a week of
+# nothing but rooms. The account owner saw it immediately — "다 무슨 방에서 우울한 벽만".
+#
+# So the order is woven instead of listed: OUTDOOR_PER_INDOOR outdoor scenes between every indoor
+# one. That fixes the run length and the balance in the same place. The reference account this
+# aesthetic came from is mostly sky, water and weather with the everyday as accent, and the pool
+# had drifted to 40% interiors.
+# Scene families that happen INDOORS. They need different composition language: an interior has
+# no sky and no horizon, and asking for "a clear cloudless sky" in the upper half of a bedroom is
+# a contradiction the image model resolves by GRAFTING AN OUTDOOR SKY ABOVE THE ROOM — a
+# physically impossible composite (published 2026-08-2x, 에베소서 2:8). The instruction caused the
+# defect; the gate could not catch it because every clause there was written for landscapes.
+# cafe_table is deliberately NOT here — a terrace and a garden lawn are OUTDOORS, and telling
+# them "there is no sky" would break the one thing that scene needs.
+INTERIOR_CATS = {
+    "window_light", "bedroom", "lamp_room", "desk",
+    # Added with the 2026-09-06 everyday expansion. Every one of these sits INSIDE a room, so the
+    # same trap applies: tell a tea cup on a table that the upper half should be "a clear cloudless
+    # sky" and the model puts a sky above the kitchen. Adding scenes without adding them here is
+    # how the 에베소서 2:8 composite happened in the first place.
+    "tea_cup", "bread_table", "morning_table", "folded_laundry",
+    "doorway", "candle_still", "coat_hook", "key_bowl", "small_dish", "cat_window",
+    "hanging_lamp",
+    "potted_plant", "wool_blanket", "bowl_of_fruit", "washed_dishes", "sewing", "shoes_by_door",
+    "umbrella_stand", "linen_cloth", "water_glass",
+    "basket",
+}
+
+def _weave():
+    """Spread the indoor scenes evenly through the outdoor ones, whatever the counts.
+
+    A fixed ratio does not work: with 90 outdoor and 60 indoor a 3:1 weave exhausts the outdoor
+    queue and leaves thirty rooms piled at the end. Placing each indoor scene at its proportional
+    position keeps them apart no matter how the pool changes.
+    """
+    rounds = {c: list(v) for c, v in SCENE_GROUPS.items()}
+    out_q, in_q = [], []
+    for _r in range(max(len(v) for v in rounds.values())):
+        for cat, items in rounds.items():
+            if _r < len(items):
+                (in_q if cat in INTERIOR_CATS else out_q).append((items[_r], cat))
+    total = len(out_q) + len(in_q)
+    # Fractional positions the indoor scenes should land on, evenly spaced across the whole run.
+    slots = {round((i + 0.5) * total / len(in_q)) for i in range(len(in_q))} if in_q else set()
+    scenes, cats = [], []
+    oi = ii = 0
+    for pos in range(total):
+        take_in = pos in slots and ii < len(in_q)
+        if not take_in and oi >= len(out_q):
+            take_in = ii < len(in_q)
+        q, i = (in_q, ii) if take_in else (out_q, oi)
+        if i >= len(q):
+            continue
+        scenes.append(q[i][0]); cats.append(q[i][1])
+        if take_in:
+            ii += 1
+        else:
+            oi += 1
+    return scenes, cats
+
+
+SCENES, SCENE_CATS = _weave()
 
 # VARIATION — so even the SAME theme looks substantially different each time it recurs. LIGHT sets a
 # colour/light palette (not a strict clock-time, so it never contradicts a scene, e.g. stars or a
@@ -410,6 +445,9 @@ LIGHT = [
     "in the cool blue stillness just after sunset",
     "in low light after dark — the scene only faintly lit, calm and very quiet",
 ]
+# Indoors uses only LIGHT[:INDOOR_LIGHT_CUTOFF] — the daylight half. See scene_variation().
+INDOOR_LIGHT_CUTOFF = 5
+
 VANTAGE = [
     "from a wide, distant vantage with deep open space",
     "from a low, grounded eye-level view",
@@ -432,21 +470,18 @@ VANTAGE = [
 # 25 themes, from open sea to a candle-lit interior.
 
 
-def scene_variation(t):
-    """A rotating 'light palette + camera angle' phrase, keyed on the monotonic post counter `t`, so
-    successive appearances of the same theme differ in tone, colour and angle.
+def scene_variation(t, indoors=False):
+    """A rotating light + vantage phrase, so the same scene looks different each time it recurs.
 
-    LIGHT now spans BRIGHT THROUGH DARK (clear morning → faint light after dark). The account's
-    criterion is 고요함 (quiet), not brightness: a lamp-lit room at night and a pale dawn are both on
-    brand, while gloom, dread and despair are not — QUALITY and NEG carry that line.
-
-    Periods stay coprime: LIGHT advances every post (7), VANTAGE every 7 posts (4), so a theme meets
-    a fresh light+angle pairing for 28 posts before any combination recurs. 7 is prime and divides
-    neither 36 (themes) nor 72 (scenes), so a theme never locks onto one tone."""
-    light = LIGHT[t % len(LIGHT)]
-    vi = (t // len(LIGHT)) % len(VANTAGE)
+    Indoors the darkest entries are skipped. Dark is on brand — the account owner confirmed that
+    outright — but dark means EVENING outdoors and ABANDONED in an empty room, and a run of dim
+    bare walls is what they saw and called 우울한. Sunset and after-dark stay for scenes that have
+    a sky; a room gets the daylight half of the palette and reads as quiet rather than forsaken.
+    """
+    light_pool = LIGHT[:INDOOR_LIGHT_CUTOFF] if indoors else LIGHT
+    light = light_pool[t % len(light_pool)]
+    vi = (t // len(light_pool)) % len(VANTAGE)
     return ", ".join([light, VANTAGE[vi]])
-
 
 def pick_scene(start, recent_cats, avoid=2):
     """Choose the next scene index, skipping forward past any whose THEME appears in the last
@@ -460,26 +495,6 @@ def pick_scene(start, recent_cats, avoid=2):
             return i, SCENE_CATS[i]
     i = start % n
     return i, SCENE_CATS[i]
-# Scene families that happen INDOORS. They need different composition language: an interior has
-# no sky and no horizon, and asking for "a clear cloudless sky" in the upper half of a bedroom is
-# a contradiction the image model resolves by GRAFTING AN OUTDOOR SKY ABOVE THE ROOM — a
-# physically impossible composite (published 2026-08-2x, 에베소서 2:8). The instruction caused the
-# defect; the gate could not catch it because every clause there was written for landscapes.
-# cafe_table is deliberately NOT here — a terrace and a garden lawn are OUTDOORS, and telling
-# them "there is no sky" would break the one thing that scene needs.
-INTERIOR_CATS = {
-    "window_light", "bedroom", "lamp_room", "desk",
-    # Added with the 2026-09-06 everyday expansion. Every one of these sits INSIDE a room, so the
-    # same trap applies: tell a tea cup on a table that the upper half should be "a clear cloudless
-    # sky" and the model puts a sky above the kitchen. Adding scenes without adding them here is
-    # how the 에베소서 2:8 composite happened in the first place.
-    "tea_cup", "bread_table", "morning_table", "folded_laundry", "stairwell",
-    "doorway", "shelf", "candle_still", "coat_hook", "key_bowl", "small_dish", "cat_window",
-    "hanging_lamp",
-    "potted_plant", "wool_blanket", "bowl_of_fruit", "washed_dishes", "sewing", "shoes_by_door",
-    "umbrella_stand", "wall_shadow", "linen_curtain", "wooden_floor", "linen_cloth", "water_glass",
-    "basket",
-}
 
 # What the empty upper half IS, per scene type — substituted into COMPOSE.
 EMPTY_AREA = {
@@ -577,7 +592,8 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
     """Generate one background → save to `dest`. Clean natural-language prompt (Gemini follows
     prose); the text area is kept clear per `placement`. `aspect` = "3:4" (feed) or "9:16" (reel)."""
     scene = SCENES[index % len(SCENES)]
-    variation = scene_variation(index if var_t is None else var_t)
+    indoors = SCENE_CATS[index % len(SCENES)] in INTERIOR_CATS
+    variation = scene_variation(index if var_t is None else var_t, indoors=indoors)
     compose = COMPOSE.get(tuple(placement), COMPOSE[("center", "middle")])
     # An interior has no sky and no horizon. Filling the same landscape wording for a bedroom is
     # what produced the room-with-a-sky-above composite, so the empty area and the anchor are

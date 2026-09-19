@@ -78,6 +78,16 @@ def checks():
     # holds the verse IS a two-zone composition, and the band is what that description produces.
     yield "A2g framing describes a photograph, not a layout", all(
         w not in framing for w in ("UPPER HALF", "the verse", "panel", "band", "zone"))
+    # Interiors must never cluster and must not get the darkest light — a week of dim bare walls
+    # is what the account owner saw on 2026-09-19.
+    run = best = 0
+    for cat in hf.SCENE_CATS:
+        run = run + 1 if cat in hf.INTERIOR_CATS else 0
+        best = max(best, run)
+    yield "A3 interiors never run back to back", best <= 1
+    yield "A3 interiors skip the darkest light", (
+        hf.INDOOR_LIGHT_CUTOFF < len(hf.LIGHT)
+        and "after dark" not in " ".join(hf.LIGHT[:hf.INDOOR_LIGHT_CUTOFF]))
     yield "A2h interior framing has no horizon and no sky above the room", (
         "no sky, no horizon" in hf.INDOOR_TOP and "the room's own wall" in hf.INDOOR_TOP)
     yield "A2b the law forbids a pasted panel and a hard seam", (
