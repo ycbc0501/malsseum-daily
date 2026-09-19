@@ -663,7 +663,7 @@
   "ref": "데살로니가후서 3:3",
   "reposted_flag": {
    "basis": "2026-09-20 화면에 직접 보임",
-   "checked": "2026-09-20",
+   "checked": "2026-09-17",
    "flagged": true
   },
   "segments": 2,
@@ -1105,7 +1105,7 @@
   "ref": "고린도전서 2:16",
   "reposted_flag": {
    "basis": "2026-09-20 화면에 직접 보임",
-   "checked": "2026-09-20",
+   "checked": "2026-09-17",
    "flagged": true
   },
   "segments": 2,
@@ -1284,6 +1284,27 @@
   "text_spread": 4.3,
   "theme": "은혜"
  },
+ "18100841660527193": {
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-09-20",
+  "duration": 30.43,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 7,
+  "gate_skipped": 2,
+  "insights": {},
+  "motion": 7.113,
+  "motion_attempts": 3,
+  "motion_sky": 1.003,
+  "published": "2026-09-20T05:22:59+09:00",
+  "ref": "데살로니가전서 5:8",
+  "scene": "well",
+  "segments": 4,
+  "text_contrast": 9.62,
+  "text_spread": 4.0,
+  "theme": "담대"
+ },
  "18102039290458956": {
   "cta_in_caption": false,
   "date": "2026-09-04",
@@ -1427,7 +1448,7 @@
   "ref": "예레미야 15:21",
   "reposted_flag": {
    "basis": "2026-09-20 화면에 직접 보임",
-   "checked": "2026-09-20",
+   "checked": "2026-09-17",
    "flagged": true
   },
   "segments": 2,
@@ -1820,7 +1841,7 @@
   "ref": "전도서 11:4",
   "reposted_flag": {
    "basis": "2026-09-20 화면에 직접 보임",
-   "checked": "2026-09-20",
+   "checked": "2026-09-17",
    "flagged": true
   },
   "segments": 2,
