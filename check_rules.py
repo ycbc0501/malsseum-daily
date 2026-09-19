@@ -31,6 +31,7 @@ def checks():
     # The four laws exist once, in content_law.LAW, and BOTH prompts must carry them. Asserting it
     # here is the point: the video prompt went months without any of them.
     law = content_law.LAW
+    framing = hf.OUTDOOR_TOP + " " + hf.INDOOR_TOP
     img = content_law.for_image("scene", "look", "framing")
     vid = content_law.for_video("motion")
     for n, marker in ((1, "NO WRITING"), (2, "NO PEOPLE"),
@@ -41,7 +42,7 @@ def checks():
     yield "A law 2 covers parts of a person", all(
         w in law for w in ("hand", "limb", "silhouette", "reflection of a person"))
     yield "A prohibitions are not duplicated into the framing block", not any(
-        w in hf.COMPOSE[("center", "top")] for w in ("CGI", "watermark", "no person"))
+        w in framing for w in ("CGI", "watermark", "no person"))
     yield "A1 no people (prompt)", "no people" in notext and "silhouette" in notext
     yield "A1 no people (gate)", "any person" in gate
     yield "A2 no writing (prompt)", "no writing" in notext and "watermark" in notext
@@ -62,19 +63,18 @@ def checks():
     yield "A2c the gate itself rejects a two-zone split", "divided into two zones" in gate.lower()
     # Assembled prompts must not contradict themselves. The interior prompt carried both
     # "there is NO horizon" and "One horizon only".
-    for indoors in (True, False):
-        text = hf.COMPOSE[("center", "top")].format(
-            empty_area=hf.EMPTY_AREA[indoors], anchor=hf.ANCHOR[indoors],
-            one_horizon=hf.ONE_HORIZON[indoors])
-        yield (f"A2d {'interior' if indoors else 'exterior'} prompt is self-consistent",
-               not (indoors and "horizon only" in text))
+    yield "A2d interior framing is self-consistent", "horizon LOW" not in hf.INDOOR_TOP
     # The scene sentence is the only thing that names objects; the framing must not inject any.
     yield "A2e framing names no objects of its own", not any(
-        w in hf.ANCHOR[False] + hf.ANCHOR[True]
-        for w in ("furniture", "flowers", "rooftops", "the bed", "the lamp"))
+        w in framing for w in ("furniture", "flowers", "rooftops", "the bed", "the lamp"))
     yield "A2b framing does not demand a flat plane", all(
-        w not in hf.COMPOSE[("center", "top")]
-        for w in ("FLAT EVEN TONE", "unbroken colour", "NO texture"))
+        w not in framing for w in ("FLAT EVEN TONE", "unbroken colour", "NO texture"))
+    # The framing must not describe the frame as zones at all — asking for an upper half that
+    # holds the verse IS a two-zone composition, and the band is what that description produces.
+    yield "A2g framing describes a photograph, not a layout", all(
+        w not in framing for w in ("UPPER HALF", "the verse", "panel", "band", "zone"))
+    yield "A2h interior framing has no horizon and no sky above the room", (
+        "no sky, no horizon" in hf.INDOOR_TOP and "the room's own wall" in hf.INDOOR_TOP)
     yield "A2b the law forbids a pasted panel and a hard seam", (
         "panel, band or backdrop" in law and "straight edge cutting it into zones" in law)
     gen = (HERE / "generate.py").read_text()
@@ -120,9 +120,7 @@ def checks():
     yield "D  no interior is asked for a sky", not [
         i for i in range(len(hf.SCENES))
         if hf.SCENE_CATS[i] in hf.INTERIOR_CATS
-        and "cloudless sky" in hf.COMPOSE[("center", "top")].format(
-            empty_area=hf.EMPTY_AREA[True], anchor=hf.ANCHOR[True],
-            one_horizon=hf.ONE_HORIZON[True])]
+        and 'cloudless sky' in hf.OUTDOOR_TOP]
     yield "F3 text area is measured, not assumed", hasattr(generate, "text_area_ok")
     # A5b — the seam gate must be MEASURED and must run even when the model said yes, because on
     # 2026-09-14 the model said yes to a stacked composite and it shipped.

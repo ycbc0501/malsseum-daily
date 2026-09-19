@@ -464,14 +464,22 @@ def main():
     # mask and regenerate when it fails. Same shape as the composition and motion gates: the pipeline
     # never trusts a generator it can check. Attempts are bounded by rule 1's build budget.
     ink = generate.verse_ink(verse, canvas=generate.REEL, placement=placement, grow=5)
-    AREA_TRIES = 3
-    # How long the composition gate may keep regenerating before it gives up and ships a rejected
-    # frame. At ~35s a render this is roughly fifteen tries; the measured rejection rate is about
-    # one in five, so exhausting it means something is systematically wrong, not unlucky.
-    IMAGE_DEADLINE_S = 9 * 60
+    # Both image gates run to a CLOCK, not a count, and both keep going until they pass. Dropping
+    # the zone language from the composition (2026-09-19) made the pictures read as photographs
+    # rather than layouts, and moved the binding constraint to legibility: measured over ten
+    # renders, 6 of 10 carried the verse on the first try against 8 of 10 with the old layout
+    # wording. Retrying is the cheaper half of that trade — the pictures are better and the clock
+    # absorbs the misses.
+    AREA_TRIES = 8
+    IMAGE_DEADLINE_S = 6 * 60      # composition gate, ~10 renders
+    AREA_DEADLINE_S = 12 * 60      # legibility, including the composition retries inside it
     gate_passed = False
     try:
+        area_t0 = time.monotonic()
         for attempt in range(1, AREA_TRIES + 1):
+            if attempt > 1 and time.monotonic() - area_t0 > AREA_DEADLINE_S:
+                print(f"text-area budget spent after {attempt - 1} attempts — shipping the best so far")
+                break
             # generate_checked may walk to a different scene when the checker keeps rejecting
             # (a café sign renders as broken lettering no matter how often you redraw it), so it
             # reports which scene actually shipped and the ledger records THAT, not the one we asked

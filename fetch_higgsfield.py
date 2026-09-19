@@ -483,14 +483,22 @@ INTERIOR_CATS = {
 
 # What the empty upper half IS, per scene type — substituted into COMPOSE.
 EMPTY_AREA = {
-    False: "open sky, soft haze, mist or calm water, whatever genuinely belongs to THIS scene",
-    True: "the room's OWN wall or ceiling continuing upward, lit as the rest of the room is — this "
-          "is an INTERIOR, so there is NO sky, NO horizon and NO outdoor view above the room, and "
-          "nothing outdoors may appear in the upper half",
+    False: "open sky",
+    True: "a tall expanse of the room's own wall",
 }
 # Only an outdoor frame has a horizon. Saying "one horizon only" to an interior contradicts the
 # same sentence's "there is NO horizon" — the interior prompt was carrying both.
-ONE_HORIZON = {False: "One horizon only. ", True: ""}
+# What the open expanse must look like, in a photographer's terms. It has to be decisively light
+# or decisively dark for the verse to separate from it — but that is about the LIGHT, never about
+# flattening the surface, which is the distinction the old wording lost.
+TONE = {
+    False: "an overcast sky that reads as one soft luminous field, or a clear sky at dusk gone "
+           "deep and dark — bright or dark, never a middling grey, and always real sky with its "
+           "own cloud and gradation. ",
+    True: "the wall evenly lit and either pale and bright or deep in shadow — never a middling "
+          "grey — with its own plaster texture, marks and falloff. This is an interior: no sky, "
+          "no horizon, nothing outdoors above the room. ",
+}
 
 ANCHOR = {
     # Named objects used to be listed here — furniture, flowers, rooftops — and they were sent with
@@ -502,28 +510,38 @@ ANCHOR = {
 }
 
 
+# No zones, and no template shared between a field and a kitchen. The old text described an upper
+# half that holds the verse and a lower part that holds the scene — which IS a two-zone
+# composition, and the law then had to forbid the band that description produces. These are the
+# words a photographer would use about the shot itself. Whether the result can carry the verse is
+# decided by MEASURING it (generate.text_area_ok) and regenerating, never by asking for a space.
+OUTDOOR_TOP = (
+    "COMPOSITION: a wide, unhurried frame with the horizon LOW, roughly a third of the way up, so "
+    "that open sky fills most of the picture above it — the sky is the subject. Everything with "
+    "detail or texture sits along the bottom and nothing rises into the sky. The light must be "
+    "decisive: either an overcast sky reading as one soft luminous field, or a clear sky at dusk "
+    "gone deep and dark. Never a middling grey, and always real sky with its own cloud and "
+    "gradation. Simple and unhurried, with a lot of quiet space."
+)
+INDOOR_TOP = (
+    "COMPOSITION: photographed straight on from low down, so a tall expanse of the room's own wall "
+    "rises above the subject and fills most of the frame. Whatever the room contains rests along "
+    "the bottom. The wall is evenly lit and decisively pale or deep in shadow — never a middling "
+    "grey — keeping its own plaster texture, marks and falloff. This is an interior: no sky, no "
+    "horizon, nothing outdoors above the room. Simple and unhurried, with a lot of quiet space."
+)
+
 COMPOSE = {
-    ("center", "top"):
-        "FRAMING: the verse is placed across the UPPER HALF, so leave that area open and simple — "
-        "{empty_area}. Keep it calm: gentle "
-        "natural variation only, no busy detail, no glare or sun disc, nothing crossing it. Let it "
-        "read as DECISIVELY LIGHT (a pale, luminous sky or a bright wall) or DECISIVELY DARK "
-        "(deep dusk, a wall in shadow) — never a middling grey, because the verse is set over it "
-        "and must separate from it. That is about BRIGHTNESS only: it stays a real photographed "
-        "surface with its own natural variation, never flattened or evened out. "
-        "Put the subject and all "
-        "textured detail LOW: {anchor}, and let nothing reach up into the open area. {one_horizon}"
-        "Plenty of quiet negative space — restrained rather than impressive.",
+    ("center", "top"): None,          # chosen per scene in generate_background
     ("center", "middle"):
-        "FRAMING: keep the CENTRE of the frame open and simple, because the verse sits there. Place "
-        "the subject and any tall elements low or to the sides, well clear of the middle. One "
-        "horizon only. Quiet, restrained, plenty of negative space.",
+        "COMPOSITION: a simple, open frame with the subject low or to one side and a wide, calm "
+        "expanse through the middle. Quiet and restrained, with plenty of space.",
     ("left", "middle"):
-        "FRAMING: keep the left and centre open and simple for the verse; place the subject toward "
-        "the lower right. One horizon only.",
+        "COMPOSITION: the subject sits low and to the right; the left and centre of the frame open "
+        "out quietly. Simple and restrained.",
     ("right", "middle"):
-        "FRAMING: keep the right and centre open and simple for the verse; place the subject toward "
-        "the lower left. One horizon only.",
+        "COMPOSITION: the subject sits low and to the left; the right and centre of the frame open "
+        "out quietly. Simple and restrained.",
 }
 QUALITY = (
     "The mood is QUIET and STILL, with a sense of hope and reverence — peaceful and true, never "
@@ -565,8 +583,8 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
     # what produced the room-with-a-sky-above composite, so the empty area and the anchor are
     # chosen by scene family, not assumed.
     indoors = SCENE_CATS[index % len(SCENES)] in INTERIOR_CATS
-    compose = compose.format(empty_area=EMPTY_AREA[indoors], anchor=ANCHOR[indoors],
-                             one_horizon=ONE_HORIZON[indoors])
+    if tuple(placement) == ("center", "top"):
+        compose = INDOOR_TOP if indoors else OUTDOOR_TOP
     # Built from content_law, which is the ONE place the prohibitions live. Four separate blocks
     # used to repeat them in different words and contradict each other — COMPOSE demanded a flat
     # even tone across the upper half while EVENTONE forbade any hard seam, and the model resolved
