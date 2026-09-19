@@ -140,12 +140,16 @@
   "gate_ran": 7,
   "gate_skipped": 0,
   "insights": {
+   "comments": 3,
+   "likes": 8,
    "views": 199,
    "views_manual": true
   },
+  "kind": "REELS",
   "motion": 8.968,
   "motion_attempts": 3,
   "motion_sky": 1.467,
+  "permalink": "https://www.instagram.com/reel/DddxpCiFTB8/",
   "published": "2026-09-19T19:18:24+09:00",
   "ref": "고린도전서 15:55",
   "reposted_flag": {
@@ -397,7 +401,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 8,
+   "likes": 9,
    "views": 103,
    "views_manual": true
   },
@@ -741,7 +745,7 @@
   "format": "reel",
   "insights": {
    "comments": 3,
-   "likes": 13,
+   "likes": 15,
    "views": 222,
    "views_manual": true
   },
@@ -1293,10 +1297,15 @@
   "gate_passed": true,
   "gate_ran": 7,
   "gate_skipped": 2,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 0
+  },
+  "kind": "REELS",
   "motion": 7.113,
   "motion_attempts": 3,
   "motion_sky": 1.003,
+  "permalink": "https://www.instagram.com/reel/Dde2xIakztX/",
   "published": "2026-09-20T05:22:59+09:00",
   "ref": "데살로니가전서 5:8",
   "scene": "well",
