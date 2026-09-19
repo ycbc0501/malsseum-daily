@@ -334,12 +334,13 @@ def flag_report(since="2026-09-10"):
             continue
         rows.append((pub, entry))
     rows.sort()
-    print(f"{'published':<17} {'kind':<6} {'ref':<18} {'caption line':<13} flagged?")
+    print(f"{'published':<17} {'kind':<6} {'ref':<18} {'views':>6}  flagged?")
     for pub, entry in rows:
         f = entry.get("reposted_flag")
         state = "?" if not f else ("YES" if f["flagged"] else "no")
+        v = (entry.get("insights") or {}).get("views")
         print(f"{pub.strftime('%m-%d %H:%M KST'):<17} {(entry.get('kind') or '?')[:5]:<6} "
-              f"{str(entry.get('ref'))[:18]:<18} {'on' if pub >= REFLECTION_SINCE else 'off':<13} {state}")
+              f"{str(entry.get('ref'))[:18]:<18} {('-' if v is None else v):>6}  {state}")
     known = [(t, e) for t, e in rows if e.get("reposted_flag")]
     if known:
         print()
@@ -352,6 +353,16 @@ def flag_report(since="2026-09-10"):
         # The axis the caption experiment cannot see. Every flagged post so far is a reel, and
         # reels are ~87% of everything the account posts — so this split is only worth reading
         # once a FEED post has actually been looked for in the list and recorded either way.
+        # The comparison the whole restriction hangs on. Views are lifetime totals at different
+        # ages, so read the medians as a direction and nothing more — one flagged post (고린도전서
+        # 15:55, 2026-09-20) had 199 views at nine hours, which on its own says the flag does not
+        # simply switch reach off.
+        for label, want in (("flagged   ", True), ("not flagged", False)):
+            vs = sorted(v for v in ((e.get("insights") or {}).get("views")
+                                    for _, e in known if e["reposted_flag"]["flagged"] is want)
+                        if v is not None)
+            if vs:
+                print(f"{label} views: n={len(vs)} median {vs[len(vs) // 2]}  {vs}")
         for kind in ("REELS", "FEED"):
             g = [e for _, e in known if (e.get("kind") or "") == kind]
             if g:

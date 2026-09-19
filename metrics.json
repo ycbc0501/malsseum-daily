@@ -148,6 +148,11 @@
   "motion_sky": 1.467,
   "published": "2026-09-19T19:18:24+09:00",
   "ref": "고린도전서 15:55",
+  "reposted_flag": {
+   "basis": "2026-09-20 화면에 직접 보임",
+   "checked": "2026-09-20",
+   "flagged": true
+  },
   "scene": "picket_fence",
   "segments": 4,
   "text_contrast": 11.23,
@@ -403,6 +408,11 @@
   "permalink": "https://www.instagram.com/reel/DdYnOgbkfZG/",
   "published": "2026-09-17T19:10:44+09:00",
   "ref": "요한일서 5:14",
+  "reposted_flag": {
+   "basis": "추론: 2026-09-20 목록에서 앞뒤 게시물은 보이는데 이 둘만 건너뛰었음. 전체 스크롤 아님",
+   "checked": "2026-09-20",
+   "flagged": false
+  },
   "segments": 2,
   "text_contrast": 12.07,
   "text_spread": 2.7,
@@ -652,7 +662,8 @@
   "published": "2026-09-17T05:08:16+09:00",
   "ref": "데살로니가후서 3:3",
   "reposted_flag": {
-   "checked": "2026-09-17",
+   "basis": "2026-09-20 화면에 직접 보임",
+   "checked": "2026-09-20",
    "flagged": true
   },
   "segments": 2,
@@ -741,6 +752,11 @@
   "permalink": "https://www.instagram.com/reel/DdZs4iEj-HP/",
   "published": "2026-09-18T05:19:22+09:00",
   "ref": "마태복음 10:31",
+  "reposted_flag": {
+   "basis": "추론: 2026-09-20 목록에서 앞뒤 게시물은 보이는데 이 둘만 건너뛰었음. 전체 스크롤 아님",
+   "checked": "2026-09-20",
+   "flagged": false
+  },
   "segments": 2,
   "text_contrast": 8.48,
   "text_spread": 12.4,
@@ -1088,7 +1104,8 @@
   "published": "2026-09-16T19:17:06+09:00",
   "ref": "고린도전서 2:16",
   "reposted_flag": {
-   "checked": "2026-09-17",
+   "basis": "2026-09-20 화면에 직접 보임",
+   "checked": "2026-09-20",
    "flagged": true
   },
   "segments": 2,
@@ -1409,7 +1426,8 @@
   "published": "2026-09-16T05:05:26+09:00",
   "ref": "예레미야 15:21",
   "reposted_flag": {
-   "checked": "2026-09-17",
+   "basis": "2026-09-20 화면에 직접 보임",
+   "checked": "2026-09-20",
    "flagged": true
   },
   "segments": 2,
@@ -1801,7 +1819,8 @@
   "published": "2026-09-15T18:59:02+09:00",
   "ref": "전도서 11:4",
   "reposted_flag": {
-   "checked": "2026-09-17",
+   "basis": "2026-09-20 화면에 직접 보임",
+   "checked": "2026-09-20",
    "flagged": true
   },
   "segments": 2,
