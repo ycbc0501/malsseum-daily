@@ -620,10 +620,14 @@ _CHECK_PROMPT = (
     "above a room with no ceiling, wall or window to justify it. A window or open door showing a "
     "view is CORRECT and must not be flagged; what is wrong is outdoors appearing where the room's "
     "own wall or ceiling should be.\n"
-    "7) A FLAT ADDED BAND: part of the frame — typically the top — is a flat, even area of colour "
-    "with no photographic texture, meeting the rest of the picture along a straight horizontal "
-    "edge, as though a panel, board or sheet had been laid over the photograph. A real open sky or "
-    "a real plain wall has subtle variation and no ruled edge; this does not. Reject it.\n"
+    "7) THE FRAME IS DIVIDED INTO TWO ZONES. A straight, near-horizontal line runs across the "
+    "picture and the area above it is a distinctly different tone, colour or brightness from the "
+    "area below — so the image reads as two stacked rectangles rather than one photograph. This "
+    "counts WHETHER OR NOT the upper area has texture: a dark even band over a lit wall is just as "
+    "wrong as a blank panel, and so is any board, sheet or backdrop that appears laid over the "
+    "scene. Judge it by eye: if the eye lands on a ruled edge cutting the frame in two, reject. "
+    "A genuine horizon where sky meets land or water is CORRECT, as is a real shadow with a soft "
+    "or uneven boundary, and a wall meeting a floor.\n"
     "8) ANY PERSON: a face, a body, a silhouette, a hand, an arm, a leg, or a person reflected in "
     "glass or water — anywhere in the frame, at any distance, however blurred, cropped or turned "
     "away. AI-made faces and hands look wrong and break the stillness the post depends on. An "
@@ -720,32 +724,42 @@ def has_seam(image_path):
     return bad
 
 
-def generate_checked(dest, index=0, placement=("center", "middle"), aspect="3:4", attempts=3, var_t=None):
-    """Generate a background AND vision-check it; regenerate (up to `attempts`) if the checker
-    flags it. Returns (path, index_used) — the caller records index_used so the scene ledger stays
-    honest about which scene actually shipped.
+def generate_checked(dest, index=0, placement=("center", "middle"), aspect="3:4", attempts=3,
+                     var_t=None, deadline_s=None):
+    """Generate until the gate PASSES. Returns (path, index_used, passed).
 
-    Retrying the SAME scene is the wrong move for some rejections. A café terrace or a city street
-    puts a shop sign in frame, the model renders the sign as broken lettering, and a fresh draw of
-    that same scene does it again — three attempts, three rejects, and the old code published the
-    third one anyway. So each retry moves to the NEXT scene, and only the light/angle changes on
-    the first retry. Still best-effort: after every attempt it returns the last render rather than
-    fail a post, but by then it has tried genuinely different subjects."""
+    This used to try three times and return the third render whether it passed or not, so a frame
+    the gate had rejected could still be published — and one was: a picture split into two tonal
+    zones by a ruled line shipped on 09-14 and 09-17. The bar is now that what goes out has
+    passed, so the loop keeps going until it does or the clock stops it. At roughly 35 seconds a
+    render a ten-minute budget is around fifteen attempts, and the measured first-attempt
+    rejection rate is about one in five, so running out is a remote case rather than the norm.
+
+    Each retry also moves to the NEXT scene: a café terrace puts a shop sign in frame every time,
+    and redrawing the same prompt just fails the same way. The scene that actually shipped is
+    reported back so the ledger records what was published, not what was requested.
+    """
+    import time as _t
+    started = _t.monotonic()
+    budget = deadline_s if deadline_s is not None else attempts * 120
     used = index
-    for a in range(1, attempts + 1):
+    for a in range(1, 200):
         used = (index + a - 1) % len(SCENES)
         generate_background(dest, used, placement, aspect=aspect,
                             var_t=(var_t if var_t is None else var_t + a - 1))
         ok, reason = check_composition(dest)
-        print(f"composition check {a}/{attempts} (scene {used} {SCENE_CATS[used]}): ok={ok} :: {reason}")
         # The measurement runs even when the model said yes — on 09-14 it said yes to a stacked
         # composite. Two independent gates, and the cheap deterministic one is not the junior.
         if ok and has_seam(dest):
             ok, reason = False, "stacked composite (measured)"
+        print(f"composition check {a} (scene {used} {SCENE_CATS[used]}): ok={ok} :: {reason}")
         if ok:
-            return dest, used
-    return dest, used
-
+            return dest, used, True
+        if _t.monotonic() - started > budget:
+            print(f"WARNING: no render passed the gate within {budget:.0f}s after {a} attempts — "
+                  f"publishing the last one, which the gate REJECTED")
+            return dest, used, False
+    return dest, used, False
 
 def _gemini_key():
     key = os.environ.get("GEMINI_API_KEY")

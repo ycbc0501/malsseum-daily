@@ -465,14 +465,20 @@ def main():
     # never trusts a generator it can check. Attempts are bounded by rule 1's build budget.
     ink = generate.verse_ink(verse, canvas=generate.REEL, placement=placement, grow=5)
     AREA_TRIES = 3
+    # How long the composition gate may keep regenerating before it gives up and ships a rejected
+    # frame. At ~35s a render this is roughly fifteen tries; the measured rejection rate is about
+    # one in five, so exhausting it means something is systematically wrong, not unlucky.
+    IMAGE_DEADLINE_S = 9 * 60
+    gate_passed = False
     try:
         for attempt in range(1, AREA_TRIES + 1):
             # generate_checked may walk to a different scene when the checker keeps rejecting
             # (a café sign renders as broken lettering no matter how often you redraw it), so it
             # reports which scene actually shipped and the ledger records THAT, not the one we asked
             # for — otherwise the same scene comes round again far too early.
-            bg, scene_i = fetch_higgsfield.generate_checked(
-                bg, scene_i, placement, aspect="9:16", var_t=post_i)
+            bg, scene_i, gate_passed = fetch_higgsfield.generate_checked(
+                bg, scene_i, placement, aspect="9:16", var_t=post_i,
+                deadline_s=IMAGE_DEADLINE_S)
             scene_cat = fetch_higgsfield.SCENE_CATS[scene_i]
             ok, why, stats = generate.text_area_ok(bg, ink, canvas=generate.REEL)
             print(f"text-area gate attempt {attempt}: {why} "
@@ -673,6 +679,9 @@ def main():
                    "clip_spoiled": bool(spoiled),
                    # How many gate calls actually reached the model vs errored out. A post with
                    # gate_ran 0 was published unchecked, which must be visible as a number.
+                   # False means the picture that shipped had been REJECTED by the gate — the one
+                   # number that says whether "what we publish has passed" actually held.
+                   "gate_passed": bool(gate_passed),
                    "gate_ran": fetch_higgsfield.GATE_RAN[0],
                    "gate_skipped": fetch_higgsfield.GATE_RAN[1],
                    "scene": scene_cat,

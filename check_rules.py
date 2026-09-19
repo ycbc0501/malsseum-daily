@@ -59,7 +59,7 @@ def checks():
     # Every defect the account owner reported must be something the GATE can see, not only
     # something the prompt asks for. Requesting is not checking — that distinction is the whole
     # lesson of 09-14 and 09-17.
-    yield "A2c the gate itself rejects a flat added band", "flat added band" in gate.lower()
+    yield "A2c the gate itself rejects a two-zone split", "divided into two zones" in gate.lower()
     # Assembled prompts must not contradict themselves. The interior prompt carried both
     # "there is NO horizon" and "One horizon only".
     for indoors in (True, False):
