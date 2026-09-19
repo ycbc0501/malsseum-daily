@@ -128,6 +128,27 @@
   "text_spread": 1.5,
   "theme": "평안"
  },
+ "17886895230617040": {
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-09-19",
+  "duration": 28.7,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 7,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 8.968,
+  "motion_attempts": 3,
+  "motion_sky": 1.467,
+  "published": "2026-09-19T19:18:24+09:00",
+  "ref": "고린도전서 15:55",
+  "scene": "picket_fence",
+  "segments": 4,
+  "text_contrast": 11.23,
+  "text_spread": 2.6,
+  "theme": "담대"
+ },
  "17889545238418332": {
   "insights": {
    "comments": 1,
