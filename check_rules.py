@@ -60,7 +60,12 @@ def checks():
     # Every defect the account owner reported must be something the GATE can see, not only
     # something the prompt asks for. Requesting is not checking — that distinction is the whole
     # lesson of 09-14 and 09-17.
-    yield "A2c the gate itself rejects a two-zone split", "divided into two zones" in gate.lower()
+    # Calibrated against six real renders the account owner judged by eye (2026-09-19): the two they
+    # called split are rejected, the four they accepted pass. Plausibility is explicitly not the
+    # test — a real painted dado still halves the frame.
+    yield "A2c the gate rejects a line that halves the frame", (
+        "cuts the frame in two" in gate.lower()
+        and "plausibility is not the test" in gate.lower())
     # Assembled prompts must not contradict themselves. The interior prompt carried both
     # "there is NO horizon" and "One horizon only".
     yield "A2d interior framing is self-consistent", "horizon LOW" not in hf.INDOOR_TOP
