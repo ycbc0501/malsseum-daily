@@ -39,8 +39,48 @@ def references():
                     yield path.name, node.lineno, mod, node.attr
 
 
+def shadowed_imports():
+    """(file, function, use line, import line, module) where a function uses a module BEFORE
+    importing it locally.
+
+    Python binds a name for the WHOLE function body, so an `import x` anywhere inside makes
+    every earlier `x.attr` an UnboundLocalError — even when `x` is imported at module level and
+    the code reads perfectly. This is invisible to compileall and to the reference check above:
+    the attribute exists, the module imports, the file compiles. Only running that exact line
+    finds it.
+
+    It cost four consecutive posts on 2026-09-18/19: daily_post.main() imported fetch_higgsfield
+    ninety lines below its first use, so every run built the whole reel — image, Veo, music —
+    and then died before publishing."""
+    for path in sorted(HERE.glob("*.py")):
+        if any(s in path.name for s in SKIP):
+            continue
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except SyntaxError:
+            continue
+        for fn in (n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef,
+                                                               ast.AsyncFunctionDef))):
+            bound = {}                       # name → line of the local import that binds it
+            for node in ast.walk(fn):
+                if isinstance(node, (ast.Import, ast.ImportFrom)):
+                    for a in node.names:
+                        bound.setdefault(a.asname or a.name.split(".")[0], node.lineno)
+            if not bound:
+                continue
+            for node in ast.walk(fn):
+                if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
+                    at = bound.get(node.id)
+                    if at and node.lineno < at:
+                        yield path.name, fn.name, node.lineno, at, node.id
+
+
 def main():
     missing = []
+    for file, fn, used, imported, name in shadowed_imports():
+        missing.append((file, used,
+                        f"{fn}() uses {name} at line {used} but imports it at line {imported} "
+                        f"— the local import makes it UnboundLocalError"))
     for file, line, mod, attr in references():
         if mod == "<syntax>":
             missing.append((file, line, attr))
