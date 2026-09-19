@@ -204,6 +204,62 @@ def findings(prev=None):
     return found
 
 
+FAILED_PREFIX = "failed-"        # one key per slot that has alerted as failed
+
+
+def slot_is_filled(hour, now=None):
+    """Did the half-day this slot owns already get a post? Asked of Instagram (RULES C4)."""
+    now = now or datetime.datetime.now(KST)
+    lo = datetime.datetime.combine(now.date(), datetime.time(0 if hour < 12 else 12), tzinfo=KST)
+    hi = lo + datetime.timedelta(hours=12)
+    return any(lo <= w < hi for w in published_times())
+
+
+def post_failed(hour, link):
+    """A posting run failed → alert only if the SLOT is actually empty, and only once.
+
+    The old alert fired from the workflow on every failed run, knowing nothing about the slot.
+    On 2026-09-19 that sent five ❌ messages; the 19:00 slot was filled at 19:18 and the account
+    owner, reading the alerts, still believed the evening post had failed. Two separate defects:
+
+      · a run that fails AFTER the slot is filled is not news — the retries and stand-downs of a
+        chain are normal, and alerting on each one teaches the reader to distrust the channel
+      · nothing ever closed the loop, so ❌ was the last word even when the post went out
+
+    So: ask Instagram, alert at most once per slot, and let main() send the resolution."""
+    state = _load(STATE, {})
+    today = datetime.datetime.now(KST).date()
+    key = f"{FAILED_PREFIX}{today}-{hour}"
+    if slot_is_filled(hour):
+        print(f"{hour:02d}:00 slot is already filled — a failed retry is not worth a message")
+        return 0
+    if state.get(key):
+        print(f"{key}: already alerted for this slot — not repeating")
+        return 0
+    import notify
+    if notify.send(f"❌ {hour:02d}:00 KST 게시 실패 — {link}\n"
+                   f"슬롯은 아직 비어 있습니다. 채워지면 이 방으로 알려드립니다."):
+        state[key] = today.isoformat()
+        with open(STATE, "w", encoding="utf-8") as f:
+            json.dump(state, f, ensure_ascii=False)
+    return 0
+
+
+def resolve_failures(state):
+    """Close every open failure whose slot has since been filled → [(key, message)]."""
+    out = []
+    for key in [k for k in state if k.startswith(FAILED_PREFIX)]:
+        try:
+            day, hour = key[len(FAILED_PREFIX):].rsplit("-", 1)
+            hour = int(hour)
+        except ValueError:
+            out.append((key, None))              # unparseable — drop it rather than keep it forever
+            continue
+        if slot_is_filled(hour):
+            out.append((key, f"✅ {hour:02d}:00 KST 게시가 올라왔습니다 — 앞선 실패는 해결됐습니다"))
+    return out
+
+
 def main():
     # `watch.py --test` proves the alert path end to end without waiting for something to break.
     # The channel was switched twice and each time the only proof it worked was a real failure
@@ -216,9 +272,25 @@ def main():
         print("test alert sent" if ok else "test alert NOT sent — check TELEGRAM_* secrets")
         return 0 if ok else 1
 
+    # Called by the posting workflow when a run fails, instead of messaging blindly.
+    if "--post-failed" in sys.argv:
+        i = sys.argv.index("--post-failed")
+        link = sys.argv[i + 1] if len(sys.argv) > i + 1 else "(no run link)"
+        return post_failed(int(os.environ.get("TARGET_HOUR") or 5), link)
+
     state = _load(STATE, {})
     today = datetime.datetime.now(KST).date()
     sent = []
+
+    # Say so when a slot that alerted as failed has since been filled. An alert channel whose
+    # last word is always ❌ is one the reader stops believing — which is exactly what happened.
+    for key, message in resolve_failures(state):
+        if message:
+            import notify
+            if notify.send(message):
+                sent.append(key)
+            print(f"{key}: resolved")
+        del state[key]
     for key, message in findings(state):
         last = state.get(key)
         if last:
@@ -238,7 +310,7 @@ def main():
     # measures growth against), and wiping them every run would silence that check forever.
     live = {k for k, _ in findings(state)}
     for key in list(state):
-        if key not in live and not key.startswith("_"):
+        if key not in live and not key.startswith(("_", FAILED_PREFIX)):
             del state[key]
     sent_n, answered_n = reply_counters()
     if sent_n is not None:

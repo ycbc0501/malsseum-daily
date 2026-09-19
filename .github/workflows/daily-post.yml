@@ -193,6 +193,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # watch.py asks Instagram whether the slot is actually empty before it says anything.
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           TARGET_HOUR: ${{ contains(fromJSON('["0 5 * * *","0 6 * * *","0 7 * * *","0 8 * * *","0 9 * * *"]'), github.event.schedule) && '19' || '5' }}
         run: |
           gh issue create \
@@ -204,6 +207,9 @@ jobs:
           If the job hit the 180-min timeout, check the timing budget comment in
           \`.github/workflows/daily-post.yml\` — wait + build must fit inside it." \
             || echo "could not open issue"
-          TARGET_HOUR="${TARGET_HOUR}" python notify.py \
-            "❌ ${TARGET_HOUR}:00 KST 게시 실패 — ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+          # NOT notify.py directly. A failing run knows nothing about the slot, and a chain
+          # retries — on 09-19 that sent five ❌ for a slot that was filled at 19:18. watch.py
+          # asks Instagram first, alerts at most once per slot, and closes the loop later.
+          TARGET_HOUR="${TARGET_HOUR}" python watch.py --post-failed \
+            "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
             || true
