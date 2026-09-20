@@ -1808,6 +1808,27 @@
   "text_spread": 3.2,
   "theme": "지혜"
  },
+ "18126524974696356": {
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-09-21",
+  "duration": 30.43,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 7,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 7.116,
+  "motion_attempts": 3,
+  "motion_sky": 0.541,
+  "published": "2026-09-21T05:05:27+09:00",
+  "ref": "유다서 1:21",
+  "scene": "stepping_stones",
+  "segments": 4,
+  "text_contrast": 10.11,
+  "text_spread": 6.9,
+  "theme": "믿음"
+ },
  "18127535191710602": {
   "insights": {
    "comments": 4,
