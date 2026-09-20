@@ -46,7 +46,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 9
+   "likes": 10
   },
   "kind": "REELS",
   "motion": 4.006,
@@ -109,7 +109,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 4,
+   "likes": 5,
    "views": 57,
    "views_manual": true
   },
@@ -235,6 +235,17 @@
   "published": "2026-08-09T10:08:26+0000",
   "ref": "잠언 19:21",
   "theme": "인도"
+ },
+ "17908715451311460": {
+  "insights": {
+   "comments": 1,
+   "likes": 8
+  },
+  "kind": "FEED",
+  "permalink": "https://www.instagram.com/p/DdgEVFpGHSQ/",
+  "published": "2026-09-20T07:38:43+0000",
+  "ref": "시편 3:6",
+  "theme": "담대"
  },
  "17910038349265735": {
   "insights": {
@@ -654,7 +665,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 7,
+   "likes": 8,
    "views": 142,
    "views_manual": true
   },
@@ -745,7 +756,7 @@
   "format": "reel",
   "insights": {
    "comments": 3,
-   "likes": 15,
+   "likes": 16,
    "views": 222,
    "views_manual": true
   },
@@ -1204,7 +1215,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 9
+   "likes": 10
   },
   "kind": "REELS",
   "permalink": "https://www.instagram.com/reel/Dc_6pyrAoHH/",
@@ -1298,8 +1309,8 @@
   "gate_ran": 7,
   "gate_skipped": 2,
   "insights": {
-   "comments": 1,
-   "likes": 0
+   "comments": 3,
+   "likes": 9
   },
   "kind": "REELS",
   "motion": 7.113,
@@ -1444,7 +1455,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 8,
+   "likes": 9,
    "views": 64,
    "views_manual": true
   },
@@ -1817,10 +1828,15 @@
   "gate_passed": true,
   "gate_ran": 7,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 2
+  },
+  "kind": "REELS",
   "motion": 7.116,
   "motion_attempts": 3,
   "motion_sky": 0.541,
+  "permalink": "https://www.instagram.com/reel/DdhZqoRDP-F/",
   "published": "2026-09-21T05:05:27+09:00",
   "ref": "유다서 1:21",
   "scene": "stepping_stones",
@@ -1858,7 +1874,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 3,
+   "likes": 4,
    "views": 65,
    "views_manual": true
   },
@@ -1968,7 +1984,7 @@
  "18135835636533896": {
   "insights": {
    "comments": 16,
-   "likes": 16,
+   "likes": 17,
    "views": 133,
    "views_manual": true
   },
