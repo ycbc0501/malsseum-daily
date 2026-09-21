@@ -82,6 +82,58 @@ def extract_frame(video, out_png, at=0.8):
     return out_png
 
 
+# How far the SCENE ITSELF is allowed to change between the start and end of a clip.
+#
+# Motion score answers "how fast", not "is it still the same place". A fence can hold perfectly
+# still by that measure while its posts drift, merge and change count — which is what shipped on
+# 2026-09-19 (고린도전서 15:55) and what the account owner called 쓰레기. Measured on the real
+# files afterwards, per segment, on the lower part of the frame:
+#
+#     09-19 울타리 (reported)   34.9  35.5  41.1  42.5     ← every segment morphs
+#     09-16 (fine)               6.9   3.7
+#     09-17 (fine)              12.0  10.3
+#
+# The two populations do not overlap, so the limit sits between them rather than being guessed.
+DRIFT_MAX = 20.0
+
+
+def edge_drift(png_a, png_b):
+    """How much the STRUCTURE changed between two frames → 0 = identical edges.
+
+    Edges, not pixels: light and colour move all the time in a calm scene and that is wanted.
+    What must not happen is an object changing shape. Only the lower part of the frame is
+    compared — the verse sits on the upper band, and its glyphs are edges that would dominate.
+    """
+    from PIL import Image, ImageChops, ImageFilter, ImageStat
+
+    def prep(p):
+        im = Image.open(p).convert("L")
+        w, h = im.size
+        return (im.crop((0, int(h * 0.45), w, h)).resize((270, 270))
+                  .filter(ImageFilter.FIND_EDGES))
+
+    return ImageStat.Stat(ImageChops.difference(prep(png_a), prep(png_b))).mean[0]
+
+
+def structure_drift(clip, out_dir=None):
+    """edge_drift between a clip's first and last frame. -1.0 if it cannot be measured —
+    a broken measurement must not be read as a passing one."""
+    import os
+    import tempfile
+    dur = _duration(clip) or 0.0
+    if dur <= 1.0:
+        return 0.0
+    d = out_dir or tempfile.mkdtemp()
+    a, b = os.path.join(d, "_drift_a.png"), os.path.join(d, "_drift_b.png")
+    try:
+        frame_at(clip, 0.2, a)
+        frame_at(clip, dur - 0.3, b)
+        return edge_drift(a, b)
+    except Exception as e:
+        print(f"  structure drift unmeasurable ({e})")
+        return -1.0
+
+
 def frame_at(video, seconds, out_png):
     """One frame at `seconds`, cropped to 9:16 — for inspecting what the ANIMATION turned into.
 

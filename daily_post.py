@@ -185,6 +185,18 @@ def clip_survives_inspection(clip, tag=""):
     """
     import fetch_higgsfield
     dur = make_video._duration(clip) or 8.0
+
+    # Measured first, because the model does not see this one. A vision check is given ONE frame
+    # at a time and every frame of 고린도전서 15:55 was a fine photograph of a fence — it was the
+    # fence CHANGING SHAPE between them that made the reel unusable, and no per-frame question
+    # can catch that. Numbers can: the reported reel drifted 34.9–42.5 per segment where the
+    # posts nobody complained about drift 3.7–12.0.
+    drift = make_video.structure_drift(clip, generate.OUT_DIR)
+    print(f"  clip {tag}structure drift: {drift:.1f} (limit {make_video.DRIFT_MAX})")
+    if drift > make_video.DRIFT_MAX:
+        print(f"  clip {tag}rejected — the scene does not hold its shape")
+        return False
+
     for when, where in ((dur * 0.5, "middle"), (max(0.0, dur - 0.6), "end")):
         png = os.path.join(generate.OUT_DIR, f"_inspect_{where}.png")
         try:
