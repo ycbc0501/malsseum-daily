@@ -589,6 +589,27 @@
   "text_spread": 1.5,
   "theme": "위로"
  },
+ "17994338598033871": {
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-09-21",
+  "duration": 30.43,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 7,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 6.902,
+  "motion_attempts": 3,
+  "motion_sky": 5.325,
+  "published": "2026-09-21T19:38:10+09:00",
+  "ref": "하박국 2:4",
+  "scene": "umbrella_stand",
+  "segments": 4,
+  "text_contrast": 5.36,
+  "text_spread": 21.4,
+  "theme": "믿음"
+ },
  "17995463363793121": {
   "insights": {
    "comments": 1,
