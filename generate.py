@@ -271,6 +271,31 @@ def _word_endings(text):
     return info
 
 
+def _word_heads(text):
+    """Per-word FIRST-morpheme (tag, form) — the mirror of `_word_endings`.
+
+    Needed because some grammatical units are identified by what STARTS the next word, not by
+    what ends this one. The auxiliary-verb construction is the case that matters: 정직하지│못하나,
+    믿고│있는, 두려워하지│말라. The first half ends in a perfectly ordinary connective ending (EC),
+    so looking only backwards the break looks like a clause end and scores as a PREFERRED place
+    to break. It is the opposite — the two words are one predicate."""
+    k = _kiwi()
+    if not k:
+        return None
+    words = text.split()
+    starts, pos = [], 0
+    for w in words:
+        pos = text.index(w, pos)
+        starts.append(pos)
+        pos += len(w)
+    toks = k.tokenize(text)
+    out = []
+    for s in starts:
+        firsts = [m for m in toks if m.start == s]
+        out.append((firsts[0].tag, firsts[0].form) if firsts else (None, ""))
+    return out
+
+
 def _compositions(n, k):
     """All ways to split n items into k contiguous non-empty groups (as size tuples)."""
     if k == 1:
@@ -287,6 +312,14 @@ def _compositions(n, k):
 #   JC  접속 조사 (과/와/이나)                          → bind to the next list item (사랑과│희락과)
 #   MAG 부사 · MAJ 접속부사                             → bind to what they modify (오직·다만·오래│참음)
 _FWD_NOUN = ("JKG", "ETM", "MM", "MAG", "MAJ", "JC")
+
+# 보조적 연결어미 — the ONLY endings that can hand a verb over to an auxiliary one:
+#   -지 못하다/아니하다/말다 · -게 하다 · -어/-아 있다·버리다·주다 · -고 있다 · -도록 하다
+# The list has to be this narrow. Without it, any EC before a VX counted, and kiwi reads the
+# 주 of "주는" (Lord + 는) as the auxiliary 주다 — which forbade a perfectly good break in
+# 시편 118:28 and pushed it to three lines. A tagger mistake becomes a layout bug unless the
+# rule also checks that the ending is one that grammatically takes an auxiliary.
+_AUX_EC = ("지", "게", "고", "어", "아", "도록", "야")
 # conjunctive / comitative particle surfaces (과/와/이나/랑) — kiwi tags these inconsistently as
 # JC or JKB, so we also match on the surface form to be robust: 사랑과│희락과, 너와│함께.
 _CONJ_FORMS = ("과", "와", "이나", "랑", "이랑")
@@ -308,8 +341,12 @@ def balanced_split(draw, text, font, max_w):
         return _greedy(draw, words, font, max_w)
 
     info = _word_endings(text)                        # (tag, form) per word, or None
+    heads = _word_heads(text)                         # first morpheme per word, or None
     def tag(i):
         return info[i][0] if info and 0 <= i < n else None
+
+    def head_tag(i):
+        return heads[i][0] if heads and 0 <= i < n else None
 
     def is_comma(i):
         return words[i].endswith((",", "，"))
@@ -327,7 +364,20 @@ def balanced_split(draw, text, font, max_w):
             return True
         if t == "JKB" and nxt in ("EC", "EF", "ETM"):  # adverbial particle → a predicate (그에게│피하는)
             return True
+        # NOT JKO. Adding the object particle here (죄를│자복하고) was tried on 2026-09-21 and
+        # rejected on measurement: across all 694 verses it pushed three-line verses from 3 to 7
+        # and forced worse breaks elsewhere — 시편 22:9 came out "하시고 내 / 어머니의", splitting a
+        # 관형사 off its noun, which is a worse tear than the one it fixed. A constraint that has
+        # to be paid for somewhere else is not free, and the corpus is where the bill shows up.
         if t == "EC" and nxt == "EF":                # connective → completing final verb (맛보아│알지어다)
+            return True
+        # 보조적 연결어미 + 보조용언 = ONE predicate, never two lines:
+        #   정직하지│못하나 · 두려워하지│말라 · 믿고│있는 · 자복하고│버리는
+        # This is the break that shipped on 하박국 2:4 (2026-09-21) and it was not an accident of
+        # balance — "정직하지" ends in EC, so `is_clause_end` scored it as a PREFERRED break. It is
+        # the opposite of a clause end. Kiwi tags the auxiliary itself VX, which is exactly the
+        # signal: an EC followed by a VX is the middle of a verb, not the end of a clause.
+        if t == "EC" and form in _AUX_EC and head_tag(i + 1) == "VX":
             return True
         return False
 
