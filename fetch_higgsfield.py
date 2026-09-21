@@ -745,6 +745,53 @@ def seam_score(image_path):
     return jump, jump / median, y
 
 
+# How much QUIET frame has to sit under the verse before the picture starts.
+#
+# The block itself always lands in the same place (top 25.6%, bottom 36.6% — generate.py pins it
+# there), so "cramped" is never about the text. It is about how soon the photograph begins
+# underneath it. Measured on real posts, clearance from the block's bottom edge to the first row
+# of actual content:
+#
+#     09-22 골로새서 2:7 (reported "여백이 너무 없어")   12.2%
+#     09-21 유다서 1:21  (account owner: this is right)  25.7%
+#     09-20 데살로니가전서 5:8 (            "        )   21.3%
+#
+# The limit sits between the two, not at a round number someone liked.
+CLEARANCE_MIN = 0.18
+BLOCK_BOTTOM = 0.38            # generate.py puts the reference line's baseline just above this
+
+
+def clearance_below(image_path, block_bottom=BLOCK_BOTTOM):
+    """Fraction of frame height between the verse block and the first row of picture content.
+
+    Row edge-energy, smoothed, scanned downward. Cover-cropping a 3:4 still to the 9:16 reel
+    takes width, not height, so a fraction measured here survives to the published frame."""
+    from PIL import Image, ImageFilter
+    import numpy as np
+    im = Image.open(image_path).convert("L")
+    h = im.height
+    rows = np.asarray(im.filter(ImageFilter.FIND_EDGES), dtype=float).mean(axis=1)
+    k = max(3, h // 60)
+    smooth = np.convolve(rows, np.ones(k) / k, mode="same")
+    start = int(h * block_bottom)
+    for y in range(start, h):
+        if smooth[y] > 4.0:
+            return (y / h) - block_bottom
+    return 1.0 - block_bottom
+
+
+def too_cramped(image_path):
+    """True if the picture crowds the verse. Never raises — a gate that cannot run must not be
+    able to stop a post (rule 0-3)."""
+    try:
+        gap = clearance_below(image_path)
+    except Exception as e:
+        print(f"clearance check skipped ({e})")
+        return False
+    print(f"clearance below the verse: {gap * 100:.1f}% (need {CLEARANCE_MIN * 100:.0f}%)")
+    return gap < CLEARANCE_MIN
+
+
 def has_seam(image_path):
     """True if the render looks pasted together. Never raises — a gate that cannot run must not
     be able to stop a post (rule 0-3)."""
@@ -787,6 +834,8 @@ def generate_checked(dest, index=0, placement=("center", "middle"), aspect="3:4"
         # composite. Two independent gates, and the cheap deterministic one is not the junior.
         if ok and has_seam(dest):
             ok, reason = False, "stacked composite (measured)"
+        if ok and too_cramped(dest):
+            ok, reason = False, "the picture starts too close under the verse (measured)"
         print(f"composition check {a} (scene {used} {SCENE_CATS[used]}): ok={ok} :: {reason}")
         if ok:
             return dest, used, True
