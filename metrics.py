@@ -101,6 +101,39 @@ def published_kst(entry):
     return t.astimezone(KST)
 
 
+# Veo's published rate, derived from the September invoice: 1,400 billed seconds for ₩193,659.
+# Update it if the SKU price changes; it is only used to turn recorded seconds into won.
+VEO_WON_PER_SECOND = 193659 / 1400
+
+
+def spend(days=30):
+    """What the recorded Veo seconds actually cost over the last `days`.
+
+    The bill was being reconstructed from logs and guessed at from call counts. Posts now record
+    veo_seconds, so this is arithmetic on measured numbers instead — and it is the line that
+    matters, at ~80% of the project's spend.
+    """
+    now = datetime.now(KST)
+    rows = []
+    for entry in load().values():
+        pub = published_kst(entry)
+        secs = entry.get("veo_seconds")
+        if pub and secs and (now - pub).days < days:
+            rows.append((pub, secs, entry.get("ref")))
+    if not rows:
+        print("no post has recorded veo_seconds yet — the next one will")
+        return None
+    total = sum(r[1] for r in rows)
+    span = max(1, (now - min(r[0] for r in rows)).days + 1)
+    won = total * VEO_WON_PER_SECOND
+    per_day = won / span
+    print(f"veo: {len(rows)} post(s) over {span} day(s), {total:.0f}s = ₩{won:,.0f}")
+    print(f"     ₩{per_day:,.0f}/day → ₩{per_day * 30:,.0f}/month at this rate")
+    worst = max(rows, key=lambda r: r[1])
+    print(f"     most expensive: {worst[2]} at {worst[1]:.0f}s")
+    return per_day * 30
+
+
 def prune_deleted(token=None, limit=50):
     """Drop entries for posts Instagram no longer has. Returns the refs removed.
 

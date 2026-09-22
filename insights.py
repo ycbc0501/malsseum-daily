@@ -177,3 +177,5 @@ if __name__ == "__main__":
     backfill()
     followers()
     metrics.report()
+    # The bill is ~80% Veo and was being estimated from logs; posts record their seconds now.
+    metrics.spend()

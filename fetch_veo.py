@@ -63,9 +63,17 @@ NEG = ("timelapse, sped up, fast-forward, accelerated motion, fast movement, "
        "elements appearing or disappearing, growing, strobing")
 
 
+# Veo bills per generated second whether the take is used or not, and it is ~80% of this
+# project's spend. Counting calls here makes the bill a number in metrics.json rather than an
+# estimate reconstructed from logs after the fact.
+CALLS = [0]
+SECONDS_PER_CALL = 8.0
+
+
 def animate(still_png, dest, aspect="9:16", prompt=MOTION, timeout_s=420, poll_s=10):
     """Submit `still_png` to Veo image-to-video, poll the long-running op, download the mp4
     to `dest`. Raises on error/timeout so callers can fall back to a zoom still."""
+    CALLS[0] += 1
     key = hf._gemini_key()
     img_b64 = base64.b64encode(open(still_png, "rb").read()).decode()
     import content_law

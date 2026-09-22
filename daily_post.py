@@ -61,7 +61,11 @@ THEME_ORDER = ["위로", "평안", "담대", "믿음", "감사", "사랑", "인�
 # Raising this is still a TIMING-BUDGET decision, not a free knob: each segment is another Veo
 # call (~2-6 min) against rule 1's ~50 min of build time. CHAIN_DEADLINE_S below is what makes
 # it safe — length gives way to the clock, the post never does.
-SEGMENTS = 4
+# Lowered 4 → 3 on 2026-09-23, on cost. Veo bills ₩138 per generated second, and the monthly
+# cap is ₩260,000 of which ~₩60,000 is images, gates and music — leaving about 24 billed seconds
+# per post, which is three eight-second calls. Four segments cost ₩325,000/month before a single
+# retry. Three is 23.1s, still comfortably inside Lyria's 30s hymn.
+SEGMENTS = 3
 
 # Lyria returns a 30s clip (fetch_lyria.MODEL). The reel is capped here so it can never outlast
 # the hymn: past 30s the music would have to loop, and a loop seam landing mid-verse is the
@@ -485,9 +489,9 @@ def main():
     # Veo seconds are billed whether the take is used or not (₩138/s), so a retry is only worth
     # eight more seconds when the inspection found a real defect.
     VEO_TRIES = 3
-    AREA_TRIES = 8
-    IMAGE_DEADLINE_S = 6 * 60      # composition gate, ~10 renders
-    AREA_DEADLINE_S = 12 * 60      # legibility, including the composition retries inside it
+    AREA_TRIES = 4
+    IMAGE_DEADLINE_S = 3 * 60      # composition gate, ~5 renders
+    AREA_DEADLINE_S = 7 * 60       # legibility, including the composition retries inside it
     gate_passed = False
     try:
         area_t0 = time.monotonic()
@@ -565,6 +569,7 @@ def main():
     ov = sky = 0.0
     motion_attempts = 0
     spoiled = False
+    veo_calls = 0            # billed seconds = this × 8; the dominant cost line
     # NO `import fetch_higgsfield` here. The module is imported at the top of the file, and a
     # local import anywhere in this function makes the name local for the WHOLE function —
     # so pick_scene() ~90 lines above raised UnboundLocalError and every run from 09-18 19:00
@@ -663,6 +668,7 @@ def main():
             # FORWARD ONLY, native speed. Never boomerang/reverse the clip — playing footage backwards
             # is exactly the kind of artificial post-processing that is banned (water and light running
             # backwards reads as fake). Length comes from Veo itself, not from replaying frames.
+            veo_calls = fetch_veo.CALLS[0]
             joined = make_video.chain_clips(
                 segments, os.path.join(generate.OUT_DIR, "_veo_long.mp4"))
             # Cap at the hymn. Four good segments run ~31s, just past Lyria's 30s clip, and the
@@ -682,6 +688,10 @@ def main():
                                         duration=min(HYMN_S, audio_dur))
             print(f"reel(still-fallback): {verse['ref']}")
     except Exception as e:
+        try:
+            veo_calls = fetch_veo.CALLS[0]
+        except Exception:
+            pass
         print(f"veo motion failed ({e}) → background-zoom still")
         make_video.build_reel_still(bg, overlay, audio, out_mp4,
                                     duration=min(HYMN_S, audio_dur))
@@ -718,6 +728,9 @@ def main():
                    # back per post instead of a judgement we keep re-litigating.
                    "motion": round(ov, 3), "motion_sky": round(sky, 3),
                    "motion_attempts": motion_attempts,
+                   # What this post actually cost in Veo seconds — the dominant line on the bill.
+                   "veo_calls": veo_calls,
+                   "veo_seconds": round(veo_calls * 8.0, 1),
                    # True when no take passed the clip inspection — see the WARNING above.
                    "clip_spoiled": bool(spoiled),
                    # How many gate calls actually reached the model vs errored out. A post with

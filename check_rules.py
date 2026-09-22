@@ -177,6 +177,8 @@ def checks():
     daily_src = (HERE / "daily_post.py").read_text()
     # motion_score is recorded, never a retry reason — measured 0.0px displacement on clips it
     # was scoring 1.8-8.4, and 0 of 18 first attempts ever cleared its limit.
+    yield "E0 veo seconds are recorded so the bill is measured", (
+        '"veo_seconds"' in daily_src and hasattr(_m, "spend"))
     yield "E2b motion is recorded, not a reason to regenerate", (
         "RECORDED, never a reason to regenerate" in daily_src)
     yield "E3 gate selects the calmest rather than rejecting", (
