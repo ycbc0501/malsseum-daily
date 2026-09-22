@@ -482,6 +482,9 @@ def main():
     # renders, 6 of 10 carried the verse on the first try against 8 of 10 with the old layout
     # wording. Retrying is the cheaper half of that trade — the pictures are better and the clock
     # absorbs the misses.
+    # Veo seconds are billed whether the take is used or not (₩138/s), so a retry is only worth
+    # eight more seconds when the inspection found a real defect.
+    VEO_TRIES = 3
     AREA_TRIES = 8
     IMAGE_DEADLINE_S = 6 * 60      # composition gate, ~10 renders
     AREA_DEADLINE_S = 12 * 60      # legibility, including the composition retries inside it
@@ -545,14 +548,18 @@ def main():
     # motion metric (make_video.motion_score): five published clips measure 1.65-4.52 overall and
     # 0.32-1.24 sky, and the account owner called at least two of them far too fast.
     #   TARGET — what calm looks like. Reaching it stops the retries early.
-    #   HARD   — frantic beyond rescue. ONLY this falls back to a still.
-    # Between the two we publish the CALMEST take we got, because a still photograph is a worse
-    # answer than slightly-too-lively motion.
-    MOTION_MAX, SKY_MAX = 1.5, 0.35
-    # Raised 8.0/4.0 → 20.0/20.0 on 2026-09-10. Those numbers came from five clips scoring
-    # 1.65-4.52, and the very next frantic scene measured 13.4/8.6/16.6 — the calmest take was
-    # 8.61 and the post went out as a STILL PHOTOGRAPH. Rule E4 already says a still is the worse
-    # answer; HARD is meant for a clip that is broken, not merely lively.
+    # motion_score is RECORDED, never a reason to regenerate. Measured 2026-09-23: the clips it
+    # was scoring 1.8-8.4 move ZERO pixels in a second — block-matching reports 0.0px displacement
+    # on every one, verified against synthetic shifts of 2/4/8/12px which it reports exactly. The
+    # score responds to shimmer in leaves and water, not to anything travelling, and the 1.5 limit
+    # was set below every value ever observed (1.65-4.52), so it could never be met. It never was:
+    # 0 of 18 first attempts cleared it, so all three takes ran every single time and 57% of the
+    # Veo seconds we paid for were discarded chasing a problem that does not exist.
+    #
+    # What the account owner actually reported — a fence changing shape, a scene looking rendered,
+    # a band dissolving — is drift and composition, and clip_survives_inspection() measures both.
+    # Those are the only reasons to spend another eight seconds.
+    MOTION_MAX, SKY_MAX = 1.5, 0.35      # kept for the recorded ratio only
     MOTION_HARD, SKY_HARD = 20.0, 20.0
     # Defined up here so the still-fallback and exception paths still write a meaningful _meta.json.
     ov = sky = 0.0
@@ -571,9 +578,9 @@ def main():
         ov = sky = 99.0
         best_score = float("inf")
         veo_t0 = time.monotonic()   # covers the gate attempts too, not just the continuations
-        # Three tries, KEEPING THE CALMEST rather than the first one that squeaks under the bar —
-        # otherwise a tighter threshold just buys more still fallbacks instead of better motion.
-        for attempt in (1, 2, 3):
+        # ONE take unless something real is wrong with it. VEO_TRIES is a ceiling for the case
+        # where the clip is genuinely defective, not a routine cost.
+        for attempt in range(1, VEO_TRIES + 1):
             # Escalate the demand each try rather than redraw the same request — see fetch_veo.CALMER.
             motion_attempts = attempt
             fetch_veo.animate(bg, clip, prompt=fetch_veo.MOTION + fetch_veo.CALMER[attempt - 1])
@@ -583,11 +590,13 @@ def main():
             # Rank on the worst axis, but a take that Veo has spoiled cannot win however calm it
             # is — a person walking through a still scene is not a motion problem.
             clean = clip_survives_inspection(clip, tag=f"attempt {attempt} ")
-            score = max(o / MOTION_MAX, s / SKY_MAX) + (0 if clean else 1000)
+            # A clean take wins outright. Among unclean ones the calmest is the tie-break, which
+            # is all the motion number is still for.
+            score = (0 if clean else 1000) + max(o / MOTION_MAX, s / SKY_MAX)
             if score < best_score:
                 best_score, ov, sky = score, o, s
                 shutil.copyfile(clip, best)
-            if clean and ov <= MOTION_MAX and sky <= SKY_MAX:
+            if clean:
                 break
         # A scene Veo spoils every time would otherwise ship silently: the best-of-N still picks
         # one, and nothing said that all of them broke a rule. Recorded as well as printed, so
@@ -622,20 +631,30 @@ def main():
                 nxt = os.path.join(generate.OUT_DIR, f"_veo{seg}.mp4")
                 seg_best = os.path.join(generate.OUT_DIR, f"_veo{seg}_best.mp4")
                 s_ov = s_sky = 99.0
+                best_seg_score = float("inf")
                 try:
                     make_video.last_frame(segments[-1], seed)
-                    for attempt in (1, 2):
+                    # Continuations used to take two takes and choose between them on the motion
+                    # number, and never inspect either — which is how a fence changed shape across
+                    # them and shipped. It is the continuations that drift, because each one is
+                    # generated from the last frame of the one before. So: one take, INSPECTED,
+                    # and a second only if that inspection found something.
+                    seg_clean = False
+                    for attempt in range(1, VEO_TRIES + 1):
                         fetch_veo.animate(seed, nxt, prompt=fetch_veo.CONTINUE + fetch_veo.MOTION
                                           + fetch_veo.CALMER[attempt - 1])
                         o, sk = make_video.motion_score(nxt)
                         print(f"veo segment {seg} attempt {attempt}: overall {o:.2f}, sky {sk:.2f}")
-                        if max(o / MOTION_MAX, sk / SKY_MAX) < max(s_ov / MOTION_MAX, s_sky / SKY_MAX):
-                            s_ov, s_sky = o, sk
+                        seg_clean = clip_survives_inspection(nxt, tag=f"segment {seg} attempt {attempt} ")
+                        score = (0 if seg_clean else 1000) + max(o / MOTION_MAX, sk / SKY_MAX)
+                        if score < best_seg_score:
+                            best_seg_score, s_ov, s_sky = score, o, sk
                             shutil.copyfile(nxt, seg_best)
-                        if s_ov <= MOTION_MAX and s_sky <= SKY_MAX:
+                        if seg_clean:
                             break
-                    if s_ov > MOTION_HARD or s_sky > SKY_HARD:
-                        print(f"veo segment {seg} frantic beyond rescue → keeping {len(segments)} segment(s)")
+                    if best_seg_score >= 1000:
+                        print(f"veo segment {seg} never passed inspection → keeping "
+                              f"{len(segments)} segment(s) rather than chaining a bad one")
                         break
                     segments.append(seg_best)
                 except Exception as e:

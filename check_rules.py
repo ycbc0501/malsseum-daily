@@ -175,9 +175,17 @@ def checks():
     src = inspect.getsource(make_video.motion_score)
     yield "E2 motion measured one second apart", "stride" in src and "fps=" in src
     daily_src = (HERE / "daily_post.py").read_text()
+    # motion_score is recorded, never a retry reason — measured 0.0px displacement on clips it
+    # was scoring 1.8-8.4, and 0 of 18 first attempts ever cleared its limit.
+    yield "E2b motion is recorded, not a reason to regenerate", (
+        "RECORDED, never a reason to regenerate" in daily_src)
     yield "E3 gate selects the calmest rather than rejecting", (
         "MOTION_HARD" in daily_src and "MOTION_HARD and sky <= SKY_HARD" in daily_src)
-    yield "E4 continuation segments retry too", daily_src.count("for attempt in (1, 2)") >= 1
+    # Continuations are inspected and retry only on a real defect — they used to take two takes,
+    # choose on the motion number, and inspect neither.
+    yield "E4 continuations are inspected", "clip_survives_inspection(nxt" in daily_src
+    yield "E4 a retry needs a real defect, not a motion number", (
+        "if s_ov <= MOTION_MAX" not in daily_src and "VEO_TRIES" in daily_src)
     import fetch_veo
     yield "E3 retries escalate the demand", (
         len(fetch_veo.CALMER) == 3 and "frozen photograph" in fetch_veo.CALMER[2].lower()
