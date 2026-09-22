@@ -206,7 +206,7 @@
  "17908715451311460": {
   "insights": {
    "comments": 1,
-   "likes": 10
+   "likes": 12
   },
   "kind": "FEED",
   "permalink": "https://www.instagram.com/p/DdgEVFpGHSQ/",
@@ -236,7 +236,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 2
+   "likes": 14
   },
   "kind": "REELS",
   "motion": 2.247,
@@ -593,7 +593,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 14
+   "likes": 18
   },
   "kind": "REELS",
   "motion": 6.902,
@@ -1716,10 +1716,15 @@
   "gate_passed": false,
   "gate_ran": 29,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 13
+  },
+  "kind": "REELS",
   "motion": 1.463,
   "motion_attempts": 3,
   "motion_sky": 1.141,
+  "permalink": "https://www.instagram.com/reel/DdlfrlJDKZe/",
   "published": "2026-09-22T19:15:39+09:00",
   "ref": "하박국 3:18",
   "scene": "tea_cup",
@@ -1870,7 +1875,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 28
+   "likes": 30
   },
   "kind": "REELS",
   "motion": 7.116,
@@ -2588,10 +2593,15 @@
   "gate_passed": false,
   "gate_ran": 8,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 1
+  },
+  "kind": "REELS",
   "motion": 3.772,
   "motion_attempts": 1,
   "motion_sky": 0.728,
+  "permalink": "https://www.instagram.com/reel/DdmjgrnFafi/",
   "published": "2026-09-23T05:07:46+09:00",
   "ref": "골로새서 4:2",
   "scene": "river",
