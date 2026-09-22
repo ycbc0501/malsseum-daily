@@ -117,6 +117,10 @@ def checks():
     yield "C5 ledger saves under if:always with semantic merge", (
         "if: always()" in daily and (HERE / "ledger_merge.py").exists())
     yield "C6 oldest-first (reel)", hasattr(daily_post, "last_published")
+    import metrics as _m
+    yield "C4b deletions come from the account, since the merge cannot express one", (
+        hasattr(_m, "prune_deleted")
+        and "prune_deleted" in (HERE / "insights.py").read_text())
     yield "C6 oldest-first (carousel)", "last_published" in carousel
     # C7 — the ledger must be rebuilt from BOTH sources on every run, and a verse that has ever
     # been published must be excluded rather than merely sorted last. 62 ledger entries against

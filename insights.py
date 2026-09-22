@@ -170,6 +170,10 @@ def followers():
 
 
 if __name__ == "__main__":
+    # Before anything is read back, drop posts the account no longer has. A deletion cannot
+    # survive ledger_merge's union on its own, so it has to come from the account each day —
+    # otherwise a removed post keeps its verse out of rotation for a year.
+    metrics.prune_deleted()
     backfill()
     followers()
     metrics.report()

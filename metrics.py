@@ -101,6 +101,46 @@ def published_kst(entry):
     return t.astimezone(KST)
 
 
+def prune_deleted(token=None, limit=50):
+    """Drop entries for posts Instagram no longer has. Returns the refs removed.
+
+    ledger_merge is a union — by design, so two bots writing at once never lose each other's
+    additions — but that also means a DELETION cannot survive it: remove an entry here, and the
+    next workflow merges its older copy back in. A post deleted from the account would keep
+    occupying its verse for a year (RULES.md C4 keeps the account as the record, and this is the
+    same rule applied to removals).
+
+    Only the window the API actually returned is considered. Anything older than the oldest post
+    it listed is outside that window and is left alone — absence there means "not asked about",
+    not "deleted".
+    """
+    import post_instagram
+    try:
+        live = post_instagram.recent_media(limit=limit, token=token)
+    except Exception as e:
+        print(f"prune skipped ({e}) — not removing anything on a failed lookup")
+        return []
+    if not live:
+        return []
+    ids = {m.get("id") for m in live}
+    oldest = min((m.get("timestamp") or "")[:19] for m in live)
+    data = load()
+    gone = []
+    for media_id, entry in list(data.items()):
+        pub = published_kst(entry)
+        if not pub or media_id in ids:
+            continue
+        # Compare in UTC, the form the API reports.
+        stamp = (pub - timedelta(hours=9)).strftime("%Y-%m-%dT%H:%M:%S")
+        if stamp >= oldest:
+            gone.append(entry.get("ref") or media_id)
+            del data[media_id]
+    if gone:
+        save(data)
+        print(f"pruned {len(gone)} post(s) no longer on the account: {gone}")
+    return gone
+
+
 def refresh(token=None, days=MATURE_DAYS):
     """Re-pull insights for every post younger than `days`. Never raises: a metrics failure
     must not be able to break a posting run."""
