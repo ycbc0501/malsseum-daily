@@ -2578,5 +2578,28 @@
   "published": "2026-07-28T10:31:23+0000",
   "ref": "시편 19:1",
   "theme": "감사"
+ },
+ "18629108218014687": {
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-09-23",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 8,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 3.772,
+  "motion_attempts": 1,
+  "motion_sky": 0.728,
+  "published": "2026-09-23T05:07:46+09:00",
+  "ref": "골로새서 4:2",
+  "scene": "river",
+  "segments": 1,
+  "text_contrast": 9.72,
+  "text_spread": 4.8,
+  "theme": "믿음",
+  "veo_calls": 4,
+  "veo_seconds": 32.0
  }
 }
