@@ -518,10 +518,15 @@
   "gate_passed": false,
   "gate_ran": 12,
   "gate_skipped": 1,
-  "insights": {},
+  "insights": {
+   "comments": 3,
+   "likes": 21
+  },
+  "kind": "REELS",
   "motion": 2.297,
   "motion_attempts": 2,
   "motion_sky": 2.198,
+  "permalink": "https://www.instagram.com/reel/DdoE8jlktSG/",
   "published": "2026-09-23T19:19:44+09:00",
   "ref": "예레미야 29:13",
   "scene": "harbor",
@@ -707,7 +712,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 9,
+   "likes": 10,
    "views": 142,
    "views_manual": true
   },
@@ -1739,10 +1744,15 @@
   "gate_passed": false,
   "gate_ran": 12,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 2
+  },
+  "kind": "REELS",
   "motion": 1.751,
   "motion_attempts": 3,
   "motion_sky": 0.564,
+  "permalink": "https://www.instagram.com/reel/DdpJDp5j1Ms/",
   "published": "2026-09-24T05:15:01+09:00",
   "ref": "마가복음 1:15",
   "scene": "shore",
@@ -1764,7 +1774,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 13
+   "likes": 17
   },
   "kind": "REELS",
   "motion": 1.463,
@@ -2640,8 +2650,8 @@
   "gate_ran": 8,
   "gate_skipped": 0,
   "insights": {
-   "comments": 1,
-   "likes": 1
+   "comments": 3,
+   "likes": 17
   },
   "kind": "REELS",
   "motion": 3.772,
