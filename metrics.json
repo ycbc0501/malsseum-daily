@@ -206,7 +206,7 @@
  "17908715451311460": {
   "insights": {
    "comments": 1,
-   "likes": 12
+   "likes": 13
   },
   "kind": "FEED",
   "permalink": "https://www.instagram.com/p/DdgEVFpGHSQ/",
@@ -223,10 +223,15 @@
   "gate_passed": false,
   "gate_ran": 32,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 10
+  },
+  "kind": "REELS",
   "motion": 1.768,
   "motion_attempts": 2,
   "motion_sky": 2.402,
+  "permalink": "https://www.instagram.com/reel/DdqpfTYEbrI/",
   "published": "2026-09-24T19:16:55+09:00",
   "ref": "야고보서 2:22",
   "scene": "country_road",
@@ -259,7 +264,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 14
+   "likes": 15
   },
   "kind": "REELS",
   "motion": 2.247,
@@ -542,8 +547,8 @@
   "gate_ran": 12,
   "gate_skipped": 1,
   "insights": {
-   "comments": 3,
-   "likes": 21
+   "comments": 5,
+   "likes": 35
   },
   "kind": "REELS",
   "motion": 2.297,
@@ -644,7 +649,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 18
+   "likes": 19
   },
   "kind": "REELS",
   "motion": 6.902,
@@ -828,10 +833,15 @@
   "gate_passed": false,
   "gate_ran": 8,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 4
+  },
+  "kind": "REELS",
   "motion": 2.385,
   "motion_attempts": 3,
   "motion_sky": 1.295,
+  "permalink": "https://www.instagram.com/reel/DdrtCiVkTe5/",
   "published": "2026-09-25T05:07:15+09:00",
   "ref": "요한일서 5:5",
   "scene": "garden_gate",
@@ -1548,7 +1558,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 10,
+   "likes": 11,
    "views": 64,
    "views_manual": true
   },
@@ -1723,7 +1733,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 22
+   "likes": 23
   },
   "kind": "REELS",
   "permalink": "https://www.instagram.com/reel/DcLW7VelbHD/",
@@ -1770,7 +1780,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 15
+   "likes": 16
   },
   "kind": "REELS",
   "permalink": "https://www.instagram.com/reel/DcWvQT-gKYD/",
@@ -1791,8 +1801,8 @@
   "gate_ran": 12,
   "gate_skipped": 0,
   "insights": {
-   "comments": 1,
-   "likes": 2
+   "comments": 3,
+   "likes": 26
   },
   "kind": "REELS",
   "motion": 1.751,
@@ -2131,7 +2141,7 @@
  "18135835636533896": {
   "insights": {
    "comments": 16,
-   "likes": 18,
+   "likes": 19,
    "views": 133,
    "views_manual": true
   },
@@ -2697,7 +2707,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 3,
-   "likes": 17
+   "likes": 19
   },
   "kind": "REELS",
   "motion": 3.772,
