@@ -159,9 +159,22 @@ def checks():
     # register — all of those have to end as the verse-only caption rather than an exception.
     os.environ.pop("CAPTION_REFLECTION", None)
     verse = {"text": "여호와는 나의 목자시니 내게 부족함이 없으리로다", "ref": "시편 23:1"}
+    plain = f"{verse['text']}\n[{verse['ref']}]"
     yield "B5 a failed reflection still produces a caption", (
         not reflection.enabled()
-        and daily_post.build_caption(verse, "") == f"{verse['text']}\n[{verse['ref']}]")
+        # an ordinary date, so the B-5b greeting is not what is being measured here
+        and daily_post.build_caption(verse, "", today="2026-01-01") == plain)
+    # B5b — the 명절 greeting is CAPTION ONLY, date-gated, and sits under the 출처.
+    yield "B5b an unlisted date gets no greeting", (
+        daily_post.greeting("2026-03-01") is None
+        and daily_post.build_caption(verse, "", today="2026-03-01") == plain)
+    chuseok = daily_post.build_caption(verse, "", today="2026-09-25")
+    yield "B5b a listed date gets the greeting, below the 출처", (
+        daily_post.greeting("2026-09-25") == "풍성한 한가위 보내세요."
+        and chuseok.startswith(plain) and chuseok.endswith("풍성한 한가위 보내세요."))
+    yield "B5b the greeting never reaches the frame", not any(
+        any(g in (HERE / f).read_text() for g in set(daily_post.GREETINGS.values()))
+        for f in ("generate.py", "content_law.py", "fetch_veo.py", "fetch_higgsfield.py"))
     yield "B5 the line is one quiet sentence, not a sermon", (
         reflection.MAX_CHARS <= 60 and reflection._clean("오늘도 힘내세요.") is None
         and reflection._clean("이 말씀을 붙들고 오늘을 삽시다.") is None)

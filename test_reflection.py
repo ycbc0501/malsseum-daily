@@ -56,7 +56,9 @@ def main():
     # And the caption itself is unchanged.
     import daily_post
     verse = {"text": "여호와는 나의 목자시니 내게 부족함이 없으리로다", "ref": "시편 23:1"}
-    if daily_post.build_caption(verse, "") != f"{verse['text']}\n[{verse['ref']}]":
+    # An ordinary day — a date with no 명절 greeting (rule B-5b), so this still measures the one
+    # thing it is here for: the reflection flag off means the caption is the verse and nothing else.
+    if daily_post.build_caption(verse, "", today="2026-01-01") != f"{verse['text']}\n[{verse['ref']}]":
         fails.append("build_caption() is not byte-identical with the flag off")
 
     for f in fails:
