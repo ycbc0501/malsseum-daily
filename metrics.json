@@ -214,6 +214,29 @@
   "ref": "시편 3:6",
   "theme": "담대"
  },
+ "17909917566541004": {
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-09-24",
+  "duration": 22.98,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 32,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 1.768,
+  "motion_attempts": 2,
+  "motion_sky": 2.402,
+  "published": "2026-09-24T19:16:55+09:00",
+  "ref": "야고보서 2:22",
+  "scene": "country_road",
+  "segments": 3,
+  "text_contrast": 4.73,
+  "text_spread": 6.6,
+  "theme": "믿음",
+  "veo_calls": 8,
+  "veo_seconds": 64.0
+ },
  "17910038349265735": {
   "insights": {
    "comments": 1,
