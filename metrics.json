@@ -159,6 +159,29 @@
   "text_spread": 1.9,
   "theme": "위로"
  },
+ "17890934460613839": {
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-09-25",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 16,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 1.138,
+  "motion_attempts": 1,
+  "motion_sky": 1.218,
+  "published": "2026-09-25T19:12:15+09:00",
+  "ref": "예레미야 33:3",
+  "scene": "water_glass",
+  "segments": 1,
+  "text_contrast": 5.23,
+  "text_spread": 16.0,
+  "theme": "믿음",
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "17891480022666460": {
   "insights": {
    "comments": 1,
