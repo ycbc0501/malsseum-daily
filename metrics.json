@@ -170,7 +170,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 9
+   "likes": 16
   },
   "kind": "REELS",
   "motion": 1.138,
@@ -253,7 +253,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 20
+   "likes": 21
   },
   "kind": "REELS",
   "motion": 1.768,
@@ -816,10 +816,15 @@
   "gate_passed": false,
   "gate_ran": 13,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 10
+  },
+  "kind": "REELS",
   "motion": 5.533,
   "motion_attempts": 3,
   "motion_sky": 0.519,
+  "permalink": "https://www.instagram.com/reel/Ddvy-ClAh_y/",
   "published": "2026-09-26T19:16:04+09:00",
   "ref": "마가복음 9:29",
   "scene": "wheat_field",
@@ -886,7 +891,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 3,
-   "likes": 29
+   "likes": 32
   },
   "kind": "REELS",
   "motion": 2.385,
@@ -1609,7 +1614,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 11,
+   "likes": 12,
    "views": 64,
    "views_manual": true
   },
@@ -1852,8 +1857,8 @@
   "gate_ran": 26,
   "gate_skipped": 0,
   "insights": {
-   "comments": 1,
-   "likes": 2
+   "comments": 5,
+   "likes": 29
   },
   "kind": "REELS",
   "motion": 3.402,
@@ -1944,10 +1949,15 @@
   "gate_passed": false,
   "gate_ran": 6,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 0
+  },
+  "kind": "REELS",
   "motion": 12.242,
   "motion_attempts": 3,
   "motion_sky": 1.441,
+  "permalink": "https://www.instagram.com/reel/Ddw2YeijYKH/",
   "published": "2026-09-27T05:05:02+09:00",
   "ref": "누가복음 5:16",
   "scene": "forest_path",
