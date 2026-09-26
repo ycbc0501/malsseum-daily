@@ -1935,6 +1935,29 @@
   "ref": "잠언 18:10",
   "theme": "지혜"
  },
+ "18117761827952991": {
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-09-27",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 6,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 12.242,
+  "motion_attempts": 3,
+  "motion_sky": 1.441,
+  "published": "2026-09-27T05:05:02+09:00",
+  "ref": "누가복음 5:16",
+  "scene": "forest_path",
+  "segments": 1,
+  "text_contrast": 11.13,
+  "text_spread": 5.5,
+  "theme": "믿음",
+  "veo_calls": 6,
+  "veo_seconds": 48.0
+ },
  "18118499197869926": {
   "insights": {
    "comments": 1,
