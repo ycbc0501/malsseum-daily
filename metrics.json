@@ -543,6 +543,29 @@
   "ref": "나훔 1:7",
   "theme": "믿음"
  },
+ "17957838336237898": {
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-09-28",
+  "duration": 15.33,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 7,
+  "gate_skipped": 1,
+  "insights": {},
+  "motion": 5.289,
+  "motion_attempts": 1,
+  "motion_sky": 0.704,
+  "published": "2026-09-28T05:18:55+09:00",
+  "ref": "요엘 2:21",
+  "scene": "sea",
+  "segments": 2,
+  "text_contrast": 10.01,
+  "text_spread": 8.7,
+  "theme": "감사",
+  "veo_calls": 5,
+  "veo_seconds": 40.0
+ },
  "17961996135132683": {
   "insights": {
    "comments": 1,
