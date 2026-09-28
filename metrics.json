@@ -234,7 +234,7 @@
  "17908715451311460": {
   "insights": {
    "comments": 1,
-   "likes": 13
+   "likes": 14
   },
   "kind": "FEED",
   "permalink": "https://www.instagram.com/p/DdgEVFpGHSQ/",
@@ -292,7 +292,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 15
+   "likes": 16
   },
   "kind": "REELS",
   "motion": 2.247,
@@ -553,8 +553,8 @@
   "gate_ran": 7,
   "gate_skipped": 1,
   "insights": {
-   "comments": 1,
-   "likes": 2
+   "comments": 3,
+   "likes": 20
   },
   "kind": "REELS",
   "motion": 5.289,
@@ -604,7 +604,7 @@
   "gate_skipped": 1,
   "insights": {
    "comments": 5,
-   "likes": 38
+   "likes": 39
   },
   "kind": "REELS",
   "motion": 2.297,
@@ -776,10 +776,15 @@
   "gate_passed": false,
   "gate_ran": 24,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 6
+  },
+  "kind": "REELS",
   "motion": 4.69,
   "motion_attempts": 1,
   "motion_sky": 5.109,
+  "permalink": "https://www.instagram.com/reel/Dd2ILsoEXt4/",
   "published": "2026-09-29T06:16:51+09:00",
   "ref": "고린도후서 9:15",
   "scene": "snowfall",
@@ -869,7 +874,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 15
+   "likes": 16
   },
   "kind": "REELS",
   "motion": 5.533,
@@ -1887,7 +1892,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 19
+   "likes": 20
   },
   "kind": "REELS",
   "permalink": "https://www.instagram.com/reel/DcWvQT-gKYD/",
@@ -2469,7 +2474,7 @@
  "18179995369426827": {
   "insights": {
    "comments": 1,
-   "likes": 6
+   "likes": 10
   },
   "kind": "FEED",
   "permalink": "https://www.instagram.com/p/DdyHuTIFz3x/",
@@ -2881,7 +2886,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 3,
-   "likes": 19
+   "likes": 20
   },
   "kind": "REELS",
   "motion": 3.772,
@@ -2907,10 +2912,15 @@
   "gate_passed": false,
   "gate_ran": 13,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 18
+  },
+  "kind": "REELS",
   "motion": 8.318,
   "motion_attempts": 3,
   "motion_sky": 3.097,
+  "permalink": "https://www.instagram.com/reel/Dd1Ga7LAr8f/",
   "published": "2026-09-28T20:42:06+09:00",
   "ref": "신명기 8:10",
   "scene": "lamp_room",
