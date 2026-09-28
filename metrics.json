@@ -767,6 +767,29 @@
   "text_spread": 1.4,
   "theme": "위로"
  },
+ "18011859644761667": {
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-09-29",
+  "duration": 22.98,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 24,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 4.69,
+  "motion_attempts": 1,
+  "motion_sky": 5.109,
+  "published": "2026-09-29T06:16:51+09:00",
+  "ref": "고린도후서 9:15",
+  "scene": "snowfall",
+  "segments": 3,
+  "text_contrast": 5.92,
+  "text_spread": 4.6,
+  "theme": "감사",
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18014130926937697": {
   "insights": {
    "comments": 1,
