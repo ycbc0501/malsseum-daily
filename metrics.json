@@ -2874,5 +2874,28 @@
   "theme": "믿음",
   "veo_calls": 4,
   "veo_seconds": 32.0
+ },
+ "18631472155030342": {
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-09-28",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 13,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 8.318,
+  "motion_attempts": 3,
+  "motion_sky": 3.097,
+  "published": "2026-09-28T20:42:06+09:00",
+  "ref": "신명기 8:10",
+  "scene": "lamp_room",
+  "segments": 1,
+  "text_contrast": 19.65,
+  "text_spread": 0.1,
+  "theme": "감사",
+  "veo_calls": 6,
+  "veo_seconds": 48.0
  }
 }
