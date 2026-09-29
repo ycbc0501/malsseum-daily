@@ -2238,6 +2238,29 @@
   "text_spread": 2.6,
   "theme": "지혜"
  },
+ "18128447521694517": {
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-09-29",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 22,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 1.94,
+  "motion_attempts": 3,
+  "motion_sky": 2.285,
+  "published": "2026-09-29T20:27:03+09:00",
+  "ref": "신명기 26:9",
+  "scene": "snowfall",
+  "segments": 1,
+  "text_contrast": 2.89,
+  "text_spread": 20.5,
+  "theme": "감사",
+  "veo_calls": 6,
+  "veo_seconds": 48.0
+ },
  "18129174019673443": {
   "insights": {
    "comments": 1,
