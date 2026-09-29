@@ -554,7 +554,7 @@
   "gate_skipped": 1,
   "insights": {
    "comments": 3,
-   "likes": 20
+   "likes": 21
   },
   "kind": "REELS",
   "motion": 5.289,
@@ -705,7 +705,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 19
+   "likes": 20
   },
   "kind": "REELS",
   "motion": 6.902,
@@ -778,7 +778,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 6
+   "likes": 18
   },
   "kind": "REELS",
   "motion": 4.69,
@@ -1892,7 +1892,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 20
+   "likes": 21
   },
   "kind": "REELS",
   "permalink": "https://www.instagram.com/reel/DcWvQT-gKYD/",
@@ -1914,7 +1914,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 5,
-   "likes": 29
+   "likes": 30
   },
   "kind": "REELS",
   "motion": 3.402,
@@ -2007,7 +2007,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 3,
-   "likes": 14
+   "likes": 16
   },
   "kind": "REELS",
   "motion": 12.242,
@@ -2247,10 +2247,15 @@
   "gate_passed": false,
   "gate_ran": 22,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 14
+  },
+  "kind": "REELS",
   "motion": 1.94,
   "motion_attempts": 3,
   "motion_sky": 2.285,
+  "permalink": "https://www.instagram.com/reel/Dd3pendgvu1/",
   "published": "2026-09-29T20:27:03+09:00",
   "ref": "신명기 26:9",
   "scene": "snowfall",
@@ -2497,7 +2502,7 @@
  "18179995369426827": {
   "insights": {
    "comments": 1,
-   "likes": 10
+   "likes": 11
   },
   "kind": "FEED",
   "permalink": "https://www.instagram.com/p/DdyHuTIFz3x/",
@@ -2878,10 +2883,15 @@
   "gate_passed": false,
   "gate_ran": 17,
   "gate_skipped": 2,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 3
+  },
+  "kind": "REELS",
   "motion": 2.544,
   "motion_attempts": 3,
   "motion_sky": 1.267,
+  "permalink": "https://www.instagram.com/reel/Dd4nPMPlDnh/",
   "published": "2026-09-30T05:27:25+09:00",
   "ref": "전도서 3:13",
   "scene": "lamp_room",
@@ -2960,7 +2970,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 18
+   "likes": 25
   },
   "kind": "REELS",
   "motion": 8.318,
