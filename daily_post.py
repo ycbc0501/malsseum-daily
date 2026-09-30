@@ -176,6 +176,12 @@ def slot_already_filled(hour):
     return slot_state(hour) == "filled"
 
 
+# The worst novelty score any clip in this run reached, so metrics.json accumulates the number
+# instead of it living only in a log line. Four measured clips decided where to LOOK; deciding
+# whether a number alone may reject a post needs a population, and this is how one is collected.
+NOVELTY_PEAK = [0.0]
+
+
 def clip_survives_inspection(clip, tag=""):
     """Look at what the ANIMATION produced, not just the still it started from.
 
@@ -184,6 +190,13 @@ def clip_survives_inspection(clip, tag=""):
     sideways, and dissolved the empty upper band the verse sits on (measured: 21% of frame height
     at 0s, 0% by 9s). None of that was ever looked at. Sampling the middle and the end catches
     drift that the opening frame cannot show.
+
+    The middle and the end are not enough on their own. 예레미야 33:3 (2026-09-25) shipped with a
+    sleeved arm swinging into frame between 1.5s and 2.3s — it arrived after the middle sample and
+    was gone before the end one, so two frames out of 240 both saw an empty room. The gate was not
+    wrong, it was looking elsewhere: shown the 2.17s frame afterwards it answered "a person's arm
+    and hand on the right side" at once. So the clip is now measured in full first
+    (`make_video.intrusion_times`) and the moments where something ENTERED are inspected too.
 
     Best-effort: any failure to inspect returns True, because a flaky checker must not cost a post.
     """
@@ -201,7 +214,24 @@ def clip_survives_inspection(clip, tag=""):
         print(f"  clip {tag}rejected — the scene does not hold its shape")
         return False
 
-    for when, where in ((dur * 0.5, "middle"), (max(0.0, dur - 0.6), "end")):
+    # The measurement picks the frames; the model still decides. Four clips is not enough
+    # evidence to reject a post on this number alone (a clean clip peaked at 3.58 and the one
+    # with the arm at 3.65), but it is more than enough to choose where to look.
+    samples = [(dur * 0.5, "middle"), (max(0.0, dur - 0.6), "end")]
+    peaks = make_video.intrusion_times(clip)
+    if peaks:
+        NOVELTY_PEAK[0] = max(NOVELTY_PEAK[0], peaks[0][1])
+    for i, (t, score) in enumerate(peaks):
+        # Narrow on purpose. The dish-carrying hand entered 예레미야 33:3 at 7.6s and the end
+        # sample sits at 7.4s; a half-second window would throw the peak away as "already
+        # covered" when the sampled frame is 0.2s too early to show it. The whole failure being
+        # fixed here is a frame sampled next to the problem instead of on it.
+        if any(abs(t - u) < 0.25 for u, _ in samples):
+            continue                       # literally the same frame
+        print(f"  clip {tag}something enters at {t:.1f}s (novelty {score:.2f}%)")
+        samples.append((t, f"enter{i + 1}"))
+
+    for when, where in samples:
         png = os.path.join(generate.OUT_DIR, f"_inspect_{where}.png")
         try:
             make_video.frame_at(clip, when, png)
@@ -767,6 +797,12 @@ def main():
                    "veo_seconds": round(veo_calls * 8.0, 1),
                    # True when no take passed the clip inspection — see the WARNING above.
                    "clip_spoiled": bool(spoiled),
+                   # Worst "something entered the frame" score across the clips this run
+                   # inspected. The arm that shipped on 2026-09-25 measured 3.65; clean clips
+                   # measured 1.40–4.24. The populations overlap on four samples, so this only
+                   # chooses frames today — recording it is how the population gets big enough
+                   # to say whether it may one day reject on its own.
+                   "clip_novelty": round(NOVELTY_PEAK[0], 2),
                    # How many gate calls actually reached the model vs errored out. A post with
                    # gate_ran 0 was published unchecked, which must be visible as a number.
                    # False means the picture that shipped had been REJECTED by the gate — the one

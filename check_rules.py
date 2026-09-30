@@ -55,6 +55,20 @@ def checks():
     yield "A  the ANIMATION is inspected, not only the still", (
         "clip_survives_inspection" in daily_post_src and "frame_at" in
         (HERE / "make_video.py").read_text())
+    # Two frames out of 240 let an arm walk through 예레미야 33:3 (2026-09-25): it arrived after
+    # the middle sample and left before the end one. The whole clip is measured, and the moments
+    # something entered are inspected too.
+    yield "A1b the whole clip is scanned for what entered it", (
+        "def intrusion_times" in (HERE / "make_video.py").read_text()
+        and "make_video.intrusion_times(clip)" in daily_post_src
+        and 'samples.append' in daily_post_src)
+    # …but that number may only CHOOSE frames. On the four clips it was built against the bad
+    # clip peaked at 3.65 and a clean one at 3.58 — overlapping populations cannot kill a post.
+    yield "A1b the intrusion number selects frames, it never rejects", (
+        "NOVELTY_PEAK" in daily_post_src
+        and '"clip_novelty"' in daily_post_src
+        and "if peaks:\n        NOVELTY_PEAK" in daily_post_src
+        and "peaks" not in daily_post_src.split("for when, where in samples:")[1][:400])
     # The framing block must not demand a flat plane (that produced the painted panel), and the
     # law must be the thing forbidding one.
     # Every defect the account owner reported must be something the GATE can see, not only

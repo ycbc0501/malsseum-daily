@@ -134,6 +134,80 @@ def structure_drift(clip, out_dir=None):
         return -1.0
 
 
+# A frame is "novel" when pixels that are normally still have changed. Below this share of the
+# still part of the frame there is nothing worth a vision call — the clip is only breathing.
+NOVELTY_FLOOR = 0.5     # percent of the normally-still pixels
+_NOVELTY_DELTA = 18     # grey levels (0-255) that count as a changed pixel
+_NOVELTY_QUIET = 0.25   # a pixel is "normally still" if it changes in fewer than this share of frames
+
+
+def intrusion_times(clip, k=2, min_gap_s=1.0, fps=4):
+    """When in the clip something ENTERED that was not there before → [(seconds, score), ...],
+    worst first. Empty list if it cannot be measured — best-effort, like every other checker here.
+
+    This exists because 예레미야 33:3 (2026-09-25) shipped with a sleeved arm swinging into frame
+    from 1.5s to 2.3s and a hand carrying a dish at 7.5s. Nothing was wrong with the vision gate:
+    asked about the 2.17s frame afterwards it answered "a person's arm and hand on the right side"
+    immediately. It had simply never been shown that frame. The inspection sampled exactly two —
+    the middle (4.0s) and the end (7.4s) — and the arm arrived and left between them. Two frames
+    out of 240 is not an inspection of the clip, it is an inspection of two moments.
+
+    So the clip is measured in full, cheaply, and the measurement chooses what the model looks at.
+
+    Not raw motion: water and clouds are SUPPOSED to move, and they move in the same pixels the
+    whole time. An intruder appears where the clip is normally still. So each pixel gets an
+    activity rate first, and the score counts change only in the pixels that are usually quiet.
+    Measured on the four clips this was built against (fades excluded — a fade to black changes
+    every pixel at once and is not an intrusion):
+
+        예레미야 33:3 (the arm)   peak 3.65% @2.17s   median 0.00   → 364× its own baseline
+        신명기 8:10 (fine)        peak 1.40% @6.50s   median 0.75   →   1.9×
+        요엘 2:21 (fine)          peak 3.58% @9.00s   median 1.77   →   2.0×
+        전도서 3:13 (fine)        peak 4.24% @14.17s  median 0.45   →   9.5×
+
+    The peak ALONE does not separate them (3.58 clean vs 3.65 bad), which is why this returns
+    times for the gate to look at rather than a verdict. Four clips is not enough evidence to
+    reject a post on a number; it is more than enough to choose which frames get inspected.
+    """
+    import os
+    import statistics
+    import tempfile
+    from PIL import Image
+
+    d = tempfile.mkdtemp(prefix="novelty_")
+    try:
+        subprocess.run([FFMPEG, "-y", "-v", "error", "-i", clip,
+                        "-vf", f"fps={fps},scale=64:114,format=gray",
+                        os.path.join(d, "f_%04d.png")], check=True, capture_output=True)
+        files = sorted(os.listdir(d))
+        if len(files) < 8:
+            return []
+        frames = [list(Image.open(os.path.join(d, f)).convert("L").getdata()) for f in files]
+        n, m = len(frames[0]), len(frames)
+        med = [statistics.median(fr[i] for fr in frames) for i in range(n)]
+        changed = [[abs(fr[i] - med[i]) > _NOVELTY_DELTA for i in range(n)] for fr in frames]
+        quiet = [i for i in range(n)
+                 if sum(row[i] for row in changed) / m < _NOVELTY_QUIET]
+        if not quiet:
+            return []          # nothing in this clip ever holds still — no baseline to measure against
+        scored = [((j + 0.5) / fps, 100.0 * sum(row[i] for i in quiet) / len(quiet))
+                  for j, row in enumerate(changed)]
+        peaks = []
+        for t, s in sorted(scored, key=lambda ts: -ts[1]):
+            if s < NOVELTY_FLOOR:
+                break
+            if all(abs(t - u) >= min_gap_s for u, _ in peaks):
+                peaks.append((t, s))
+            if len(peaks) >= k:
+                break
+        return peaks
+    except Exception as e:
+        print(f"  intrusion scan unmeasurable ({e})")
+        return []
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
 def frame_at(video, seconds, out_png):
     """One frame at `seconds`, cropped to 9:16 — for inspecting what the ANIMATION turned into.
 
