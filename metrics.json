@@ -741,10 +741,15 @@
   "gate_passed": false,
   "gate_ran": 4,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 1
+  },
+  "kind": "REELS",
   "motion": 6.773,
   "motion_attempts": 3,
   "motion_sky": 0.56,
+  "permalink": "https://www.instagram.com/reel/Dd7JZRrgCov/",
   "published": "2026-10-01T05:03:36+09:00",
   "ref": "로마서 16:27",
   "scene": "sea",
@@ -802,7 +807,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 18
+   "likes": 19
   },
   "kind": "REELS",
   "motion": 4.69,
@@ -1456,10 +1461,15 @@
   "gate_passed": false,
   "gate_ran": 24,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 3,
+   "likes": 14
+  },
+  "kind": "REELS",
   "motion": 3.641,
   "motion_attempts": 1,
   "motion_sky": 4.33,
+  "permalink": "https://www.instagram.com/reel/Dd6Mgp5DsRm/",
   "published": "2026-09-30T20:11:41+09:00",
   "ref": "전도서 11:7",
   "scene": "snowfall",
@@ -2296,7 +2306,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 14
+   "likes": 17
   },
   "kind": "REELS",
   "motion": 1.94,
@@ -2932,7 +2942,7 @@
   "gate_skipped": 2,
   "insights": {
    "comments": 1,
-   "likes": 3
+   "likes": 25
   },
   "kind": "REELS",
   "motion": 2.544,
