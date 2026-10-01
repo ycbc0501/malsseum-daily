@@ -742,8 +742,8 @@
   "gate_ran": 4,
   "gate_skipped": 0,
   "insights": {
-   "comments": 1,
-   "likes": 1
+   "comments": 5,
+   "likes": 29
   },
   "kind": "REELS",
   "motion": 6.773,
@@ -807,7 +807,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 19
+   "likes": 20
   },
   "kind": "REELS",
   "motion": 4.69,
@@ -903,7 +903,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 16
+   "likes": 17
   },
   "kind": "REELS",
   "motion": 5.533,
@@ -1157,10 +1157,15 @@
   "gate_passed": false,
   "gate_ran": 13,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 6
+  },
+  "kind": "REELS",
   "motion": 6.345,
   "motion_attempts": 3,
   "motion_sky": 0.581,
+  "permalink": "https://www.instagram.com/reel/Dd80LQcFApK/",
   "published": "2026-10-01T20:36:38+09:00",
   "ref": "에베소서 5:4",
   "scene": "forest_path",
@@ -1487,7 +1492,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 3,
-   "likes": 14
+   "likes": 18
   },
   "kind": "REELS",
   "motion": 3.641,
@@ -1947,10 +1952,15 @@
   "gate_passed": false,
   "gate_ran": 29,
   "gate_skipped": 1,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 3
+  },
+  "kind": "REELS",
   "motion": 7.985,
   "motion_attempts": 1,
   "motion_sky": 14.333,
+  "permalink": "https://www.instagram.com/reel/Dd9wavomDTR/",
   "published": "2026-10-02T05:23:05+09:00",
   "ref": "예레미야 20:13",
   "scene": "snowfall",
