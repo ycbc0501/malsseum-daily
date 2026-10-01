@@ -1147,6 +1147,30 @@
   "text_spread": 0.8,
   "theme": "은혜"
  },
+ "18064200689783757": {
+  "clip_novelty": 17.0,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-10-01",
+  "duration": 22.98,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 13,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 6.345,
+  "motion_attempts": 3,
+  "motion_sky": 0.581,
+  "published": "2026-10-01T20:36:38+09:00",
+  "ref": "에베소서 5:4",
+  "scene": "forest_path",
+  "segments": 3,
+  "text_contrast": 11.34,
+  "text_spread": 4.3,
+  "theme": "감사",
+  "veo_calls": 5,
+  "veo_seconds": 40.0
+ },
  "18068411876706584": {
   "insights": {
    "comments": 1,
