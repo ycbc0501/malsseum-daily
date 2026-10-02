@@ -230,10 +230,15 @@
   "gate_passed": false,
   "gate_ran": 13,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 16
+  },
+  "kind": "REELS",
   "motion": 7.783,
   "motion_attempts": 3,
   "motion_sky": 0.439,
+  "permalink": "https://www.instagram.com/reel/Dd_V6nugRwG/",
   "published": "2026-10-02T20:10:13+09:00",
   "ref": "이사야 12:5",
   "scene": "wheat_field",
@@ -316,7 +321,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 16
+   "likes": 17
   },
   "kind": "REELS",
   "motion": 2.247,
@@ -1000,7 +1005,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 3,
-   "likes": 32
+   "likes": 33
   },
   "kind": "REELS",
   "motion": 2.385,
@@ -1183,7 +1188,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 6
+   "likes": 18
   },
   "kind": "REELS",
   "motion": 6.345,
@@ -1978,7 +1983,7 @@
   "gate_skipped": 1,
   "insights": {
    "comments": 1,
-   "likes": 3
+   "likes": 32
   },
   "kind": "REELS",
   "motion": 7.985,
@@ -2146,7 +2151,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 3,
-   "likes": 16
+   "likes": 17
   },
   "kind": "REELS",
   "motion": 12.242,
@@ -2630,10 +2635,15 @@
   "gate_passed": false,
   "gate_ran": 36,
   "gate_skipped": 1,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 7
+  },
+  "kind": "REELS",
   "motion": 5.003,
   "motion_attempts": 2,
   "motion_sky": 6.84,
+  "permalink": "https://www.instagram.com/reel/DeAUffXlOIS/",
   "published": "2026-10-03T05:16:47+09:00",
   "ref": "이사야 38:20",
   "scene": "canal_town",
@@ -3048,7 +3058,7 @@
   "gate_skipped": 2,
   "insights": {
    "comments": 1,
-   "likes": 25
+   "likes": 27
   },
   "kind": "REELS",
   "motion": 2.544,
@@ -3105,7 +3115,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 3,
-   "likes": 20
+   "likes": 21
   },
   "kind": "REELS",
   "motion": 3.772,
@@ -3133,7 +3143,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 25
+   "likes": 26
   },
   "kind": "REELS",
   "motion": 8.318,
