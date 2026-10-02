@@ -220,6 +220,30 @@
   "ref": "이사야 53:5",
   "theme": "위로"
  },
+ "17904175536596555": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-10-02",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 13,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 7.783,
+  "motion_attempts": 3,
+  "motion_sky": 0.439,
+  "published": "2026-10-02T20:10:13+09:00",
+  "ref": "이사야 12:5",
+  "scene": "wheat_field",
+  "segments": 1,
+  "text_contrast": 7.83,
+  "text_spread": 14.0,
+  "theme": "감사",
+  "veo_calls": 6,
+  "veo_seconds": 48.0
+ },
  "17908530855454299": {
   "insights": {
    "comments": 1,
