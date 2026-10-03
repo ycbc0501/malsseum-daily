@@ -232,7 +232,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 16
+   "likes": 26
   },
   "kind": "REELS",
   "motion": 7.783,
@@ -259,10 +259,15 @@
   "gate_passed": false,
   "gate_ran": 19,
   "gate_skipped": 1,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 27
+  },
+  "kind": "REELS",
   "motion": 3.409,
   "motion_attempts": 1,
   "motion_sky": 0.447,
+  "permalink": "https://www.instagram.com/reel/DeB1t_AATK2/",
   "published": "2026-10-03T19:27:02+09:00",
   "ref": "이사야 42:12",
   "scene": "wheat_field",
@@ -2007,7 +2012,7 @@
   "gate_skipped": 1,
   "insights": {
    "comments": 1,
-   "likes": 32
+   "likes": 35
   },
   "kind": "REELS",
   "motion": 7.985,
@@ -2202,10 +2207,15 @@
   "gate_passed": false,
   "gate_ran": 25,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 5
+  },
+  "kind": "REELS",
   "motion": 1.679,
   "motion_attempts": 1,
   "motion_sky": 1.559,
+  "permalink": "https://www.instagram.com/reel/DeC4UHOAT0n/",
   "published": "2026-10-04T05:08:40+09:00",
   "ref": "이사야 43:21",
   "scene": "reflection_lake",
@@ -2685,7 +2695,7 @@
   "gate_skipped": 1,
   "insights": {
    "comments": 1,
-   "likes": 7
+   "likes": 18
   },
   "kind": "REELS",
   "motion": 5.003,
