@@ -2192,6 +2192,30 @@
   "veo_calls": 6,
   "veo_seconds": 48.0
  },
+ "18118441759998620": {
+  "clip_novelty": 1.28,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-04",
+  "duration": 22.98,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 25,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 1.679,
+  "motion_attempts": 1,
+  "motion_sky": 1.559,
+  "published": "2026-10-04T05:08:40+09:00",
+  "ref": "이사야 43:21",
+  "scene": "reflection_lake",
+  "segments": 3,
+  "text_contrast": 1.1,
+  "text_spread": 35.5,
+  "theme": "감사",
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18118499197869926": {
   "insights": {
    "comments": 1,
