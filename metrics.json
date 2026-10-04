@@ -2881,6 +2881,30 @@
   "ref": "로마서 12:2",
   "theme": "은혜"
  },
+ "18331342678274869": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-10-05",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 7,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 13.669,
+  "motion_attempts": 3,
+  "motion_sky": 11.644,
+  "published": "2026-10-05T05:18:33+09:00",
+  "ref": "디모데전서 1:5",
+  "scene": "cathedral",
+  "segments": 1,
+  "text_contrast": 8.21,
+  "text_spread": 15.6,
+  "theme": "사랑",
+  "veo_calls": 6,
+  "veo_seconds": 48.0
+ },
  "18335681068250151": {
   "insights": {
    "comments": 1,
