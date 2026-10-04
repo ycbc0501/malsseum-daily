@@ -232,7 +232,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 26
+   "likes": 30
   },
   "kind": "REELS",
   "motion": 7.783,
@@ -261,7 +261,7 @@
   "gate_skipped": 1,
   "insights": {
    "comments": 1,
-   "likes": 27
+   "likes": 36
   },
   "kind": "REELS",
   "motion": 3.409,
@@ -801,7 +801,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 5,
-   "likes": 29
+   "likes": 30
   },
   "kind": "REELS",
   "motion": 6.773,
@@ -1217,7 +1217,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 18
+   "likes": 19
   },
   "kind": "REELS",
   "motion": 6.345,
@@ -1566,6 +1566,17 @@
   "theme": "감사",
   "veo_calls": 3,
   "veo_seconds": 24.0
+ },
+ "18097426379098134": {
+  "insights": {
+   "comments": 1,
+   "likes": 4
+  },
+  "kind": "FEED",
+  "permalink": "https://www.instagram.com/p/DeELsUpmAsw/",
+  "published": "2026-10-04T08:15:45+0000",
+  "ref": "시편 4:7",
+  "theme": "감사"
  },
  "18098159543374854": {
   "cta_in_caption": false,
@@ -2012,7 +2023,7 @@
   "gate_skipped": 1,
   "insights": {
    "comments": 1,
-   "likes": 35
+   "likes": 37
   },
   "kind": "REELS",
   "motion": 7.985,
@@ -2065,7 +2076,7 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 21
+   "likes": 22
   },
   "kind": "REELS",
   "permalink": "https://www.instagram.com/reel/DcWvQT-gKYD/",
@@ -2208,8 +2219,8 @@
   "gate_ran": 25,
   "gate_skipped": 0,
   "insights": {
-   "comments": 1,
-   "likes": 5
+   "comments": 3,
+   "likes": 36
   },
   "kind": "REELS",
   "motion": 1.679,
@@ -2695,7 +2706,7 @@
   "gate_skipped": 1,
   "insights": {
    "comments": 1,
-   "likes": 18
+   "likes": 21
   },
   "kind": "REELS",
   "motion": 5.003,
@@ -2891,10 +2902,15 @@
   "gate_passed": false,
   "gate_ran": 7,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 0
+  },
+  "kind": "REELS",
   "motion": 13.669,
   "motion_attempts": 3,
   "motion_sky": 11.644,
+  "permalink": "https://www.instagram.com/reel/DeFeSmqnw3f/",
   "published": "2026-10-05T05:18:33+09:00",
   "ref": "디모데전서 1:5",
   "scene": "cathedral",
@@ -3140,7 +3156,7 @@
   "gate_skipped": 2,
   "insights": {
    "comments": 1,
-   "likes": 27
+   "likes": 28
   },
   "kind": "REELS",
   "motion": 2.544,
