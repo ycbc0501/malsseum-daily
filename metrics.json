@@ -3281,5 +3281,29 @@
   "theme": "감사",
   "veo_calls": 6,
   "veo_seconds": 48.0
+ },
+ "18632946685003547": {
+  "clip_novelty": 29.03,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-10-06",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 9,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 12.879,
+  "motion_attempts": 3,
+  "motion_sky": 6.128,
+  "published": "2026-10-06T06:59:07+09:00",
+  "ref": "디모데전서 2:4",
+  "scene": "forest_path",
+  "segments": 1,
+  "text_contrast": 10.92,
+  "text_spread": 6.9,
+  "theme": "사랑",
+  "veo_calls": 6,
+  "veo_seconds": 48.0
  }
 }
