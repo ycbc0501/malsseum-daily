@@ -469,10 +469,15 @@
   "gate_passed": true,
   "gate_ran": 15,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 2
+  },
+  "kind": "REELS",
   "motion": 2.564,
   "motion_attempts": 1,
   "motion_sky": 0.398,
+  "permalink": "https://www.instagram.com/reel/DeKmqJGEWLW/",
   "published": "2026-10-07T05:08:01+09:00",
   "ref": "골로새서 3:14",
   "scene": "wheat_field",
@@ -940,7 +945,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 3,
-   "likes": 23
+   "likes": 40
   },
   "kind": "REELS",
   "motion": 3.332,
@@ -1014,7 +1019,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 17
+   "likes": 18
   },
   "kind": "REELS",
   "motion": 5.533,
@@ -1363,10 +1368,15 @@
   "gate_passed": true,
   "gate_ran": 6,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 18
+  },
+  "kind": "REELS",
   "motion": 99.0,
   "motion_attempts": 1,
   "motion_sky": 99.0,
+  "permalink": "https://www.instagram.com/reel/DeJuizzEqM8/",
   "published": "2026-10-06T20:57:32+09:00",
   "ref": "고린도전서 10:24",
   "scene": "basket",
@@ -1647,7 +1657,7 @@
  "18097426379098134": {
   "insights": {
    "comments": 1,
-   "likes": 8
+   "likes": 9
   },
   "kind": "FEED",
   "permalink": "https://www.instagram.com/p/DeELsUpmAsw/",
@@ -2296,8 +2306,8 @@
   "gate_ran": 25,
   "gate_skipped": 0,
   "insights": {
-   "comments": 3,
-   "likes": 41
+   "comments": 5,
+   "likes": 42
   },
   "kind": "REELS",
   "motion": 1.679,
@@ -2783,7 +2793,7 @@
   "gate_skipped": 1,
   "insights": {
    "comments": 1,
-   "likes": 21
+   "likes": 22
   },
   "kind": "REELS",
   "motion": 5.003,
@@ -3347,7 +3357,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 9
+   "likes": 19
   },
   "kind": "REELS",
   "motion": 12.879,
