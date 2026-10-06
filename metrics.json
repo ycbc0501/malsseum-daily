@@ -459,6 +459,30 @@
   "ref": "데살로니가전서 5:18",
   "theme": "감사"
  },
+ "17931185382408041": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-07",
+  "duration": 22.98,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 15,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 2.564,
+  "motion_attempts": 1,
+  "motion_sky": 0.398,
+  "published": "2026-10-07T05:08:01+09:00",
+  "ref": "골로새서 3:14",
+  "scene": "wheat_field",
+  "segments": 3,
+  "text_contrast": 5.33,
+  "text_spread": 5.0,
+  "theme": "사랑",
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "17931900147363606": {
   "insights": {
    "comments": 1,
