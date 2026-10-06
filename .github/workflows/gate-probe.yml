@@ -1,0 +1,38 @@
+name: Measure the image gates
+
+# Manual only. Generates a few backgrounds, prints what the gates measure on them, and publishes
+# NOTHING. It exists because the clearance gate spent a fortnight rejecting every render while
+# the only way to see a gate number was to publish a post and read the log afterwards.
+#
+# Each render is billed (rule E-0), so the default is four.
+on:
+  workflow_dispatch:
+    inputs:
+      renders:
+        description: "How many backgrounds to generate and measure"
+        type: string
+        default: "4"
+      scene:
+        description: "Scene index to start from"
+        type: string
+        default: "0"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install --quiet pillow numpy requests
+      - name: measure
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          HF_API_KEY: ${{ secrets.HF_API_KEY }}
+          HF_API_SECRET: ${{ secrets.HF_API_SECRET }}
+        run: python3 gate_probe.py "${{ inputs.renders }}"
