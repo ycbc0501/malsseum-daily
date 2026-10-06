@@ -854,6 +854,40 @@ CLEARANCE_MIN = 0.18
 BLOCK_BOTTOM = 0.38            # generate.py puts the reference line's baseline just above this
 
 
+# Where "content" begins, as a fraction of how busy THIS picture gets — never an absolute number.
+#
+# It was an absolute number (row edge-energy > 4.0) from 2026-09-22 to 2026-10-06, and in that
+# fortnight the gate rejected EVERY render it ever saw. Four surviving CI logs, 25 renders across
+# six different scene families — bridge_small, still_water, basket, sea, forest_path, cathedral —
+# all report the same impossible value:
+#
+#     clearance below the verse: -0.0% (need 18%)
+#
+# -0.0% is what the function returns when the very first row it looks at is already "content", so
+# the limit was never being compared against anything. Six different photographs cannot all begin
+# at exactly the same pixel; a measurement that says they do is reporting on itself.
+#
+# The cause is calibration drift between two different images. 4.0 was read off PUBLISHED frames —
+# cover-cropped, re-rendered by Veo, h264-encoded, every one of those steps smoothing edges — and
+# then applied to the RAW render, which is sharper and bigger. Measured on real frames, the old
+# rule moves with sharpness instead of with the picture: 유다서 1:21 reads 24.2% as published, 6.1%
+# merely sharpened and 38.2% merely upscaled, with no content moved at all.
+#
+# So the reference is now the image's OWN calm versus its OWN busiest, which multiplies out:
+# scale every edge in the frame by any factor and the threshold scales with it. Same four frames,
+# same five transformations: 유다서 holds 25.5-26.2%, 골로새서 10.2-11.3%, 마가복음 19.3-19.7%.
+#
+# CLEAR_RISE was fitted to the only ground truth that exists — the three posts the account owner
+# judged by eye, recorded in RULES F-2c. At 0.25 it reproduces them:
+#
+#     골로새서 2:7 ("여백이 너무 없어")   11.2%   recorded 12.2%
+#     유다서 1:21  (account owner: right)  25.7%   recorded 25.7%
+#
+# The quiet reference is read from the TOP 20% only. The verse block starts at 25.6%, so that band
+# is above every glyph — which keeps the number honest whether or not text has been composited.
+CLEAR_RISE = 0.25
+
+
 def clearance_below(image_path, block_bottom=BLOCK_BOTTOM):
     """Fraction of frame height between the verse block and the first row of picture content.
 
@@ -867,8 +901,13 @@ def clearance_below(image_path, block_bottom=BLOCK_BOTTOM):
     k = max(3, h // 60)
     smooth = np.convolve(rows, np.ones(k) / k, mode="same")
     start = int(h * block_bottom)
+    quiet = float(np.median(smooth[:max(1, int(h * 0.20))]))
+    busy = float(np.percentile(smooth[start:], 90))
+    # A wholly open frame has nothing to rise above; busy == quiet leaves the threshold at quiet
+    # and the scan finds nothing, which is the right answer — maximum clearance.
+    threshold = quiet + CLEAR_RISE * max(0.0, busy - quiet)
     for y in range(start, h):
-        if smooth[y] > 4.0:
+        if smooth[y] > threshold:
             return (y / h) - block_bottom
     return 1.0 - block_bottom
 

@@ -155,6 +155,17 @@ def checks():
         if hf.SCENE_CATS[i] in hf.INTERIOR_CATS
         and 'cloudless sky' in hf.OUTDOOR_TOP]
     yield "F3 text area is measured, not assumed", hasattr(generate, "text_area_ok")
+    # F2c — the clearance threshold must be relative to the picture, never an absolute edge value.
+    # It was absolute (4.0) for a fortnight and rejected every render it ever saw: four CI logs,
+    # 25 renders, six scene families, all reporting -0.0%. A number that cannot vary is not a
+    # measurement. The property, not the constant, is what is enforced here.
+    yield "F2c clearance is measured against the picture's own busyness", (
+        hasattr(hf, "CLEAR_RISE") and 0.0 < hf.CLEAR_RISE < 1.0
+        and "quiet + CLEAR_RISE" in (HERE / "fetch_higgsfield.py").read_text())
+    # …and the quiet reference must be read from above the verse block (25.6%), so the number does
+    # not change depending on whether text has been composited.
+    yield "F2c the quiet reference is read above the verse block", (
+        "int(h * 0.20)" in (HERE / "fetch_higgsfield.py").read_text())
     # A5b — the seam gate must be MEASURED and must run even when the model said yes, because on
     # 2026-09-14 the model said yes to a stacked composite and it shipped.
     yield "A5b stacked composites are measured, not asked about", hasattr(hf, "has_seam")
