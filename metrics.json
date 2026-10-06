@@ -1329,6 +1329,30 @@
   "ref": "빌립보서 4:6",
   "theme": "평안"
  },
+ "18080673410370394": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-06",
+  "duration": 30.0,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 6,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 99.0,
+  "motion_attempts": 1,
+  "motion_sky": 99.0,
+  "published": "2026-10-06T20:57:32+09:00",
+  "ref": "고린도전서 10:24",
+  "scene": "basket",
+  "segments": 0,
+  "text_contrast": 2.01,
+  "text_spread": 36.6,
+  "theme": "사랑",
+  "veo_calls": 1,
+  "veo_seconds": 8.0
+ },
  "18081320090276307": {
   "insights": {
    "comments": 3,
