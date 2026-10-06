@@ -232,7 +232,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 30
+   "likes": 31
   },
   "kind": "REELS",
   "motion": 7.783,
@@ -261,7 +261,7 @@
   "gate_skipped": 1,
   "insights": {
    "comments": 1,
-   "likes": 36
+   "likes": 38
   },
   "kind": "REELS",
   "motion": 3.409,
@@ -914,10 +914,15 @@
   "gate_passed": false,
   "gate_ran": 26,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 3,
+   "likes": 23
+  },
+  "kind": "REELS",
   "motion": 3.332,
   "motion_attempts": 1,
   "motion_sky": 3.795,
+  "permalink": "https://www.instagram.com/reel/DeHMTcMgQOr/",
   "published": "2026-10-05T21:19:45+09:00",
   "ref": "요한삼서 1:2",
   "scene": "snowfall",
@@ -1594,7 +1599,7 @@
  "18097426379098134": {
   "insights": {
    "comments": 1,
-   "likes": 4
+   "likes": 8
   },
   "kind": "FEED",
   "permalink": "https://www.instagram.com/p/DeELsUpmAsw/",
@@ -2244,7 +2249,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 3,
-   "likes": 36
+   "likes": 41
   },
   "kind": "REELS",
   "motion": 1.679,
@@ -2928,7 +2933,7 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 0
+   "likes": 8
   },
   "kind": "REELS",
   "motion": 13.669,
@@ -3292,10 +3297,15 @@
   "gate_passed": false,
   "gate_ran": 9,
   "gate_skipped": 0,
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "likes": 9
+  },
+  "kind": "REELS",
   "motion": 12.879,
   "motion_attempts": 3,
   "motion_sky": 6.128,
+  "permalink": "https://www.instagram.com/reel/DeIOmzNkYbd/",
   "published": "2026-10-06T06:59:07+09:00",
   "ref": "디모데전서 2:4",
   "scene": "forest_path",
