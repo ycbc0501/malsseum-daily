@@ -162,6 +162,32 @@ def checks():
         "if ok and has_seam(dest)" in (HERE / "fetch_higgsfield.py").read_text())
     yield "A5b both thresholds must trip", (
         hf.SEAM_JUMP >= 5.0 and hf.SEAM_RATIO >= 20.0)
+    # F2a — seam_score is blind between 18% and 45% of the height, which is exactly where
+    # OUTDOOR_TOP asks the sky to end. 디모데전서 2:4 (2026-10-06) shipped a forest cut off at
+    # 32.1% and has_seam reported ok. A second gate covers that band by measuring STRAIGHTNESS.
+    yield "F2a a ruled line across the top is measured", hasattr(hf, "has_ruled_line")
+    yield "F2a the ruled-line gate runs even when the model approves", (
+        "if ok and has_ruled_line(dest)" in (HERE / "fetch_higgsfield.py").read_text())
+    # The window has to still cover the band seam_score skips, or the blind spot is back.
+    yield "F2a the ruled-line window covers seam_score's blind band", (
+        hf.RULED_FROM <= 0.18 and hf.RULED_UPTO >= 0.40)
+    # Calibrated 0.900 (defect) against 0.347 (worst clean) over 29 published reels. A limit
+    # outside this range has stopped being the measurement it claims to be.
+    yield "F2a the ruled-line limit sits between the measured groups", (
+        0.40 <= hf.RULED_FRAC <= 0.80)
+    # Only columns no glyph can reach — col_w never exceeds 0.85 of the frame (generate.py).
+    yield "F2a the ruled-line gate samples only glyph-free columns", (
+        0 < hf.RULED_MARGIN <= 0.075)
+    # F2a-1 — the instruction, not the scene, chose where that line fell. A scene with no horizon
+    # must not be told to put one a third of the way up and that nothing may rise into the sky.
+    yield "F2a-1 horizonless outdoor scenes are not asked to invent a horizon", (
+        "no horizon of its own" in hf.OUTDOOR_TOP
+        and "nothing rises into the sky" not in hf.OUTDOOR_TOP)
+    # F2a-2 — a scene whose own text says it is inside must not be handed OUTDOOR_TOP.
+    yield "F2a-2 scenes that describe an interior are registered as interiors", not [
+        hf.SCENE_CATS[i] for i, s in enumerate(hf.SCENES)
+        if hf.SCENE_CATS[i] not in hf.INTERIOR_CATS
+        and ("interior" in s or "nave" in s or "windowsill" in s)]
     # B5 — the caption line is ON as of 2026-09-14, in BOTH publishing paths. A reflection that
     # reached the reel and not the carousel would leave half the account exactly as unoriginal as
     # before, which is the failure this rule exists to prevent.

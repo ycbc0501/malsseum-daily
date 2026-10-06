@@ -19,6 +19,19 @@ output/
 # video clips are fetched fresh at runtime, never committed
 videos/
 
+# Investigation scratch. notes/*.md IS committed — the findings are the point — but the media
+# pulled down to reach them is not: the 2026-10-06 ruled-line trace alone downloaded 457 MB of
+# published reels, and every one of them is still on the `media` release if it is needed again.
+# The frames worth keeping were downscaled into testdata/, which IS committed.
+notes/**/*.mp4
+notes/**/*.png
+notes/**/*.jpg
+notes/**/index.json
+notes/**/seams.json
+notes/**/joined*.json
+notes/**/calib.json
+notes/**/upper.json
+
 # quarantined audio (verify license before use)
 music/*.bak
 

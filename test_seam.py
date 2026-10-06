@@ -49,9 +49,17 @@ def main():
             ("paste at 67%", wall(int(H * 0.67)), True),
             ("paste at 55%", wall(int(H * 0.55)), True),
             ("faint paste (2 levels)", wall(int(H * 0.67), step=2), False),
-            # The verse band is excluded on purpose: white text on a dark wall is a real
-            # brightness cliff and is not a defect.
-            ("edge in the text band", wall(int(H * 0.30)), False),
+            # seam_score skips 18%-45% of the height. The reason written here used to be "white
+            # text on a dark wall is a real brightness cliff" — but has_seam only ever runs on the
+            # raw background, BEFORE any text is composited, so there was never any text to be
+            # fooled by. The exclusion was pure blindness, and 2026-10-06 디모데전서 2:4 shipped
+            # through it with a forest cut off at 32.1%.
+            #
+            # This case still expects False, because it is still true of THIS gate. The band is
+            # covered now by has_ruled_line() — see test_ruled_line.py, which fails if that stops
+            # being so. Do not read this line as "a line across the top is acceptable".
+            ("edge in the band seam_score skips — covered by has_ruled_line", wall(int(H * 0.30)),
+             False),
             # Frame edges are excluded too — the last row of a video is often darker.
             ("edge at the very bottom", wall(H - 3), False),
         ]

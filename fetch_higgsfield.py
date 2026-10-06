@@ -393,6 +393,14 @@ INTERIOR_CATS = {
     "potted_plant", "wool_blanket", "bowl_of_fruit", "washed_dishes", "sewing", "shoes_by_door",
     "umbrella_stand", "linen_cloth", "water_glass",
     "basket",
+    # Added 2026-10-06. These three describe an inside in their OWN scene text — "the tall stone
+    # interior of an old cathedral", "the long nave of an old church", "a stone windowsill", "a
+    # bare stone interior", "on a bare table" — and were still being handed OUTDOOR_TOP, i.e.
+    # "open sky fills most of the picture above it". That is the 에베소서 2:8 sky-above-the-room
+    # trap verbatim, and rule D says registering a family here is part of adding it. Found while
+    # tracing the 디모데전서 2:4 ruled line; 디모데전서 1:5 (cathedral, 10-05) is the lowest-liked
+    # reel in the last 29 at 8.
+    "cathedral", "candle", "flowers_vase",
 }
 
 def _weave():
@@ -533,10 +541,22 @@ ANCHOR = {
 OUTDOOR_TOP = (
     "COMPOSITION: a wide, unhurried frame with the horizon LOW, roughly a third of the way up, so "
     "that open sky fills most of the picture above it — the sky is the subject. Everything with "
-    "detail or texture sits along the bottom and nothing rises into the sky. The light must be "
+    "detail or texture sits low in the frame. The light must be "
     "decisive: either an overcast sky reading as one soft luminous field, or a clear sky at dusk "
     "gone deep and dark. Never a middling grey, and always real sky with its own cloud and "
-    "gradation. Simple and unhurried, with a lot of quiet space."
+    "gradation. Simple and unhurried, with a lot of quiet space. "
+    # Some outdoor scenes have no horizon at all — woodland, a lane between walls, a gorge. Asked
+    # for a low horizon anyway, the model obeyed the only way it could: it sliced the forest off
+    # flat and put blank sky above the cut (2026-10-06 디모데전서 2:4, a ruled line at 32% height,
+    # 90% of columns breaking at one row). The instruction, not the scene, chose where that line
+    # fell — "roughly a third of the way up" is exactly where it landed.
+    # Named objects stay out of here on purpose — rule A-2e. The framing says WHERE things go and
+    # HOW edges behave; the scene sentence is the only place that decides WHAT they are.
+    "If THIS scene has no horizon of its own, do NOT invent one, and do NOT cut anything off to "
+    "make room for one. Whatever opens above this scene is the bright expanse instead. Whatever "
+    "meets that brightness must meet it RAGGEDLY and irregularly, each part ending at its own "
+    "height, the way things in this scene actually end. Nothing in the frame may be sliced off by "
+    "a straight horizontal line."
 )
 INDOOR_TOP = (
     "COMPOSITION: photographed straight on from low down, so a tall expanse of the room's own wall "
@@ -712,6 +732,79 @@ def check_composition(image_path):
 SEAM_JUMP = 7.0      # brightness levels (0-255) between two adjacent rows
 SEAM_RATIO = 30.0    # …and that many times the image's own typical row-to-row change
 
+# ---- the ruled line across the TOP of the frame --------------------------------------------
+#
+# seam_score() below cannot see this one, by construction. It skips the rows between 18% and 45%
+# of the height — written when the verse band was thought to be a source of false alarms — and
+# that is precisely the band OUTDOOR_TOP asks the sky to end in. 2026-10-06 디모데전서 2:4 shipped
+# a forest guillotined by a dead-straight line at y=617 of 1920 (32.1%), and the gate reported
+# `ok`, because the only rows that could have shown it were the excluded ones:
+#
+#     seam_score as shipped        jump  5.6   18x   at 74.5%   → ok, published
+#     the same frame, no exclusion jump 67.8  206x   at 32.1%   → stacked
+#
+# The exclusion was never needed: has_seam() only ever runs inside generate_checked(), on the
+# raw background BEFORE any text is composited, so there is no text in the image to be fooled by.
+#
+# Widening seam_score instead was tried against the 29 reels on the media release and rejects
+# too much: on brightness alone a real table edge measures jump 48.8 / 431x and a true field
+# horizon 22.9 / 96x, both of them fine pictures. Brightness is the wrong question. What RULES A-4
+# and F-2 actually forbid is a LINE — so measure straightness, not contrast: the fraction of
+# columns that all break at the SAME row. Measured over those 29 published reels, worst row in
+# the upper 45% of the frame:
+#
+#     10-06 디모데전서 2:4  forest_path   0.924   ← reported
+#     09-29 신명기 26:9     snowfall      0.283   ← worst clean frame
+#     the other 27                        ≤0.217, median 0.000
+#
+# A true horizon is a straight line too, and is allowed — but in this account's own compositions
+# it is never up here: OUTDOOR_TOP asks for it "a third of the way up" (y/h ≈ 0.67) and every
+# clean frame's strongest straight step sits below 45%. So the window, not the shape, is what
+# keeps a real sea horizon out of this gate's way.
+#
+# Only the outer 7% of width is sampled. col_w never exceeds 0.85 of the frame (generate.py), so
+# no glyph can ever land there — which keeps this honest if it is ever pointed at a composited
+# frame. Verified on the published 디모데전서 2:4 frame: 0.0 across every text row, 0.914 at y=617.
+RULED_FRAC = 0.55    # of the sampled columns, all breaking at one row
+RULED_STEP = 25      # …by at least this many brightness levels
+RULED_UPTO = 0.45    # only the top of the frame; a true low horizon lives below this
+RULED_FROM = 0.08    # not the frame's own edge
+RULED_MARGIN = 0.07  # sample this much of the width at each side — never any text
+
+
+def ruled_line(image_path):
+    """(frac, y) for the straightest full-width horizontal break in the TOP of the frame.
+
+    Not "is there a brightness jump" (seam_score asks that) but "do all the columns break in the
+    same place" — a ruled line is a line whether it is subtle or loud. A photograph's canopy,
+    rooftops or hills meet the sky raggedly, column by column; a pasted panel, or a scene sliced
+    off to make room for one, breaks everywhere at once."""
+    from PIL import Image
+    import numpy as np
+    a = np.asarray(Image.open(image_path).convert("L"), dtype=float)
+    h, w = a.shape
+    m = max(1, int(w * RULED_MARGIN))
+    step = np.abs(np.diff(np.concatenate([a[:, :m], a[:, -m:]], axis=1), axis=0))
+    frac = (step > RULED_STEP).mean(axis=1)
+    lo, hi = int(h * RULED_FROM), max(int(h * RULED_FROM) + 1, int(h * RULED_UPTO))
+    y = lo + int(np.argmax(frac[lo:hi]))
+    return float(frac[y]), y
+
+
+def has_ruled_line(image_path):
+    """True if a straight line rules across the top of the render (RULES A-4, F-2). Never raises —
+    a gate that cannot run must not be able to stop a post (rule 0-3)."""
+    try:
+        frac, y = ruled_line(image_path)
+    except Exception as e:
+        print(f"ruled-line check skipped ({e})")
+        return False
+    bad = frac >= RULED_FRAC
+    print(f"ruled line: {frac * 100:.0f}% of columns break at {y}px "
+          f"(limit {RULED_FRAC * 100:.0f}%) → {'RULED' if bad else 'ok'}")
+    return bad
+
+
 
 def seam_score(image_path):
     """(jump, ratio, y) for the worst horizontal edge in the image — a MEASUREMENT, not a question.
@@ -834,6 +927,10 @@ def generate_checked(dest, index=0, placement=("center", "middle"), aspect="3:4"
         # composite. Two independent gates, and the cheap deterministic one is not the junior.
         if ok and has_seam(dest):
             ok, reason = False, "stacked composite (measured)"
+        # Straightness, not brightness — and in the band seam_score is blind to. 디모데전서 2:4
+        # (10-06) passed every other gate here nine times with a forest cut off by a ruled line.
+        if ok and has_ruled_line(dest):
+            ok, reason = False, "a straight line rules across the top of the frame (measured)"
         if ok and too_cramped(dest):
             ok, reason = False, "the picture starts too close under the verse (measured)"
         print(f"composition check {a} (scene {used} {SCENE_CATS[used]}): ok={ok} :: {reason}")
