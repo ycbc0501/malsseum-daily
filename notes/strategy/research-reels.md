@@ -4,7 +4,14 @@
 - 대상 계정: @saintseoul_studio — 팔로워 214, 1일 2회 릴스(05:00 / 19:00 KST),
   7.7s / 15.3s / 23s, AI 영상, 무음성·무얼굴, 찬송가 instrumental, 한국어 말씀 온스크린 텍스트(정적)
 - 문제: 좋아요 15 → 24~41 (2주)인데 팔로워 30일 +18. **비팔로워 도달이 없다**는 신호.
-- 상태: **작업 중 (incremental)** — 발견되는 대로 갱신
+- 상태: **1차 완료 (2026-10-06)** — §1~§10 + 판정표 작성됨
+
+> ## ⚠️ 이 문서를 읽는 사람이 먼저 알아야 할 것
+> 리서치 도중 결론이 **뒤집혔다.** 처음 질문은 "릴스를 어떻게 더 잘 만들까"였지만,
+> 계정 기록(`notes/reach-recovery-2026-09-14.md`)과 Instagram 공식 문언을 맞춰 보면
+> **이 계정은 원본성(「퍼온 콘텐츠」) 추천 제한 상태이고 비팔로워 배포가 사실상 0이다.**
+> 시청자 내 좋아요율은 7~14%로 건강하다 — **보여주면 좋아한다. 안 보여주고 있을 뿐이다.**
+> **→ §10을 먼저 읽을 것.** §1~§9의 최적화는 제재가 풀린 뒤에야 측정 가능하다.
 
 ## 출처 등급 태그
 - `[1차 출처]` — Instagram/Meta 공식, Mosseri 발언, 플랫폼 헬프 문서, 엔지니어링 블로그
@@ -667,3 +674,93 @@ if you think they made a mistake"** 할 수 있다 `[1차 출처]`.
 5. **시그니처 오디오 고정** (Meta Sound Collection 내) — 규칙 개정 동반. §6.3
 6. **도달·공유·저장 계측 구축.** §9.1
 7. (제재 해제 후) **길이 중심을 23초+로, 단계적 텍스트 공개, Trial Reels A/B.** §2, §5, §4
+
+---
+
+## 출처 목록
+
+### 1차 출처 (Instagram / Meta 공식)
+- Adam Mosseri, "Instagram Ranking Explained", 2023-05-31 —
+  https://about.instagram.com/blog/announcements/instagram-ranking-explained
+  (릴스 4대 예측: 리셰어 / 완주 / 좋아요 / **오디오 페이지 방문**. 신호 4번에 팔로워 수·참여 수준)
+- "Breaking Down How Instagram Search Works", 2021-08-25 —
+  https://about.instagram.com/blog/announcements/break-down-how-instagram-search-works
+  (인덱싱: usernames, bios, captions, hashtags, places. **"in the caption, not the comments"**.
+  키워드 검색은 영어 우선, 타 언어는 향후)
+- "Trial reels: Try content with non-followers first", 2024-12-10 —
+  https://creators.instagram.com/blog/instagram-trial-reels
+  (비팔로워 우선 노출, ~24시간 후 지표, 첫 72시간 기준 자동 공유. **자격 요건 미명시**)
+- Meta, "Our Approach to Labeling AI-Generated Content and Manipulated Media",
+  2024-04-05 (2024-07-01 "AI info" 개칭, 2024-09-12 정교화) —
+  https://about.fb.com/news/2024/04/metas-approach-to-labeling-ai-generated-content-and-manipulated-media/
+  (**AI 생성이라는 이유만으로 다운랭크 없음. 미공개 벌칙 명시 없음**)
+- Instagram 앱 **계정 상태** 화면 문언 (2026-09-14 자가 전사) —
+  「복제된 콘텐츠 또는 회원님이 권리를 소유하지 않은 콘텐츠를 공유하는 것은 추천
+  가이드라인을 준수하지 않는 행위입니다」 + [검토 요청]
+- Mosseri 발언 (2차 인용): 2025-01-22 3대 신호 **watch time / likes per reach /
+  sends per reach**, "Likes are slightly more important for connected content, and
+  sends are slightly more important for unconnected content";
+  "Contrary to popular belief, hashtags are not a way to get more reach";
+  "there's no official shadow banning program, but we are going to limit the reach of
+  certain accounts under certain circumstances ... you can go check that out in Account Status"
+- 2025-04-21 views 지표 통일 (impressions/plays/video views 폐기, **리플레이 합산**)
+- 2024-12-13 해시태그 팔로우 기능 제거
+- 2025-01 **profile-views API 지표 폐기**
+
+### 대규모 조사 (표본 명시)
+- **Metricool 2026 Instagram Study** — n = **24,364,803 포스트 / 375,118 계정**,
+  2025-01~02 vs 2026-01~02 — https://metricool.com/press-release-instagram-study-2026/
+  (평균 릴 시청 시간 ~4초→**8.5초**; 최적 **30~60초**(45~60초 최고); 릴스 참여율
+  YoY **+24.76%**; 단일 이미지 도달 −21.96%/참여 −45.98%; 해시태그 사용 시 조회
+  **−31.70%**·상호작용 −33.89%; 댓글 CTA **+202.78%**, 질문 **+36.70%**;
+  **1만 미만 계정 중 21%만 성장**)
+- **Socialinsider, Instagram Reels Statistics 2026** — n = **140,000 릴스**,
+  비즈니스 계정, 2026-01~06 — https://www.socialinsider.io/blog/instagram-reels-statistics/
+  (도달률: 30초 미만 **5.20%** / 30~60초 **5.60%** / 60~90초 5.30% / 120초+ 3.50%.
+  계정 규모별 도달률: 1~5K **9.78%**, 5~10K 7.55%, 50~100K 5.60%.
+  **스킵률 1~5K = 65.50%**. 게시 빈도 중위: 1~5K = **월 8건**)
+- **Buffer, How Often Should You Post on Instagram** — n = **200만+ 포스트 / 10만 계정**
+  — https://buffer.com/resources/how-often-to-post-on-instagram/
+  (주 1~2회 기준선 대비 포스트당 도달 주 3~5회 +12% / 6~9회 +18% / **10회+ +24%**,
+  최다 게시 계정에 벌점 없음. 26주 중 20주+ 게시 = 포스트당 참여 **약 5배**)
+- Buffer, How the Instagram Algorithm Works —
+  https://buffer.com/resources/instagram-algorithms/
+  (이상적 길이 30~90초; 3분 이하만 비팔로워 추천; "DM shares are king")
+
+### 2차 출처 (신뢰 높음 — 정책 보도)
+- TechCrunch, 2024-04-30, "Instagram is updating its ranking systems to surface more
+  content from smaller original creators" (**"two or more identical pieces of content
+  → only recommend the original"**; 애그리게이터 추천 제외; **30일 내 10회 초과**;
+  **마지막 비원본 게시 후 30일 경과 시 자격 회복**; 라이선스 퍼블리셔 예외)
+- TechCrunch / Tubefilter / Forbes, 2025-07-14~15, Meta의 Facebook "unoriginal
+  content" 단속 (**"reused text"** 포함, 수익화 차단 + 배포 축소, "AI slop"·"repetitive" 표적)
+- TechCrunch / PetaPixel, 2026-04-30, Instagram 사진·캐러셀 확대
+  (original = **"content someone wholly created or reflects their unique perspective"**;
+  **materially edited**는 original — "meme templates or popular clips ... adding an
+  element that **enhances** the content" (**unique text, creative edits, voiceover**);
+  **low-effort edits(워터마크·속도 변경)는 불인정**; 잃는 것은 "recommendations
+  across the app, including users' feeds and the 'Discover' tab")
+- TechCrunch, 2026-08-31, "Instagram puts new limits on undisclosed AI profiles"
+  ("AI creator"→**"AI-generated profile"** 개칭; 미라벨 프로필은 릴스·Explore에서
+  비팔로워 추천 제외; **AI 생성 인물이 등장하는 프로필 한정, 단순 AI 도구 사용자는 제외**;
+  자진 라벨 시 도달 변화 없음)
+
+### 자가 관측 (이 저장소의 1차 기록 — 최상급 증거)
+- `notes/reach-collapse-2026-08-27.md` — 퍼온 콘텐츠 플래그 10건 최초 발견
+- `notes/reach-recovery-2026-09-14.md` — 계정 상태 전사, 「도달 제한」 확인,
+  아카이브가 해결로 카운트되지 않음, 릴 55건 동일성 실측, **캡션 한 줄 4/4 플래그 실패**
+- `notes/strategy/STRATEGY.md` — 비용 실측, 팔로워 +18/30일, 도달 데이터 공백
+- 2026-09-12~17 퍼온 콘텐츠 목록 7건 직접 관측 (조회 57~142 vs 미플래그 103/133/222)
+
+### 인용 금지 — 근거 없는 수치 `[업계 통설]`
+- "Mosseri: sends가 likes보다 **3~5배** 무겁다" — **존재하지 않는 인용.** 실제 문언은
+  "slightly more important". 이 수치를 싣는 페이지들은 서로를 인용하는 AI 생성 블로그다.
+- "트렌딩 오디오가 도달 **29~33%** 높다 / 참여 42% / 바이럴 릴의 79%" — 표본·방법·원출처 불명
+- "3초 내 얼굴이 유지율 **35%** 높인다 / 바이럴 릴의 72%가 3초 훅" — 표본 불명
+- "3초 스킵률 20% 미만 목표 / hold rate 40~50%" — 표본 불명
+- "Trial Reels는 팔로워 **1,000명 이상** 필요" — 공식 문서 미확인
+- "해시태그가 30개→5개로 제한" / "alt text는 강한 SEO 신호" — 공식 문서 미확인
+- "프로필 방문→팔로우 전환율 월 평균 **13.5%**" — profile-views API 폐기(2025-01) 이후
+  신뢰 불가
+- "애그리게이터 도달 **60~80%** 하락" — 수치 출처 불명
+- Instagram "audition system" 단계별 수치 — 공식 확인 없음
