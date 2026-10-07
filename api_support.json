@@ -1,0 +1,515 @@
+{
+ "account_fields": {
+  "biography": {
+   "ok": true,
+   "sample": "일상이 되는 성경"
+  },
+  "followers_count": {
+   "ok": true,
+   "sample": 215
+  },
+  "follows_count": {
+   "ok": true,
+   "sample": 186
+  },
+  "has_profile_pic": {
+   "ok": true,
+   "sample": true
+  },
+  "id": {
+   "ok": true,
+   "sample": "17841416389585321"
+  },
+  "is_published": {
+   "ok": true,
+   "sample": true
+  },
+  "media_count": {
+   "ok": true,
+   "sample": 195
+  },
+  "name": {
+   "ok": true,
+   "sample": "saint seoul"
+  },
+  "profile_picture_url": {
+   "ok": true,
+   "sample": "<url, 395 chars>"
+  },
+  "shopping_product_tag_eligibility": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false
+  },
+  "username": {
+   "ok": true,
+   "sample": "saintseoul_studio"
+  },
+  "website": {
+   "ok": true,
+   "sample": null
+  }
+ },
+ "account_insights": {
+  "accounts_engaged": {
+   "breakdown": null,
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "comments": {
+   "breakdown": null,
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "comments|media_product_type": {
+   "breakdown": "media_product_type",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "engaged_audience_demographics": {
+   "breakdown": null,
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "lifetime"
+  },
+  "engaged_audience_demographics|age": {
+   "breakdown": "age",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "lifetime"
+  },
+  "engaged_audience_demographics|city": {
+   "breakdown": "city",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "lifetime"
+  },
+  "engaged_audience_demographics|country": {
+   "breakdown": "country",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "lifetime"
+  },
+  "engaged_audience_demographics|gender": {
+   "breakdown": "gender",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "lifetime"
+  },
+  "follower_demographics": {
+   "breakdown": null,
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "lifetime"
+  },
+  "follower_demographics|age": {
+   "breakdown": "age",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "lifetime"
+  },
+  "follower_demographics|city": {
+   "breakdown": "city",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "lifetime"
+  },
+  "follower_demographics|country": {
+   "breakdown": "country",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "lifetime"
+  },
+  "follower_demographics|gender": {
+   "breakdown": "gender",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "lifetime"
+  },
+  "follows_and_unfollows": {
+   "breakdown": null,
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "follows_and_unfollows|follow_type": {
+   "breakdown": "follow_type",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "likes": {
+   "breakdown": null,
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "likes|media_product_type": {
+   "breakdown": "media_product_type",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "profile_links_taps": {
+   "breakdown": null,
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "profile_links_taps|contact_button_type": {
+   "breakdown": "contact_button_type",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "reach": {
+   "breakdown": null,
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "reach|follow_type": {
+   "breakdown": "follow_type",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "reach|media_product_type": {
+   "breakdown": "media_product_type",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "replies": {
+   "breakdown": null,
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "reposts": {
+   "breakdown": null,
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "saves": {
+   "breakdown": null,
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "saves|media_product_type": {
+   "breakdown": "media_product_type",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "shares": {
+   "breakdown": null,
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "shares|media_product_type": {
+   "breakdown": "media_product_type",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "total_interactions": {
+   "breakdown": null,
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "total_interactions|media_product_type": {
+   "breakdown": "media_product_type",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "views": {
+   "breakdown": null,
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "views|follower_type": {
+   "breakdown": "follower_type",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  },
+  "views|media_product_type": {
+   "breakdown": "media_product_type",
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "period": "day"
+  }
+ },
+ "base": "https://graph.facebook.com/v21.0",
+ "checked": "2026-10-07 14:54 KST",
+ "login": "Facebook Login",
+ "media_fields": {
+  "alt_text": {
+   "ok": true,
+   "present": false,
+   "sample": null
+  },
+  "boost_eligibility_info": {
+   "ok": true,
+   "present": true,
+   "sample": "{\"eligible_to_boost\": true}"
+  },
+  "caption": {
+   "ok": true,
+   "present": true,
+   "sample": "이 모든 것 위에 사랑을 더하라 이는 온전하게 매는 띠니라\n[골로새서 3:14]\n\n온전함은 개별적인 노력의 합이 아니라 그 모든 것을 묶는 사랑입니다."
+  },
+  "comments_count": {
+   "ok": true,
+   "present": true,
+   "sample": 1
+  },
+  "id": {
+   "ok": true,
+   "present": true,
+   "sample": "17931185382408041"
+  },
+  "is_ai_generated": {
+   "ok": true,
+   "present": true,
+   "sample": false
+  },
+  "is_comment_enabled": {
+   "ok": true,
+   "present": true,
+   "sample": true
+  },
+  "is_shared_to_feed": {
+   "ok": true,
+   "present": true,
+   "sample": true
+  },
+  "like_count": {
+   "ok": true,
+   "present": true,
+   "sample": 4
+  },
+  "media_audio_type": {
+   "ok": true,
+   "present": true,
+   "sample": "ORIGINAL_SOUND"
+  },
+  "media_product_type": {
+   "ok": true,
+   "present": true,
+   "sample": "REELS"
+  },
+  "media_type": {
+   "ok": true,
+   "present": true,
+   "sample": "VIDEO"
+  },
+  "permalink": {
+   "ok": true,
+   "present": true,
+   "sample": "https://www.instagram.com/reel/DeKmqJGEWLW/"
+  },
+  "reposts_count": {
+   "ok": true,
+   "present": true,
+   "sample": 0
+  },
+  "saved_count": {
+   "ok": true,
+   "present": false,
+   "sample": null
+  },
+  "shares_count": {
+   "ok": true,
+   "present": true,
+   "sample": 0
+  },
+  "shortcode": {
+   "ok": true,
+   "present": true,
+   "sample": "DeKmqJGEWLW"
+  },
+  "thumbnail_url": {
+   "ok": true,
+   "present": true,
+   "sample": "<url, 588 chars>"
+  },
+  "timestamp": {
+   "ok": true,
+   "present": true,
+   "sample": "2026-10-06T20:07:11+0000"
+  },
+  "total_comments_count": {
+   "ok": true,
+   "present": true,
+   "sample": 1
+  },
+  "total_like_count": {
+   "ok": true,
+   "present": true,
+   "sample": 4
+  },
+  "total_views_count": {
+   "ok": true,
+   "present": true,
+   "sample": 52
+  }
+ },
+ "media_metrics": {
+  "comments": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "18097426379098134"
+  },
+  "crossposted_views": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "17931185382408041"
+  },
+  "facebook_views": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "18097426379098134"
+  },
+  "follows": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "18097426379098134"
+  },
+  "ig_reels_avg_watch_time": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "17931185382408041"
+  },
+  "ig_reels_video_view_total_time": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "17931185382408041"
+  },
+  "impressions": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "18097426379098134"
+  },
+  "likes": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "18097426379098134"
+  },
+  "link_clicks": {
+   "error": "no media of type STORY to probe against",
+   "ok": null
+  },
+  "navigation": {
+   "error": "no media of type STORY to probe against",
+   "ok": null
+  },
+  "profile_activity": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "18097426379098134"
+  },
+  "profile_visits": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "18097426379098134"
+  },
+  "reach": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "18097426379098134"
+  },
+  "reels_skip_rate": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "17931185382408041"
+  },
+  "replies": {
+   "error": "no media of type STORY to probe against",
+   "ok": null
+  },
+  "reposts": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "18097426379098134"
+  },
+  "saved": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "18097426379098134"
+  },
+  "shares": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "18097426379098134"
+  },
+  "total_comments": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "18097426379098134"
+  },
+  "total_interactions": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "18097426379098134"
+  },
+  "total_likes": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "18097426379098134"
+  },
+  "total_views": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "18097426379098134"
+  },
+  "views": {
+   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "ok": false,
+   "probed_on": "18097426379098134"
+  }
+ },
+ "probed_media": [
+  {
+   "id": "17931185382408041",
+   "product_type": "REELS"
+  },
+  {
+   "id": "18080673410370394",
+   "product_type": "REELS"
+  },
+  {
+   "id": "18632946685003547",
+   "product_type": "REELS"
+  },
+  {
+   "id": "18019212710944687",
+   "product_type": "REELS"
+  },
+  {
+   "id": "18331342678274869",
+   "product_type": "REELS"
+  },
+  {
+   "id": "18097426379098134",
+   "product_type": "FEED"
+  }
+ ],
+ "scopes": [
+  "instagram_basic",
+  "instagram_content_publish",
+  "instagram_manage_comments",
+  "pages_read_engagement",
+  "pages_show_list",
+  "public_profile"
+ ]
+}

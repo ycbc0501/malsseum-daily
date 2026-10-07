@@ -121,6 +121,45 @@ scopes: pages_show_list · instagram_basic · instagram_manage_comments
 **`python3 ig_doctor.py`로 확인.** 절차: [notes/insights-token-2026-10-07.md](notes/insights-token-2026-10-07.md)
 비즈니스 관리자 경로(SMS 2FA에 막혔던)가 풀렸다면 그쪽이 더 낫다 — 만료 없는 토큰 하나.
 
+## 2026-10-07 심야 2 — **전수 수집. 그리고 권한 없이도 오고 있었다** (STRATEGY.md §17)
+
+원석님 지시: **"독스에 있는 거 다 받고 거기서 우리가 쓸 걸 정해. 예외 두지 말고."**
+§16의 "권한 하나만 승인하면 10칸 자동"도 **또 일부만 맞았다.** 독스를 전수로 읽고 실제로 쳐보니
+**권한과 무관하게 오늘부터 오는 칸이 따로 있었다.** 평범한 "필드"는 인사이트 "지표"와 다른 문이다.
+```
+total_views_count=52  shares_count=0  reposts_count  total_like_count  total_comments_count
+copyright_check_information={"status":"complete","matches_found":false}   ← 원본성(§7.1)
+boost_eligibility_info={"eligible_to_boost":true}  media_audio_type  is_shared_to_feed
+```
+`metrics.py note()` 주석에 내가 **"API는 이것들 대부분을 줄 수 없다"**고 써놨다. 필드 하나 거리였다.
+§14 게시물 화면 · §15 인사이트 안쪽 · §16 에러 메시지 · **§17 독스의 다른 절** — 네 번 같은 병.
+
+- **손입력 대조 통과:** `shares_count` **3/3 정확 일치**, `total_views_count` 13/13에서 손입력
+  이상(스냅샷 이후 증가분만큼). → 손입력을 자동으로 갈아끼웠다. `saved_count`는 늘 `None`
+  (소유자 전용) → **저장만 인사이트 권한 전용으로 남는다.**
+- **원장이 즉시 커졌다:** 조회 있는 게시물 **14 → 83**, 공유 **3 → 83**, 저작권 결과 0 → 7.
+- **§6 비용 결정이 처음으로 통제된 데이터 위에 섰다.** 기간을 09-19 이후로 고정한 세그먼트별
+  조회 중앙값 = 266/312/314/322/261 — **평평하다.** E-0c·E-0d 유지가 n=3이 아니라 **n=32** 위에.
+  §14.7의 "짧은 릴에 불리한 신호"는 폐기.
+- **반증:** 보고서의 주제별 표는 거의 전부 **날짜**다. 주제가 블록 발행이라 평안(중앙일 09-11,
+  조회 90)·담대(09-16, 120)가 정확히 제재 기간이고 월별 중앙값은 8월 289 · **9월 170** · 10월 317.
+  **"주제가 공유를 만든다"는 지지되지 않는다.** 주제 효과를 알려면 **교차 배치**가 필요하다(G-3.9).
+
+**코드:** **`ig_catalog.py` 신규** — 공식 레퍼런스 전사가 요청의 단일 출처(묶음·단건·계정 행이
+전부 파생, 손으로 적는 변경 금지). 조건부 실패 지표는 `bundle: False`로 격리하고 묶음은
+`media_product_type`별로 만든다. **`ig_probe.py` 신규** — 전 항목을 하나씩 쳐보고
+`api_support.json`에 판정을 남기며 **❌가 "없다"의 증거가 아니라고 스스로 경고**한다;
+`--if-stale`로 25일마다 자동 재측정. **`insights.py`** — 필드 23개 전수(+`node`), **계정 인사이트
+신규 차원 → `account.json`**(`reach|follow_type` = 비팔로워 도달 직접), 거부는 `errors`에 기록,
+목록 전체를 죽이는 `copyright_check_information`은 분리. **출처 표시 명시화**(`_api`/`_field`/
+`_manual`) — 추론했던 첫 구현이 골로새서 3:14 좋아요를 **2에 동결**시켰다(API는 4).
+**`save_ledger.sh`의 조용한 유실 경로 제거** — `git add`에 없는 파일이 섞이면 전체가 실패하고
+`nothing to commit`으로 끝나 **metrics.json까지 저장되지 않았다.**
+`RULES.md` G-3 1~10 · `check_rules.py` 11개 · `test_catalog.py` 44개(역테스트 5종 확인).
+
+**원석님 1회 작업은 §16 그대로 유효**(권한 승인 → `reach`·`saved`·`reels_skip_rate`·계정 전체).
+그 전에도 위 7칸은 매일 자동으로 쌓인다.
+
 **비용 — 2026-10-07 수정 완료 ✅.** STRATEGY.md §6의 수정안을 구현했다(`RULES.md` E-0c·E-0d,
 `daily_post.CHAIN_TRIES = 1` + `chain_ok` 게이트, `test_veo_budget.py`). **오프닝이 1회에
 검사를 통과하지 못하면 연결을 아예 시작하지 않고, 연결은 take 1회뿐이다.** 근거: 09-23 이후

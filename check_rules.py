@@ -334,6 +334,54 @@ def checks():
     # instead of going quiet the moment one post has it.
     yield "G2.7 the views-as-denominator note survives partial reach", (
         "if exact < len(scored)" in inspect.getsource(_m.report))
+
+    # --- G-3 collect everything the docs document; choose later ------------------------------
+    import ig_catalog as _c
+    import ig_probe as _pr
+    # G-3.1 The request list must be DERIVED from the catalog. A hand-typed list at the request
+    # site is how `reels_skip_rate` stayed unrequested while being named the #1 problem.
+    _psrc = inspect.getsource(_p)
+    yield "G3.1 the request bundles are derived from ig_catalog, not hand-typed", (
+        "ig_catalog.tiers(" in _psrc
+        and _p.INSIGHT_TIERS[0] == _c.tiers(_c.REELS)[0]
+        and set(_p.INSIGHT_SINGLES) == (set(_c.media_metrics(_c.REELS, bundle_only=True))
+                                        | set(_c.media_metrics(_c.REELS, fragile_only=True))))
+    # G-3.2 One throw-prone name in a bundle blanks every other metric in the same request.
+    yield "G3.2 no conditional-failure metric rides in any bundle", all(
+        not (set(t) & {n for n, s in _c.MEDIA_METRICS.items() if not s["bundle"]})
+        for pt in (_c.REELS, _c.FEED, _c.STORY) for t in _c.tiers(pt))
+    yield "G3.2 bundles are built per media product type", (
+        "product_type" in inspect.signature(_p.insights).parameters
+        and set(_c.tiers(_c.FEED)[0]) != set(_c.tiers(_c.REELS)[0]))
+    # G-3.3 copyright_check_information fails a whole /media page; it must be fetched alone.
+    yield "G3.3 the listing-fatal field is kept out of the batch", (
+        _c.MEDIA_FIELDS_SOLO
+        and not (set(_c.MEDIA_FIELDS_SOLO) & set(_c.media_fields()))
+        and set(_c.MEDIA_FIELDS_SOLO) <= set(_c.media_fields(solo=True)))
+    # G-3.4 The plain fields that need no insights scope must actually be requested.
+    yield "G3.4 the scope-free count fields are in the listing", (
+        {"total_views_count", "shares_count", "reposts_count"} <= set(_c.media_fields()))
+    # G-3.5 Provenance written down, never deduced from a missing marker (the likes=2 freeze).
+    _isrc = inspect.getsource(_i.backfill)
+    yield "G3.5 provenance is read from an explicit marker", (
+        '_api' in _isrc and 'FIELD_AS_METRIC_ORDER' in _isrc
+        and 'got.get(f"{metric}_api")' in _isrc)
+    yield "G3.5 an endpoint answer is marked so a plain field stops overwriting it", (
+        "DUAL_SOURCE" in _isrc and "DUAL_SOURCE" in inspect.getsource(_m.refresh))
+    # G-3.6 The account dimension, and the breakdown that replaces an inference with a number.
+    yield "G3.6 account insights are collected with every documented breakdown", (
+        hasattr(_i, "account")
+        and ("reach", "follow_type") in {(m, bd) for m, _p2, _t, bd, _tf
+                                         in _c.account_requests() if bd})
+    yield "G3.6 the account ledger is its own file, keyed by date", (
+        _i.ACCOUNT.endswith("account.json") and _i.ACCOUNT != _m.FILE)
+    # G-3.7 A refusal and a zero are different facts; the refusal has to be on disk.
+    yield "G3.7 rejected account metrics are recorded, not just logged", (
+        'errors' in inspect.getsource(_i.account)
+        and 'day.setdefault("errors"' in inspect.getsource(_i.account))
+    # G-3.8 The probe must say out loud that its ❌ is not evidence a metric is unavailable.
+    yield "G3.8 the probe warns that (#10) cannot prove absence", (
+        "NOT 'this metric does not exist'" in inspect.getsource(_pr.show))
     import fetch_veo
     yield "E3 retries escalate the demand", (
         len(fetch_veo.CALMER) == 3 and "frozen photograph" in fetch_veo.CALMER[2].lower()

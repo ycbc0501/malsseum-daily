@@ -62,7 +62,12 @@ def _style(path):
     whole-file conflict this script exists to prevent (2026-09-17).
 
     Unknown ledgers keep the historical compact form."""
-    if os.path.basename(path) == "metrics.json":
+    # account.json and api_support.json are written the same way metrics.json is
+    # (insights.account(), ig_probe._write()). Leaving them out of this list would make every
+    # merge rewrite the whole file compactly, which is precisely the whole-file conflict this
+    # function exists to prevent — and account.json is appended to by the same daily workflow
+    # that writes metrics.json, so it would hit it immediately.
+    if os.path.basename(path) in ("metrics.json", "account.json", "api_support.json"):
         return {"indent": 1, "sort_keys": True}
     return {}
 

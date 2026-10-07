@@ -134,7 +134,7 @@ def spend(days=30):
     return per_day * 30
 
 
-def prune_deleted(token=None, limit=50):
+def prune_deleted(token=None, limit=50, ig_user_id=None):
     """Drop entries for posts Instagram no longer has. Returns the refs removed.
 
     ledger_merge is a union — by design, so two bots writing at once never lose each other's
@@ -149,7 +149,11 @@ def prune_deleted(token=None, limit=50):
     """
     import post_instagram
     try:
-        live = post_instagram.recent_media(limit=limit, token=token)
+        # The account id has to be passed too, not just the token. A caller holding both from
+        # a secrets file still ended up asking for `/None/media`, and the resulting 400 printed
+        # as "prune skipped" — which reads like "nothing to prune" and left a hand-deleted
+        # post holding its verse out of rotation.
+        live = post_instagram.recent_media(limit=limit, token=token, ig_user_id=ig_user_id)
     except Exception as e:
         print(f"prune skipped ({e}) — not removing anything on a failed lookup")
         return []
@@ -201,6 +205,14 @@ def refresh(token=None, days=MATURE_DAYS):
             for _f in APP_FIELDS:
                 if got.get(_stored(_f)) is not None:
                     merged.pop(f"{_stored(_f)}_manual", None)
+            # Same for the plain-field stand-ins, and mark what the endpoint answered so the
+            # next backfill does not overwrite a real metric with a field that merely counts
+            # something similar. See the provenance note in insights.backfill().
+            import ig_catalog
+            for _m in ig_catalog.DUAL_SOURCE:
+                if got.get(_m) is not None:
+                    merged.pop(f"{_m}_field", None)
+                    merged[f"{_m}_api"] = True
             entry["insights"] = merged
             entry["fetched"] = now.isoformat(timespec="seconds")
             touched += 1

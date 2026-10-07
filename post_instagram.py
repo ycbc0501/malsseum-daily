@@ -16,6 +16,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+import ig_catalog
+
 GRAPH = "https://graph.facebook.com/v21.0"
 
 
@@ -246,23 +248,23 @@ def reply(comment_id, message, token=None):
 #
 # NOT in the API at any tier, and therefore the only numbers that stay hand-entered:
 #   주요 조회 출처 (릴스 탭 / 탐색 탭 / 피드)  ·  또래 비교 (더 높음/더 낮음)  ·  팔로우
-INSIGHT_TIERS = [
-    ("reach", "likes", "comments", "shares", "saved", "total_interactions", "views",
-     "reels_skip_rate", "reposts", "ig_reels_avg_watch_time", "ig_reels_video_view_total_time"),
-    ("reach", "likes", "comments", "shares", "saved", "total_interactions", "views",
-     "ig_reels_avg_watch_time"),
-    ("reach", "likes", "comments", "shares", "saved", "total_interactions", "views"),
-    ("reach", "likes", "comments", "shares", "saved", "total_interactions"),
-    ("reach",),
-]
+# Both of these are now DERIVED from ig_catalog.py rather than typed out here. The list that
+# used to live at this spot was hand-picked from memory, and that is precisely how
+# `reels_skip_rate` — the metric §15 named the account's #1 problem — sat in Meta's reference
+# for months without ever being requested. The catalog is a transcription of the reference; a
+# metric is in the request because the docs document it, not because someone remembered it.
+INSIGHT_TIERS = ig_catalog.tiers(ig_catalog.REELS)
 
 # Asked for one at a time when every bundle fails — a bundle is all-or-nothing, so one
-# unsupported name blanks the rest. Ordered by how much the account actually needs them.
-INSIGHT_SINGLES = ("views", "reach", "shares", "saved", "reels_skip_rate", "reposts",
-                   "ig_reels_avg_watch_time", "total_interactions")
+# unsupported name blanks the rest. This list is EVERY documented REELS metric, bundle-safe
+# ones in priority order followed by the fragile ones (documented to throw when the media was
+# never cross-posted to Facebook, or restricted to the Facebook-Login flavour of the API).
+# Alone is the only place the fragile ones can safely be asked: a rejection costs one call.
+INSIGHT_SINGLES = (ig_catalog.media_metrics(ig_catalog.REELS, bundle_only=True)
+                   + ig_catalog.media_metrics(ig_catalog.REELS, fragile_only=True))
 
 
-def insights(media_id, token=None, base=None):
+def insights(media_id, token=None, base=None, product_type=None, extras=()):
     """Performance metrics for one published media → {metric: value}.
 
     Needs instagram_manage_insights (Facebook Login) or instagram_business_manage_insights
@@ -279,7 +281,10 @@ def insights(media_id, token=None, base=None):
     token = token or os.environ.get("IG_ACCESS_TOKEN")
     base = base or GRAPH
     last = None
-    for tier in INSIGHT_TIERS:
+    # Bundles are built for the media's OWN product type. `follows` and `profile_visits` are
+    # documented for FEED and STORY and not for REELS, so putting them in a reel's bundle is
+    # not a wasted field — it is an error that blanks every other metric in the request.
+    for tier in ig_catalog.tiers(product_type or ig_catalog.REELS):
         try:
             got = _get(f"{base}/{media_id}/insights"
                        f"?metric={','.join(tier)}&access_token={token}")
@@ -313,6 +318,25 @@ def insights(media_id, token=None, base=None):
                 except Exception as e:
                     print(f"insights({media_id}): tier {tier[0]}..({len(tier)}) had no "
                           f"views and asking alone failed: {e}")
+            # A bundle cannot carry the fragile metrics (crossposted_views, facebook_views,
+            # total_*) — they are documented to throw when the media was never shared to
+            # Facebook, or to need the Facebook-Login flavour of the API, and a throw blanks
+            # every other metric in the same request. So they are asked ALONE, here, AFTER a
+            # bundle has already succeeded. The caller passes only the ones a probe has not
+            # already ruled out (see ig_probe.py / api_support.json), so this is bounded: an
+            # unsupported name costs one call on the first run and none after.
+            for extra in extras:
+                if extra in out:
+                    continue
+                try:
+                    got = _get(f"{base}/{media_id}/insights"
+                               f"?metric={extra}&access_token={token}")
+                except Exception as e:
+                    print(f"  {media_id} extra {extra}: {str(e)[:110]}")
+                    continue
+                for row in got.get("data", []):
+                    vals = row.get("values") or [{}]
+                    out[row["name"]] = vals[0].get("value")
             return out
 
     # Every bundle was rejected. A bundle is all-or-nothing: ask for six metrics and one
@@ -321,7 +345,9 @@ def insights(media_id, token=None, base=None):
     # and comments recorded while the app itself was showing a view count on each post.
     # So fall back to asking for each metric ALONE and keeping whatever answers.
     out = {}
-    for metric in INSIGHT_SINGLES:
+    pt = product_type or ig_catalog.REELS
+    for metric in (ig_catalog.media_metrics(pt, bundle_only=True)
+                   + ig_catalog.media_metrics(pt, fragile_only=True)):
         try:
             got = _get(f"{base}/{media_id}/insights"
                        f"?metric={metric}&access_token={token}")

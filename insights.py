@@ -18,13 +18,20 @@ answers to one question (rule 11b).
 
 import json
 import os
+import urllib.parse
 from datetime import datetime, timedelta, timezone
 
+import ig_catalog
 import metrics
 import post_instagram
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FOLLOWERS = os.path.join(HERE, "followers.json")
+# Daily account-level ledger. Separate from metrics.json on purpose: that file is keyed by
+# media id and answers "did this post work?", while this one is keyed by date and answers "is
+# the account working?" — including the non-follower reach breakdown that no per-post row can
+# carry. Mixing them would mean one of the two keys had to be faked.
+ACCOUNT = os.path.join(HERE, "account.json")
 KST = timezone(timedelta(hours=9))
 import re
 _REF = re.compile(r"\[([^\[\]]+)\]")
@@ -38,11 +45,26 @@ def api():
     behind SMS 2FA that does not arrive. `IG_INSIGHTS_TOKEN` comes from Instagram Login
     (`ig_login.py`), needs no Facebook account, and is read-only. When present it wins for
     READING. Publishing never touches it."""
-    tok = os.environ.get("IG_INSIGHTS_TOKEN")
+    # Environment first (that is what CI sets), then meta_secrets.txt. Without the file
+    # fallback this collector could not be run by hand on the machine that owns the secrets,
+    # while ig_doctor.py and ig_probe.py could — so every check of "does collection actually
+    # work?" had to be done with a different code path than the one that runs. That asymmetry
+    # is how today's four wrong claims survived: the thing being verified was never the thing
+    # running. The file is gitignored; nothing is printed from it.
+    def _s(key):
+        val = os.environ.get(key)
+        if val:
+            return val
+        try:
+            import ig_doctor
+            return ig_doctor.secrets().get(key)
+        except Exception:
+            return None
+
+    tok = _s("IG_INSIGHTS_TOKEN")
     if tok:
         return "https://graph.instagram.com/v21.0", "me", tok
-    return (post_instagram.GRAPH, os.environ.get("IG_USER_ID"),
-            os.environ.get("IG_ACCESS_TOKEN"))
+    return post_instagram.GRAPH, _s("IG_USER_ID"), _s("IG_ACCESS_TOKEN")
 
 
 def _themes():
@@ -79,10 +101,10 @@ def backfill(limit=90):
     print(f"reading via {base} as {uid}")
 
     themes, data = _themes(), metrics.load()
-    listing = post_instagram._get(
-        f"{base}/{uid}/media"
-        f"?fields=id,timestamp,media_product_type,permalink,caption,like_count,comments_count"
-        f"&limit={int(limit)}&access_token={token}")
+    listing, dropped = _listing(base, uid, token, limit)
+    if dropped:
+        print(f"  listing fell back to core fields (dropped {len(dropped)}): "
+              f"{', '.join(dropped)}")
 
     added = filled = empties = 0
     skip_insights = False
@@ -99,32 +121,67 @@ def backfill(limit=90):
             entry.setdefault("published", m["timestamp"])
         got = dict(entry.get("insights") or {})
         was = dict(got)
+        node_was = dict(entry.get("node") or {})
+        entry["node"] = _node(m, entry["node"] if "node" in entry else {})
 
-        # likes/comments ride along in the listing above — no extra call, no scope. Take the
-        # fresh value ALWAYS, not just the first time. `if not got:` used to skip an entry the
-        # moment it held anything, which froze every post at its day-one snapshot: a reel that
-        # gained likes over the following week was recorded as if it never did.
-        for key, field in (("likes", "like_count"), ("comments", "comments_count")):
-            if m.get(field) is not None:
-                got[key] = m[field]
+        # Plain media FIELDS, not insights: they ride along in the listing above at no extra
+        # call and — this is the part that cost two months — no insights scope. On 2026-10-07 a
+        # probe of every documented field showed `total_views_count`, `shares_count`,
+        # `reposts_count`, `total_like_count` and `total_comments_count` all answering for this
+        # token, while `metrics.note()`'s own docstring said "the API cannot give us most of
+        # these". Validated against the fourteen hand-entered posts: shares matched EXACTLY
+        # 3/3, and views was >= the hand-entered snapshot in 13/13 with the gap explained by
+        # the days since the screenshot. See notes/insight-metrics-catalog.md §4.
+        #
+        # Precedence: a value from the insights ENDPOINT wins over the same number from a plain
+        # field (the endpoint is what Instagram's own screens show), and a plain field beats a
+        # hand-entered one. Provenance is marked EXPLICITLY — `<metric>_api` when the endpoint
+        # answered, `<metric>_field` naming the field it came from — and absence of a marker
+        # means "unknown provenance", which must NOT be read as "the endpoint said so".
+        #
+        # That distinction is not theoretical. The first version of this loop inferred
+        # endpoint-provenance from the absence of a marker, and every `likes` recorded before
+        # today — all written from `like_count` by a loop that marked nothing — instantly
+        # qualified as untouchable. 골로새서 3:14 froze at likes=2 while the API was returning
+        # 4. Provenance has to be written down, not deduced from what is missing.
+        for field, metric in ig_catalog.FIELD_AS_METRIC_ORDER:
+            val = m.get(field)
+            if val is None or got.get(f"{metric}_api"):
+                continue
+            got[metric] = val
+            got[f"{metric}_field"] = field
+            got.pop(f"{metric}_manual", None)
 
-        # The scoped metrics (views, reach) cost a call each, so only chase them where they
-        # are still missing and still moving. `views` is the number the account is judged by;
-        # an entry that has likes but no views is not measured, it is half-measured.
+        # The scoped metrics (reach, saved, reels_skip_rate, watch time) cost a call each, so
+        # only chase them where they are still missing and still moving. `reach` is the one the
+        # plain fields cannot substitute for: views counts plays, reach counts people.
         young = _is_young(entry.get("published"))
-        if young and "views" not in got and not skip_insights:
+        if young and "reach" not in got and not skip_insights:
             try:
                 # `base` matters: an IG_INSIGHTS_TOKEN is only valid against
                 # graph.instagram.com. api() has always known that and insights() never got
                 # told, so an Instagram-Login token would have failed OAuth and printed
                 # "insights unavailable" — indistinguishable from having no permission.
-                fresh = post_instagram.insights(m["id"], token, base=base) or {}
+                fresh = post_instagram.insights(
+                    m["id"], token, base=base,
+                    product_type=m.get("media_product_type") or entry.get("kind"),
+                    extras=_extras()) or {}
             except Exception as e:
                 print(f"  insights({m['id']}) failed: {e}")
                 fresh = {}
             # MERGE. A partial answer must never delete what we already had — the same
-            # mistake metrics.refresh() made until 2026-09-09.
-            got.update({k: v for k, v in fresh.items() if v is not None})
+            # mistake metrics.refresh() made until 2026-09-09. And a real answer supersedes a
+            # plain-field stand-in, marker and all: leaving `views_field` next to a value the
+            # insights endpoint returned would keep the ledger apologising for a number that
+            # no longer needs it.
+            for k, v in fresh.items():
+                if v is None:
+                    continue
+                got[k] = v
+                got.pop(f"{k}_field", None)
+                got.pop(f"{k}_manual", None)
+                if k in ig_catalog.DUAL_SOURCE:
+                    got[f"{k}_api"] = True   # so the plain field stops overwriting it
             if fresh:
                 empties = 0
             else:
@@ -140,9 +197,208 @@ def backfill(limit=90):
         if got != was:
             entry["insights"] = got
             filled += 1
+        if entry.get("node") != node_was:
+            filled = filled or 1
     metrics.save(data)
     print(f"backfill: {added} new entr(ies), {filled} filled, {len(data)} total")
     return data
+
+
+# --- everything the catalog documents, collected on a schedule ------------------------------
+
+# Written into metrics.json entries under "node": the plain media fields. Four of these are
+# metrics in disguise (see ig_catalog.FIELD_AS_METRIC) and get copied into "insights"; the rest
+# are inputs we never had — what audio a reel used, whether it was shared to feed, whether Meta
+# flagged a copyright match, whether the account is still eligible to boost.
+_NODE_SKIP = (
+    "id",            # the ledger key already is the id
+    "caption",       # `ref` is extracted from it; the full text would double the ledger
+    "permalink",     # stored at the top level of the entry
+    "thumbnail_url",  # a signed CDN URL that expires in days — committing it records nothing
+)
+
+
+def _node(m, prev):
+    """Media node fields worth keeping, merged over what we had.
+
+    MERGE, not replace: a field missing from one response (the listing dropped the extras, say)
+    must not erase the value a previous run recorded. That is the same rule as the insights
+    merge, and it is broken the same way — by assigning the response."""
+    out = dict(prev)
+    for k, v in m.items():
+        if k in _NODE_SKIP or v is None:
+            continue
+        out[k] = v
+    return out
+
+
+def _listing(base, uid, token, limit):
+    """The media listing with EVERY documented field, falling back only if Meta refuses.
+
+    `fields=` is atomic across the whole page: ask for `copyright_check_information` over 40
+    posts and one older post whose video is gone returns `9005 Video content was not found`
+    for the entire request — not for that row. Measured 2026-10-07 by asking for each field
+    alone; every other documented field survived the batch, so that one is fetched per media
+    (see `solo_fields`) and the batch keeps the other twenty-one.
+
+    Returns (listing, dropped_fields) so the log says which numbers are missing and why,
+    instead of a page that silently carries eight fields where it used to carry twenty-two."""
+    full = ig_catalog.media_fields(extra=True)
+    try:
+        return post_instagram._get(
+            f"{base}/{uid}/media?fields={','.join(full)}"
+            f"&limit={int(limit)}&access_token={token}"), ()
+    except Exception as e:
+        print(f"  full field listing rejected ({str(e)[:140]}) — retrying with core fields")
+    core = ig_catalog.media_fields(extra=False)
+    return (post_instagram._get(f"{base}/{uid}/media?fields={','.join(core)}"
+                                f"&limit={int(limit)}&access_token={token}"),
+            tuple(f for f in full if f not in core))
+
+
+def _extras():
+    """Fragile metrics still worth asking for alone — minus whatever a probe already ruled out.
+
+    Without this the daily run would re-ask five metrics per post forever to collect five
+    identical rejections. `api_support.json` is written by `ig_probe.py`; when it does not
+    exist we ask for everything once, which is the right default for a file whose whole purpose
+    is to stop us deciding availability from memory."""
+    fragile = ig_catalog.media_metrics(ig_catalog.REELS, fragile_only=True)
+    try:
+        import ig_probe
+        verdict = (ig_probe.load().get("media_metrics") or {})
+    except Exception:
+        return fragile
+    if not verdict:
+        return fragile
+    return tuple(m for m in fragile if verdict.get(m, {}).get("ok") is not False)
+
+
+def solo_fields(limit=8, base=None, uid=None, token=None):
+    """Fields that are only safe one media at a time — currently the copyright check.
+
+    `copyright_check_information` reports whether Meta matched the reel's audio or video against
+    someone else's content. That is the originality question §7.1 spent weeks arguing from
+    screenshots of the account-status screen, answered per post by the API. It cannot ride in
+    the listing (see `_listing`), so it is fetched for the newest few posts only."""
+    if base is None:
+        base, uid, token = api()
+    data, touched = metrics.load(), 0
+    recent = sorted((e for e in data.items() if e[1].get("published")),
+                    key=lambda kv: kv[1]["published"], reverse=True)[:int(limit)]
+    for media_id, entry in recent:
+        fields = ",".join(ig_catalog.MEDIA_FIELDS_SOLO)
+        try:
+            got = post_instagram._get(
+                f"{base}/{media_id}?fields={fields}&access_token={token}")
+        except Exception as e:
+            print(f"  solo fields {media_id}: {str(e)[:110]}")
+            continue
+        node = entry.setdefault("node", {})
+        before = dict(node)
+        for k, v in got.items():
+            if k != "id" and v is not None:
+                node[k] = v
+        if node != before:
+            touched += 1
+    metrics.save(data)
+    print(f"solo fields: {touched} post(s) updated with {', '.join(ig_catalog.MEDIA_FIELDS_SOLO)}")
+    return touched
+
+
+def account(base=None, uid=None, token=None):
+    """Every documented ACCOUNT metric and field, appended to account.json under today's date.
+
+    This dimension was collected ZERO times before 2026-10-07. Media insights answer "did this
+    post work"; these answer "is the account working" — and `reach` with `breakdown=follow_type`
+    reports NON-FOLLOWER reach outright, which §14 and §15 both inferred from a ratio of reach
+    to follower count. An inference that the API will hand over on request is not a finding.
+
+    One request per (metric, period, metric_type, breakdown) row, deliberately. The endpoint
+    will not batch across differing periods, and batching metrics is how a single unsupported
+    name blanks the rest — the failure that cost this repo 156 posts of reach.
+
+    Rejections are RECORDED, not swallowed: an empty day and a day the token was not allowed to
+    ask are different facts, and a log line that scrolls away is not a record of either."""
+    if base is None:
+        base, uid, token = api()
+    if not (uid and token):
+        print("account(): no credentials")
+        return {}
+
+    today = datetime.now(KST).strftime("%Y-%m-%d")
+    try:
+        with open(ACCOUNT, encoding="utf-8") as f:
+            book = json.load(f)
+    except Exception:
+        book = {}
+    day = book.setdefault(today, {})
+
+    fields = ",".join(ig_catalog.account_fields())
+    try:
+        prof = post_instagram._get(f"{base}/{uid}?fields={fields}&access_token={token}")
+        day["profile"] = {k: v for k, v in prof.items()
+                          if k != "profile_picture_url" and v is not None}
+    except Exception as e:
+        print(f"  account fields rejected ({str(e)[:120]}) — retrying core only")
+        try:
+            prof = post_instagram._get(
+                f"{base}/{uid}?fields={','.join(ig_catalog.account_fields(extra=False))}"
+                f"&access_token={token}")
+            day["profile"] = {k: v for k, v in prof.items() if v is not None}
+        except Exception as e2:
+            day["profile_error"] = str(e2)[:160]
+
+    got = day.setdefault("insights", {})
+    errors = day.setdefault("errors", {})
+    ok = bad = 0
+    for metric, period, mtype, bd, tf in ig_catalog.account_requests():
+        q = {"metric": metric, "period": period, "metric_type": mtype, "access_token": token}
+        if bd:
+            q["breakdown"] = bd
+        if tf:
+            q["timeframe"] = tf
+        key = metric + (f"|{bd}" if bd else "")
+        try:
+            res = post_instagram._get(f"{base}/{uid}/insights?"
+                                      + urllib.parse.urlencode(q))
+        except Exception as e:
+            errors[key] = str(e)[:160]
+            bad += 1
+            continue
+        rows = res.get("data") or []
+        tv = (rows[0].get("total_value") if rows else None) or {}
+        if "value" in tv:
+            got[key] = tv["value"]
+        elif tv.get("breakdowns"):
+            # breakdowns → {"NON_FOLLOWER": 123, ...}. Flattened on the way in: a nested
+            # dimension_keys/results shape is unreadable at a glance and every reader of this
+            # ledger would have to re-flatten it, differently each time.
+            flat = {}
+            for b in tv["breakdowns"]:
+                for r in b.get("results") or []:
+                    name = "/".join(str(x) for x in (r.get("dimension_values") or []))
+                    flat[name or "?"] = r.get("value")
+            got[key] = flat
+        else:
+            got[key] = res.get("data") or None
+        errors.pop(key, None)
+        ok += 1
+    if not errors:
+        day.pop("errors", None)
+
+    with open(ACCOUNT, "w", encoding="utf-8") as f:
+        json.dump(book, f, ensure_ascii=False, indent=1, sort_keys=True)
+    note = ""
+    if bad and not ok:
+        note = ("  — every one was rejected. Check `python3 ig_doctor.py`: without "
+                "*_manage_insights this whole dimension is unreadable, and the errors are "
+                "recorded in account.json rather than lost to the log.")
+    print(f"account: {ok} metric(s) recorded, {bad} rejected for {today}{note}")
+    if got.get("reach|follow_type"):
+        r = got["reach|follow_type"]
+        print(f"  reach by follow type: " + " ".join(f"{k}={v}" for k, v in sorted(r.items())))
+    return book
 
 
 def followers():
@@ -177,8 +433,17 @@ if __name__ == "__main__":
     # Before anything is read back, drop posts the account no longer has. A deletion cannot
     # survive ledger_merge's union on its own, so it has to come from the account each day —
     # otherwise a removed post keeps its verse out of rotation for a year.
-    metrics.prune_deleted()
+    # Hand the token down rather than letting prune_deleted() read the environment on its own:
+    # a run started from meta_secrets.txt would otherwise see no token, print "prune skipped"
+    # and keep a deleted post's verse out of rotation for a year.
+    _base, _uid, _tok = api()
+    metrics.prune_deleted(token=_tok, ig_user_id=_uid)
     backfill()
+    # The two collections the catalog says are available and this repo never made. `account()`
+    # is the dimension that answers "is the account working?"; `solo_fields()` picks up the
+    # copyright verdict, which cannot ride in the listing without failing the whole page.
+    account()
+    solo_fields()
     followers()
     metrics.report()
     # The bill is ~80% Veo and was being estimated from logs; posts record their seconds now.

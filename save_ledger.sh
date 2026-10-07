@@ -41,7 +41,18 @@ for attempt in 1 2 3 4 5; do
     [ -f "$mine" ] && python3 ledger_merge.py "$mine" "$f" "$f"
   done
 
-  git add "${FILES[@]}" 2>/dev/null || true
+  # One `git add` PER FILE. `git add a b missing.json` fails as a whole and stages nothing,
+  # the `|| true` swallows it, and the run then reports "nothing to commit" — so a ledger that
+  # was correctly written is silently never saved because an unrelated optional file in the
+  # same list did not exist. This script already lost a ledger once (2026-08-26); it is not
+  # going to lose one to its own argument list.
+  for f in "${FILES[@]}"; do
+    if [ -f "$f" ]; then
+      git add "$f" || echo "::warning::could not stage $f"
+    else
+      echo "no $f to save (skipping)"
+    fi
+  done
   if git diff --cached --quiet; then
     echo "nothing to commit"
     exit 0

@@ -28,9 +28,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 6
+   "comments_field": "comments_count",
+   "likes": 6,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 86,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 6,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DdBbk2-kWpE",
+   "timestamp": "2026-09-08T10:05:47+0000",
+   "total_comments_count": 1,
+   "total_like_count": 6,
+   "total_views_count": 86
+  },
   "permalink": "https://www.instagram.com/reel/DdBbk2-kWpE/",
   "published": "2026-09-08T19:06:25+09:00",
   "ref": "누가복음 2:29",
@@ -46,12 +74,40 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 11
+   "comments_field": "comments_count",
+   "likes": 11,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 126,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 4.006,
   "motion_attempts": 3,
   "motion_sky": 1.819,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 11,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DdJJOa4lOTV",
+   "timestamp": "2026-09-11T09:59:19+0000",
+   "total_comments_count": 1,
+   "total_like_count": 11,
+   "total_views_count": 126
+  },
   "permalink": "https://www.instagram.com/reel/DdJJOa4lOTV/",
   "published": "2026-09-11T19:00:37+09:00",
   "ref": "누가복음 10:5",
@@ -63,9 +119,37 @@
  "17871131760650356": {
   "insights": {
    "comments": 1,
-   "likes": 10
+   "comments_field": "comments_count",
+   "likes": 10,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 83,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 10,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DdFE7reiPCg",
+   "timestamp": "2026-09-09T20:04:52+0000",
+   "total_comments_count": 1,
+   "total_like_count": 10,
+   "total_views_count": 83
+  },
   "permalink": "https://www.instagram.com/reel/DdFE7reiPCg/",
   "published": "2026-09-09T20:04:52+0000",
   "ref": "데살로니가후서 1:2",
@@ -109,14 +193,40 @@
   "format": "reel",
   "insights": {
    "comments": 1,
+   "comments_field": "comments_count",
    "likes": 6,
-   "views": 57,
-   "views_manual": true
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 69,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 1.947,
   "motion_attempts": 3,
   "motion_sky": 0.279,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 6,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DdLubYaEmmU",
+   "timestamp": "2026-09-12T10:02:56+0000",
+   "total_comments_count": 1,
+   "total_like_count": 6,
+   "total_views_count": 69
+  },
   "permalink": "https://www.instagram.com/reel/DdLubYaEmmU/",
   "published": "2026-09-12T19:03:42+09:00",
   "ref": "로마서 8:6",
@@ -170,12 +280,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 16
+   "comments_field": "comments_count",
+   "likes": 16,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 4,
+   "shares_field": "shares_count",
+   "views": 314,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 1.138,
   "motion_attempts": 1,
   "motion_sky": 1.218,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 16,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 4,
+   "shortcode": "DdtNxRij19u",
+   "timestamp": "2026-09-25T10:11:33+0000",
+   "total_comments_count": 1,
+   "total_like_count": 16,
+   "total_views_count": 314
+  },
   "permalink": "https://www.instagram.com/reel/DdtNxRij19u/",
   "published": "2026-09-25T19:12:15+09:00",
   "ref": "예레미야 33:3",
@@ -232,12 +370,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 31
+   "comments_field": "comments_count",
+   "likes": 31,
+   "likes_field": "like_count",
+   "reposts": 2,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 357,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 7.783,
   "motion_attempts": 3,
   "motion_sky": 0.439,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 31,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 2,
+   "shares_count": 0,
+   "shortcode": "Dd_V6nugRwG",
+   "timestamp": "2026-10-02T11:09:17+0000",
+   "total_comments_count": 1,
+   "total_like_count": 31,
+   "total_views_count": 357
+  },
   "permalink": "https://www.instagram.com/reel/Dd_V6nugRwG/",
   "published": "2026-10-02T20:10:13+09:00",
   "ref": "이사야 12:5",
@@ -261,12 +427,46 @@
   "gate_skipped": 1,
   "insights": {
    "comments": 1,
-   "likes": 38
+   "comments_field": "comments_count",
+   "likes": 38,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 305,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 3.409,
   "motion_attempts": 1,
   "motion_sky": 0.447,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "copyright_check_information": {
+    "status": {
+     "matches_found": false,
+     "status": "complete"
+    }
+   },
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 38,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DeB1t_AATK2",
+   "timestamp": "2026-10-03T10:25:37+0000",
+   "total_comments_count": 1,
+   "total_like_count": 38,
+   "total_views_count": 305
+  },
   "permalink": "https://www.instagram.com/reel/DeB1t_AATK2/",
   "published": "2026-10-03T19:27:02+09:00",
   "ref": "이사야 42:12",
@@ -292,9 +492,32 @@
  "17908715451311460": {
   "insights": {
    "comments": 1,
-   "likes": 14
+   "comments_field": "comments_count",
+   "likes": 14,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count"
   },
   "kind": "FEED",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "like_count": 14,
+   "media_product_type": "FEED",
+   "media_type": "CAROUSEL_ALBUM",
+   "reposts_count": 1,
+   "shares_count": 0,
+   "shortcode": "DdgEVFpGHSQ",
+   "timestamp": "2026-09-20T07:38:43+0000",
+   "total_comments_count": 1,
+   "total_like_count": 14
+  },
   "permalink": "https://www.instagram.com/p/DdgEVFpGHSQ/",
   "published": "2026-09-20T07:38:43+0000",
   "ref": "시편 3:6",
@@ -311,12 +534,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 21
+   "comments_field": "comments_count",
+   "likes": 21,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 2,
+   "shares_field": "shares_count",
+   "views": 305,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 1.768,
   "motion_attempts": 2,
   "motion_sky": 2.402,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 21,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 2,
+   "shortcode": "DdqpfTYEbrI",
+   "timestamp": "2026-09-24T10:16:14+0000",
+   "total_comments_count": 1,
+   "total_like_count": 21,
+   "total_views_count": 305
+  },
   "permalink": "https://www.instagram.com/reel/DdqpfTYEbrI/",
   "published": "2026-09-24T19:16:55+09:00",
   "ref": "야고보서 2:22",
@@ -350,12 +601,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 17
+   "comments_field": "comments_count",
+   "likes": 17,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 259,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 2.247,
   "motion_attempts": 3,
   "motion_sky": 3.403,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 17,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 0,
+   "shortcode": "Ddj-hBJiH1l",
+   "timestamp": "2026-09-21T20:05:15+0000",
+   "total_comments_count": 1,
+   "total_like_count": 17,
+   "total_views_count": 259
+  },
   "permalink": "https://www.instagram.com/reel/Ddj-hBJiH1l/",
   "published": "2026-09-22T05:05:58+09:00",
   "ref": "골로새서 2:7",
@@ -383,9 +662,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 14
+   "comments_field": "comments_count",
+   "likes": 14,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 257,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 14,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DcedWU6jBGt",
+   "timestamp": "2026-08-25T20:07:45+0000",
+   "total_comments_count": 1,
+   "total_like_count": 14,
+   "total_views_count": 257
+  },
   "permalink": "https://www.instagram.com/reel/DcedWU6jBGt/",
   "published": "2026-08-26T05:08:38+09:00",
   "ref": "시편 90:12",
@@ -412,12 +719,40 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 10
+   "comments_field": "comments_count",
+   "likes": 10,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 118,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 2.727,
   "motion_attempts": 3,
   "motion_sky": 1.974,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 10,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 0,
+   "shortcode": "DdCgdpvDxF2",
+   "timestamp": "2026-09-08T20:07:47+0000",
+   "total_comments_count": 1,
+   "total_like_count": 10,
+   "total_views_count": 118
+  },
   "permalink": "https://www.instagram.com/reel/DdCgdpvDxF2/",
   "published": "2026-09-09T05:08:53+09:00",
   "ref": "갈라디아서 1:3",
@@ -471,12 +806,46 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 2
+   "comments_field": "comments_count",
+   "likes": 4,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 52,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 2.564,
   "motion_attempts": 1,
   "motion_sky": 0.398,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "copyright_check_information": {
+    "status": {
+     "matches_found": false,
+     "status": "complete"
+    }
+   },
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 4,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DeKmqJGEWLW",
+   "timestamp": "2026-10-06T20:07:11+0000",
+   "total_comments_count": 1,
+   "total_like_count": 4,
+   "total_views_count": 52
+  },
   "permalink": "https://www.instagram.com/reel/DeKmqJGEWLW/",
   "published": "2026-10-07T05:08:01+09:00",
   "ref": "골로새서 3:14",
@@ -548,14 +917,40 @@
   "format": "reel",
   "insights": {
    "comments": 1,
+   "comments_field": "comments_count",
    "likes": 10,
-   "views": 103,
-   "views_manual": true
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 118,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 8.545,
   "motion_attempts": 3,
   "motion_sky": 4.575,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 10,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DdYnOgbkfZG",
+   "timestamp": "2026-09-17T10:10:00+0000",
+   "total_comments_count": 1,
+   "total_like_count": 10,
+   "total_views_count": 118
+  },
   "permalink": "https://www.instagram.com/reel/DdYnOgbkfZG/",
   "published": "2026-09-17T19:10:44+09:00",
   "ref": "요한일서 5:14",
@@ -576,12 +971,40 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 10
+   "comments_field": "comments_count",
+   "likes": 10,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 91,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 6.745,
   "motion_attempts": 3,
   "motion_sky": 0.277,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 10,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DdKOPUdCbAi",
+   "timestamp": "2026-09-11T20:02:24+0000",
+   "total_comments_count": 1,
+   "total_like_count": 10,
+   "total_views_count": 91
+  },
   "permalink": "https://www.instagram.com/reel/DdKOPUdCbAi/",
   "published": "2026-09-12T05:03:10+09:00",
   "ref": "요한복음 6:20",
@@ -641,12 +1064,40 @@
   "gate_skipped": 1,
   "insights": {
    "comments": 3,
-   "likes": 21
+   "comments_field": "comments_count",
+   "likes": 21,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 313,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 5.289,
   "motion_attempts": 1,
   "motion_sky": 0.704,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 3,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 21,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DdzcxGJiNzv",
+   "timestamp": "2026-09-27T20:18:08+0000",
+   "total_comments_count": 3,
+   "total_like_count": 21,
+   "total_views_count": 313
+  },
   "permalink": "https://www.instagram.com/reel/DdzcxGJiNzv/",
   "published": "2026-09-28T05:18:55+09:00",
   "ref": "요엘 2:21",
@@ -691,12 +1142,40 @@
   "gate_skipped": 1,
   "insights": {
    "comments": 5,
-   "likes": 39
+   "comments_field": "comments_count",
+   "likes": 39,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 7,
+   "shares_field": "shares_count",
+   "views": 363,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 2.297,
   "motion_attempts": 2,
   "motion_sky": 2.198,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 5,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 39,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 7,
+   "shortcode": "DdoE8jlktSG",
+   "timestamp": "2026-09-23T10:18:24+0000",
+   "total_comments_count": 5,
+   "total_like_count": 39,
+   "total_views_count": 363
+  },
   "permalink": "https://www.instagram.com/reel/DdoE8jlktSG/",
   "published": "2026-09-23T19:19:44+09:00",
   "ref": "예레미야 29:13",
@@ -770,9 +1249,37 @@
   "format": "reel",
   "insights": {
    "comments": 3,
-   "likes": 16
+   "comments_field": "comments_count",
+   "likes": 16,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 133,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 3,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 16,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "Dcvt93CAYiv",
+   "timestamp": "2026-09-01T13:00:10+0000",
+   "total_comments_count": 3,
+   "total_like_count": 16,
+   "total_views_count": 133
+  },
   "permalink": "https://www.instagram.com/reel/Dcvt93CAYiv/",
   "published": "2026-09-01T22:00:58+09:00",
   "ref": "베드로전서 5:7",
@@ -792,12 +1299,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 20
+   "comments_field": "comments_count",
+   "likes": 20,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 276,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 6.902,
   "motion_attempts": 3,
   "motion_sky": 5.325,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 20,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "Ddi9iv2EuLI",
+   "timestamp": "2026-09-21T10:37:30+0000",
+   "total_comments_count": 1,
+   "total_like_count": 20,
+   "total_views_count": 276
+  },
   "permalink": "https://www.instagram.com/reel/Ddi9iv2EuLI/",
   "published": "2026-09-21T19:38:10+09:00",
   "ref": "하박국 2:4",
@@ -830,12 +1365,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 5,
-   "likes": 30
+   "comments_field": "comments_count",
+   "likes": 30,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 404,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 6.773,
   "motion_attempts": 3,
   "motion_sky": 0.56,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 5,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 30,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 0,
+   "shortcode": "Dd7JZRrgCov",
+   "timestamp": "2026-09-30T20:02:52+0000",
+   "total_comments_count": 5,
+   "total_like_count": 30,
+   "total_views_count": 404
+  },
   "permalink": "https://www.instagram.com/reel/Dd7JZRrgCov/",
   "published": "2026-10-01T05:03:36+09:00",
   "ref": "로마서 16:27",
@@ -894,12 +1457,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 20
+   "comments_field": "comments_count",
+   "likes": 20,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 277,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 4.69,
   "motion_attempts": 1,
   "motion_sky": 5.109,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 20,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "Dd2ILsoEXt4",
+   "timestamp": "2026-09-28T21:16:04+0000",
+   "total_comments_count": 1,
+   "total_like_count": 20,
+   "total_views_count": 277
+  },
   "permalink": "https://www.instagram.com/reel/Dd2ILsoEXt4/",
   "published": "2026-09-29T06:16:51+09:00",
   "ref": "고린도후서 9:15",
@@ -914,9 +1505,37 @@
  "18014130926937697": {
   "insights": {
    "comments": 1,
-   "likes": 12
+   "comments_field": "comments_count",
+   "likes": 12,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 239,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 12,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 0,
+   "shortcode": "DchBswqnEBz",
+   "timestamp": "2026-08-26T20:03:49+0000",
+   "total_comments_count": 1,
+   "total_like_count": 12,
+   "total_views_count": 239
+  },
   "permalink": "https://www.instagram.com/reel/DchBswqnEBz/",
   "published": "2026-08-26T20:03:49+0000",
   "ref": "잠언 18:10",
@@ -945,20 +1564,46 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 3,
-   "comments_manual": true,
+   "comments_field": "comments_count",
    "likes": 40,
-   "likes_manual": true,
+   "likes_field": "like_count",
    "reposts": 1,
-   "reposts_manual": true,
+   "reposts_field": "reposts_count",
    "shares": 5,
-   "shares_manual": true,
-   "views": 465,
-   "views_manual": true
+   "shares_field": "shares_count",
+   "views": 470,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 3.332,
   "motion_attempts": 1,
   "motion_sky": 3.795,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 3,
+   "copyright_check_information": {
+    "status": {
+     "matches_found": false,
+     "status": "complete"
+    }
+   },
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 40,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 5,
+   "shortcode": "DeHMTcMgQOr",
+   "timestamp": "2026-10-05T12:19:04+0000",
+   "total_comments_count": 3,
+   "total_like_count": 40,
+   "total_views_count": 470
+  },
   "permalink": "https://www.instagram.com/reel/DeHMTcMgQOr/",
   "published": "2026-10-05T21:19:45+09:00",
   "ref": "요한삼서 1:2",
@@ -977,14 +1622,40 @@
   "format": "reel",
   "insights": {
    "comments": 1,
+   "comments_field": "comments_count",
    "likes": 10,
-   "views": 142,
-   "views_manual": true
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 161,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 3.609,
   "motion_attempts": 3,
   "motion_sky": 4.732,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 10,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DdXGy--HTzW",
+   "timestamp": "2026-09-16T20:07:32+0000",
+   "total_comments_count": 1,
+   "total_like_count": 10,
+   "total_views_count": 161
+  },
   "permalink": "https://www.instagram.com/reel/DdXGy--HTzW/",
   "published": "2026-09-17T05:08:16+09:00",
   "ref": "데살로니가후서 3:3",
@@ -1005,9 +1676,37 @@
   "format": "reel",
   "insights": {
    "comments": 3,
-   "likes": 24
+   "comments_field": "comments_count",
+   "likes": 24,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 3,
+   "shares_field": "shares_count",
+   "views": 369,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 3,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 24,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 3,
+   "shortcode": "DcBCzn_ibwg",
+   "timestamp": "2026-08-14T09:57:57+0000",
+   "total_comments_count": 3,
+   "total_like_count": 24,
+   "total_views_count": 369
+  },
   "permalink": "https://www.instagram.com/reel/DcBCzn_ibwg/",
   "published": "2026-08-14T18:58:44+09:00",
   "ref": "로마서 8:28",
@@ -1027,12 +1726,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 18
+   "comments_field": "comments_count",
+   "likes": 18,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 1,
+   "shares_field": "shares_count",
+   "views": 310,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 5.533,
   "motion_attempts": 3,
   "motion_sky": 0.519,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 18,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 1,
+   "shortcode": "Ddvy-ClAh_y",
+   "timestamp": "2026-09-26T10:15:19+0000",
+   "total_comments_count": 1,
+   "total_like_count": 18,
+   "total_views_count": 310
+  },
   "permalink": "https://www.instagram.com/reel/Ddvy-ClAh_y/",
   "published": "2026-09-26T19:16:04+09:00",
   "ref": "마가복음 9:29",
@@ -1051,9 +1778,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 24
+   "comments_field": "comments_count",
+   "likes": 24,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 2,
+   "shares_field": "shares_count",
+   "views": 257,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 24,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 2,
+   "shortcode": "DcTET3UgMae",
+   "timestamp": "2026-08-21T09:57:22+0000",
+   "total_comments_count": 1,
+   "total_like_count": 24,
+   "total_views_count": 257
+  },
   "permalink": "https://www.instagram.com/reel/DcTET3UgMae/",
   "published": "2026-08-21T18:59:02+09:00",
   "ref": "빌립보서 4:19",
@@ -1069,9 +1824,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 33
+   "comments_field": "comments_count",
+   "likes": 33,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 2,
+   "shares_field": "shares_count",
+   "views": 367,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 33,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 2,
+   "shortcode": "DcHRSATDuuY",
+   "timestamp": "2026-08-16T19:59:53+0000",
+   "total_comments_count": 1,
+   "total_like_count": 33,
+   "total_views_count": 367
+  },
   "permalink": "https://www.instagram.com/reel/DcHRSATDuuY/",
   "published": "2026-08-17T05:00:45+09:00",
   "ref": "빌립보서 4:13",
@@ -1100,12 +1883,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 3,
-   "likes": 33
+   "comments_field": "comments_count",
+   "likes": 33,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 1,
+   "shares_field": "shares_count",
+   "views": 446,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 2.385,
   "motion_attempts": 3,
   "motion_sky": 1.295,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 3,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 33,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 1,
+   "shortcode": "DdrtCiVkTe5",
+   "timestamp": "2026-09-24T20:06:29+0000",
+   "total_comments_count": 3,
+   "total_like_count": 33,
+   "total_views_count": 446
+  },
   "permalink": "https://www.instagram.com/reel/DdrtCiVkTe5/",
   "published": "2026-09-25T05:07:15+09:00",
   "ref": "요한일서 5:5",
@@ -1124,14 +1935,40 @@
   "format": "reel",
   "insights": {
    "comments": 3,
+   "comments_field": "comments_count",
    "likes": 17,
-   "views": 222,
-   "views_manual": true
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 237,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 3.769,
   "motion_attempts": 3,
   "motion_sky": 1.955,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 3,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 17,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 0,
+   "shortcode": "DdZs4iEj-HP",
+   "timestamp": "2026-09-17T20:18:39+0000",
+   "total_comments_count": 3,
+   "total_like_count": 17,
+   "total_views_count": 237
+  },
   "permalink": "https://www.instagram.com/reel/DdZs4iEj-HP/",
   "published": "2026-09-18T05:19:22+09:00",
   "ref": "마태복음 10:31",
@@ -1152,14 +1989,40 @@
   "format": "reel",
   "insights": {
    "comments": 1,
+   "comments_field": "comments_count",
    "likes": 13,
-   "views": 79,
-   "views_manual": true
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 94,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 1.86,
   "motion_attempts": 3,
   "motion_sky": 0.859,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 13,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DdPZFqVk5HQ",
+   "timestamp": "2026-09-13T20:13:26+0000",
+   "total_comments_count": 1,
+   "total_like_count": 13,
+   "total_views_count": 94
+  },
   "permalink": "https://www.instagram.com/reel/DdPZFqVk5HQ/",
   "published": "2026-09-14T05:14:07+09:00",
   "ref": "신명기 1:29",
@@ -1180,9 +2043,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 23
+   "comments_field": "comments_count",
+   "likes": 23,
+   "likes_field": "like_count",
+   "reposts": 2,
+   "reposts_field": "reposts_count",
+   "shares": 1,
+   "shares_field": "shares_count",
+   "views": 337,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 23,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 2,
+   "shares_count": 1,
+   "shortcode": "DcGL-KKk-CH",
+   "timestamp": "2026-08-16T09:54:06+0000",
+   "total_comments_count": 1,
+   "total_like_count": 23,
+   "total_views_count": 337
+  },
   "permalink": "https://www.instagram.com/reel/DcGL-KKk-CH/",
   "published": "2026-08-16T18:54:49+09:00",
   "ref": "시편 119:105",
@@ -1198,9 +2089,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 23
+   "comments_field": "comments_count",
+   "likes": 23,
+   "likes_field": "like_count",
+   "reposts": 2,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 317,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 23,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 2,
+   "shares_count": 0,
+   "shortcode": "DcDnlaTkt2D",
+   "timestamp": "2026-08-15T09:57:36+0000",
+   "total_comments_count": 1,
+   "total_like_count": 23,
+   "total_views_count": 317
+  },
   "permalink": "https://www.instagram.com/reel/DcDnlaTkt2D/",
   "published": "2026-08-15T18:58:18+09:00",
   "ref": "이사야 40:8",
@@ -1234,9 +2153,32 @@
  "18048938651807863": {
   "insights": {
    "comments": 1,
-   "likes": 9
+   "comments_field": "comments_count",
+   "likes": 9,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count"
   },
   "kind": "FEED",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "like_count": 9,
+   "media_product_type": "FEED",
+   "media_type": "CAROUSEL_ALBUM",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DcWpHNHk448",
+   "timestamp": "2026-08-22T19:16:24+0000",
+   "total_comments_count": 1,
+   "total_like_count": 9
+  },
   "permalink": "https://www.instagram.com/p/DcWpHNHk448/",
   "published": "2026-08-22T19:16:24+0000",
   "ref": "마태복음 28:20",
@@ -1260,9 +2202,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 6
+   "comments_field": "comments_count",
+   "likes": 6,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 1,
+   "shares_field": "shares_count",
+   "views": 50,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 6,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 1,
+   "shortcode": "DcN72QfkeJb",
+   "timestamp": "2026-08-19T10:07:16+0000",
+   "total_comments_count": 1,
+   "total_like_count": 6,
+   "total_views_count": 50
+  },
   "permalink": "https://www.instagram.com/reel/DcN72QfkeJb/",
   "published": "2026-08-19T19:08:15+09:00",
   "ref": "고린도후서 5:17",
@@ -1283,12 +2253,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 19
+   "comments_field": "comments_count",
+   "likes": 19,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 4,
+   "shares_field": "shares_count",
+   "views": 282,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 6.345,
   "motion_attempts": 3,
   "motion_sky": 0.581,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 19,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 4,
+   "shortcode": "Dd80LQcFApK",
+   "timestamp": "2026-10-01T11:35:54+0000",
+   "total_comments_count": 1,
+   "total_like_count": 19,
+   "total_views_count": 282
+  },
   "permalink": "https://www.instagram.com/reel/Dd80LQcFApK/",
   "published": "2026-10-01T20:36:38+09:00",
   "ref": "에베소서 5:4",
@@ -1378,36 +2376,62 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 2,
-   "comments_manual": true,
+   "comments_field": "comments_count",
    "follows": 0,
    "follows_manual": true,
    "ig_reels_avg_watch_time": 2000,
    "ig_reels_avg_watch_time_manual": true,
    "likes": 22,
-   "likes_manual": true,
+   "likes_field": "like_count",
    "reach": 233,
    "reach_manual": true,
    "reels_skip_rate": 85.2,
    "reels_skip_rate_manual": true,
    "reposts": 0,
-   "reposts_manual": true,
+   "reposts_field": "reposts_count",
    "saved": 6,
    "saved_manual": true,
    "shares": 1,
-   "shares_manual": true,
+   "shares_field": "shares_count",
    "src_explore": 30.9,
    "src_explore_manual": true,
    "src_feed": 12.5,
    "src_feed_manual": true,
    "src_reels": 56.6,
    "src_reels_manual": true,
-   "views": 260,
-   "views_manual": true
+   "views": 266,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 99.0,
   "motion_attempts": 1,
   "motion_sky": 99.0,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 2,
+   "copyright_check_information": {
+    "status": {
+     "matches_found": false,
+     "status": "complete"
+    }
+   },
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 22,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 1,
+   "shortcode": "DeJuizzEqM8",
+   "timestamp": "2026-10-06T11:56:48+0000",
+   "total_comments_count": 2,
+   "total_like_count": 22,
+   "total_views_count": 266
+  },
   "permalink": "https://www.instagram.com/reel/DeJuizzEqM8/",
   "published": "2026-10-06T20:57:32+09:00",
   "ref": "고린도전서 10:24",
@@ -1459,9 +2483,37 @@
   "format": "reel",
   "insights": {
    "comments": 3,
-   "likes": 27
+   "comments_field": "comments_count",
+   "likes": 27,
+   "likes_field": "like_count",
+   "reposts": 3,
+   "reposts_field": "reposts_count",
+   "shares": 2,
+   "shares_field": "shares_count",
+   "views": 433,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 3,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 27,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 3,
+   "shares_count": 2,
+   "shortcode": "DcZUPzHjvEn",
+   "timestamp": "2026-08-23T20:12:08+0000",
+   "total_comments_count": 3,
+   "total_like_count": 27,
+   "total_views_count": 433
+  },
   "permalink": "https://www.instagram.com/reel/DcZUPzHjvEn/",
   "published": "2026-08-24T05:12:56+09:00",
   "ref": "야고보서 1:5",
@@ -1517,9 +2569,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 19
+   "comments_field": "comments_count",
+   "likes": 19,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 274,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 19,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DcIybGalBp2",
+   "timestamp": "2026-08-17T10:08:43+0000",
+   "total_comments_count": 1,
+   "total_like_count": 19,
+   "total_views_count": 274
+  },
   "permalink": "https://www.instagram.com/reel/DcIybGalBp2/",
   "published": "2026-08-17T19:09:29+09:00",
   "ref": "요한복음 14:6",
@@ -1557,14 +2637,40 @@
   "format": "reel",
   "insights": {
    "comments": 1,
+   "comments_field": "comments_count",
    "likes": 7,
-   "views": 123,
-   "views_manual": true
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 143,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 1.049,
   "motion_attempts": 3,
   "motion_sky": 0.534,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 7,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DdWDKVdFBPF",
+   "timestamp": "2026-09-16T10:16:20+0000",
+   "total_comments_count": 1,
+   "total_like_count": 7,
+   "total_views_count": 143
+  },
   "permalink": "https://www.instagram.com/reel/DdWDKVdFBPF/",
   "published": "2026-09-16T19:17:06+09:00",
   "ref": "고린도전서 2:16",
@@ -1610,9 +2716,32 @@
  "18091787783223800": {
   "insights": {
    "comments": 1,
-   "likes": 4
+   "comments_field": "comments_count",
+   "likes": 4,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count"
   },
   "kind": "FEED",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "like_count": 4,
+   "media_product_type": "FEED",
+   "media_type": "CAROUSEL_ALBUM",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "Dco5N_DFG-p",
+   "timestamp": "2026-08-29T21:23:26+0000",
+   "total_comments_count": 1,
+   "total_like_count": 4
+  },
   "permalink": "https://www.instagram.com/p/Dco5N_DFG-p/",
   "published": "2026-08-29T21:23:26+0000",
   "ref": "잠언 27:17",
@@ -1625,9 +2754,37 @@
   "format": "reel",
   "insights": {
    "comments": 6,
-   "likes": 22
+   "comments_field": "comments_count",
+   "likes": 22,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 336,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 6,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 22,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DcQfXkIDt5E",
+   "timestamp": "2026-08-20T09:55:58+0000",
+   "total_comments_count": 6,
+   "total_like_count": 22,
+   "total_views_count": 336
+  },
   "permalink": "https://www.instagram.com/reel/DcQfXkIDt5E/",
   "published": "2026-08-20T18:56:39+09:00",
   "ref": "베드로전서 2:9",
@@ -1669,12 +2826,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 3,
-   "likes": 18
+   "comments_field": "comments_count",
+   "likes": 18,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 251,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 3.641,
   "motion_attempts": 1,
   "motion_sky": 4.33,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 3,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 18,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 0,
+   "shortcode": "Dd6Mgp5DsRm",
+   "timestamp": "2026-09-30T11:10:51+0000",
+   "total_comments_count": 3,
+   "total_like_count": 18,
+   "total_views_count": 251
+  },
   "permalink": "https://www.instagram.com/reel/Dd6Mgp5DsRm/",
   "published": "2026-09-30T20:11:41+09:00",
   "ref": "전도서 11:7",
@@ -1689,9 +2874,32 @@
  "18097426379098134": {
   "insights": {
    "comments": 1,
-   "likes": 9
+   "comments_field": "comments_count",
+   "likes": 9,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count"
   },
   "kind": "FEED",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "like_count": 9,
+   "media_product_type": "FEED",
+   "media_type": "CAROUSEL_ALBUM",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DeELsUpmAsw",
+   "timestamp": "2026-10-04T08:15:45+0000",
+   "total_comments_count": 1,
+   "total_like_count": 9
+  },
   "permalink": "https://www.instagram.com/p/DeELsUpmAsw/",
   "published": "2026-10-04T08:15:45+0000",
   "ref": "시편 4:7",
@@ -1704,9 +2912,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 11
+   "comments_field": "comments_count",
+   "likes": 11,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 136,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 11,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "Dc_6pyrAoHH",
+   "timestamp": "2026-09-07T19:58:54+0000",
+   "total_comments_count": 1,
+   "total_like_count": 11,
+   "total_views_count": 136
+  },
   "permalink": "https://www.instagram.com/reel/Dc_6pyrAoHH/",
   "published": "2026-09-08T04:59:38+09:00",
   "ref": "전도서 4:6",
@@ -1777,9 +3013,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 26
+   "comments_field": "comments_count",
+   "likes": 26,
+   "likes_field": "like_count",
+   "reposts": 2,
+   "reposts_field": "reposts_count",
+   "shares": 8,
+   "shares_field": "shares_count",
+   "views": 355,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 26,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 2,
+   "shares_count": 8,
+   "shortcode": "DcVpQ5ik6Jg",
+   "timestamp": "2026-08-22T09:58:48+0000",
+   "total_comments_count": 1,
+   "total_like_count": 26,
+   "total_views_count": 355
+  },
   "permalink": "https://www.instagram.com/reel/DcVpQ5ik6Jg/",
   "published": "2026-08-22T19:00:25+09:00",
   "ref": "로마서 12:2",
@@ -1799,12 +3063,40 @@
   "gate_skipped": 2,
   "insights": {
    "comments": 3,
-   "likes": 12
+   "comments_field": "comments_count",
+   "likes": 12,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 1,
+   "shares_field": "shares_count",
+   "views": 172,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 7.113,
   "motion_attempts": 3,
   "motion_sky": 1.003,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 3,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 12,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 1,
+   "shortcode": "Dde2xIakztX",
+   "timestamp": "2026-09-19T20:21:19+0000",
+   "total_comments_count": 3,
+   "total_like_count": 12,
+   "total_views_count": 172
+  },
   "permalink": "https://www.instagram.com/reel/Dde2xIakztX/",
   "published": "2026-09-20T05:22:59+09:00",
   "ref": "데살로니가전서 5:8",
@@ -1850,9 +3142,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 19
+   "comments_field": "comments_count",
+   "likes": 19,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 3,
+   "shares_field": "shares_count",
+   "views": 260,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 19,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 3,
+   "shortcode": "Dcf-ErWHd6s",
+   "timestamp": "2026-08-26T10:13:00+0000",
+   "total_comments_count": 1,
+   "total_like_count": 19,
+   "total_views_count": 260
+  },
   "permalink": "https://www.instagram.com/reel/Dcf-ErWHd6s/",
   "published": "2026-08-26T19:13:51+09:00",
   "ref": "잠언 17:22",
@@ -1868,12 +3188,40 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 10
+   "comments_field": "comments_count",
+   "likes": 10,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 88,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 1.542,
   "motion_attempts": 3,
   "motion_sky": 2.035,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 10,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DdGlyh2m_p4",
+   "timestamp": "2026-09-10T10:11:16+0000",
+   "total_comments_count": 1,
+   "total_like_count": 10,
+   "total_views_count": 88
+  },
   "permalink": "https://www.instagram.com/reel/DdGlyh2m_p4/",
   "published": "2026-09-10T19:12:01+09:00",
   "ref": "야고보서 3:18",
@@ -1944,14 +3292,40 @@
   "format": "reel",
   "insights": {
    "comments": 1,
+   "comments_field": "comments_count",
    "likes": 12,
-   "views": 64,
-   "views_manual": true
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 1,
+   "shares_field": "shares_count",
+   "views": 106,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 1.429,
   "motion_attempts": 1,
   "motion_sky": 0.25,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 12,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 1,
+   "shortcode": "DdUhnZJj2KF",
+   "timestamp": "2026-09-15T20:04:08+0000",
+   "total_comments_count": 1,
+   "total_like_count": 12,
+   "total_views_count": 106
+  },
   "permalink": "https://www.instagram.com/reel/DdUhnZJj2KF/",
   "published": "2026-09-16T05:05:26+09:00",
   "ref": "예레미야 15:21",
@@ -2023,14 +3397,40 @@
   "format": "reel",
   "insights": {
    "comments": 1,
+   "comments_field": "comments_count",
    "likes": 18,
-   "views": 107,
-   "views_manual": true
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 122,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 2.72,
   "motion_attempts": 3,
   "motion_sky": 0.485,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 18,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DdR-gsNE0Sh",
+   "timestamp": "2026-09-14T20:18:56+0000",
+   "total_comments_count": 1,
+   "total_like_count": 18,
+   "total_views_count": 122
+  },
   "permalink": "https://www.instagram.com/reel/DdR-gsNE0Sh/",
   "published": "2026-09-15T05:19:42+09:00",
   "ref": "사도행전 28:31",
@@ -2079,9 +3479,37 @@
   "format": "reel",
   "insights": {
    "comments": 3,
-   "likes": 6
+   "comments_field": "comments_count",
+   "likes": 6,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 112,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 3,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 6,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 0,
+   "shortcode": "DcoyCF8ieEG",
+   "timestamp": "2026-08-29T20:21:00+0000",
+   "total_comments_count": 3,
+   "total_like_count": 6,
+   "total_views_count": 112
+  },
   "permalink": "https://www.instagram.com/reel/DcoyCF8ieEG/",
   "published": "2026-08-30T05:21:44+09:00",
   "ref": "잠언 22:6",
@@ -2119,9 +3547,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 23
+   "comments_field": "comments_count",
+   "likes": 23,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 289,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 23,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 0,
+   "shortcode": "DcLW7VelbHD",
+   "timestamp": "2026-08-18T10:06:09+0000",
+   "total_comments_count": 1,
+   "total_like_count": 23,
+   "total_views_count": 289
+  },
   "permalink": "https://www.instagram.com/reel/DcLW7VelbHD/",
   "published": "2026-08-18T19:06:51+09:00",
   "ref": "히브리서 13:8",
@@ -2142,12 +3598,40 @@
   "gate_skipped": 1,
   "insights": {
    "comments": 1,
-   "likes": 37
+   "comments_field": "comments_count",
+   "likes": 38,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 1,
+   "shares_field": "shares_count",
+   "views": 381,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 7.985,
   "motion_attempts": 1,
   "motion_sky": 14.333,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 38,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 1,
+   "shortcode": "Dd9wavomDTR",
+   "timestamp": "2026-10-01T20:22:20+0000",
+   "total_comments_count": 1,
+   "total_like_count": 38,
+   "total_views_count": 381
+  },
   "permalink": "https://www.instagram.com/reel/Dd9wavomDTR/",
   "published": "2026-10-02T05:23:05+09:00",
   "ref": "예레미야 20:13",
@@ -2166,9 +3650,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 18
+   "comments_field": "comments_count",
+   "likes": 18,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 1,
+   "shares_field": "shares_count",
+   "views": 353,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 18,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 1,
+   "shortcode": "DcEr-e9il1A",
+   "timestamp": "2026-08-15T19:55:25+0000",
+   "total_comments_count": 1,
+   "total_like_count": 18,
+   "total_views_count": 353
+  },
   "permalink": "https://www.instagram.com/reel/DcEr-e9il1A/",
   "published": "2026-08-16T04:56:13+09:00",
   "ref": "예레미야 29:11",
@@ -2195,9 +3707,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 22
+   "comments_field": "comments_count",
+   "likes": 22,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 13,
+   "shares_field": "shares_count",
+   "views": 429,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 22,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 13,
+   "shortcode": "DcWvQT-gKYD",
+   "timestamp": "2026-08-22T20:10:25+0000",
+   "total_comments_count": 1,
+   "total_like_count": 22,
+   "total_views_count": 429
+  },
   "permalink": "https://www.instagram.com/reel/DcWvQT-gKYD/",
   "published": "2026-08-23T05:11:14+09:00",
   "ref": "고린도후서 12:9",
@@ -2217,12 +3757,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 5,
-   "likes": 30
+   "comments_field": "comments_count",
+   "likes": 30,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 381,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 3.402,
   "motion_attempts": 1,
   "motion_sky": 5.636,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 5,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 30,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DduTNEzAEPy",
+   "timestamp": "2026-09-25T20:18:24+0000",
+   "total_comments_count": 5,
+   "total_like_count": 30,
+   "total_views_count": 381
+  },
   "permalink": "https://www.instagram.com/reel/DduTNEzAEPy/",
   "published": "2026-09-26T05:19:13+09:00",
   "ref": "마태복음 7:8",
@@ -2245,12 +3813,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 3,
-   "likes": 28
+   "comments_field": "comments_count",
+   "likes": 28,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 6,
+   "shares_field": "shares_count",
+   "views": 344,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 1.751,
   "motion_attempts": 3,
   "motion_sky": 0.564,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 3,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 28,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 6,
+   "shortcode": "DdpJDp5j1Ms",
+   "timestamp": "2026-09-23T20:13:32+0000",
+   "total_comments_count": 3,
+   "total_like_count": 28,
+   "total_views_count": 344
+  },
   "permalink": "https://www.instagram.com/reel/DdpJDp5j1Ms/",
   "published": "2026-09-24T05:15:01+09:00",
   "ref": "마가복음 1:15",
@@ -2273,12 +3869,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 17
+   "comments_field": "comments_count",
+   "likes": 17,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 1,
+   "shares_field": "shares_count",
+   "views": 261,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 1.463,
   "motion_attempts": 3,
   "motion_sky": 1.141,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 17,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 1,
+   "shortcode": "DdlfrlJDKZe",
+   "timestamp": "2026-09-22T10:14:19+0000",
+   "total_comments_count": 1,
+   "total_like_count": 17,
+   "total_views_count": 261
+  },
   "permalink": "https://www.instagram.com/reel/DdlfrlJDKZe/",
   "published": "2026-09-22T19:15:39+09:00",
   "ref": "하박국 3:18",
@@ -2310,12 +3934,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 3,
-   "likes": 17
+   "comments_field": "comments_count",
+   "likes": 17,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 1,
+   "shares_field": "shares_count",
+   "views": 299,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 12.242,
   "motion_attempts": 3,
   "motion_sky": 1.441,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 3,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 17,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 1,
+   "shortcode": "Ddw2YeijYKH",
+   "timestamp": "2026-09-26T20:04:16+0000",
+   "total_comments_count": 3,
+   "total_like_count": 17,
+   "total_views_count": 299
+  },
   "permalink": "https://www.instagram.com/reel/Ddw2YeijYKH/",
   "published": "2026-09-27T05:05:02+09:00",
   "ref": "누가복음 5:16",
@@ -2339,12 +3991,46 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 5,
-   "likes": 42
+   "comments_field": "comments_count",
+   "likes": 42,
+   "likes_field": "like_count",
+   "reposts": 2,
+   "reposts_field": "reposts_count",
+   "shares": 1,
+   "shares_field": "shares_count",
+   "views": 340,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 1.679,
   "motion_attempts": 1,
   "motion_sky": 1.559,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 5,
+   "copyright_check_information": {
+    "status": {
+     "matches_found": false,
+     "status": "complete"
+    }
+   },
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 42,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 2,
+   "shares_count": 1,
+   "shortcode": "DeC4UHOAT0n",
+   "timestamp": "2026-10-03T20:07:34+0000",
+   "total_comments_count": 5,
+   "total_like_count": 42,
+   "total_views_count": 340
+  },
   "permalink": "https://www.instagram.com/reel/DeC4UHOAT0n/",
   "published": "2026-10-04T05:08:40+09:00",
   "ref": "이사야 43:21",
@@ -2403,9 +4089,32 @@
  "18121114900845867": {
   "insights": {
    "comments": 1,
-   "likes": 8
+   "comments_field": "comments_count",
+   "likes": 8,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count"
   },
   "kind": "FEED",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "like_count": 8,
+   "media_product_type": "FEED",
+   "media_type": "CAROUSEL_ALBUM",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DcEnaAxH10t",
+   "timestamp": "2026-08-15T19:15:06+0000",
+   "total_comments_count": 1,
+   "total_like_count": 8
+  },
   "permalink": "https://www.instagram.com/p/DcEnaAxH10t/",
   "published": "2026-08-15T19:15:06+0000",
   "ref": "시편 1:2",
@@ -2436,9 +4145,37 @@
   "format": "reel",
   "insights": {
    "comments": 3,
-   "likes": 22
+   "comments_field": "comments_count",
+   "likes": 22,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 206,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 3,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 22,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DcRkQkZkXXy",
+   "timestamp": "2026-08-20T19:58:10+0000",
+   "total_comments_count": 3,
+   "total_like_count": 22,
+   "total_views_count": 206
+  },
   "permalink": "https://www.instagram.com/reel/DcRkQkZkXXy/",
   "published": "2026-08-21T04:59:21+09:00",
   "ref": "요한복음 8:12",
@@ -2465,9 +4202,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 12
+   "comments_field": "comments_count",
+   "likes": 12,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 2,
+   "shares_field": "shares_count",
+   "views": 250,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 12,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 2,
+   "shortcode": "DcdXx0OjDpl",
+   "timestamp": "2026-08-25T09:59:58+0000",
+   "total_comments_count": 1,
+   "total_like_count": 12,
+   "total_views_count": 250
+  },
   "permalink": "https://www.instagram.com/reel/DcdXx0OjDpl/",
   "published": "2026-08-25T19:00:49+09:00",
   "ref": "잠언 4:23",
@@ -2487,12 +4252,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 30
+   "comments_field": "comments_count",
+   "likes": 30,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 327,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 7.116,
   "motion_attempts": 3,
   "motion_sky": 0.541,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 30,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 0,
+   "shortcode": "DdhZqoRDP-F",
+   "timestamp": "2026-09-20T20:04:47+0000",
+   "total_comments_count": 1,
+   "total_like_count": 30,
+   "total_views_count": 327
+  },
   "permalink": "https://www.instagram.com/reel/DdhZqoRDP-F/",
   "published": "2026-09-21T05:05:27+09:00",
   "ref": "유다서 1:21",
@@ -2531,14 +4324,40 @@
   "format": "reel",
   "insights": {
    "comments": 1,
+   "comments_field": "comments_count",
    "likes": 5,
-   "views": 65,
-   "views_manual": true
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 88,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 3.495,
   "motion_attempts": 3,
   "motion_sky": 1.859,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 5,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DdTcSc_lVNt",
+   "timestamp": "2026-09-15T09:58:16+0000",
+   "total_comments_count": 1,
+   "total_like_count": 5,
+   "total_views_count": 88
+  },
   "permalink": "https://www.instagram.com/reel/DdTcSc_lVNt/",
   "published": "2026-09-15T18:59:02+09:00",
   "ref": "전도서 11:4",
@@ -2581,12 +4400,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 17
+   "comments_field": "comments_count",
+   "likes": 17,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 4,
+   "shares_field": "shares_count",
+   "views": 271,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 1.94,
   "motion_attempts": 3,
   "motion_sky": 2.285,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 17,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 4,
+   "shortcode": "Dd3pendgvu1",
+   "timestamp": "2026-09-29T11:26:17+0000",
+   "total_comments_count": 1,
+   "total_like_count": 17,
+   "total_views_count": 271
+  },
   "permalink": "https://www.instagram.com/reel/Dd3pendgvu1/",
   "published": "2026-09-29T20:27:03+09:00",
   "ref": "신명기 26:9",
@@ -2601,9 +4448,32 @@
  "18129174019673443": {
   "insights": {
    "comments": 1,
-   "likes": 9
+   "comments_field": "comments_count",
+   "likes": 9,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count"
   },
   "kind": "FEED",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "like_count": 9,
+   "media_product_type": "FEED",
+   "media_type": "CAROUSEL_ALBUM",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "Dc786xjjZeD",
+   "timestamp": "2026-09-06T07:01:24+0000",
+   "total_comments_count": 1,
+   "total_like_count": 9
+  },
   "permalink": "https://www.instagram.com/p/Dc786xjjZeD/",
   "published": "2026-09-06T07:01:24+0000",
   "ref": "시편 9:9",
@@ -2616,14 +4486,40 @@
   "format": "reel",
   "insights": {
    "comments": 1,
+   "comments_field": "comments_count",
    "likes": 9,
-   "views": 74,
-   "views_manual": true
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 85,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 0.543,
   "motion_attempts": 1,
   "motion_sky": 0.101,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 9,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DdNaVQNmyVu",
+   "timestamp": "2026-09-13T01:45:50+0000",
+   "total_comments_count": 1,
+   "total_like_count": 9,
+   "total_views_count": 85
+  },
   "permalink": "https://www.instagram.com/reel/DdNaVQNmyVu/",
   "published": "2026-09-13T10:46:42+09:00",
   "ref": "에베소서 4:3",
@@ -2644,9 +4540,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 15
+   "comments_field": "comments_count",
+   "likes": 15,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 2,
+   "shares_field": "shares_count",
+   "views": 210,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 15,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 2,
+   "shortcode": "DcazCBAle9Z",
+   "timestamp": "2026-08-24T10:00:22+0000",
+   "total_comments_count": 1,
+   "total_like_count": 15,
+   "total_views_count": 210
+  },
   "permalink": "https://www.instagram.com/reel/DcazCBAle9Z/",
   "published": "2026-08-24T19:01:05+09:00",
   "ref": "전도서 3:1",
@@ -2668,12 +4592,35 @@
  },
  "18135835636533896": {
   "insights": {
-   "comments": 16,
+   "comments": 3,
+   "comments_field": "comments_count",
    "likes": 19,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
    "views": 133,
    "views_manual": true
   },
   "kind": "FEED",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 3,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "like_count": 19,
+   "media_product_type": "FEED",
+   "media_type": "CAROUSEL_ALBUM",
+   "reposts_count": 1,
+   "shares_count": 0,
+   "shortcode": "DdOA2BCkbLS",
+   "timestamp": "2026-09-13T07:21:55+0000",
+   "total_comments_count": 3,
+   "total_like_count": 19
+  },
   "permalink": "https://www.instagram.com/p/DdOA2BCkbLS/",
   "published": "2026-09-13T07:21:55+0000",
   "ref": "시편 4:8",
@@ -2722,9 +4669,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 10
+   "comments_field": "comments_count",
+   "likes": 10,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 152,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 10,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 0,
+   "shortcode": "DcrXgKLj3VJ",
+   "timestamp": "2026-08-30T20:26:56+0000",
+   "total_comments_count": 1,
+   "total_like_count": 10,
+   "total_views_count": 152
+  },
   "permalink": "https://www.instagram.com/reel/DcrXgKLj3VJ/",
   "published": "2026-08-31T05:27:42+09:00",
   "ref": "이사야 53:5",
@@ -2740,9 +4715,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 15
+   "comments_field": "comments_count",
+   "likes": 15,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 169,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 15,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "Dc-3b95iTlb",
+   "timestamp": "2026-09-07T10:11:30+0000",
+   "total_comments_count": 1,
+   "total_like_count": 15,
+   "total_views_count": 169
+  },
   "permalink": "https://www.instagram.com/reel/Dc-3b95iTlb/",
   "published": "2026-09-07T19:12:32+09:00",
   "ref": "마가복음 5:34",
@@ -2825,12 +4828,40 @@
   "gate_skipped": 1,
   "insights": {
    "comments": 1,
-   "likes": 22
+   "comments_field": "comments_count",
+   "likes": 22,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 314,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 5.003,
   "motion_attempts": 2,
   "motion_sky": 6.84,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 22,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DeAUffXlOIS",
+   "timestamp": "2026-10-02T20:16:03+0000",
+   "total_comments_count": 1,
+   "total_like_count": 22,
+   "total_views_count": 314
+  },
   "permalink": "https://www.instagram.com/reel/DeAUffXlOIS/",
   "published": "2026-10-03T05:16:47+09:00",
   "ref": "이사야 38:20",
@@ -2849,9 +4880,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 26
+   "comments_field": "comments_count",
+   "likes": 26,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 1,
+   "shares_field": "shares_count",
+   "views": 339,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 26,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 1,
+   "shortcode": "DcJ3a0ujBYy",
+   "timestamp": "2026-08-17T20:11:26+0000",
+   "total_comments_count": 1,
+   "total_like_count": 26,
+   "total_views_count": 339
+  },
   "permalink": "https://www.instagram.com/reel/DcJ3a0ujBYy/",
   "published": "2026-08-18T05:12:06+09:00",
   "ref": "갈라디아서 2:20",
@@ -2863,9 +4922,32 @@
  "18179995369426827": {
   "insights": {
    "comments": 1,
-   "likes": 11
+   "comments_field": "comments_count",
+   "likes": 11,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count"
   },
   "kind": "FEED",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "like_count": 11,
+   "media_product_type": "FEED",
+   "media_type": "CAROUSEL_ALBUM",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DdyHuTIFz3x",
+   "timestamp": "2026-09-27T07:54:46+0000",
+   "total_comments_count": 1,
+   "total_like_count": 11
+  },
   "permalink": "https://www.instagram.com/p/DdyHuTIFz3x/",
   "published": "2026-09-27T07:54:46+0000",
   "ref": "시편 2:11",
@@ -2920,9 +5002,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 19
+   "comments_field": "comments_count",
+   "likes": 19,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 4,
+   "shares_field": "shares_count",
+   "views": 363,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 19,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 4,
+   "shortcode": "Dcb4oR9DddG",
+   "timestamp": "2026-08-24T20:08:34+0000",
+   "total_comments_count": 1,
+   "total_like_count": 19,
+   "total_views_count": 363
+  },
   "permalink": "https://www.instagram.com/reel/Dcb4oR9DddG/",
   "published": "2026-08-25T05:09:22+09:00",
   "ref": "미가 6:8",
@@ -2971,9 +5081,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 12
+   "comments_field": "comments_count",
+   "likes": 12,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 77,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 12,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DcqoPSpDLao",
+   "timestamp": "2026-08-30T13:33:53+0000",
+   "total_comments_count": 1,
+   "total_like_count": 12,
+   "total_views_count": 77
+  },
   "permalink": "https://www.instagram.com/reel/DcqoPSpDLao/",
   "published": "2026-08-30T22:34:36+09:00",
   "ref": "여호수아 1:9",
@@ -2989,9 +5127,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 21
+   "comments_field": "comments_count",
+   "likes": 21,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 9,
+   "shares_field": "shares_count",
+   "views": 323,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 21,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 9,
+   "shortcode": "DcCIJC6D4e8",
+   "timestamp": "2026-08-14T20:03:44+0000",
+   "total_comments_count": 1,
+   "total_like_count": 21,
+   "total_views_count": 323
+  },
   "permalink": "https://www.instagram.com/reel/DcCIJC6D4e8/",
   "published": "2026-08-15T05:04:25+09:00",
   "ref": "골로새서 3:23",
@@ -3023,20 +5189,46 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "comments_manual": true,
+   "comments_field": "comments_count",
    "likes": 8,
-   "likes_manual": true,
+   "likes_field": "like_count",
    "reposts": 0,
-   "reposts_manual": true,
+   "reposts_field": "reposts_count",
    "shares": 0,
-   "shares_manual": true,
+   "shares_field": "shares_count",
    "views": 311,
-   "views_manual": true
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 13.669,
   "motion_attempts": 3,
   "motion_sky": 11.644,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "copyright_check_information": {
+    "status": {
+     "matches_found": false,
+     "status": "complete"
+    }
+   },
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 8,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DeFeSmqnw3f",
+   "timestamp": "2026-10-04T20:17:53+0000",
+   "total_comments_count": 1,
+   "total_like_count": 8,
+   "total_views_count": 311
+  },
   "permalink": "https://www.instagram.com/reel/DeFeSmqnw3f/",
   "published": "2026-10-05T05:18:33+09:00",
   "ref": "디모데전서 1:5",
@@ -3099,12 +5291,40 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 9
+   "comments_field": "comments_count",
+   "likes": 9,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 87,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 3.28,
   "motion_attempts": 3,
   "motion_sky": 0.551,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 9,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DdHpD2LDRdf",
+   "timestamp": "2026-09-10T19:58:52+0000",
+   "total_comments_count": 1,
+   "total_like_count": 9,
+   "total_views_count": 87
+  },
   "permalink": "https://www.instagram.com/reel/DdHpD2LDRdf/",
   "published": "2026-09-11T05:00:04+09:00",
   "ref": "이사야 14:7",
@@ -3149,9 +5369,37 @@
   "format": "reel",
   "insights": {
    "comments": 3,
-   "likes": 21
+   "comments_field": "comments_count",
+   "likes": 21,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 1,
+   "shares_field": "shares_count",
+   "views": 315,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 3,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 21,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 1,
+   "shortcode": "DcMabFzgcwn",
+   "timestamp": "2026-08-18T19:55:59+0000",
+   "total_comments_count": 3,
+   "total_like_count": 21,
+   "total_views_count": 315
+  },
   "permalink": "https://www.instagram.com/reel/DcMabFzgcwn/",
   "published": "2026-08-19T04:56:42+09:00",
   "ref": "사도행전 16:31",
@@ -3167,9 +5415,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 13
+   "comments_field": "comments_count",
+   "likes": 13,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 1,
+   "shares_field": "shares_count",
+   "views": 268,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 13,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 1,
+   "shortcode": "DcYO4l-E33i",
+   "timestamp": "2026-08-23T10:06:02+0000",
+   "total_comments_count": 1,
+   "total_like_count": 13,
+   "total_views_count": 268
+  },
   "permalink": "https://www.instagram.com/reel/DcYO4l-E33i/",
   "published": "2026-08-23T19:07:17+09:00",
   "ref": "베드로전서 5:10",
@@ -3185,9 +5461,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 8
+   "comments_field": "comments_count",
+   "likes": 8,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 106,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 8,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 0,
+   "shortcode": "DcuJXZ_j3aa",
+   "timestamp": "2026-08-31T22:21:04+0000",
+   "total_comments_count": 1,
+   "total_like_count": 8,
+   "total_views_count": 106
+  },
   "permalink": "https://www.instagram.com/reel/DcuJXZ_j3aa/",
   "published": "2026-09-01T07:21:51+09:00",
   "ref": "마태복음 11:28",
@@ -3243,9 +5547,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 18
+   "comments_field": "comments_count",
+   "likes": 18,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 292,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 18,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DcO_lt0iXoO",
+   "timestamp": "2026-08-19T19:59:03+0000",
+   "total_comments_count": 1,
+   "total_like_count": 18,
+   "total_views_count": 292
+  },
   "permalink": "https://www.instagram.com/reel/DcO_lt0iXoO/",
   "published": "2026-08-20T04:59:48+09:00",
   "ref": "에베소서 2:8",
@@ -3261,9 +5593,37 @@
   "format": "reel",
   "insights": {
    "comments": 1,
-   "likes": 7
+   "comments_field": "comments_count",
+   "likes": 7,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 151,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 7,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DcoDfVWFFJ3",
+   "timestamp": "2026-08-29T13:34:18+0000",
+   "total_comments_count": 1,
+   "total_like_count": 7,
+   "total_views_count": 151
+  },
   "permalink": "https://www.instagram.com/reel/DcoDfVWFFJ3/",
   "published": "2026-08-29T22:35:13+09:00",
   "ref": "잠언 15:1",
@@ -3283,12 +5643,40 @@
   "gate_skipped": 2,
   "insights": {
    "comments": 1,
-   "likes": 28
+   "comments_field": "comments_count",
+   "likes": 28,
+   "likes_field": "like_count",
+   "reposts": 1,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 293,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 2.544,
   "motion_attempts": 3,
   "motion_sky": 1.267,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 28,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 1,
+   "shares_count": 0,
+   "shortcode": "Dd4nPMPlDnh",
+   "timestamp": "2026-09-29T20:25:53+0000",
+   "total_comments_count": 1,
+   "total_like_count": 28,
+   "total_views_count": 293
+  },
   "permalink": "https://www.instagram.com/reel/Dd4nPMPlDnh/",
   "published": "2026-09-30T05:27:25+09:00",
   "ref": "전도서 3:13",
@@ -3340,12 +5728,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 3,
-   "likes": 21
+   "comments_field": "comments_count",
+   "likes": 21,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 1,
+   "shares_field": "shares_count",
+   "views": 269,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 3.772,
   "motion_attempts": 1,
   "motion_sky": 0.728,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 3,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 21,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 1,
+   "shortcode": "DdmjgrnFafi",
+   "timestamp": "2026-09-22T20:07:00+0000",
+   "total_comments_count": 3,
+   "total_like_count": 21,
+   "total_views_count": 269
+  },
   "permalink": "https://www.instagram.com/reel/DdmjgrnFafi/",
   "published": "2026-09-23T05:07:46+09:00",
   "ref": "골로새서 4:2",
@@ -3368,12 +5784,40 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 26
+   "comments_field": "comments_count",
+   "likes": 26,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 339,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 8.318,
   "motion_attempts": 3,
   "motion_sky": 3.097,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 26,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "Dd1Ga7LAr8f",
+   "timestamp": "2026-09-28T11:41:27+0000",
+   "total_comments_count": 1,
+   "total_like_count": 26,
+   "total_views_count": 339
+  },
   "permalink": "https://www.instagram.com/reel/Dd1Ga7LAr8f/",
   "published": "2026-09-28T20:42:06+09:00",
   "ref": "신명기 8:10",
@@ -3397,12 +5841,46 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 19
+   "comments_field": "comments_count",
+   "likes": 19,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 320,
+   "views_field": "total_views_count"
   },
   "kind": "REELS",
   "motion": 12.879,
   "motion_attempts": 3,
   "motion_sky": 6.128,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "copyright_check_information": {
+    "status": {
+     "matches_found": false,
+     "status": "complete"
+    }
+   },
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 19,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DeIOmzNkYbd",
+   "timestamp": "2026-10-05T21:58:30+0000",
+   "total_comments_count": 1,
+   "total_like_count": 19,
+   "total_views_count": 320
+  },
   "permalink": "https://www.instagram.com/reel/DeIOmzNkYbd/",
   "published": "2026-10-06T06:59:07+09:00",
   "ref": "디모데전서 2:4",

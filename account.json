@@ -1,0 +1,46 @@
+{
+ "2026-10-07": {
+  "errors": {
+   "accounts_engaged": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "comments": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "comments|media_product_type": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "engaged_audience_demographics": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "engaged_audience_demographics|age": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "engaged_audience_demographics|city": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "engaged_audience_demographics|country": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "engaged_audience_demographics|gender": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "follower_demographics": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "follower_demographics|age": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "follower_demographics|city": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "follower_demographics|country": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "follower_demographics|gender": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "follows_and_unfollows": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "follows_and_unfollows|follow_type": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "likes": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "likes|media_product_type": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "profile_links_taps": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "profile_links_taps|contact_button_type": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "reach": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "reach|follow_type": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "reach|media_product_type": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "replies": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "reposts": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "saves": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "saves|media_product_type": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "shares": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "shares|media_product_type": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "total_interactions": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "total_interactions|media_product_type": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "views": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "views|follower_type": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "views|media_product_type": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)"
+  },
+  "insights": {},
+  "profile": {
+   "followers_count": 215,
+   "id": "17841416389585321",
+   "media_count": 195,
+   "username": "saintseoul_studio"
+  }
+ }
+}

@@ -28,6 +28,21 @@ jobs:
           IG_INSIGHTS_TOKEN: ${{ secrets.IG_INSIGHTS_TOKEN }}
         run: python insights.py
 
+      # Once a month, ask the API about every single name in ig_catalog.py and write the
+      # verdict to api_support.json. This is the only thing that keeps "what is automatic" from
+      # drifting back into something decided from memory: several catalogued metrics are
+      # documented "in development" and will start answering with no announcement, and a token
+      # gaining the insights scope changes thirty rows at once. ~85 calls, on the 1st only.
+      - name: Re-probe what the API will answer (monthly)
+        continue-on-error: true
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_INSIGHTS_TOKEN: ${{ secrets.IG_INSIGHTS_TOKEN }}
+          META_APP_ID: ${{ secrets.META_APP_ID }}
+          META_APP_SECRET: ${{ secrets.META_APP_SECRET }}
+        run: python ig_probe.py --if-stale
+
       # Silent unless something is actually wrong. A daily "it posted" message was noise; this
       # only speaks when engagement falls off a cliff, posts stop, or several in a row get no
       # response at all. Backtested against the August collapse: no false alarm on any healthy
@@ -47,4 +62,5 @@ jobs:
         # One implementation for every ledger — see save_ledger.sh. The old
         # `git pull --rebase || true; git push` is what lost the 08-26 ledger.
         run: >-
-          bash save_ledger.sh 'ledgers: metrics + followers' metrics.json followers.json watch.json
+          bash save_ledger.sh 'ledgers: metrics + followers + account'
+          metrics.json followers.json watch.json account.json api_support.json
