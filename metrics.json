@@ -1242,6 +1242,33 @@
   "ref": "시편 18:2",
   "theme": "믿음"
  },
+ "17991399687023220": {
+  "clip_novelty": 7.22,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-07",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 17,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 3.185,
+  "motion_attempts": 3,
+  "motion_sky": 2.697,
+  "published": "2026-10-07T20:45:04+09:00",
+  "ref": "베드로전서 2:17",
+  "scene": "bedroom",
+  "segments": 1,
+  "text_contrast": 1.56,
+  "text_spread": 37.3,
+  "theme": "사랑",
+  "veo_attempts": [
+   3
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "17992428077834928": {
   "cta_in_caption": false,
   "date": "2026-09-01",
