@@ -202,9 +202,30 @@ finally:
     post_instagram._get = real_get
 day = next(iter(book.values()))
 check("a fully rejected day is written down, not silently empty",
-      len(day.get("errors") or {}) == len(ig_catalog.account_requests()))
-check("the non-follower breakdown is among the things recorded as refused",
-      "reach|follow_type" in (day.get("errors") or {}))
+      bool(day.get("errors")))
+# 33 copies of one sentence, every day, for as long as the permission is missing, is ~12,000
+# lines a year in a ledger whose value is being readable by eye. One fact, with its scale.
+check("an all-identical refusal is recorded ONCE, with how many requests it covered",
+      (day["errors"].get("*") or "").startswith("HTTP 400: (#10)")
+      and day["errors"].get("*_requests") == len(ig_catalog.account_requests()))
+
+
+def _mixed(url):
+    if "metric=reach" in url and "breakdown=follow_type" in url:
+        raise RuntimeError("HTTP 400: (#10) no permission for this breakdown")
+    if "/insights?" in url:
+        return {"data": [{"total_value": {"value": 1}}]}
+    return {"id": "u", "followers_count": 215}
+
+
+post_instagram._get = _mixed
+try:
+    book = insights.account(base="b", uid="u", token="t")
+finally:
+    post_instagram._get = real_get
+day = next(iter(book.values()))
+check("a PARTIAL refusal is still recorded per request key, not collapsed",
+      list(day.get("errors") or {}) == ["reach|follow_type"])
 
 
 def _ok(url):

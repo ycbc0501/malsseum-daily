@@ -376,9 +376,14 @@ def checks():
     yield "G3.6 the account ledger is its own file, keyed by date", (
         _i.ACCOUNT.endswith("account.json") and _i.ACCOUNT != _m.FILE)
     # G-3.7 A refusal and a zero are different facts; the refusal has to be on disk.
+    _asrc = inspect.getsource(_i.account)
     yield "G3.7 rejected account metrics are recorded, not just logged", (
-        'errors' in inspect.getsource(_i.account)
-        and 'day.setdefault("errors"' in inspect.getsource(_i.account))
+        'day["errors"] = errors' in _asrc and 'errors[key] = str(e)' in _asrc)
+    yield "G3.7 an all-identical refusal is compressed, a partial one is not", (
+        'len(set(errors.values())) == 1 and not ok' in _asrc
+        and '"*_requests"' in _asrc)
+    yield "G3.7 errors do not accumulate across runs the way values do", (
+        "errors = {}" in _asrc and 'day.setdefault("insights"' in _asrc)
     # G-3.8 The probe must say out loud that its ❌ is not evidence a metric is unavailable.
     yield "G3.8 the probe warns that (#10) cannot prove absence", (
         "NOT 'this metric does not exist'" in inspect.getsource(_pr.show))

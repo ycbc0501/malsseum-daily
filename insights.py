@@ -350,7 +350,11 @@ def account(base=None, uid=None, token=None):
             day["profile_error"] = str(e2)[:160]
 
     got = day.setdefault("insights", {})
-    errors = day.setdefault("errors", {})
+    # Values ACCUMULATE across runs (a metric that answered this morning is still true this
+    # evening), but errors do NOT: they describe this run's outcome. Carried over, a compressed
+    # "everything was refused" summary from the morning would still be sitting next to this
+    # evening's working metrics, reading as though both were true at once.
+    errors = {}
     ok = bad = 0
     for metric, period, mtype, bd, tf in ig_catalog.account_requests():
         q = {"metric": metric, "period": period, "metric_type": mtype, "access_token": token}
@@ -382,10 +386,17 @@ def account(base=None, uid=None, token=None):
             got[key] = flat
         else:
             got[key] = res.get("data") or None
-        errors.pop(key, None)
         ok += 1
+    day["errors"] = errors
     if not errors:
         day.pop("errors", None)
+    elif len(set(errors.values())) == 1 and not ok:
+        # Every request refused with the SAME sentence — one missing permission, not 33 facts.
+        # Writing it out 33 times a day would add ~12,000 lines a year to a ledger whose whole
+        # value is being readable by eye, and it would do it for exactly as long as the problem
+        # went unfixed. Record the fact once, and say how many requests it covered.
+        day["errors"] = {"*": next(iter(errors.values())),
+                         "*_requests": len(ig_catalog.account_requests())}
 
     with open(ACCOUNT, "w", encoding="utf-8") as f:
         json.dump(book, f, ensure_ascii=False, indent=1, sort_keys=True)
