@@ -199,8 +199,8 @@ def refresh(token=None, days=MATURE_DAYS):
             # not just views': a stale `shares_manual` next to an API `shares` would make the
             # one number Instagram ranks on look untrustworthy exactly when it became real.
             for _f in APP_FIELDS:
-                if got.get(_f) is not None:
-                    merged.pop(f"{_f}_manual", None)
+                if got.get(_stored(_f)) is not None:
+                    merged.pop(f"{_stored(_f)}_manual", None)
             entry["insights"] = merged
             entry["fetched"] = now.isoformat(timespec="seconds")
             touched += 1
@@ -214,9 +214,10 @@ def refresh(token=None, days=MATURE_DAYS):
 def distribution(entry):
     """How many people this post reached, or the closest number we actually have.
 
-    `reach` (unique accounts) only ever arrives from the insights endpoint, which answers
-    `(#10)` for this token — so it has NEVER been present, on any of 208 posts. `views` can be
-    read off the app by hand and 14 posts carry it. They are not the same measurement (views
+    `reach` (unique accounts) never arrives from the insights endpoint, which answers `(#10)`
+    for this token. It is not unobtainable, though — that was a second-order version of the
+    same error: 「릴스 인사이트 → 조회한 사람」 is reach, on screen, free, and went unread
+    until 2026-10-07. `views` is the weaker stand-in for the posts nobody has opened yet. They are not the same measurement (views
     counts plays, reach counts people) but one of them exists and the other does not, and
     report() used to require `reach` and therefore showed "0 with insights" while fourteen
     distribution numbers sat in the file unread. That is the same mistake as reading the API's
@@ -317,18 +318,28 @@ def report():
         return
     scored = [e for e in data.values() if distribution(e)[0]]
     exact = sum(1 for e in scored if distribution(e)[1])
+    # Reach can now arrive two ways — the API, or 「조회한 사람」 typed off the 릴스 인사이트
+    # screen. Both are reach and both are exact, but saying "from the API" about a number a
+    # human read off a phone is the kind of small untruth that later gets built on.
+    byhand = sum(1 for e in scored if distribution(e)[1]
+                 and (e.get("insights") or {}).get("reach_manual"))
     print(f"{len(data)} post(s) recorded, {len(scored)} with a distribution number "
-          f"({exact} true reach from the API, {len(scored) - exact} views read off the app)\n")
+          f"({exact - byhand} reach from the API, {byhand} reach read off 릴스 인사이트, "
+          f"{len(scored) - exact} views standing in for reach)\n")
     if not scored:
         print("No reach/views at all — the token lacks instagram_manage_insights "
               "(`python3 metrics.py refresh` once it has it), and nothing has been entered by "
               "hand either (`python3 metrics.py observe \"<ref>\" views=… shares=…`).")
         _engagement_only(data)
         return
-    if exact == 0:
-        print("NOTE: every number below uses VIEWS as the denominator, not reach — views count "
-              "plays, reach counts people, so the rates are conservative. `reach` has never "
-              "been available on this token (RULES.md G-2).\n")
+    if exact < len(scored):
+        # Not `exact == 0`: once ONE post carries real reach, a test for zero goes quiet while
+        # the other fourteen posts keep using views as the denominator unannounced. The note
+        # has to survive the good news.
+        print(f"NOTE: {len(scored) - exact} of {len(scored)} rows below use VIEWS as the "
+              "denominator, not reach — views count plays, reach counts people, so those rates "
+              "are conservative. The API has never returned `reach` on this token; where reach "
+              "is present a human read 「조회한 사람」 off the app (RULES.md G-2).\n")
 
     def group(key, label):
         buckets = {}
@@ -337,10 +348,22 @@ def report():
         print(f"— by {label} —")
         for k in sorted(buckets, key=str):
             g = buckets[k]
-            def avg(m):
+            def vals_of(m):
                 vals = [(e["insights"] or {}).get(m) for e in g]
-                vals = [v for v in vals if isinstance(v, (int, float))]
+                return [v for v in vals if isinstance(v, (int, float))]
+
+            def avg(m):
+                vals = vals_of(m)
                 return sum(vals) / len(vals) if vals else 0
+
+            def avg_n(m, scale=1.0, unit=""):
+                """Mean plus the count it stands on. A column averaged over 1 post under a
+                header saying n=13 reads as thirteen posts agreeing; it is one post."""
+                vals = vals_of(m)
+                if not vals:
+                    return f"{'—':>7}{unit}      "
+                return f"{sum(vals) / len(vals) * scale:7.1f}{unit}(n={len(vals)})"
+
             shares = [r for r in (_rate(e, "shares") for e in g) if r is not None]
             likes = [r for r in (_rate(e, "likes") for e in g) if r is not None]
             dists = [d for d in (distribution(e)[0] for e in g) if d]
@@ -349,14 +372,19 @@ def report():
                   # `shares` is averaged over the posts that HAVE it, which is not n — printing
                   # a mean over 3 posts under a header saying n=13 is the same quiet overclaim
                   # this whole section exists to stop. Say how many it is standing on.
-                  f"saved={avg('saved'):5.1f}  "
-                  f"shares={avg('shares'):5.1f}(n={len(shares)})  "
+                  f"saved={avg_n('saved')}  "
+                  f"shares={avg_n('shares')}  "
                   # The signal Instagram says it ranks reels on. Printed next to like rate so the
                   # proxy and the real thing are never confused for each other again.
                   f"send/seen={(sum(shares) / len(shares) * 100 if shares else 0):5.2f}%  "
                   f"like/seen={(sum(likes) / len(likes) * 100 if likes else 0):5.2f}%  "
                   f"follows={avg('follows'):5.1f}  "
-                  f"watch={avg('ig_reels_avg_watch_time') / 1000 if avg('ig_reels_avg_watch_time') else 0:5.1f}s")
+                  # Watch time and skip rate are the two columns that say whether anyone stayed
+                  # long enough to read the verse. Everything to their left measures people who
+                  # already did. 2026-10-07: the first post ever measured came back at 2.0s on a
+                  # 30s asset with an 85.2% skip rate (STRATEGY.md §15).
+                  f"watch={avg_n('ig_reels_avg_watch_time', 1 / 1000, 's')}  "
+                  f"skip={avg_n('skip_rate', 1.0, '%')}")
         print()
 
     group("segments", "Veo segments (reel length)")
@@ -377,7 +405,39 @@ def report():
 # Instagram's own public statement of what ranks a reel is SENDS PER REACH, and until
 # 2026-10-07 the strategy note recorded sends as "not designed for" — inferred, never read.
 # They were on screen the entire time, next to the paper-plane icon.
-APP_FIELDS = ("views", "reach", "likes", "comments", "shares", "reposts", "saves")
+#
+# 「릴스 인사이트」 — one tap deeper than the post, and the層 that was never opened until
+# 2026-10-07 evening. It carries the three things this ledger could not previously hold:
+#
+#   조회한 사람    → reach     THE unique-accounts number. "reach has never been available on
+#                             this token" was true of the API and false of the screen.
+#   평균 조회 시간  → watch     seconds in, stored as ms in the API's own field, so a working
+#                             token later overwrites it instead of sitting beside it.
+#   주요 조회 출처  → src_*     릴스 탭 / 탐색 탭 / 피드, in percent. Reels+Explore are surfaces
+#                             shown to people who do NOT follow us, so this is the direct
+#                             read on distribution that follower-ratio arithmetic only inferred.
+#   건너뛰기 비율  → skip_rate  share of viewers who swiped past. No API equivalent at all.
+APP_FIELDS = ("views", "reach", "likes", "comments", "shares", "reposts", "saves",
+              "follows", "watch", "skip_rate", "src_reels", "src_explore", "src_feed")
+
+# Percentages off the insights screen: these are not counts and must not be int()ed — 85.2
+# becoming 85 is a silent edit to a measurement.
+_PCT_FIELDS = ("skip_rate", "src_reels", "src_explore", "src_feed")
+
+# Where a hand-entered field is actually stored. The name a human types is the one on the
+# screen; the name on disk is the API's, so a hand-entered number and a future refresh() land
+# in the SAME field instead of two fields that silently disagree.
+#
+#   watch  → the app prints "평균 조회 시간 2초", the API returns milliseconds
+#   saves  → the icon is 🔖 and the app says 저장, but the API metric is spelled `saved`,
+#            which report() already reads. Entered as `saves` and stored as `saves`, the
+#            number would have sat in the file unread — the exact failure this module just
+#            fixed one level up (see report()).
+_FIELD_STORE = {"watch": "ig_reels_avg_watch_time", "saves": "saved"}
+
+
+def _stored(field):
+    return _FIELD_STORE.get(field, field)
 
 
 def note(which, **vals):
@@ -409,8 +469,14 @@ def note(which, **vals):
            which in entry.get("permalink", ""):
             ins = entry.setdefault("insights", {})
             for k, v in vals.items():
-                ins[k] = int(v)
-                ins[f"{k}_manual"] = True
+                if k in _PCT_FIELDS:
+                    val = float(v)
+                elif k == "watch":
+                    val = round(float(v) * 1000)       # 초 → ms, the API's unit
+                else:
+                    val = int(v)
+                ins[_stored(k)] = val
+                ins[f"{_stored(k)}_manual"] = True
             save(data)
             print(f"{entry.get('ref', media_id)}: "
                   + " ".join(f"{k}={v}" for k, v in sorted(vals.items())) + " (hand-entered)")

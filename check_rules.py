@@ -276,6 +276,31 @@ def checks():
     # next to an API shares would make the one ranking number look untrustworthy when it went real.
     yield "G2 an API answer clears the hand-entered marker on every field", (
         "for _f in APP_FIELDS" in inspect.getsource(_m.refresh))
+    # G-2.5 The 릴스 인사이트 screen is one tap deeper than the post, and carries the three
+    # things this ledger could not hold: reach itself, watch time, and where the views came
+    # from. 탐색 탭 is a non-follower surface, so src_* is a direct read on distribution that
+    # follower-ratio arithmetic could only infer.
+    yield "G2.5 the deeper insights screen has fields to land in", (
+        all(f in _m.APP_FIELDS for f in
+            ("reach", "watch", "skip_rate", "src_reels", "src_explore", "src_feed", "saves")))
+    # G-2.6 The name typed in is the screen's; the name on disk is the API's. When those two
+    # drift, the number is recorded and invisible — which happened twice on 2026-10-07.
+    yield "G2.6 saves lands in the API's field name, not the app's", (
+        _m._stored("saves") == "saved" and _m._stored("watch") == "ig_reels_avg_watch_time")
+    yield "G2.6 the hand-entry marker follows the stored name", (
+        "_stored(_f)" in inspect.getsource(_m.refresh)
+        and "_stored(k)" in inspect.getsource(_m.note))
+    yield "G2.6 a percentage off the screen is not truncated to an int", (
+        "_PCT_FIELDS" in inspect.getsource(_m.note) and "float(v)" in inspect.getsource(_m.note))
+    # G-2.7 A mean printed under an n=13 header while standing on 1 post is the quiet overclaim
+    # this whole ledger exists to stop.
+    yield "G2.7 sparse averages in report() carry their own n", (
+        "def avg_n" in inspect.getsource(_m.report)
+        and "n={len(vals)}" in inspect.getsource(_m.report))
+    # ...and the "these rows use views, not reach" note must survive the first real reach,
+    # instead of going quiet the moment one post has it.
+    yield "G2.7 the views-as-denominator note survives partial reach", (
+        "if exact < len(scored)" in inspect.getsource(_m.report))
     import fetch_veo
     yield "E3 retries escalate the demand", (
         len(fetch_veo.CALMER) == 3 and "frozen photograph" in fetch_veo.CALMER[2].lower()
