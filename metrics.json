@@ -4322,6 +4322,35 @@
   "text_spread": 6.9,
   "theme": "믿음"
  },
+ "18126543484874694": {
+  "clip_novelty": 1.55,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-08",
+  "duration": 22.98,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 24,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 4.06,
+  "motion_attempts": 1,
+  "motion_sky": 0.652,
+  "published": "2026-10-08T05:37:09+09:00",
+  "ref": "신명기 6:5",
+  "scene": "lighthouse",
+  "segments": 3,
+  "text_contrast": 10.61,
+  "text_spread": 3.3,
+  "theme": "사랑",
+  "veo_attempts": [
+   1,
+   1,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18127535191710602": {
   "insights": {
    "comments": 4,
