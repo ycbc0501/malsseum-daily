@@ -384,7 +384,7 @@ def report():
                   # already did. 2026-10-07: the first post ever measured came back at 2.0s on a
                   # 30s asset with an 85.2% skip rate (STRATEGY.md §15).
                   f"watch={avg_n('ig_reels_avg_watch_time', 1 / 1000, 's')}  "
-                  f"skip={avg_n('skip_rate', 1.0, '%')}")
+                  f"skip={avg_n('reels_skip_rate', 1.0, '%')}")
         print()
 
     group("segments", "Veo segments (reel length)")
@@ -433,7 +433,16 @@ _PCT_FIELDS = ("skip_rate", "src_reels", "src_explore", "src_feed")
 #            which report() already reads. Entered as `saves` and stored as `saves`, the
 #            number would have sat in the file unread — the exact failure this module just
 #            fixed one level up (see report()).
-_FIELD_STORE = {"watch": "ig_reels_avg_watch_time", "saves": "saved"}
+#   skip_rate → the API calls it `reels_skip_rate` ("the percentage of views from people who
+#            skipped during the first 3 seconds", marked estimated/in development in the
+#            reference). Caught by the rule above the moment it was written down: on
+#            2026-10-07 this was stored as plain `skip_rate` while the API answers to
+#            `reels_skip_rate`, so the hand-entered 85.2% and the first API answer would have
+#            sat in two fields that silently disagreed. Whether the API returns 85.2 or 0.852
+#            is NOT yet known — no call has ever succeeded. The first real answer must be
+#            compared against a hand-entered one before any rate is trusted.
+_FIELD_STORE = {"watch": "ig_reels_avg_watch_time", "saves": "saved",
+                "skip_rate": "reels_skip_rate"}
 
 
 def _stored(field):

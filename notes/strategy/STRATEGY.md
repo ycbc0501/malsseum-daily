@@ -1080,3 +1080,113 @@ python3 metrics.py observe "고린도전서 10:24" views=260 reach=233 likes=22 
 
 **3~4건만 더 모이면** 건너뛰기 85.2%가 상수인지 이 한 건인지 갈립니다. 그게 갈리면
 이 계정에서 **다음에 무엇을 고쳐야 하는지가 처음으로 추측이 아니게 됩니다.**
+
+---
+
+# §16 — "API로 못 받는 거야?" 아니다. 권한 하나였다 (2026-10-07 심야)
+
+원석님 질문: *"그럼 api로 못받는거야? 매번수동으로 줘야해? 그러지 않을거같은데 독스 똑바로 다시봐"*
+
+**원석님이 맞았다.** 제대로 읽으니 전제가 무너진다. 이 절은 §14·§15가 서 있던 바닥을 고친다.
+
+## 16.1 두 달 동안 아무도 토큰에게 묻지 않았다
+
+```
+GET /debug_token   (2026-10-07 실행, 1회 호출, 1초)
+  type SYSTEM_USER   application bible   expires_at 0
+  scopes  pages_show_list · instagram_basic · instagram_manage_comments
+          instagram_content_publish · pages_read_engagement · public_profile
+```
+
+**`instagram_manage_insights`가 없다. 요청된 적이 없다.**
+
+`(#10) Application does not have permission for this action` 을 **"인스타그램이 우리에게
+안 보여준다"** 로 읽었다. 실제 뜻은 **"이 토큰은 그걸 요청한 적이 없다"** 다.
+**메시지는 처음부터 정확했다.** 두 달치 전략이 읽기 오류 하나 위에 서 있었다.
+
+§14가 "게시물 화면을 안 봤다", §15가 "인사이트 화면 안쪽을 안 열었다"였다면,
+§16은 **"에러 메시지를 안 읽었다"** 다. 같은 병이 세 번째다.
+
+## 16.2 그래서 "매번 수동"이 아니다
+
+**권한만 붙으면 자동**(공식 릴 지표 레퍼런스, 2026-10-07 원문):
+```
+comments · crossposted_views · facebook_views · ig_reels_avg_watch_time
+ig_reels_video_view_total_time · likes · reach · reels_skip_rate · reposts
+saved · shares · total_interactions · views · total_comments · total_likes · total_views
+```
+
+**`reels_skip_rate`와 `reposts`가 API에 있다.** 어제 손으로 넣은 「건너뛰기 85.2%」와
+「리포스트 0」이 그것이다. 레퍼런스 정의: *"릴 첫 3초 안에 건너뛴 사람의 조회 비율",
+추정치이며 개발 중.* **§15가 새 1순위로 지목한 바로 그 숫자가 API에 있었다.**
+
+**API에 없어 계속 수동인 것은 셋뿐이다:**
+```
+주요 조회 출처(릴스/탐색/피드)  ·  또래 비교(더 높음/낮음)  ·  미디어 단위 팔로우
+```
+셋 다 천천히 변한다 → **매일이 아니라 2주에 한 건**이면 충분하다.
+
+```
+어제 손으로 넣은 13칸  →  자동 10칸 + 수동 3칸
+```
+
+## 16.3 그런데 권한이 생겼어도 안 들어왔을 것이다 — 두 개는 우리 탓
+
+**① `INSIGHT_TIERS`가 `reels_skip_rate`·`reposts`를 한 번도 요청한 적이 없다.**
+권한을 받아도 이 두 칸은 영원히 비어 있었고, Meta 탓으로 보였을 것이다.
+
+**② 더 나쁜 것 — 읽기 토큰이 엉뚱한 호스트로 간다.** `insights.py api()`는 인스타그램
+로그인 토큰이 `graph.instagram.com`에만 유효한 걸 알고 있었는데,
+`post_instagram.insights()`에 **전달하지 않았다.**
+```
+원석님이 OAuth 통과 → 토큰 생성 → 호출이 OAuth 오류 → insights()가 {} 반환
+→ 로그에 "insights unavailable" → 권한 없을 때와 글자 하나 다르지 않다
+```
+**승인하고도 "역시 안 되네"로 끝났을 것이다.** 둘 다 오늘 고쳤다.
+
+## 16.4 내 "확인"이 아무것도 확인하지 못했다
+
+지난 세션에 `ig_login.py --auth-url` 주소가 **HTTP 200**을 돌려주는 걸 보고
+"경로가 살아있다"고 보고했다. 대조 시험:
+```
+우리 앱 ID            HTTP 200  본문 680,370자  title "Login • Instagram"
+없는 ID 1234567890…   HTTP 200  본문 680,448자  title "Login • Instagram"
+```
+**존재하지 않는 앱에도 같은 200이 온다. 200은 증거가 아니었다.**
+
+그리고 같은 종류의 함정 하나 더: **권한이 없으면 Meta는 존재하지 않는 지표 이름에도
+`(#10)`을 돌려준다**(`view_sources`·`navigation`으로 확인). 권한 검사가 이름 검증보다
+먼저다. **`(#10)` 쓸어보기로 지표 유무를 판정할 수 없다.**
+
+## 16.5 코드로 못 박은 것 — 다시는 기억으로 논쟁하지 않는다
+
+- **`ig_doctor.py` 신규.** 한 줄로 권한·빠진 것·자동화 범위·수동 잔여를 출력한다.
+  추측하지 않고 `debug_token`에게 묻는다.
+- `post_instagram.py` — `INSIGHT_TIERS`에 `reels_skip_rate·reposts·
+  ig_reels_video_view_total_time` 추가, `INSIGHT_SINGLES` 분리, `base` 인자.
+- `insights.py` — `base`를 실제로 전달.
+- `metrics.py` — **G-2.6이 쓰인 지 몇 시간 만에 제 코드를 잡았다.** 손입력 `skip_rate`가
+  API 이름 `reels_skip_rate`와 어긋나 있었다. 매핑 추가 + 기존 값 이관.
+  ⚠️ **API가 85.2를 주는지 0.852를 주는지는 아직 모른다** — 첫 실값을 손입력 값과
+  대조하기 전에는 어떤 비율도 믿지 않는다.
+- `RULES.md` G-2 **1-a ~ 1-d** 신설, `check_rules.py` 6개, `test_insight_metrics.py` 12개.
+  **역테스트 4종 확인** — 요청 되돌리면 4개, 호스트 하드코딩 1개, base 전달 중단 1개,
+  매핑 되돌리면 5개 실패.
+- 절차: [notes/insights-token-2026-10-07.md](../insights-token-2026-10-07.md)
+
+## 16.6 원석님이 하실 일 — 한 번뿐이고, 그 뒤로는 없다
+
+자동 갱신 워크플로(`refresh-token.yml` + `refresh_token.py`)는 **이미 만들어져 있다.**
+최초 승인 1회만 남았다.
+
+```
+1. developers.facebook.com → 앱 "bible" → 제품에 Instagram 추가
+   → "API setup with Instagram login" → Instagram 앱 ID / 시크릿 복사
+2. export IG_APP_ID=... IG_APP_SECRET=... ; python3 ig_login.py --auth-url
+   → 주소 열고 @saintseoul_studio 로 로그인·승인 → code= 복사
+3. python3 ig_login.py --code 'XXXX'  →  gh secret set IG_INSIGHTS_TOKEN
+4. python3 ig_doctor.py               →  ✅ 확인
+```
+
+**과거 기록상 비즈니스 관리자 경로는 SMS 2FA에 막혀 있었다.** 그게 풀렸다면 그쪽이
+더 낫다 — 만료 없는 토큰 하나로 끝나고 갱신이 아예 필요 없다.

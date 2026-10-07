@@ -286,7 +286,40 @@ def checks():
     # G-2.6 The name typed in is the screen's; the name on disk is the API's. When those two
     # drift, the number is recorded and invisible — which happened twice on 2026-10-07.
     yield "G2.6 saves lands in the API's field name, not the app's", (
-        _m._stored("saves") == "saved" and _m._stored("watch") == "ig_reels_avg_watch_time")
+        _m._stored("saves") == "saved" and _m._stored("watch") == "ig_reels_avg_watch_time"
+        # Caught by this very rule hours after it was written: 건너뛰기 비율 was stored as
+        # `skip_rate` while the API answers to `reels_skip_rate`, so the hand-entered 85.2%
+        # and the first API answer would have landed in two fields that never met.
+        and _m._stored("skip_rate") == "reels_skip_rate")
+    # G-2.1a The API was never the limit — one permission was missing and nobody asked the
+    # token for two months. The diagnosis must be one command, not an argument from memory.
+    import ig_doctor
+    yield "G2.1a a tool exists that asks the token what it can do", (
+        callable(getattr(ig_doctor, "describe", None))
+        and "debug_token" in inspect.getsource(ig_doctor.describe))
+    yield "G2.1a the doctor names the permission that is actually missing", (
+        any("instagram_manage_insights" in need for need in ig_doctor.NEEDED.values())
+        and any("instagram_business_manage_insights" in need
+                for need in ig_doctor.NEEDED.values()))
+    # G-2.1b A (#10) sweep cannot tell a real metric from an invented one — permission is
+    # checked before the name is. Whoever reads probe() next has to be told, in the code.
+    yield "G2.1b the (#10) trap is written down where it would be re-made", (
+        "(#10)" in inspect.getsource(ig_doctor.probe)
+        and "view_sources" in inspect.getsource(ig_doctor.probe))
+    # G-2.1d A read token is only valid against its own host. Without `base`, an Instagram
+    # Login token fails OAuth, insights() returns {}, and the log says "insights unavailable"
+    # — identical to having no permission. A human's OAuth trip would have been wasted.
+    import post_instagram as _p
+    yield "G2.1d insights() is sent to the host its token is valid for", (
+        "base" in inspect.signature(_p.insights).parameters
+        and "{GRAPH}/" not in inspect.getsource(_p.insights))
+    import insights as _i
+    yield "G2.1d insights.py hands the base down", (
+        "base=base" in inspect.getsource(_i.backfill))
+    # The two metrics that were hand-entered while the API had names for them.
+    yield "G2.1a reels_skip_rate and reposts are actually requested", (
+        {"reels_skip_rate", "reposts"} <= {m for t in _p.INSIGHT_TIERS for m in t}
+        and {"reels_skip_rate", "reposts"} <= set(_p.INSIGHT_SINGLES))
     yield "G2.6 the hand-entry marker follows the stored name", (
         "_stored(_f)" in inspect.getsource(_m.refresh)
         and "_stored(k)" in inspect.getsource(_m.note))

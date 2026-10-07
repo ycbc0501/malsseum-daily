@@ -233,25 +233,55 @@ def reply(comment_id, message, token=None):
 # request if any single metric is unavailable for a media type or version, so we degrade tier by
 # tier instead of guessing: v21 serves `plays`, v22+ renamed it `views`, and the ig_reels_* pair
 # only exists for reels. Better to return the core numbers than to return nothing.
+# 2026-10-07: the official REELS metric list was read for the first time. It names two metrics
+# this file had never asked for — `reels_skip_rate` ("the percentage of views from people who
+# skipped during the first 3 seconds", marked estimated/in development) and `reposts`. Both were
+# being typed in by hand off the app while the API had names for them. Whatever else is wrong
+# with the token, THIS was ours.
+#
+# Valid for REELS (verbatim from the reference, 2026-10-07):
+#   comments · crossposted_views · facebook_views · ig_reels_avg_watch_time
+#   ig_reels_video_view_total_time · likes · reach · reels_skip_rate · reposts · saved
+#   shares · total_interactions · views · total_comments · total_likes · total_views
+#
+# NOT in the API at any tier, and therefore the only numbers that stay hand-entered:
+#   주요 조회 출처 (릴스 탭 / 탐색 탭 / 피드)  ·  또래 비교 (더 높음/더 낮음)  ·  팔로우
 INSIGHT_TIERS = [
-    ("reach", "likes", "comments", "shares", "saved", "total_interactions",
-     "plays", "ig_reels_avg_watch_time", "ig_reels_video_view_total_time"),
+    ("reach", "likes", "comments", "shares", "saved", "total_interactions", "views",
+     "reels_skip_rate", "reposts", "ig_reels_avg_watch_time", "ig_reels_video_view_total_time"),
+    ("reach", "likes", "comments", "shares", "saved", "total_interactions", "views",
+     "ig_reels_avg_watch_time"),
     ("reach", "likes", "comments", "shares", "saved", "total_interactions", "views"),
     ("reach", "likes", "comments", "shares", "saved", "total_interactions"),
     ("reach",),
 ]
 
+# Asked for one at a time when every bundle fails — a bundle is all-or-nothing, so one
+# unsupported name blanks the rest. Ordered by how much the account actually needs them.
+INSIGHT_SINGLES = ("views", "reach", "shares", "saved", "reels_skip_rate", "reposts",
+                   "ig_reels_avg_watch_time", "total_interactions")
 
-def insights(media_id, token=None):
+
+def insights(media_id, token=None, base=None):
     """Performance metrics for one published media → {metric: value}.
 
-    Needs instagram_manage_insights on the token. Returns {} rather than raising if every
-    tier is rejected, so a metrics run can never take down a posting run."""
+    Needs instagram_manage_insights (Facebook Login) or instagram_business_manage_insights
+    (Instagram Login). Returns {} rather than raising if every tier is rejected, so a metrics
+    run can never take down a posting run.
+
+    `base` MUST be passed when the token came from Instagram Login: that token is only valid
+    against graph.instagram.com, and sending it to graph.facebook.com fails with an OAuth
+    error that this function swallows into {} — which then prints as "insights unavailable",
+    the same sentence a missing permission prints. A human would have done the whole OAuth
+    dance and been told nothing changed. insights.py already computes the right base in api();
+    it just was not handed down. (Found 2026-10-07 while checking why the API "cannot" give
+    us reach — it can; see notes/insights-token-2026-10-07.md.)"""
     token = token or os.environ.get("IG_ACCESS_TOKEN")
+    base = base or GRAPH
     last = None
     for tier in INSIGHT_TIERS:
         try:
-            got = _get(f"{GRAPH}/{media_id}/insights"
+            got = _get(f"{base}/{media_id}/insights"
                        f"?metric={','.join(tier)}&access_token={token}")
         except Exception as e:
             last = e
@@ -275,7 +305,7 @@ def insights(media_id, token=None):
             # a rejection here costs one call and changes nothing.
             if "views" not in out:
                 try:
-                    got = _get(f"{GRAPH}/{media_id}/insights"
+                    got = _get(f"{base}/{media_id}/insights"
                                f"?metric=views&access_token={token}")
                     for row in got.get("data", []):
                         vals = row.get("values") or [{}]
@@ -291,9 +321,9 @@ def insights(media_id, token=None):
     # and comments recorded while the app itself was showing a view count on each post.
     # So fall back to asking for each metric ALONE and keeping whatever answers.
     out = {}
-    for metric in ("views", "reach", "shares", "saved", "total_interactions"):
+    for metric in INSIGHT_SINGLES:
         try:
-            got = _get(f"{GRAPH}/{media_id}/insights"
+            got = _get(f"{base}/{media_id}/insights"
                        f"?metric={metric}&access_token={token}")
         except Exception as e:
             last = e

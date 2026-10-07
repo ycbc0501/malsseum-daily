@@ -86,6 +86,41 @@ rules — read it when you need to know *why*. **Where the two disagree, RULES.m
 3~4건이면 85.2%가 상수인지 이 한 건인지 갈린다: 이사야 42:12 · 이사야 12:5 · 로마서 16:27 ·
 디모데전서 2:4 (전부 7.67초 릴).
 
+## 2026-10-07 심야 — **API로 못 받는 게 아니었다. 권한 하나였다** (STRATEGY.md §16)
+
+원석님 지적("독스 똑바로 다시봐")이 맞았다. **`debug_token` 한 번이면 끝날 일이었다.**
+```
+scopes: pages_show_list · instagram_basic · instagram_manage_comments
+        instagram_content_publish · pages_read_engagement · public_profile
+→ instagram_manage_insights 가 없다. 요청된 적이 없다.
+```
+`(#10)`은 **"인스타그램이 숨긴다"가 아니라 "이 토큰은 요청한 적이 없다"** 였다. 메시지는
+처음부터 정확했다. §14=게시물 화면 안 봄, §15=인사이트 안쪽 안 엶, **§16=에러 메시지 안 읽음.**
+
+- **"매번 수동"이 아니다. 어제 손으로 넣은 13칸 → 자동 10칸 + 수동 3칸.**
+  공식 릴 지표에 **`reels_skip_rate`와 `reposts`가 있다** — §15가 1순위로 지목한 건너뛰기가
+  API에 있었다. 수동으로 남는 건 **조회 출처 · 또래 비교 · 미디어 팔로우 셋뿐**이고
+  전부 천천히 변해서 2주에 한 건이면 된다.
+- **권한이 생겼어도 안 들어왔을 것 — 둘은 우리 탓이다.** ① `INSIGHT_TIERS`가
+  `reels_skip_rate·reposts`를 한 번도 요청한 적이 없다. ② `insights.py api()`는 읽기 토큰이
+  `graph.instagram.com`에만 유효한 걸 아는데 `post_instagram.insights()`에 **전달하지 않았다**
+  → OAuth 실패 → `{}` → 로그 "insights unavailable" = 권한 없을 때와 동일. **승인해도 헛수고.**
+- **내 지난 "확인"은 무효였다.** authorize URL `200`은 **존재하지 않는 앱 ID에도 똑같이** 온다
+  (본문 680,448 vs 680,370). 그리고 **권한이 없으면 Meta는 가짜 지표 이름에도 `(#10)`** 을
+  돌려준다(`view_sources`로 확인) → **`(#10)` 쓸어보기로 지표 유무 판정 불가.**
+
+**코드:** **`ig_doctor.py` 신규** — 한 줄로 권한·빠진 것·자동/수동 경계를 출력(추측 금지).
+`INSIGHT_TIERS`+`INSIGHT_SINGLES` 보강, `insights(…, base=)`. **G-2.6이 쓰인 지 몇 시간 만에
+제 코드를 잡았다** — 손입력 `skip_rate` ↔ API `reels_skip_rate` 어긋남, 매핑+이관 완료.
+⚠️ **API가 85.2를 주는지 0.852를 주는지는 미지** — 첫 실값을 손입력과 대조 전엔 안 믿는다.
+`RULES.md` G-2 1-a~1-d · `check_rules.py` 6개 · `test_insight_metrics.py` 12개
+(역테스트 4종: 4/1/1/5개 실패 확인).
+
+**원석님 1회 작업** — 자동 갱신 워크플로는 **이미 있다**. 최초 승인만 남았다:
+`ig_login.py --auth-url` → 승인 → `--code` → `gh secret set IG_INSIGHTS_TOKEN` →
+**`python3 ig_doctor.py`로 확인.** 절차: [notes/insights-token-2026-10-07.md](notes/insights-token-2026-10-07.md)
+비즈니스 관리자 경로(SMS 2FA에 막혔던)가 풀렸다면 그쪽이 더 낫다 — 만료 없는 토큰 하나.
+
 **비용 — 2026-10-07 수정 완료 ✅.** STRATEGY.md §6의 수정안을 구현했다(`RULES.md` E-0c·E-0d,
 `daily_post.CHAIN_TRIES = 1` + `chain_ok` 게이트, `test_veo_budget.py`). **오프닝이 1회에
 검사를 통과하지 못하면 연결을 아예 시작하지 않고, 연결은 take 1회뿐이다.** 근거: 09-23 이후

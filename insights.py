@@ -114,7 +114,11 @@ def backfill(limit=90):
         young = _is_young(entry.get("published"))
         if young and "views" not in got and not skip_insights:
             try:
-                fresh = post_instagram.insights(m["id"], token) or {}
+                # `base` matters: an IG_INSIGHTS_TOKEN is only valid against
+                # graph.instagram.com. api() has always known that and insights() never got
+                # told, so an Instagram-Login token would have failed OAuth and printed
+                # "insights unavailable" — indistinguishable from having no permission.
+                fresh = post_instagram.insights(m["id"], token, base=base) or {}
             except Exception as e:
                 print(f"  insights({m['id']}) failed: {e}")
                 fresh = {}

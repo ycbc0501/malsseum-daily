@@ -49,13 +49,15 @@ def run():
 
     # --- field NAMES: a hand-entered number must land where readers look -------------------
     check("saves lands in the API's field name `saved`", ins.get("saved") == 6)
+    check("skip_rate lands in the API's `reels_skip_rate`",
+          ins.get("reels_skip_rate") == 85.2 and "skip_rate" not in ins)
     check("`saves` is not left as a second, unread field", "saves" not in ins)
     check("watch lands in the API's `ig_reels_avg_watch_time`",
           ins.get("ig_reels_avg_watch_time") == 2000)        # 2초 → ms, the API's unit
     check("the app's own spelling is not kept alongside it", "watch" not in ins)
 
     # --- UNITS: a percentage is not a count ------------------------------------------------
-    check("a skip rate keeps its decimal", ins.get("skip_rate") == 85.2)
+    check("a skip rate keeps its decimal", ins.get("reels_skip_rate") == 85.2)
     check("view sources keep theirs", ins.get("src_reels") == 56.6
           and ins.get("src_explore") == 30.9 and ins.get("src_feed") == 12.5)
     check("counts stay integers", isinstance(ins.get("reach"), int) and ins["reach"] == 233)
@@ -66,7 +68,7 @@ def run():
           and "reposts" in ins and ins.get("follows") == 0)
 
     # --- the hand-entry marker travels with the STORED name --------------------------------
-    for f in ("saved", "ig_reels_avg_watch_time", "reach", "skip_rate"):
+    for f in ("saved", "ig_reels_avg_watch_time", "reach", "reels_skip_rate"):
         check(f"`{f}` is marked hand-entered", ins.get(f"{f}_manual") is True)
 
     # --- report() must actually read what note() wrote -------------------------------------
@@ -103,7 +105,7 @@ def run():
               "reach_manual" not in after and "saved_manual" not in after)
         check("the aliased field is cleared by its STORED name", after.get("saved") == 9)
         check("fields the API did not answer keep their marker",
-              after.get("skip_rate_manual") is True)
+              after.get("reels_skip_rate_manual") is True)
 
     # --- an unknown field is refused, not silently dropped ----------------------------------
     with mock.patch.object(metrics, "FILE", path):
