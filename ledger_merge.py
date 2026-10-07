@@ -18,6 +18,12 @@ replying to the same comment every few hours for days (2026-09-17). The fix live
 `replied_publicly` is the authority and a resurrected queue entry is dropped on sight.
 BEFORE ADDING A LEDGER THAT DELETES, read that code: this file will not honour it.
 
+The second ledger that deletes is metrics.json (`prune_deleted`, 2026-09-22), and it did NOT
+honour this warning for two weeks: the pruned row came back from origin/main on the very next
+save and the deleted post went on holding its verse. Same fix, same shape — `metrics_deleted.json`
+is additive, therefore merge-safe, and `metrics.load()` drops anything it lists on sight
+(RULES C4d). The verse release is recomputed from it every run for the same reason.
+
 These files are dicts, not prose, so the correct resolution is semantic, not textual:
   · dict  → union of keys; OURS wins a shared key (we just wrote it, so it is fresher)
   · list  → theirs first, then anything of ours they lack — order kept, no duplicates
@@ -67,7 +73,9 @@ def _style(path):
     # merge rewrite the whole file compactly, which is precisely the whole-file conflict this
     # function exists to prevent — and account.json is appended to by the same daily workflow
     # that writes metrics.json, so it would hit it immediately.
-    if os.path.basename(path) in ("metrics.json", "account.json", "api_support.json"):
+    # metrics_deleted.json is written by metrics.prune_deleted() with metrics.save()'s shape.
+    if os.path.basename(path) in ("metrics.json", "metrics_deleted.json",
+                                  "account.json", "api_support.json"):
         return {"indent": 1, "sort_keys": True}
     return {}
 

@@ -39,7 +39,7 @@ MATURE_DAYS = 14
 def load():
     try:
         with open(FILE, encoding="utf-8") as f:
-            return json.load(f)
+            return _drop_resurrected(json.load(f))
     except FileNotFoundError:
         return {}
     except Exception as e:
@@ -134,6 +134,79 @@ def spend(days=30):
     return per_day * 30
 
 
+DELETED = os.path.join(HERE, "metrics_deleted.json")
+STATE = os.path.join(HERE, "state.json")
+
+
+def _drop_resurrected(data):
+    """Remove rows a merge brought back from the dead. The archive is the authority.
+
+    ledger_merge is a union and says so in capitals: it CANNOT express a deletion, and
+    save_ledger.sh resets onto origin/main before merging — so prune_deleted() removing a row
+    and the very next save step putting it straight back is not a race, it is the normal path.
+    Verified by simulation on 2026-10-07: merge({'a'}, {'a','deleted'}) → {'a','deleted'}.
+
+    The union-safe way to express a removal is an ADDITIVE authority file plus "drop it on
+    sight" at every read — the same shape comment_reply.py uses for `replied_publicly`, which
+    ledger_merge's own docstring points at. metrics_deleted.json only ever grows, so it
+    survives the merge, and anything it lists is not in the ledger no matter what the merge did.
+    """
+    try:
+        archive = load_deleted()
+    except Exception:
+        return data                     # unreadable archive: do NOT silently drop rows
+    back = [k for k in archive if k in data]
+    if back:
+        print(f"{len(back)} deleted post(s) came back through a ledger merge — dropping again: "
+              f"{[archive[k].get('ref') or k for k in back]}")
+        data = {k: v for k, v in data.items() if k not in archive}
+    return data
+
+
+def load_deleted():
+    try:
+        with open(DELETED, encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+    except Exception as e:
+        # Same reasoning as load(): an unreadable archive must not read as an empty one, or a
+        # prune run would quietly overwrite every measurement it holds.
+        print(f"WARNING: {DELETED} exists but could not be read ({e}) — refusing to overwrite it")
+        raise
+
+
+def release_verses(refs, still_used):
+    """Take deleted posts' verses out of state.json's used_verses. Returns the refs released.
+
+    prune_deleted() used to stop at metrics.json, and that is only half of what C4b promises.
+    `used_verses` is append-only within a cycle (daily_post adds, nothing removes), so a verse
+    whose only post was deleted stays blocked until the whole pool wraps — about a year. When
+    고린도전서 15:55 was deleted on 2026-09-22 this line had to be edited BY HAND, which is the
+    proof the automation did not do it; the rule was written down and half-enforced, which reads
+    as a guarantee.
+
+    `still_used` is every ref that some surviving post still occupies — a verse published twice
+    with only one copy deleted must stay blocked."""
+    try:
+        with open(STATE, encoding="utf-8") as f:
+            state = json.load(f)
+    except Exception as e:
+        print(f"verse release skipped ({e}) — state.json unreadable, not guessing at it")
+        return []
+    used = state.get("used_verses")
+    if not isinstance(used, list):
+        return []
+    free = [r for r in refs if r and r not in still_used and r in used]
+    if not free:
+        return []
+    state["used_verses"] = [r for r in used if r not in set(free)]
+    with open(STATE, "w", encoding="utf-8") as f:
+        json.dump(state, f, ensure_ascii=False)
+    print(f"released {len(free)} verse(s) back into the pool: {free}")
+    return free
+
+
 def prune_deleted(token=None, limit=50, ig_user_id=None):
     """Drop entries for posts Instagram no longer has. Returns the refs removed.
 
@@ -162,7 +235,14 @@ def prune_deleted(token=None, limit=50, ig_user_id=None):
     ids = {m.get("id") for m in live}
     oldest = min((m.get("timestamp") or "")[:19] for m in live)
     data = load()
-    gone = []
+    try:
+        archive = load_deleted()
+    except Exception:
+        # Pruning without being able to archive would destroy the measurements this whole
+        # change exists to keep. Rule 0-2: a check that cannot run is not a pass.
+        print("prune skipped — the deleted-post archive is unreadable, not dropping any row")
+        return []
+    gone, dropped_ids = [], []
     for media_id, entry in list(data.items()):
         pub = published_kst(entry)
         if not pub or media_id in ids:
@@ -171,10 +251,34 @@ def prune_deleted(token=None, limit=50, ig_user_id=None):
         stamp = (pub - timedelta(hours=9)).strftime("%Y-%m-%dT%H:%M:%S")
         if stamp >= oldest:
             gone.append(entry.get("ref") or media_id)
+            dropped_ids.append(media_id)
+            # MOVED, not deleted. A pruned entry carries real measurements — views, shares,
+            # segments, veo_seconds — and since 2026-10-07 the cost decision (RULES E-0c/E-0d)
+            # rests on exactly those columns across 83 posts. Dropping the row would quietly
+            # shrink the evidence every time a post is taken down. The report and the
+            # oldest-verse-first selection read metrics.json only, so nothing downstream sees it.
+            archive[media_id] = {**entry, "deleted_noticed": datetime.now(KST).strftime("%Y-%m-%d")}
             del data[media_id]
     if gone:
         save(data)
-        print(f"pruned {len(gone)} post(s) no longer on the account: {gone}")
+        with open(DELETED, "w", encoding="utf-8") as f:
+            json.dump(archive, f, ensure_ascii=False, indent=1, sort_keys=True)
+        print(f"pruned {len(gone)} post(s) no longer on the account: {gone} "
+              f"(measurements kept in {os.path.basename(DELETED)})")
+    # Released EVERY run, from the archive — not once, from `gone`. A one-shot release is
+    # undone the same way the prune is: ledger_merge unions used_verses, so the remote's copy
+    # puts the ref straight back and the verse is blocked again with nothing in the log. Driving
+    # it from the additive archive on every run means the removal re-converges after any merge.
+    # A verse is only free when NOTHING still holds it: no surviving ledger row, and no live
+    # caption. `live` is already in hand, so this costs no extra call.
+    import re
+    live_refs = set()
+    for m in live:
+        found = re.search(r"\[([^\[\]]+)\]", m.get("caption") or "")
+        if found:
+            live_refs.add(found.group(1).strip())
+    still = {e.get("ref") for e in data.values()} | live_refs
+    release_verses([e.get("ref") for e in archive.values()], still)
     return gone
 
 

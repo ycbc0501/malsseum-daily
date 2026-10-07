@@ -135,6 +135,28 @@ def checks():
     yield "C4b deletions come from the account, since the merge cannot express one", (
         hasattr(_m, "prune_deleted")
         and "prune_deleted" in (HERE / "insights.py").read_text())
+    # C4c/C4d/C4e — the three halves that were missing. A pruned row used to be destroyed rather
+    # than moved, the removal was handed straight back by the next merge, and the verse stayed
+    # blocked for a full cycle (고린도전서 15:55 had to be released by hand on 09-22).
+    _met = (HERE / "metrics.py").read_text()
+    yield "C4c a deleted post's measurements are archived, not destroyed", (
+        hasattr(_m, "load_deleted") and "metrics_deleted.json" in _met
+        and "deleted_noticed" in _met)
+    yield "C4c nothing is pruned when it cannot be archived", (
+        "the deleted-post archive is unreadable" in _met)
+    yield "C4d a resurrected row is dropped on sight at every read", (
+        hasattr(_m, "_drop_resurrected") and "_drop_resurrected(json.load(f))" in _met)
+    yield "C4d the archive is saved by the workflow that writes it", (
+        "metrics_deleted.json" in (HERE / ".github/workflows/insights.yml").read_text())
+    yield "C4e a deleted post's verse is released from used_verses", (
+        hasattr(_m, "release_verses")
+        and "state.json" in _met and "used_verses" in _met)
+    yield "C4e the release is recomputed from the archive every run, not once", (
+        'release_verses([e.get("ref") for e in archive.values()]' in _met)
+    yield "C4e a verse another live post still holds is not released", (
+        "still_used" in _met and "live_refs" in _met)
+    yield "C4e the released state.json is saved by that workflow too", (
+        "state.json" in (HERE / ".github/workflows/insights.yml").read_text())
     yield "C6 oldest-first (carousel)", "last_published" in carousel
     # C7 — the ledger must be rebuilt from BOTH sources on every run, and a verse that has ever
     # been published must be excluded rather than merely sorted last. 62 ledger entries against

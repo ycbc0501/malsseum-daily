@@ -63,4 +63,5 @@ jobs:
         # `git pull --rebase || true; git push` is what lost the 08-26 ledger.
         run: >-
           bash save_ledger.sh 'ledgers: metrics + followers + account'
-          metrics.json followers.json watch.json account.json api_support.json
+          metrics.json metrics_deleted.json state.json followers.json watch.json
+          account.json api_support.json
