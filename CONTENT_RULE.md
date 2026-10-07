@@ -117,7 +117,10 @@ spectacular. If a render is impressive, it is wrong.
 ## 6. Video length — and NEVER reverse playback
 - **NEVER boomerang / reverse / ping-pong the clip.** Playing footage backwards is banned artificial post-processing (water and light running backwards read as fake), same rule as no slow-mo and no interpolation. Video always plays **forward at native speed**.
 - Length must come from **Veo itself**, never from replaying frames. Veo's fast tier caps at ~8s; to go longer, chain a genuine continuation (feed the clip's last frame back into Veo) — never a reverse or a hard loop.
-- **Production reels are ~16s: `daily_post.SEGMENTS = 2` chained continuations.** Each segment
+- **Production reels are up to ~23s: `daily_post.SEGMENTS = 3` chained continuations** (2 → 4 on
+  2026-08-21 for the music seam, 4 → 3 on 2026-09-23 on cost; this line said `= 2` until
+  2026-10-07, two settings out of date). A reel only reaches 3 segments when every take passes
+  inspection first try — see the cost ceiling below. Each segment
   animates the *tail* frame of the one before it (`make_video.last_frame`, taken `TAIL` before the
   end so Veo's frozen last frames never seed or show), and the segments are joined forward-only
   (`make_video.chain_clips`). No frame is ever repeated or reversed.
@@ -127,6 +130,26 @@ spectacular. If a render is impressive, it is wrong.
 - **Raising `SEGMENTS` is a timing-budget decision, not a free knob** — each segment is another
   Veo call (~2–6 min) against rule 1's ~50 min of build time, and past ~30s the reel outlasts
   Lyria's 30s hymn, which would force the music to loop (rule 7 keeps it seamless).
+- **2026-10-07 — the chain now has a cost ceiling, and length lost the argument it was winning.**
+  `SEGMENTS` was treated as the cost knob for a year, and it was the wrong one. Measured over the
+  25 posts after 2026-09-23: **1,008 billed Veo seconds bought 376 shipped seconds — 62.7% was
+  thrown away**, and the inverse correlation is the whole story — the posts that called Veo
+  *most* shipped the *shortest* reels (`6 calls / 48s → one 7.7s segment`, in 12 of 25). The
+  mechanism was correct behaviour with no budget: three takes of the opening, then three takes of
+  a continuation that kept failing inspection, then the right call — "do not chain a bad one" —
+  after all the money was already spent. Lowering `SEGMENTS` would not have touched a won of it.
+  What fixed it (`RULES.md` E-0c, `daily_post.CHAIN_TRIES`): **the first miss is the signal.** An
+  opening that needs a second take does not get chained at all, and a continuation gets exactly
+  one take. Worst case per post went 9 calls → 3, i.e. ₩597,576/month → ₩199,192 at two posts a
+  day (`test_veo_budget.py` prints both figures next to the cap and fails if the ceiling moves).
+  The reason this was affordable at all is that **length turned out not to matter**: across the
+  same 25 posts, 8s reels drew 21.9 likes, 15s drew 27.2, 23s drew 26.3 — overlapping ranges,
+  no trend. The old rule above ("a continuation gets one attempt … costs *length*, never the
+  post") had been **reversed** in August precisely to protect length; it is now restored, because
+  the thing it was protecting was never measured to exist.
+- **Takes are recorded per segment** (`_meta.json` → `veo_attempts`, e.g. `[3, 1]`). The saving
+  above had to be *reconstructed* from `veo_calls` and `segments` totals, which is why the
+  strategy note labels it an estimate. A cost question should be a read, not a reconstruction.
 - Still fallbacks run **24s** — already longer than the chained reel, so they are not doubled.
 
 ## 7. Music — unique every time, warm but small

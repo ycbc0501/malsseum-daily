@@ -252,6 +252,17 @@ def checks():
     yield "E4 continuations are inspected", "clip_survives_inspection(nxt" in daily_src
     yield "E4 a retry needs a real defect, not a motion number", (
         "if s_ov <= MOTION_MAX" not in daily_src and "VEO_TRIES" in daily_src)
+    # 62.7% of the Veo seconds bought after 2026-09-23 were thrown away, and the posts that
+    # retried MOST shipped the SHORTEST reels. Both halves of E-0c have to hold or the leak
+    # reopens quietly: the chain must not start after a miss, AND a continuation gets one take.
+    yield "E0c a continuation gets exactly one take", (
+        "CHAIN_TRIES = 1" in daily_src
+        and "for attempt in range(1, CHAIN_TRIES + 1)" in daily_src)
+    yield "E0c a scene that missed once is not chained at all", (
+        "chain_ok = (motion_attempts == 1 and not spoiled)" in daily_src
+        and "(SEGMENTS + 1) if chain_ok else 2" in daily_src)
+    yield "E0d takes per segment are recorded, not reconstructed", (
+        '"veo_attempts"' in daily_src and "veo_attempts.append" in daily_src)
     import fetch_veo
     yield "E3 retries escalate the demand", (
         len(fetch_veo.CALMER) == 3 and "frozen photograph" in fetch_veo.CALMER[2].lower()

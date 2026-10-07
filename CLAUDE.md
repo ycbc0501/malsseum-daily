@@ -32,7 +32,18 @@ rules — read it when you need to know *why*. **Where the two disagree, RULES.m
 지금 인사이트 전 항목이 `(#10)`으로 거부돼 도달·공유·저장을 하나도 못 본다.
 제한이 풀린 지금이야말로 그 숫자가 의미를 갖는다.
 
-비용: 실측 Veo 40.3초/건 → 월 ≈₩334,000(총 ≈₩390,000, 한도 ₩260,000). 수정안은 STRATEGY.md §6.
+**비용 — 2026-10-07 수정 완료 ✅.** STRATEGY.md §6의 수정안을 구현했다(`RULES.md` E-0c·E-0d,
+`daily_post.CHAIN_TRIES = 1` + `chain_ok` 게이트, `test_veo_budget.py`). **오프닝이 1회에
+검사를 통과하지 못하면 연결을 아예 시작하지 않고, 연결은 take 1회뿐이다.** 근거: 09-23 이후
+25건에서 과금 초의 62.7%가 버려졌고(1,008초 사서 376초 출고), 호출이 가장 많은 글이 가장 짧은
+릴을 냈으며, 길이는 반응과 무관했다(8/15/23초 → 21.9/27.2/26.3 좋아요, 구간 중첩).
+```
+게시 1건 최악의 경우   9호출 72초 ₩597,576/월  →  3호출 24초 ₩199,192/월
+실측(최근 25건 평균)   39.0초 = ₩324,019/월     ← 다음 게시물부터 내려간다
+```
+`test_veo_budget.py`가 **상한을 원 단위로 계산해 한도와 비교**하고, 누수를 되돌리는 변경에서
+실패한다(역테스트 확인). 아직 안 한 것: **저녁 슬롯 폐지**(§9.1) — 하면 Veo가 다시 반이 되지만
+발행 빈도 결정이라 승인 대기 중.
 
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_higgsfield.py` (image + gates),
 `fetch_veo.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),

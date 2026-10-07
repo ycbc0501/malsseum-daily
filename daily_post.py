@@ -553,6 +553,16 @@ def main():
     # Veo seconds are billed whether the take is used or not (₩138/s), so a retry is only worth
     # eight more seconds when the inspection found a real defect.
     VEO_TRIES = 3
+    # Continuations get ONE take, and the chain only starts if the OPENING was clean first try.
+    # Measured over the 25 posts after 2026-09-23 (notes/strategy/STRATEGY.md §1.3-1.6):
+    # 1,008 billed seconds bought 376 shipped seconds — 62.7% of the money was thrown away, and
+    # the posts that called Veo MOST shipped the SHORTEST reels (calls 6 → 1 segment / 7.7s, in
+    # 12 of 25). The first failure is an early signal that Veo cannot animate this scene cleanly;
+    # buying three more takes of a continuation after it has already missed once has never once
+    # rescued the chain. Replaying the rule over those 25 posts: ₩139,104 → ₩85,008 (-39%) for
+    # 47 → 40 shipped segments (-15%), and §1.5 measured no relationship between reel length and
+    # engagement (8s 21.9 likes / 15s 27.2 / 23s 26.3 — the ranges fully overlap).
+    CHAIN_TRIES = 1
     AREA_TRIES = 4
     IMAGE_DEADLINE_S = 3 * 60      # composition gate, ~5 renders
     AREA_DEADLINE_S = 7 * 60       # legibility, including the composition retries inside it
@@ -640,6 +650,11 @@ def main():
     # to 09-19 19:00 died after building the reel. Python accepts this at compile time; only
     # running it finds it.
     n_segments = 0          # recorded in _meta.json so metrics.py can measure length changes
+    # Takes spent per segment, e.g. [3, 1] — the opening needed three, the continuation one.
+    # §6 of the strategy note had to RECONSTRUCT the attempt structure from veo_calls and
+    # segments totals to price the change below, which made the saving an estimate. Recording
+    # it per segment is what makes the next such question measurable instead of reconstructed.
+    veo_attempts = []
     try:
         import fetch_veo
         clip = os.path.join(generate.OUT_DIR, "_veo.mp4")
@@ -674,6 +689,7 @@ def main():
         if ran == 0 and skipped:
             print(f"WARNING: the composition gate never reached the model ({skipped} attempts all "
                   f"errored) — this post shipped with NO image check at all")
+        veo_attempts.append(motion_attempts)
         spoiled = best_score >= 1000
         if spoiled:
             print(f"WARNING: every take of scene {scene_cat} had something the rules forbid "
@@ -685,12 +701,20 @@ def main():
             # Chain from the CALMEST take, not the last one generated — `clip` holds whatever
             # attempt ran most recently, which may be the frantic one we rejected.
             segments = [best]
-            # Extend, one segment at a time. The continuation gets the SAME best-of-N treatment as
-            # the opening — it used to get one attempt and be dropped if it missed the bar, which
-            # under the recalibrated target would have cut every reel from 15.3s to 7.7s. A short
-            # reel is its own defect (it loops before the verse can be read), so the continuation is
-            # kept unless it is frantic beyond rescue.
-            for seg in range(2, SEGMENTS + 1):
+            # DO NOT CHAIN A SCENE VEO ALREADY STRUGGLED WITH. If the opening needed more than one
+            # take, every continuation is generated from the tail of a scene Veo has already shown
+            # it cannot animate cleanly — and the ledger says those runs end at one segment anyway
+            # after paying for five or six takes. Spending nothing here is where the 39% comes from.
+            chain_ok = (motion_attempts == 1 and not spoiled)
+            if not chain_ok:
+                print(f"veo opening took {motion_attempts} take(s)"
+                      f"{' and never passed inspection' if spoiled else ''} → not chaining "
+                      f"(rule E-0c: a scene that misses once does not get continued)")
+            # Extend, one segment at a time. Each continuation gets ONE take and is INSPECTED; a
+            # continuation that misses stops the chain where it stands rather than buying two more
+            # takes of the same drift. Length gives way to cost here, which §1.5 measured as free:
+            # 8s / 15s / 23s reels drew 21.9 / 27.2 / 26.3 likes — overlapping ranges, no trend.
+            for seg in range(2, (SEGMENTS + 1) if chain_ok else 2):
                 spent = time.monotonic() - veo_t0
                 if spent > CHAIN_DEADLINE_S:
                     print(f"veo chaining hit the {CHAIN_DEADLINE_S // 60} min budget after "
@@ -706,10 +730,15 @@ def main():
                     # Continuations used to take two takes and choose between them on the motion
                     # number, and never inspect either — which is how a fence changed shape across
                     # them and shipped. It is the continuations that drift, because each one is
-                    # generated from the last frame of the one before. So: one take, INSPECTED,
-                    # and a second only if that inspection found something.
+                    # generated from the last frame of the one before. So: ONE take, INSPECTED,
+                    # and no second one — retrying a continuation bought 24 more billed seconds
+                    # and still ended at one segment in 12 of the 25 posts measured.
+                    # The loop is kept (rather than a straight-line call) so CHAIN_TRIES is a
+                    # number someone can raise with evidence instead of a rewrite.
                     seg_clean = False
-                    for attempt in range(1, VEO_TRIES + 1):
+                    seg_tries = 0
+                    for attempt in range(1, CHAIN_TRIES + 1):
+                        seg_tries = attempt
                         fetch_veo.animate(seed, nxt, prompt=fetch_veo.CONTINUE + fetch_veo.MOTION
                                           + fetch_veo.CALMER[attempt - 1])
                         o, sk = make_video.motion_score(nxt)
@@ -721,9 +750,10 @@ def main():
                             shutil.copyfile(nxt, seg_best)
                         if seg_clean:
                             break
+                    veo_attempts.append(seg_tries)
                     if best_seg_score >= 1000:
-                        print(f"veo segment {seg} never passed inspection → keeping "
-                              f"{len(segments)} segment(s) rather than chaining a bad one")
+                        print(f"veo segment {seg} did not pass inspection in {seg_tries} take(s) "
+                              f"→ keeping {len(segments)} segment(s) rather than chaining a bad one")
                         break
                     segments.append(seg_best)
                 except Exception as e:
@@ -795,6 +825,10 @@ def main():
                    # What this post actually cost in Veo seconds — the dominant line on the bill.
                    "veo_calls": veo_calls,
                    "veo_seconds": round(veo_calls * 8.0, 1),
+                   # Takes spent per segment, e.g. [3, 1]. veo_calls alone cannot say WHERE the
+                   # money went — the strategy note had to reconstruct it and label the result an
+                   # estimate. This makes "which segment burns the budget" readable directly.
+                   "veo_attempts": veo_attempts,
                    # True when no take passed the clip inspection — see the WARNING above.
                    "clip_spoiled": bool(spoiled),
                    # Worst "something entered the frame" score across the clips this run
