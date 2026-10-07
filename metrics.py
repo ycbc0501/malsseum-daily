@@ -194,9 +194,13 @@ def refresh(token=None, days=MATURE_DAYS):
             merged = dict(entry.get("insights") or {})
             merged.update({k: v for k, v in got.items() if v is not None})
             # A real answer supersedes a hand-entered one, and the marker has to go with it —
-            # otherwise the ledger keeps saying "typed in by hand" about an API number.
-            if got.get("views") is not None:
-                merged.pop("views_manual", None)
+            # otherwise the ledger keeps saying "typed in by hand" about an API number. Every
+            # app field can now be hand-entered (see note()), so every marker has to be cleared,
+            # not just views': a stale `shares_manual` next to an API `shares` would make the
+            # one number Instagram ranks on look untrustworthy exactly when it became real.
+            for _f in APP_FIELDS:
+                if got.get(_f) is not None:
+                    merged.pop(f"{_f}_manual", None)
             entry["insights"] = merged
             entry["fetched"] = now.isoformat(timespec="seconds")
             touched += 1
@@ -207,9 +211,34 @@ def refresh(token=None, days=MATURE_DAYS):
     return touched
 
 
+def distribution(entry):
+    """How many people this post reached, or the closest number we actually have.
+
+    `reach` (unique accounts) only ever arrives from the insights endpoint, which answers
+    `(#10)` for this token — so it has NEVER been present, on any of 208 posts. `views` can be
+    read off the app by hand and 14 posts carry it. They are not the same measurement (views
+    counts plays, reach counts people) but one of them exists and the other does not, and
+    report() used to require `reach` and therefore showed "0 with insights" while fourteen
+    distribution numbers sat in the file unread. That is the same mistake as reading the API's
+    silence as "no data": the number was there and nothing looked at it.
+
+    Returns (value, is_exact). `is_exact` is False when this is views standing in for reach, so
+    callers can say which one they are printing instead of quietly implying reach.
+    """
+    ins = entry.get("insights") or {}
+    r = ins.get("reach")
+    if isinstance(r, (int, float)) and r:
+        return r, True
+    v = ins.get("views")
+    if isinstance(v, (int, float)) and v:
+        return v, False
+    return None, True
+
+
 def _rate(entry, num, den="reach"):
     ins = entry.get("insights") or {}
-    a, b = ins.get(num), ins.get(den)
+    a = ins.get(num)
+    b = distribution(entry)[0] if den == "reach" else ins.get(den)
     if not isinstance(a, (int, float)) or not isinstance(b, (int, float)) or not b:
         return None
     return a / b
@@ -286,13 +315,20 @@ def report():
     if not data:
         print("metrics.json is empty — nothing published has been recorded yet.")
         return
-    scored = [e for e in data.values() if (e.get("insights") or {}).get("reach")]
-    print(f"{len(data)} post(s) recorded, {len(scored)} with insights\n")
+    scored = [e for e in data.values() if distribution(e)[0]]
+    exact = sum(1 for e in scored if distribution(e)[1])
+    print(f"{len(data)} post(s) recorded, {len(scored)} with a distribution number "
+          f"({exact} true reach from the API, {len(scored) - exact} views read off the app)\n")
     if not scored:
-        print("No reach/shares — the token lacks instagram_manage_insights "
-              "(`python3 metrics.py refresh` once it has it).")
+        print("No reach/views at all — the token lacks instagram_manage_insights "
+              "(`python3 metrics.py refresh` once it has it), and nothing has been entered by "
+              "hand either (`python3 metrics.py observe \"<ref>\" views=… shares=…`).")
         _engagement_only(data)
         return
+    if exact == 0:
+        print("NOTE: every number below uses VIEWS as the denominator, not reach — views count "
+              "plays, reach counts people, so the rates are conservative. `reach` has never "
+              "been available on this token (RULES.md G-2).\n")
 
     def group(key, label):
         buckets = {}
@@ -306,10 +342,19 @@ def report():
                 vals = [v for v in vals if isinstance(v, (int, float))]
                 return sum(vals) / len(vals) if vals else 0
             shares = [r for r in (_rate(e, "shares") for e in g) if r is not None]
-            print(f"  {str(k):<12} n={len(g):<3} reach={avg('reach'):7.1f}  "
-                  f"plays={avg('plays') or avg('views'):7.1f}  saved={avg('saved'):5.1f}  "
-                  f"shares={avg('shares'):5.1f}  "
-                  f"share/reach={(sum(shares) / len(shares) * 100 if shares else 0):5.2f}%  "
+            likes = [r for r in (_rate(e, "likes") for e in g) if r is not None]
+            dists = [d for d in (distribution(e)[0] for e in g) if d]
+            print(f"  {str(k):<12} n={len(g):<3} "
+                  f"seen={(sum(dists) / len(dists) if dists else 0):7.1f}  "
+                  # `shares` is averaged over the posts that HAVE it, which is not n — printing
+                  # a mean over 3 posts under a header saying n=13 is the same quiet overclaim
+                  # this whole section exists to stop. Say how many it is standing on.
+                  f"saved={avg('saved'):5.1f}  "
+                  f"shares={avg('shares'):5.1f}(n={len(shares)})  "
+                  # The signal Instagram says it ranks reels on. Printed next to like rate so the
+                  # proxy and the real thing are never confused for each other again.
+                  f"send/seen={(sum(shares) / len(shares) * 100 if shares else 0):5.2f}%  "
+                  f"like/seen={(sum(likes) / len(likes) * 100 if likes else 0):5.2f}%  "
                   f"follows={avg('follows'):5.1f}  "
                   f"watch={avg('ig_reels_avg_watch_time') / 1000 if avg('ig_reels_avg_watch_time') else 0:5.1f}s")
         print()
@@ -321,30 +366,62 @@ def report():
     group("theme", "verse theme")
 
 
-def note_views(which, count):
-    """Record a view count read off the app by hand → True if it landed.
+# What the Instagram app shows on a post, under the icons, that the API refuses us. The names
+# on the right are the ledger's, so a hand-entered number lands in the same field a working
+# IG_INSIGHTS_TOKEN would later fill — the whole point of `*_manual` is that a real answer can
+# supersede it without a migration.
+#
+#   ♡  likes      Q  comments      🔁 reposts      ✈️ shares (보내기)      🔖 saves
+#
+# `shares` is the one that matters most and the one this project went two months without:
+# Instagram's own public statement of what ranks a reel is SENDS PER REACH, and until
+# 2026-10-07 the strategy note recorded sends as "not designed for" — inferred, never read.
+# They were on screen the entire time, next to the paper-plane icon.
+APP_FIELDS = ("views", "reach", "likes", "comments", "shares", "reposts", "saves")
 
-    The API cannot give us this: the publishing token's app lacks
-    instagram_manage_insights (`(#10) Application does not have permission`), so all 166 posts
-    carry likes and comments only while every post visibly shows a view count in the app. That
-    gap is not cosmetic — 2026-08-27's reach restriction is a DISTRIBUTION event, and likes are
-    a lagging, noisy proxy for distribution. Until IG_INSIGHTS_TOKEN exists (see ig_login.py),
-    a number typed in by hand beats no number at all.
 
-    Marked `views_manual` so nothing later mistakes it for something the API returned, and so
-    `refresh()` overwriting it with a real value is an improvement rather than a conflict."""
+def note(which, **vals):
+    """Record numbers read off the app by hand → True if they landed.
+
+    The API cannot give us most of these: the publishing token's app lacks
+    instagram_manage_insights (`(#10) Application does not have permission`), so every post in
+    the ledger carries likes and comments only — while the app shows views, sends and reposts
+    right there on the post. That gap is not cosmetic. Reach is a DISTRIBUTION number and likes
+    are a lagging, noisy proxy for it; sends are the ranking signal Instagram names out loud.
+    Until IG_INSIGHTS_TOKEN exists (see ig_login.py), a number typed in by hand beats no number.
+
+    Each field is marked `<field>_manual` so nothing later mistakes it for something the API
+    returned, and so `refresh()` overwriting it with a real value is an improvement rather than
+    a conflict. Zero is a VALUE, not a missing number: a post with no sends is the observation
+    that makes the posts with sends mean something, so `shares=0` is recorded, not skipped."""
+    vals = {k: v for k, v in vals.items() if v is not None}
+    unknown = [k for k in vals if k not in APP_FIELDS]
+    if unknown:
+        print(f"not a field this ledger keeps: {', '.join(unknown)} "
+              f"(known: {', '.join(APP_FIELDS)})")
+        return False
+    if not vals:
+        print("nothing to record — pass at least one of " + ", ".join(APP_FIELDS))
+        return False
     data = load()
     for media_id, entry in data.items():
         if which in (media_id, entry.get("permalink", ""), entry.get("ref", "")) or \
            which in entry.get("permalink", ""):
             ins = entry.setdefault("insights", {})
-            ins["views"] = int(count)
-            ins["views_manual"] = True
+            for k, v in vals.items():
+                ins[k] = int(v)
+                ins[f"{k}_manual"] = True
             save(data)
-            print(f"{entry.get('ref', media_id)}: views={count} (hand-entered)")
+            print(f"{entry.get('ref', media_id)}: "
+                  + " ".join(f"{k}={v}" for k, v in sorted(vals.items())) + " (hand-entered)")
             return True
     print(f"no post matching {which!r} — pass a ref (\"신명기 1:29\"), a permalink or a media id")
     return False
+
+
+def note_views(which, count):
+    """Back-compat: the old views-only entry point (notes/reach-recovery-2026-09-14.md §409)."""
+    return note(which, views=count)
 
 
 def note_flag(refs, flagged=True, basis=None):
@@ -460,6 +537,21 @@ if __name__ == "__main__":
         if len(sys.argv) < 4:
             raise SystemExit('usage: metrics.py views "<ref|permalink|media id>" <count>')
         sys.exit(0 if note_views(sys.argv[2], sys.argv[3]) else 1)
+    elif cmd == "observe":
+        # Everything the app shows on a post, in one line, read straight off the screen:
+        #   python3 metrics.py observe "요한삼서 1:2" views=465 likes=40 comments=3 shares=5 reposts=1
+        # `shares` is the paper-plane (보내기) count. Record 0 explicitly when there are none.
+        if len(sys.argv) < 4 or "=" not in "".join(sys.argv[3:]):
+            raise SystemExit('usage: metrics.py observe "<ref|permalink|media id>" '
+                             'views=465 likes=40 shares=5 …  (fields: '
+                             + ", ".join(APP_FIELDS) + ")")
+        kv = {}
+        for arg in sys.argv[3:]:
+            if "=" not in arg:
+                raise SystemExit(f"not a field=value pair: {arg!r}")
+            k, v = arg.split("=", 1)
+            kv[k.strip()] = v.strip()
+        sys.exit(0 if note(sys.argv[2], **kv) else 1)
     elif cmd in ("flagged", "notflagged"):
         # python3 metrics.py flagged "데살로니가후서 3:3" "고린도전서 2:16" …
         # python3 metrics.py notflagged "시편 4:8"      ← looked for it, it was NOT listed

@@ -945,7 +945,15 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 3,
-   "likes": 40
+   "comments_manual": true,
+   "likes": 40,
+   "likes_manual": true,
+   "reposts": 1,
+   "reposts_manual": true,
+   "shares": 5,
+   "shares_manual": true,
+   "views": 465,
+   "views_manual": true
   },
   "kind": "REELS",
   "motion": 3.332,
@@ -1369,8 +1377,14 @@
   "gate_ran": 6,
   "gate_skipped": 0,
   "insights": {
-   "comments": 1,
-   "likes": 18
+   "comments": 2,
+   "comments_manual": true,
+   "likes": 21,
+   "likes_manual": true,
+   "shares": 1,
+   "shares_manual": true,
+   "views": 252,
+   "views_manual": true
   },
   "kind": "REELS",
   "motion": 99.0,
@@ -2991,7 +3005,15 @@
   "gate_skipped": 0,
   "insights": {
    "comments": 1,
-   "likes": 8
+   "comments_manual": true,
+   "likes": 8,
+   "likes_manual": true,
+   "reposts": 0,
+   "reposts_manual": true,
+   "shares": 0,
+   "shares_manual": true,
+   "views": 311,
+   "views_manual": true
   },
   "kind": "REELS",
   "motion": 13.669,

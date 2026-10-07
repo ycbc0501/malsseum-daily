@@ -263,6 +263,19 @@ def checks():
         and "(SEGMENTS + 1) if chain_ok else 2" in daily_src)
     yield "E0d takes per segment are recorded, not reconstructed", (
         '"veo_attempts"' in daily_src and "veo_attempts.append" in daily_src)
+    # G-2. The API refuses insights with (#10), and for two months that was recorded as "we
+    # cannot see reach or shares" — while the app showed views, sends and reposts on every post.
+    # The ledger must have somewhere to PUT a number read off the screen, sends above all:
+    # sends-per-reach is the ranking signal Instagram names out loud, and likes are a proxy.
+    yield "G2 shares can be recorded by hand, not just views", (
+        "shares" in _m.APP_FIELDS and "reposts" in _m.APP_FIELDS
+        and callable(getattr(_m, "note", None)))
+    yield "G2 a hand-entered number is marked as one", (
+        '_manual' in inspect.getsource(_m.note))
+    # A real API answer must clear the marker for the field it answered — a stale shares_manual
+    # next to an API shares would make the one ranking number look untrustworthy when it went real.
+    yield "G2 an API answer clears the hand-entered marker on every field", (
+        "for _f in APP_FIELDS" in inspect.getsource(_m.refresh))
     import fetch_veo
     yield "E3 retries escalate the demand", (
         len(fetch_veo.CALMER) == 3 and "frozen photograph" in fetch_veo.CALMER[2].lower()
