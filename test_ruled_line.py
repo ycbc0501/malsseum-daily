@@ -33,6 +33,23 @@ The measure is resolution-sensitive — downscaling SHARPENS it (snowfall 0.347 
 540px). The gate always runs on full-size renders, so the full-size numbers are the real ones; the
 fixtures are half-size and therefore a HARSHER test than production.
 
+RE-SWEPT 2026-10-07 over 46 reels — every one the account still carried, back to 09-10, each one
+downloaded and measured rather than sampled. The calibration above was built on 29; widening it
+changed nothing and settled two questions:
+
+    ruled  1 of 46         디모데전서 2:4 only. There is nothing else to take down.
+    97%    the defect      next worst 42% (신명기 26:9), then 29%, 25%, 18%, 18%; median 0%
+    0/45   false positives on real published frames
+
+So the 55% limit sits in an EMPTY band, 42%…97%, measured on published posts rather than chosen.
+Moving it anywhere inside that band changes no verdict; moving it below 42% starts rejecting the
+snowfall frame, which the account owner never objected to.
+
+(The same sweep's clearance column is NOT comparable to CLEARANCE_MIN: it reads published frames,
+and reading a published number and applying it to the raw render is precisely the mistake that
+blinded this gate for a fortnight. It is recorded in notes/deleted/ruled_line_sweep_20261007.json
+and deliberately not acted on.)
+
     python3 test_ruled_line.py
 """
 
