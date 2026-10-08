@@ -5690,6 +5690,34 @@
   "text_spread": 2.9,
   "theme": "사랑"
  },
+ "18448847080120884": {
+  "clip_novelty": 7.73,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-09",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 5,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 7.118,
+  "motion_attempts": 1,
+  "motion_sky": 0.457,
+  "published": "2026-10-09T05:32:34+09:00",
+  "ref": "빌립보서 2:2",
+  "scene": "sea",
+  "segments": 1,
+  "text_contrast": 8.17,
+  "text_spread": 5.4,
+  "theme": "사랑",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18456474745116969": {
   "insights": {
    "comments": 1,
