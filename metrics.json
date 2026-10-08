@@ -5007,6 +5007,33 @@
   "veo_calls": 7,
   "veo_seconds": 56.0
  },
+ "18169349911461961": {
+  "clip_novelty": 2.64,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-08",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 5,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 10.231,
+  "motion_attempts": 3,
+  "motion_sky": 0.437,
+  "published": "2026-10-08T20:54:18+09:00",
+  "ref": "고린도전서 13:7",
+  "scene": "sea",
+  "segments": 1,
+  "text_contrast": 10.92,
+  "text_spread": 6.3,
+  "theme": "사랑",
+  "veo_attempts": [
+   3
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18171686149453004": {
   "cta_in_caption": false,
   "date": "2026-08-18",
