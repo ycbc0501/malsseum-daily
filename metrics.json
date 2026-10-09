@@ -5202,6 +5202,35 @@
   "permalink": "https://www.instagram.com/reel/DZ_bNzOjYi7/",
   "published": "2026-06-25T01:49:56+0000"
  },
+ "18184975261417253": {
+  "clip_novelty": 4.97,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-10",
+  "duration": 15.33,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 8,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 9.238,
+  "motion_attempts": 1,
+  "motion_sky": 1.113,
+  "published": "2026-10-10T05:05:59+09:00",
+  "ref": "베드로전서 4:8",
+  "scene": "sea",
+  "segments": 2,
+  "text_contrast": 9.43,
+  "text_spread": 6.9,
+  "theme": "사랑",
+  "veo_attempts": [
+   1,
+   1,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18188727010378181": {
   "insights": {
    "comments": 1,
