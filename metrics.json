@@ -3329,6 +3329,35 @@
   "ref": "시편 62:1",
   "theme": "위로"
  },
+ "18107223998577964": {
+  "clip_novelty": 4.48,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-09",
+  "duration": 22.98,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 13,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 7.328,
+  "motion_attempts": 1,
+  "motion_sky": 0.655,
+  "published": "2026-10-09T20:48:56+09:00",
+  "ref": "데살로니가전서 1:4",
+  "scene": "sea",
+  "segments": 3,
+  "text_contrast": 5.7,
+  "text_spread": 16.8,
+  "theme": "사랑",
+  "veo_attempts": [
+   1,
+   1,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18107805137283200": {
   "insights": {
    "comments": 3,
