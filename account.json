@@ -37,5 +37,18 @@
    "media_count": 199,
    "username": "saintseoul_studio"
   }
+ },
+ "2026-10-10": {
+  "errors": {
+   "*": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
+   "*_requests": 33
+  },
+  "insights": {},
+  "profile": {
+   "followers_count": 217,
+   "id": "17841416389585321",
+   "media_count": 201,
+   "username": "saintseoul_studio"
+  }
  }
 }
