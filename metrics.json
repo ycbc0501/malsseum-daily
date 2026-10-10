@@ -5075,6 +5075,33 @@
   "veo_calls": 7,
   "veo_seconds": 56.0
  },
+ "18164758336491934": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-10-10",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 5,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 17.796,
+  "motion_attempts": 3,
+  "motion_sky": 19.288,
+  "published": "2026-10-10T20:05:32+09:00",
+  "ref": "요한일서 2:10",
+  "scene": "cathedral",
+  "segments": 1,
+  "text_contrast": 1.54,
+  "text_spread": 32.1,
+  "theme": "사랑",
+  "veo_attempts": [
+   3
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18169349911461961": {
   "clip_novelty": 2.64,
   "clip_spoiled": false,
