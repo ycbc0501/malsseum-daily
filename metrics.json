@@ -336,6 +336,33 @@
   "ref": "베드로전서 2:9",
   "theme": "은혜"
  },
+ "17891943213654525": {
+  "clip_novelty": 1.86,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-11",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 14,
+  "gate_skipped": 1,
+  "insights": {},
+  "motion": 4.01,
+  "motion_attempts": 2,
+  "motion_sky": 0.54,
+  "published": "2026-10-11T05:11:24+09:00",
+  "ref": "마태복음 3:17",
+  "scene": "wheat_field",
+  "segments": 1,
+  "text_contrast": 4.56,
+  "text_spread": 8.1,
+  "theme": "사랑",
+  "veo_attempts": [
+   2
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "17893240941588747": {
   "insights": {
    "comments": 1,
