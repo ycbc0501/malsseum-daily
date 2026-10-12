@@ -5184,6 +5184,33 @@
   "ref": "요한일서 4:19",
   "theme": "사랑"
  },
+ "18151377898538985": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-10-12",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 1,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 15.267,
+  "motion_attempts": 3,
+  "motion_sky": 0.424,
+  "published": "2026-10-12T21:54:27+09:00",
+  "ref": "데살로니가후서 3:5",
+  "scene": "sea",
+  "segments": 1,
+  "text_contrast": 8.08,
+  "text_spread": 10.4,
+  "theme": "인도",
+  "veo_attempts": [
+   3
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18163589620470059": {
   "clip_novelty": 10.66,
   "clip_spoiled": false,
