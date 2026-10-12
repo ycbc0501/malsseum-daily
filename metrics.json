@@ -5669,6 +5669,33 @@
   "ref": "고린도후서 5:17",
   "theme": "은혜"
  },
+ "18234343114323673": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-10-13",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 10,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 4.073,
+  "motion_attempts": 3,
+  "motion_sky": 0.455,
+  "published": "2026-10-13T07:31:24+09:00",
+  "ref": "히브리서 12:13",
+  "scene": "wheat_field",
+  "segments": 1,
+  "text_contrast": 8.43,
+  "text_spread": 7.6,
+  "theme": "인도",
+  "veo_attempts": [
+   3
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18243997210308897": {
   "cta_in_caption": false,
   "date": "2026-08-30",
