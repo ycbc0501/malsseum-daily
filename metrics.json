@@ -4999,6 +4999,33 @@
   },
   "theme": "평안"
  },
+ "18136983595727149": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-10-13",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 16,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 0.687,
+  "motion_attempts": 3,
+  "motion_sky": 0.415,
+  "published": "2026-10-13T21:42:04+09:00",
+  "ref": "갈라디아서 5:18",
+  "scene": "bedroom",
+  "segments": 1,
+  "text_contrast": 2.11,
+  "text_spread": 34.4,
+  "theme": "인도",
+  "veo_attempts": [
+   3
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18137927056491677": {
   "insights": {
    "comments": 1,
