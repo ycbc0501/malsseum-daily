@@ -5200,6 +5200,35 @@
   "ref": "빌립보서 4:19",
   "theme": "은혜"
  },
+ "18146190931549171": {
+  "clip_novelty": 16.25,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-14",
+  "duration": 15.33,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 26,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 2.065,
+  "motion_attempts": 1,
+  "motion_sky": 1.665,
+  "published": "2026-10-14T05:44:20+09:00",
+  "ref": "신명기 8:6",
+  "scene": "flowers_vase",
+  "segments": 2,
+  "text_contrast": 6.01,
+  "text_spread": 22.8,
+  "theme": "인도",
+  "veo_attempts": [
+   1,
+   1,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18148538053509674": {
   "insights": {
    "comments": 1,
