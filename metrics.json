@@ -1309,6 +1309,35 @@
   "ref": "갈라디아서 6:9",
   "theme": "믿음"
  },
+ "17975885022135428": {
+  "clip_novelty": 15.04,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-15",
+  "duration": 22.98,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 18,
+  "gate_skipped": 1,
+  "insights": {},
+  "motion": 5.151,
+  "motion_attempts": 1,
+  "motion_sky": 7.444,
+  "published": "2026-10-15T05:19:54+09:00",
+  "ref": "에베소서 5:8",
+  "scene": "rainy_street",
+  "segments": 3,
+  "text_contrast": 9.43,
+  "text_spread": 6.8,
+  "theme": "인도",
+  "veo_attempts": [
+   1,
+   1,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "17976851184060962": {
   "insights": {
    "comments": 1,
