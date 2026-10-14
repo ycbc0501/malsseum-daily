@@ -4947,6 +4947,35 @@
   "text_spread": 3.2,
   "theme": "지혜"
  },
+ "18131996386783452": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-14",
+  "duration": 22.98,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 12,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 0.479,
+  "motion_attempts": 1,
+  "motion_sky": 0.373,
+  "published": "2026-10-14T19:10:02+09:00",
+  "ref": "누가복음 1:79",
+  "scene": "candle",
+  "segments": 3,
+  "text_contrast": 5.3,
+  "text_spread": 14.5,
+  "theme": "인도",
+  "veo_attempts": [
+   1,
+   1,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18132250663614890": {
   "insights": {
    "comments": 1,
