@@ -426,6 +426,14 @@ def checks():
     insights = (HERE / ".github/workflows/insights.yml").read_text()
     yield "G1 alerts only on trouble, not every post", (
         "notify.py --posted" not in daily and "python watch.py" in insights)
+    # Alerts have moved twice because nobody read where they landed. The topic id must reach
+    # every step that sends, or they silently go to the group's General instead.
+    for _wf in ("daily-post.yml", "insights.yml", "watch.yml"):
+        _src = (HERE / ".github/workflows" / _wf).read_text()
+        yield (f"G1 {_wf} passes the alert topic", 
+               "TELEGRAM_CHAT_ID" not in _src or "TELEGRAM_THREAD_ID" in _src)
+    yield "G1 notify targets a topic when given one", (
+        "message_thread_id" in (HERE / "notify.py").read_text())
     yield "G1 an alert cannot fail a post", (
         "continue-on-error: true" in insights
         and "not configured" in (HERE / "notify.py").read_text())

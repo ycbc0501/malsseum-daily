@@ -18,16 +18,23 @@ import urllib.request
 API = "https://api.telegram.org"
 
 
-def send(text, token=None, chat_id=None):
+def send(text, token=None, chat_id=None, thread_id=None):
+    """Post one line to Telegram. TELEGRAM_THREAD_ID targets a topic inside a forum group.
+
+    Alerts began in a DM with a dedicated bot, which nobody opened — two missed posts were caught
+    correctly and found by eye anyway (RULES.md G-1). They then moved to the bridge bot's DM, and
+    now to a topic in the group the account owner already reads, which needs no separate chat.
+    """
     token = token or os.environ.get("TELEGRAM_BOT_TOKEN")
     chat_id = chat_id or os.environ.get("TELEGRAM_CHAT_ID")
+    thread_id = thread_id or os.environ.get("TELEGRAM_THREAD_ID")
     if not token or not chat_id:
         print("telegram: not configured — skipping")
         return False
-    body = urllib.parse.urlencode({
-        "chat_id": chat_id, "text": text,
-        "disable_web_page_preview": "true",
-    }).encode()
+    fields = {"chat_id": chat_id, "text": text, "disable_web_page_preview": "true"}
+    if thread_id:
+        fields["message_thread_id"] = str(thread_id)
+    body = urllib.parse.urlencode(fields).encode()
     try:
         req = urllib.request.Request(f"{API}/bot{token}/sendMessage", data=body, method="POST")
         urllib.request.urlopen(req, timeout=20)

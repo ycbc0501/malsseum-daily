@@ -193,6 +193,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
           # watch.py asks Instagram whether the slot is actually empty before it says anything.
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
