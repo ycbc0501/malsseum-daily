@@ -324,6 +324,16 @@ _AUX_EC = ("지", "게", "고", "어", "아", "도록", "야")
 # JC or JKB, so we also match on the surface form to be robust: 사랑과│희락과, 너와│함께.
 _CONJ_FORMS = ("과", "와", "이나", "랑", "이랑")
 
+# Forms that bind LEFTWARD — the mirror of _FWD_NOUN. They cannot begin a line because they have
+# no meaning without the word in front of them, and the tagger does not mark them: kiwi calls
+# 하여금 an adverb (MAG) and the 안 of "주 안에서" a common noun (NNG). Both shipped broken —
+# 저는 다리로│하여금 (히브리서 12:13) and 이제는 주│안에서 (에베소서 5:8).
+#   하여금  only ever follows -로/-으로, as one causative phrase
+#   positional nouns bind only when they sit directly on a BARE noun: 주 안에서, 성 밖에.
+#     "앞에 있는…" opening a line is correct, so the preceding word has to be checked too.
+_BIND_LEFT = ("하여금",)
+_POSITION_NOUNS = ("안", "밖", "위", "아래", "속", "중", "사이", "앞", "뒤", "곁", "가운데")
+
 
 def balanced_split(draw, text, font, max_w):
     """Break a verse into lines at GRAMMATICAL boundaries, never inside a grammatical unit.
@@ -347,6 +357,9 @@ def balanced_split(draw, text, font, max_w):
 
     def head_tag(i):
         return heads[i][0] if heads and 0 <= i < n else None
+
+    def head_form(i):                                 # surface of the word's FIRST morpheme
+        return heads[i][1] if heads and 0 <= i < n else None
 
     def is_comma(i):
         return words[i].endswith((",", "，"))
@@ -378,6 +391,12 @@ def balanced_split(draw, text, font, max_w):
         # the opposite of a clause end. Kiwi tags the auxiliary itself VX, which is exactly the
         # signal: an EC followed by a VX is the middle of a verb, not the end of a clause.
         if t == "EC" and form in _AUX_EC and head_tag(i + 1) == "VX":
+            return True
+        # A word that binds to the one before it cannot start the next line.
+        nxt_form = head_form(i + 1)
+        if nxt_form in _BIND_LEFT:
+            return True
+        if nxt_form in _POSITION_NOUNS and t in ("NNG", "NNP"):
             return True
         return False
 

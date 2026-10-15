@@ -68,5 +68,25 @@ with contextlib.redirect_stdout(io.StringIO()):
 print(f"  ({len(rows)} verses, {three} need three lines)")
 check("three-line verses stay at or below the shipped 3", three <= 3)
 
+
+# ---- leftward-binding forms (2026-10-15) -------------------------------------
+# Reported: 저는 다리로│하여금 (히브리서 12:13) and 이제는 주│안에서 (에베소서 5:8). Neither is a
+# tagger signal — kiwi calls 하여금 an adverb and the 안 of "주 안에서" a common noun — so the rule
+# has to be about what binds LEFT, the mirror of _FWD_NOUN.
+for _text, _orphan in [
+    ("너희 발을 위하여 곧은 길을 만들어 저는 다리로 하여금 어그러지지 않고 고침을 받게 하라", "하여금"),
+    ("너희가 전에는 어둠이더니 이제는 주 안에서 빛이라 빛의 자녀들처럼 행하라", "안에서"),
+    ("하나님이여 주의 인자하심이 어찌 그리 보배로우신지요 사람들이 주의 날개 그늘 아래에 피하나이다", "아래에"),
+]:
+    for _size in (44, 35):
+        _lines = split_of(_text, _size)
+        check(f"{_orphan} never starts a line at {_size}px",
+              _orphan not in [l.split()[0] for l in _lines[1:]])
+
+# A positional noun with nothing before it must still be allowed to open the verse.
+check("a positional noun may open the verse",
+      split_of("앞에 있는 것을 잡으려고 좇아가노라")[0].startswith("앞에"))
+
 print(f"\n{len(FAIL)} failure(s)" if FAIL else "\nall good")
 sys.exit(1 if FAIL else 0)
+
