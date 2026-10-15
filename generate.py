@@ -360,7 +360,8 @@ def _compositions(n, k):
 #   JKG 의 (genitive) · ETM 관형형 어미 · MM 관형사   → bind to the following NOUN
 #   JC  접속 조사 (과/와/이나)                          → bind to the next list item (사랑과│희락과)
 #   MAG 부사 · MAJ 접속부사                             → bind to what they modify (오직·다만·오래│참음)
-_FWD_NOUN = ("JKG", "ETM", "MM", "MAG", "MAJ", "JC")
+#   NR  수사                                          → bind to its counter (열│명, 하나│되게)
+_FWD_NOUN = ("JKG", "ETM", "MM", "MAG", "MAJ", "JC", "NR")
 
 # 보조적 연결어미 — the ONLY endings that can hand a verb over to an auxiliary one:
 #   -지 못하다/아니하다/말다 · -게 하다 · -어/-아 있다·버리다·주다 · -고 있다 · -도록 하다
@@ -380,7 +381,9 @@ _CONJ_FORMS = ("과", "와", "이나", "랑", "이랑")
 #   하여금  only ever follows -로/-으로, as one causative phrase
 #   positional nouns bind only when they sit directly on a BARE noun: 주 안에서, 성 밖에.
 #     "앞에 있는…" opening a line is correct, so the preceding word has to be checked too.
-_BIND_LEFT = ("하여금",)
+#   같이·처럼·만큼  comparative suffixes on the word before (자비로우심│같이, 것│같이)
+#   없이            only ever ends a compound (변함│없이, 거침│없이, 끊임│없이)
+_BIND_LEFT = ("하여금", "같이", "처럼", "만큼", "없이")
 _POSITION_NOUNS = ("안", "밖", "위", "아래", "속", "중", "사이", "앞", "뒤", "곁", "가운데")
 
 
@@ -413,26 +416,49 @@ def balanced_split(draw, text, font, max_w):
     def is_comma(i):
         return words[i].endswith((",", "，"))
 
-    def forward_attach(i):                            # is a break after word i grammatically wrong?
+    def forward_attach(i):                            # how badly is a break after word i wrong?
+        """0 = fine, or a severity in TEAR_* — not every tear is the same size.
+
+        Some verses have NO allowed break: 디모데전서 4:5 ("하나님의 말씀과 기도로
+        거룩하여짐이라") is genitive, conjunction, adverbial-particle, and nothing else.
+        While every tear cost the same, the tie fell through to length balance, which
+        chose to split the conjoined pair 말씀과│기도로 — the worst of the three — over
+        merely parting 기도로 from its predicate. Ranking them is what makes the forced
+        case come out right."""
         if not info or i + 1 >= n or is_comma(i):     # a comma always licenses a break
-            return False
+            return 0
         t, form = info[i]
         nxt = tag(i + 1)
+        nxt_form = head_form(i + 1)
+        # The two words are one word (변함│없이, 주│안에서), a modifier is torn from what it
+        # modifies, or a conjoined pair is split.
+        if nxt_form in _BIND_LEFT:
+            return TEAR_PHRASE
+        if nxt_form in _POSITION_NOUNS and t in ("NNG", "NNP"):
+            return TEAR_PHRASE
         if t in _FWD_NOUN:                            # modifier / conjunction / adverb → next word
-            return True
+            return TEAR_PHRASE
         if t == "NP":                                # a bare pronoun modifies the next word (너희│마음, 내│안에)
-            return True
+            return TEAR_PHRASE
         if t and t.startswith("J") and form in _CONJ_FORMS:  # 과/와/이나 conjunction/comitative → next
-            return True
-        if t == "JKB" and nxt in ("EC", "EF", "ETM"):  # adverbial particle → a predicate (그에게│피하는)
-            return True
+            return TEAR_PHRASE
+        # A bare noun sitting directly on another noun is a compound or an apposition:
+        # 그리스도│예수, 주 예수│그리스도, 많은 물│소리. With a particle it would be a real
+        # phrase boundary, so the test is the ABSENCE of one.
+        # head_tag, not tag: "증거들의" ENDS in a genitive but BEGINS with the noun 증거, and
+        # it is the beginning that the bare noun in front is glued to. Reading the ending here
+        # is why 주의│증거들의, 물│소리와 and 예수│그리스도에 all slipped through.
+        # NNB is deliberately absent. 대로·것·바·줄 CLOSE the adnominal clause in front of them
+        # ("말씀하신 대로 │ 종을") — treating them as glue moved two good breaks to worse ones.
+        if t in ("NNG", "NNP") and head_tag(i + 1) in ("NNG", "NNP"):
+            return TEAR_PHRASE
         # NOT JKO. Adding the object particle here (죄를│자복하고) was tried on 2026-09-21 and
         # rejected on measurement: across all 694 verses it pushed three-line verses from 3 to 7
         # and forced worse breaks elsewhere — 시편 22:9 came out "하시고 내 / 어머니의", splitting a
         # 관형사 off its noun, which is a worse tear than the one it fixed. A constraint that has
         # to be paid for somewhere else is not free, and the corpus is where the bill shows up.
         if t == "EC" and nxt == "EF":                # connective → completing final verb (맛보아│알지어다)
-            return True
+            return TEAR_PHRASE
         # 보조적 연결어미 + 보조용언 = ONE predicate, never two lines:
         #   정직하지│못하나 · 두려워하지│말라 · 믿고│있는 · 자복하고│버리는
         # This is the break that shipped on 하박국 2:4 (2026-09-21) and it was not an accident of
@@ -440,14 +466,14 @@ def balanced_split(draw, text, font, max_w):
         # the opposite of a clause end. Kiwi tags the auxiliary itself VX, which is exactly the
         # signal: an EC followed by a VX is the middle of a verb, not the end of a clause.
         if t == "EC" and form in _AUX_EC and head_tag(i + 1) == "VX":
-            return True
-        # A word that binds to the one before it cannot start the next line.
-        nxt_form = head_form(i + 1)
-        if nxt_form in _BIND_LEFT:
-            return True
-        if nxt_form in _POSITION_NOUNS and t in ("NNG", "NNP"):
-            return True
-        return False
+            return TEAR_PHRASE
+        # MILD — a complete phrase parted from the predicate it serves. Still wrong, but a
+        # reader can follow it; when a verse offers nothing better this is the one to take.
+        if t == "JKB" and nxt in ("EC", "EF", "ETM"):
+            return TEAR_CLAUSE
+        if t == "JKC":                                # 보격 조사 → 되다/아니다 (올무가│되게)
+            return TEAR_CLAUSE
+        return 0
 
     def is_clause_end(i):                             # a natural, preferred break point
         return is_comma(i) or tag(i) in ("EC", "EF")
@@ -458,7 +484,18 @@ def balanced_split(draw, text, font, max_w):
             seg[(i, j)] = text_w(draw, " ".join(words[i:j + 1]), font)
         return seg[(i, j)]
 
-    P_FORBID = 100.0 * max_w                          # forward-attach break: never (unless unavoidable)
+    # Two sizes of tear, not one. A verse whose every break is forbidden still has to break
+    # somewhere, and while all tears cost the same the tie fell through to length balance —
+    # which chose the worst available one. The gap is wide enough that a worse tear is never
+    # traded for better balance, and TEAR_CLAUSE still outranks the orphan penalty: a one-word
+    # line is ugly, tearing a phrase is wrong, and wrong loses to ugly every time.
+    #
+    # A third, higher tier for word-internal splits (변함│없이, 물│소리) was tried and REMOVED:
+    # with the rules themselves correct it changed nothing across all 694 verses. What had been
+    # letting those breaks through was reading the next word's ENDING instead of its head, not
+    # the size of the penalty — so the fix belonged in the rule, not in a new knob.
+    TEAR_PHRASE = 100.0 * max_w                       # one word split, modifier torn off, pair split
+    TEAR_CLAUSE =   5.0 * max_w                       # a whole phrase parted from its predicate
     P_SOFT   = 0.55 * max_w                           # allowed break that isn't a clause end/comma
     P_ORPHAN = 2.0 * max_w                            # a lonely ~1-word line is bad
     P_LINE   = 0.7 * max_w                            # prefer fewer lines, all else equal
@@ -483,8 +520,9 @@ def balanced_split(draw, text, font, max_w):
             score = (max(widths) - min(widths)) + P_LINE * k
             score += P_ORPHAN * sum(1 for w in widths if w < ORPHAN_W)
             for b in breaks:
-                if forward_attach(b):
-                    score += P_FORBID
+                tear = forward_attach(b)
+                if tear:
+                    score += tear
                 elif not is_clause_end(b):
                     score += P_SOFT
             if best is None or score < best[0]:

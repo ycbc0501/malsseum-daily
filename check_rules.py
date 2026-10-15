@@ -111,6 +111,12 @@ def checks():
     # in the code as a net, but every verse we ship must clear the bar at full size.
     yield "F2b tracking and set width are set", (
         "TRACK = -0.05" in gen and "WIDTH = 0.80" in gen)
+    # F-4a/4b: tears are ranked, and the noun rule reads the next word's HEAD.
+    yield "F4a tears are ranked, not one flat penalty", (
+        "TEAR_PHRASE" in gen and "TEAR_CLAUSE" in gen
+        and "P_FORBID" not in gen)
+    yield "F4b the bare-noun rule reads the next word's head", (
+        'head_tag(i + 1) in ("NNG", "NNP")' in gen)
     yield "F2b measuring and drawing read the same two numbers", (
         "def text_w" in gen and "def draw_text" in gen
         and gen.count("_tracked()") >= 3)
