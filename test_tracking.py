@@ -1,0 +1,130 @@
+"""자간(TRACK)과 장평(WIDTH) — RULES.md F-2b.
+
+이 파일이 지키는 것은 두 가지다.
+  ① 694절 전부가 44px 두 줄 안에 들어간다 ("글자 크기는 하나입니다").
+  ② 재는 코드와 그리는 코드가 같은 두 숫자를 읽는다.
+②가 깨지면 ①은 거짓말이 된다 — 분줄기는 "두 줄"이라 재고 캔버스는 세 줄로 그린다.
+2026-10-16 이전이 정확히 그 상태였다(렌더러에 자간이 없는데 측정만 자간을 가정).
+"""
+import io
+import json
+import contextlib
+import os
+import sys
+import unittest
+
+from PIL import Image, ImageDraw
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import generate
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+VERSES = json.load(open(os.path.join(HERE, "verses.json")))["verses"]
+COL_W = int(generate.REEL[0] * 0.85)
+
+
+def _fit(text):
+    d = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+    with contextlib.redirect_stdout(io.StringIO()):
+        return generate.fit_verse(d, text, COL_W, 44)
+
+
+class Settings(unittest.TestCase):
+    def test_the_chosen_numbers_are_in_place(self):
+        self.assertEqual(generate.TRACK, -0.05)
+        self.assertEqual(generate.WIDTH, 0.80)
+
+    def test_tracking_is_active(self):
+        self.assertTrue(generate._tracked())
+
+
+class EveryVerseAtFullSize(unittest.TestCase):
+    """① — 하나도 빠짐없이. 한 개라도 작아지면 "한 크기"가 아니다."""
+
+    def test_no_verse_shrinks(self):
+        small = [v["ref"] for v in VERSES if _fit(v["text"])[3] != 44]
+        self.assertEqual(small, [], f"{len(small)}절이 44px 아래로 내려갔다: {small[:5]}")
+
+    def test_no_verse_needs_a_third_line(self):
+        long = [v["ref"] for v in VERSES if len(_fit(v["text"])[1]) > 2]
+        self.assertEqual(long, [], f"{len(long)}절이 세 줄이 됐다: {long[:5]}")
+
+    def test_every_line_fits_the_column(self):
+        d = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+        over = []
+        for v in VERSES:
+            font, lines, _lh, _size = _fit(v["text"])
+            for ln in lines:
+                if generate.text_w(d, ln, font) > COL_W:
+                    over.append(v["ref"])
+                    break
+        self.assertEqual(over, [], f"{len(over)}절이 단을 넘쳤다: {over[:5]}")
+
+
+class MeasuringMatchesDrawing(unittest.TestCase):
+    """② — text_w()가 내놓는 폭과 draw_text()가 칠하는 폭이 같아야 한다."""
+
+    SAMPLES = ["이제는 주 안에서 빛이라 빛의 자녀들처럼 행하라",
+               "여호와는 나의 목자시니",
+               "주의 날개 그늘 아래에 피하나이다"]
+
+    def _painted_width(self, s, font):
+        img = Image.new("RGBA", (2400, 300), (0, 0, 0, 0))
+        generate.draw_text(img, (20, 20), s, font, (255, 255, 255, 255))
+        box = img.getbbox()
+        return box[2] - box[0]
+
+    def test_the_gap_is_side_bearings_and_does_not_grow(self):
+        """잰 폭은 자폭, 그린 폭은 잉크 범위다 — 마지막 글자의 사이드베어링만큼 늘 짧다.
+
+        그 차이는 글자 수와 무관한 상수여야 한다. 그리는 쪽이 재는 쪽과 다른
+        TRACK/WIDTH를 쓰면 차이가 길이에 **비례해서** 벌어지고, 그때 이 테스트가 잡는다."""
+        d = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+        font = generate.load_font(generate.SERIF, 44)
+        gaps = []
+        for s in self.SAMPLES:
+            measured = generate.text_w(d, s, font)
+            painted = self._painted_width(s, font)
+            self.assertGreater(measured, painted, f"{s!r}: 그린 게 잰 것보다 넓다")
+            gaps.append(measured - painted)
+        self.assertLess(max(gaps), 44, f"차이가 한 글자를 넘는다: {gaps}")
+        self.assertLess(max(gaps) - min(gaps), 0.5 * 44,
+                        f"차이가 길이에 따라 벌어진다 = 재는 쪽과 그리는 쪽이 갈렸다: {gaps}")
+
+    def test_tracking_actually_narrows_what_is_drawn(self):
+        """렌더러가 TRACK/WIDTH를 무시하면(= 2026-10-16 이전) 이 테스트가 잡는다."""
+        font = generate.load_font(generate.SERIF, 44)
+        tight = self._painted_width(self.SAMPLES[0], font)
+        track, width = generate.TRACK, generate.WIDTH
+        try:
+            generate.TRACK, generate.WIDTH = 0.0, 1.0
+            loose = self._painted_width(self.SAMPLES[0], font)
+        finally:
+            generate.TRACK, generate.WIDTH = track, width
+        self.assertLess(tight, loose * 0.85,
+                        f"눌린 폭 {tight} 이 안 눌린 폭 {loose} 보다 충분히 좁지 않다")
+
+
+class DefaultsFallThrough(unittest.TestCase):
+    """기본값에서는 PIL 경로 그대로 — 조판 기계가 평소 출력을 바꾸지 않는다."""
+
+    def test_untracked_matches_pil_exactly(self):
+        track, width = generate.TRACK, generate.WIDTH
+        font = generate.load_font(generate.SERIF, 44)
+        s = "여호와는 나의 목자시니"
+        try:
+            generate.TRACK, generate.WIDTH = 0.0, 1.0
+            self.assertFalse(generate._tracked())
+            mine = Image.new("RGBA", (900, 200), (0, 0, 0, 0))
+            generate.draw_text(mine, (10, 10), s, font, (255, 255, 255, 255))
+            pil = Image.new("RGBA", (900, 200), (0, 0, 0, 0))
+            ImageDraw.Draw(pil).text((10, 10), s, font=font, fill=(255, 255, 255, 255))
+            self.assertEqual(list(mine.getdata()), list(pil.getdata()))
+            d = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+            self.assertEqual(generate.text_w(d, s, font), d.textlength(s, font=font))
+        finally:
+            generate.TRACK, generate.WIDTH = track, width
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

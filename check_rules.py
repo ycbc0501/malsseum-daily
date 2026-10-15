@@ -107,7 +107,13 @@ def checks():
     yield "A2b the law forbids a pasted panel and a hard seam", (
         "panel, band or backdrop" in law and "straight edge cutting it into zones" in law)
     gen = (HERE / "generate.py").read_text()
-    yield "F5 exactly two type sizes", "SMALL_RATIO" in gen and "MAX_LINES_AT_FULL" in gen
+    # F-2b: one type size, and the two numbers that make it possible. The 35px fallback stays
+    # in the code as a net, but every verse we ship must clear the bar at full size.
+    yield "F2b tracking and set width are set", (
+        "TRACK = -0.05" in gen and "WIDTH = 0.80" in gen)
+    yield "F2b measuring and drawing read the same two numbers", (
+        "def text_w" in gen and "def draw_text" in gen
+        and gen.count("_tracked()") >= 3)
     # Dark is allowed and must stay allowed — three of the seven light phrases are after sunset,
     # and the gate is told explicitly not to flag dark or moody light. What is banned is the
     # feeling, not the light level.
