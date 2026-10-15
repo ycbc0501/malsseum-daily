@@ -89,8 +89,55 @@ def cover_crop(img, cw, ch):
 
 # ----- text layout -------------------------------------------------------------
 
+# 자간과 장평 — 한글은 글자가 정사각이라 글꼴만 바꿔서는 가로로 좁아지지 않는다(전수
+# 측정: 가장 좁은 후보도 지금 대비 92%). 한국 조판이 실제로 쓰는 두 손잡이는 글자 사이를
+# 좁히는 자간과 글자 자체를 눌러 쓰는 장평이다. TRACK은 글자 크기 대비 비율(-0.04 = 4%
+# 좁힘), WIDTH는 장평. 둘 다 재는 코드(text_w)와 그리는 코드(draw_text)가 같이 읽는다 —
+# 갈라지면 "두 줄에 들어간다"고 재고 세 줄로 그리게 된다.
+TRACK = 0.0
+WIDTH = 1.0
+_SS = 3                     # 눌러 쓴 뒤에도 획이 뭉개지지 않게 크게 그리고 줄인다
+
+
+def _tracked():
+    return TRACK != 0.0 or WIDTH != 1.0
+
+
 def text_w(draw, s, font):
-    return draw.textlength(s, font=font)
+    if not _tracked():
+        return draw.textlength(s, font=font)
+    step = TRACK * font.size
+    w = sum(font.getlength(ch) + step for ch in s) - (step if s else 0)
+    return w * WIDTH
+
+
+def draw_text(img, xy, s, font, fill, stroke_width=0, stroke_fill=None):
+    """Draw one line onto an RGBA image, honouring TRACK and WIDTH.
+
+    Falls through to PIL when neither is set, so the default path is byte-identical
+    to what it was before tracking existed."""
+    if not _tracked():
+        ImageDraw.Draw(img).text(xy, s, font=font, fill=fill,
+                                 stroke_width=stroke_width, stroke_fill=stroke_fill)
+        return
+    big = load_font(getattr(font, "path", SERIF), font.size * _SS)
+    step = TRACK * font.size * _SS
+    adv = [big.getlength(ch) + step for ch in s]
+    w = max(1, int(round(sum(adv) - step)))
+    asc, desc = big.getmetrics()
+    h = asc + desc
+    pad = font.size * _SS
+    strip = Image.new("RGBA", (w + pad, h + 2 * stroke_width * _SS), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(strip)
+    x = 0.0
+    for ch, a in zip(s, adv):
+        sd.text((x, stroke_width * _SS), ch, font=big, fill=fill,
+                stroke_width=stroke_width * _SS, stroke_fill=stroke_fill)
+        x += a
+    strip = strip.crop((0, 0, w, strip.height))
+    strip = strip.resize((max(1, int(round(w * WIDTH / _SS))),
+                          max(1, strip.height // _SS)), Image.LANCZOS)
+    img.alpha_composite(strip, (int(xy[0]), int(xy[1]) - stroke_width))
 
 
 def _greedy(draw, words, font, max_w):
@@ -694,7 +741,7 @@ def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "top"
     y = top_y
     for ln in lines:
         lw = text_w(td, ln, font)
-        td.text((line_x(lw), y), ln, font=font, fill=fg + (255,))
+        draw_text(txt, (line_x(lw), y), ln, font, fg + (255,))
         y += line_h
     srctxt = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
     sd = ImageDraw.Draw(srctxt)
@@ -703,7 +750,7 @@ def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "top"
     src_text = verse["ref"]
     sw = text_w(sd, src_text, src_font)
     # The reference sets the reference line quieter than the verse — same colour, lower presence.
-    sd.text((line_x(sw), y + gap), src_text, font=src_font, fill=fg + (205,))
+    draw_text(srctxt, (line_x(sw), y + gap), src_text, src_font, fg + (205,))
 
     # Backing is now INSURANCE, not the legibility mechanism. COMPOSE demands an empty upper half
     # and the text colour adapts to it, so the heavy 150-alpha cloud that produced the visible grey
@@ -800,8 +847,8 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
     y = top_y
     for ln in lines:
         lw = text_w(td, ln, font)
-        td.text((line_x(lw), y), ln, font=font, fill=fg + (255,),
-                stroke_width=stroke, stroke_fill=(0, 0, 0, 150))
+        draw_text(txt, (line_x(lw), y), ln, font, fg + (255,),
+                  stroke_width=stroke, stroke_fill=(0, 0, 0, 150))
         y += line_h
     if photo:
         src_fill = (228, 225, 219) if fg[0] > 128 else (74, 68, 62)   # match verse (light/dark)
@@ -811,8 +858,8 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
     sd = ImageDraw.Draw(srctxt)
     src_text = f"[{verse['ref']}]"
     sw = text_w(sd, src_text, src_font)
-    sd.text((line_x(sw), y + gap), src_text, font=src_font, fill=src_fill + (255,),
-            stroke_width=stroke, stroke_fill=(0, 0, 0, 150))
+    draw_text(srctxt, (line_x(sw), y + gap), src_text, src_font, src_fill + (255,),
+              stroke_width=stroke, stroke_fill=(0, 0, 0, 150))
 
     if photo:
         def cloud(b, alpha, cap, blurreps):
@@ -880,7 +927,7 @@ def render_overlay(verse, out_path, frame_path, handle="", canvas=REEL):
     y = top_y
     for ln in lines:
         lw = text_w(td, ln, font)
-        td.text(((cw - lw) // 2, y), ln, font=font, fill=fg + (255,))
+        draw_text(txt, ((cw - lw) // 2, y), ln, font, fg + (255,))
         y += line_h
     src_fill = (228, 225, 219)
     src_img = render_italic(f"[{verse['ref']}]", src_font, src_fill + (255,))
