@@ -850,6 +850,10 @@ def main():
                    "gate_passed": bool(gate_passed),
                    "gate_ran": fetch_higgsfield.GATE_RAN[0],
                    "gate_skipped": fetch_higgsfield.GATE_RAN[1],
+                   # Which image model produced the picture. The pro model goes 503 under
+                   # load and we fall back to a softer one; without this the drop in
+                   # quality would be invisible and blamed on the prompt.
+                   "image_model": fetch_higgsfield.IMAGE_MODEL_USED[0],
                    "scene": scene_cat,
                    # The follow CTA left the caption on 2026-08-01 (rule 10). metrics.report()
                    # groups on this, so the change is answerable later instead of argued about;

@@ -10,6 +10,7 @@ import base64
 import json
 import os
 import time
+import urllib.error
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -27,6 +28,12 @@ class MissingCredential(RuntimeError):
 
 MODEL = "gemini"        # default backend: Nano Banana Pro (photoreal, clean, respects "no text")
 GEMINI_MODEL = "gemini-3-pro-image"
+# The pro image model goes 503 ("high demand") with no warning. A single 503 used to kill
+# the whole day's post. We retry, then fall back — a softer image beats no post. The
+# fallback ignores imageSize, so it returns 768x1344; the composition gate still runs on it.
+GEMINI_FALLBACK = "gemini-2.5-flash-image"
+GEMINI_TRIES = 4                  # attempts on the pro model before falling back
+IMAGE_MODEL_USED = [""]           # last model that actually produced an image (recorded in _meta)
 VISION_MODEL = "gemini-2.5-pro"   # vision model that inspects the render for composition flaws
                                   # (flash missed the upright-reflection bug; pro catches it)
 FLUX = "flux-pro/kontext/max/text-to-image"   # Higgsfield fallback options
@@ -993,12 +1000,11 @@ def _gemini_key():
     return key
 
 
-def _gemini(prompt, dest, aspect="3:4"):
-    """Nano Banana Pro (Gemini 3 Pro Image) → save image to dest."""
+def _gemini_once(model, prompt, dest, aspect):
     body = {"contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"imageConfig": {"aspectRatio": aspect, "imageSize": "2K"}}}
     url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
-           f"{GEMINI_MODEL}:generateContent?key={_gemini_key()}")
+           f"{model}:generateContent?key={_gemini_key()}")
     req = urllib.request.Request(url, data=json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json"}, method="POST")
     data = json.load(urllib.request.urlopen(req, timeout=180))
@@ -1006,8 +1012,30 @@ def _gemini(prompt, dest, aspect="3:4"):
         if "inlineData" in part:
             with open(dest, "wb") as f:
                 f.write(base64.b64decode(part["inlineData"]["data"]))
+            IMAGE_MODEL_USED[0] = model
             return dest
-    raise RuntimeError("gemini: no image in response")
+    raise RuntimeError(f"{model}: no image in response")
+
+
+def _gemini(prompt, dest, aspect="3:4"):
+    """Nano Banana Pro (Gemini 3 Pro Image) → save image to dest.
+
+    Retries the pro model through transient overload, then falls back once."""
+    last = None
+    for attempt in range(GEMINI_TRIES):
+        try:
+            return _gemini_once(GEMINI_MODEL, prompt, dest, aspect)
+        except urllib.error.HTTPError as e:
+            if e.code not in (429, 500, 502, 503, 504):
+                raise
+            last = e
+            print(f"   {GEMINI_MODEL} {e.code} — 재시도 {attempt + 1}/{GEMINI_TRIES}", flush=True)
+            time.sleep(min(60, 8 * 2 ** attempt))
+    print(f"   {GEMINI_MODEL} 계속 불가 → {GEMINI_FALLBACK} 로 대체", flush=True)
+    try:
+        return _gemini_once(GEMINI_FALLBACK, prompt, dest, aspect)
+    except urllib.error.HTTPError:
+        raise last
 
 
 def _soul(client, prompt, wh="1536x2048"):
