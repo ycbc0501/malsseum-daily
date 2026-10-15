@@ -2653,6 +2653,34 @@
   "ref": "시편 126:5",
   "theme": "위로"
  },
+ "18074619821739727": {
+  "clip_novelty": 42.44,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-16",
+  "duration": 15.33,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 15,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 0.9,
+  "motion_attempts": 1,
+  "motion_sky": 0.75,
+  "published": "2026-10-16T05:15:49+09:00",
+  "ref": "신명기 32:12",
+  "scene": "window_light",
+  "segments": 2,
+  "text_contrast": 4.53,
+  "text_spread": 11.7,
+  "theme": "인도",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18078365765297839": {
   "insights": {
    "comments": 1,
