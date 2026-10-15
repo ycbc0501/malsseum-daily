@@ -2776,6 +2776,33 @@
   "ref": "야고보서 1:2",
   "theme": "감사"
  },
+ "18084523352686967": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-10-15",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 1,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 12.988,
+  "motion_attempts": 3,
+  "motion_sky": 0.419,
+  "published": "2026-10-15T18:59:18+09:00",
+  "ref": "요한일서 2:6",
+  "scene": "sea",
+  "segments": 1,
+  "text_contrast": 7.91,
+  "text_spread": 10.3,
+  "theme": "인도",
+  "veo_attempts": [
+   3
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18084684533371472": {
   "cta_in_caption": false,
   "date": "2026-08-24",
