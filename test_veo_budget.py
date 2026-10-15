@@ -60,34 +60,27 @@ VEO_TRIES = const("VEO_TRIES")
 CHAIN_TRIES = const("CHAIN_TRIES")
 SEGMENTS = daily_post.SEGMENTS
 
-# ── 1. The chain gate is the shipped expression, not a paraphrase of it ──────────────────────
-# Evaluate the ACTUAL range() bound from the source under both branches. If someone deletes the
-# chain_ok gate, this stops finding the expression and the test fails rather than quietly
-# passing on a copy that still has it.
+# ── 1. Every reel is the same length ────────────────────────────────────────────────────────
+# E-0c used to cap cost by refusing to chain after a missed opening, which made the LENGTH depend
+# on luck: 52% of reels came out at 7.7s and looped four times under a 30s hymn. Uniform length is
+# the requirement now and the ceiling is held by arithmetic alone (section 2).
 m = re.search(r"for seg in range\(2, (.+?)\):", SRC)
 if not m:
     bad += fails("the continuation loop bound is no longer a readable range() expression")
 else:
     expr = m.group(1)
-    env = {"SEGMENTS": SEGMENTS}
-    missed = list(range(2, eval(expr, {}, dict(env, chain_ok=False))))
-    clean = list(range(2, eval(expr, {}, dict(env, chain_ok=True))))
-    if missed:
-        bad += fails(f"E-0c: an opening that missed still chains {len(missed)} segment(s) — "
-                     f"the continuations would be built from a scene Veo already failed")
-    if len(clean) != SEGMENTS - 1:
-        bad += fails(f"a clean opening chains {len(clean)} segment(s), expected {SEGMENTS - 1}")
-    print(f"1. chain gate: clean opening → {len(clean)} continuation(s), "
-          f"opening that missed → {len(missed)}")
-
-if "chain_ok = (motion_attempts == 1 and not spoiled)" not in SRC:
-    bad += fails("E-0c: the gate no longer requires the opening to pass on the FIRST take")
+    if "chain_ok" in expr:
+        bad += fails("the chain is conditional again — reel length would vary post to post")
+    else:
+        n = len(list(range(2, eval(expr, {}, {"SEGMENTS": SEGMENTS}))))
+        if n != SEGMENTS - 1:
+            bad += fails(f"chains {n} continuation(s), expected {SEGMENTS - 1}")
+        print(f"1. chain: always {n} continuation(s) → every reel {SEGMENTS * 7.66:.1f}s")
 
 # ── 2. Worst case per post, in calls ─────────────────────────────────────────────────────────
-# Two mutually exclusive branches, because the gate makes them exclusive:
-#   (a) the opening misses → up to VEO_TRIES calls and NO chain
-#   (b) the opening is clean first try → 1 call plus CHAIN_TRIES per continuation
-worst_calls = max(VEO_TRIES, 1 + (SEGMENTS - 1) * CHAIN_TRIES)
+# The chain is unconditional now, so the worst case is simply every take anyone may spend:
+# the opening's retries plus one take per continuation.
+worst_calls = VEO_TRIES + (SEGMENTS - 1) * CHAIN_TRIES
 worst_seconds = worst_calls * SECONDS_PER_CALL
 worst_month = worst_seconds * WON_PER_SECOND * POSTS_PER_DAY * 30
 print(f"2. worst case: {worst_calls} calls = {worst_seconds:.0f}s/post "

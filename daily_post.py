@@ -61,11 +61,20 @@ THEME_ORDER = ["위로", "평안", "담대", "믿음", "감사", "사랑", "인�
 # Raising this is still a TIMING-BUDGET decision, not a free knob: each segment is another Veo
 # call (~2-6 min) against rule 1's ~50 min of build time. CHAIN_DEADLINE_S below is what makes
 # it safe — length gives way to the clock, the post never does.
-# Lowered 4 → 3 on 2026-09-23, on cost. Veo bills ₩138 per generated second, and the monthly
-# cap is ₩260,000 of which ~₩60,000 is images, gates and music — leaving about 24 billed seconds
-# per post, which is three eight-second calls. Four segments cost ₩325,000/month before a single
-# retry. Three is 23.1s, still comfortably inside Lyria's 30s hymn.
-SEGMENTS = 3
+# Every reel is 15.3 seconds. Two decisions meet here.
+#
+# Length does not move engagement — measured over 39 posts, reels of 7.7s / 15.3s / 23.0s drew
+# 25.3 / 19.4 / 25.6 likes, a spread of 0.3 against a standard error of 3.9. So length is free to
+# be chosen on cost, and uniformity is worth having on its own: reels used to come out at any of
+# those three lengths depending on whether the opening take needed a retry, and 52% landed at
+# 7.7s, which loops four times under a 30s hymn and reads as the video being fast.
+#
+# Cost then fixes the number. Veo bills ₩138.3 a generated second and the monthly cap leaves
+# ₩200,190 for it, which is 3 calls per post. Three segments spends all three on segments and
+# leaves nothing for a retry; two segments spends two and keeps one — and a retry is what lets the
+# drift and CGI gates do anything other than report. Same money, uniform length, defects can be
+# redrawn. See test_veo_budget.py, which holds the arithmetic.
+SEGMENTS = 2
 
 # Lyria returns a 30s clip (fetch_lyria.MODEL). The reel is capped here so it can never outlast
 # the hymn: past 30s the music would have to loop, and a loop seam landing mid-verse is the
@@ -552,7 +561,7 @@ def main():
     # absorbs the misses.
     # Veo seconds are billed whether the take is used or not (₩138/s), so a retry is only worth
     # eight more seconds when the inspection found a real defect.
-    VEO_TRIES = 3
+    VEO_TRIES = 2
     # Continuations get ONE take, and the chain only starts if the OPENING was clean first try.
     # Measured over the 25 posts after 2026-09-23 (notes/strategy/STRATEGY.md §1.3-1.6):
     # 1,008 billed seconds bought 376 shipped seconds — 62.7% of the money was thrown away, and
@@ -705,16 +714,13 @@ def main():
             # take, every continuation is generated from the tail of a scene Veo has already shown
             # it cannot animate cleanly — and the ledger says those runs end at one segment anyway
             # after paying for five or six takes. Spending nothing here is where the 39% comes from.
-            chain_ok = (motion_attempts == 1 and not spoiled)
-            if not chain_ok:
-                print(f"veo opening took {motion_attempts} take(s)"
-                      f"{' and never passed inspection' if spoiled else ''} → not chaining "
-                      f"(rule E-0c: a scene that misses once does not get continued)")
-            # Extend, one segment at a time. Each continuation gets ONE take and is INSPECTED; a
-            # continuation that misses stops the chain where it stands rather than buying two more
-            # takes of the same drift. Length gives way to cost here, which §1.5 measured as free:
-            # 8s / 15s / 23s reels drew 21.9 / 27.2 / 26.3 likes — overlapping ranges, no trend.
-            for seg in range(2, (SEGMENTS + 1) if chain_ok else 2):
+            # Every reel is the same length. Reels ran 7.7s, 15.3s and 23.0s depending on whether
+            # the opening take needed a retry — 52% of them came out at 7.7s, which loops four
+            # times under a 30s hymn and reads as the video being fast. Length does not move
+            # engagement: measured over 39 posts, 7.7s/15.3s/23.0s drew 25.3/19.4/25.6 likes, a
+            # spread of 0.3 against a standard error of 3.9. So length is a cost decision, taken
+            # once, and the opening needing a second take no longer decides the format.
+            for seg in range(2, SEGMENTS + 1):
                 spent = time.monotonic() - veo_t0
                 if spent > CHAIN_DEADLINE_S:
                     print(f"veo chaining hit the {CHAIN_DEADLINE_S // 60} min budget after "

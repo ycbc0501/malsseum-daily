@@ -92,9 +92,15 @@ print(f"5. SEGMENTS={daily_post.SEGMENTS}, HYMN_S={daily_post.HYMN_S}, "
 src = open("daily_post.py", encoding="utf-8").read()
 if "duration=24" in src:
     bad += fails("a still fallback still runs 24s — shorter than the chained reel it replaces")
-if daily_post.SEGMENTS * 7.65 < daily_post.HYMN_S - 8:
-    bad += fails(f"SEGMENTS={daily_post.SEGMENTS} cannot reach the hymn length; "
-                 f"the reel will loop inside the music again")
+# The reel must never EXCEED the hymn — that was the original defect, the music looping back on
+# itself mid-verse. Being SHORTER is a deliberate trade taken on 2026-10-15: the cap leaves three
+# Veo calls per post, and two segments spend two of them, keeping one for a retry so the drift and
+# CGI gates can redraw a bad take instead of only reporting it. A 15.3s reel means the 30s hymn is
+# trimmed, and each loop restarts it — which the shortened fades (0.6/0.8) make a 1.4s dip rather
+# than the 3s hole that was complained about.
+if daily_post.SEGMENTS * 7.65 > daily_post.HYMN_S:
+    bad += fails(f"SEGMENTS={daily_post.SEGMENTS} outruns the {daily_post.HYMN_S}s hymn; "
+                 f"the music will loop inside one play")
 
 # --- 6. the still fallback has the same seam discipline ---------------------------------------
 # It is a reel too, so Instagram loops it identically. It used to fade 1.0 in / 1.5 out.

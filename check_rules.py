@@ -280,9 +280,15 @@ def checks():
     yield "E0c a continuation gets exactly one take", (
         "CHAIN_TRIES = 1" in daily_src
         and "for attempt in range(1, CHAIN_TRIES + 1)" in daily_src)
-    yield "E0c a scene that missed once is not chained at all", (
-        "chain_ok = (motion_attempts == 1 and not spoiled)" in daily_src
-        and "(SEGMENTS + 1) if chain_ok else 2" in daily_src)
+    # E-0c was "a scene that missed once is not chained", which capped cost by making the reel
+    # short — and 52% came out at 7.7s, looping four times under the hymn. Length is uniform now
+    # and the ceiling is held by arithmetic instead: VEO_TRIES + (SEGMENTS-1)*CHAIN_TRIES calls
+    # must fit the Veo budget. test_veo_budget.py checks the won; this checks the shape.
+    _vt = int(re.search(r"VEO_TRIES = (\d+)", daily_src).group(1))
+    _ct = int(re.search(r"CHAIN_TRIES = (\d+)", daily_src).group(1))
+    import daily_post as _dp
+    yield "E0c every reel is the same length", "if chain_ok else 2" not in daily_src
+    yield "E0c the worst case fits three Veo calls", _vt + (_dp.SEGMENTS - 1) * _ct <= 3
     yield "E0d takes per segment are recorded, not reconstructed", (
         '"veo_attempts"' in daily_src and "veo_attempts.append" in daily_src)
     # G-2. The API refuses insights with (#10), and for two months that was recorded as "we
