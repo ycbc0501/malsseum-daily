@@ -1,0 +1,66 @@
+{
+ "18632946685003547": {
+  "clip_novelty": 29.03,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-10-06",
+  "deleted_noticed": "2026-10-16",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 9,
+  "gate_skipped": 0,
+  "insights": {
+   "comments": 1,
+   "comments_field": "comments_count",
+   "likes": 22,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 342,
+   "views_field": "total_views_count"
+  },
+  "kind": "REELS",
+  "motion": 12.879,
+  "motion_attempts": 3,
+  "motion_sky": 6.128,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "copyright_check_information": {
+    "status": {
+     "matches_found": false,
+     "status": "complete"
+    }
+   },
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 22,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "DeIOmzNkYbd",
+   "timestamp": "2026-10-05T21:58:30+0000",
+   "total_comments_count": 1,
+   "total_like_count": 22,
+   "total_views_count": 342
+  },
+  "permalink": "https://www.instagram.com/reel/DeIOmzNkYbd/",
+  "published": "2026-10-06T06:59:07+09:00",
+  "ref": "디모데전서 2:4",
+  "scene": "forest_path",
+  "segments": 1,
+  "text_contrast": 10.92,
+  "text_spread": 6.9,
+  "theme": "사랑",
+  "veo_calls": 6,
+  "veo_seconds": 48.0
+ }
+}
