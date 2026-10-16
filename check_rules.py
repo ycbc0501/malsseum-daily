@@ -112,6 +112,15 @@ def checks():
     yield "F2b tracking and set width are set", (
         "TRACK = -0.05" in gen and "WIDTH = 0.80" in gen)
     # F-4a/4b: tears are ranked, and the noun rule reads the next word's HEAD.
+    yield "F4-1 boundaries are graded, not a yes/no clause test", (
+        "def boundary" in gen and "P_STEP" in gen and "is_clause_end" not in gen)
+    yield "F4-2 only auxiliary connectives chain to the next verb", (
+        "_AUX_EC and finite_predicate" in gen)
+    yield "F4-5 predicate detection reads every morpheme", (
+        "def _word_is_predicate" in gen and "def _is_verb" in gen
+        and 'tag.split("-")[0]' in gen)
+    yield "F4-6 the 것이나 mis-tag is corrected at source", (
+        'tag == "JC" and form == "이나"' in gen)
     yield "F4a tears are ranked, not one flat penalty", (
         "TEAR_PHRASE" in gen and "TEAR_CLAUSE" in gen
         and "P_FORBID" not in gen)

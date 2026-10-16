@@ -68,6 +68,85 @@ class ForcedChoiceTakesTheMildestTear(unittest.TestCase):
         self.assertNotEqual(lines[0].split()[-1], "올무가", lines)
 
 
+class SenseGroupsFromThePaper(unittest.TestCase):
+    """박연옥(2021) 「의미단위 끊어 읽기 10개 기준」 — 계정 주인이 2026-10-16에 지적한 세 건.
+
+    셋 다 같은 원리다: **핵이 바로 이어지면 그 사이에서 끊지 않는다.** 논문의 기준
+    4(부사어+용언)·5(목적어+타동사)·6(관형어+체언)·10(보어+되다)이 전부 같은 말이고,
+    여기서는 그걸 연결어미와 주어·주제어까지 넓힌 것이다."""
+
+    def test_comparative_closes_the_line(self):
+        """「것 같이」 뒤에서 끊는다. 주어 너희도를 앞줄에 떼어 놓지 않는다.
+
+        같이는 양쪽에 용접돼 있었다 — kiwi가 MAG로 읽어 뒤에 붙고, _BIND_LEFT가 앞에
+        붙여서, 어느 줄도 같이로 끝내거나 시작할 수 없었다."""
+        self.assertEqual(lines_of("요한복음 15:12"),
+                         ["내 계명은 곧 내가 너희를 사랑한 것 같이",
+                          "너희도 서로 사랑하라 하는 이것이니라"])
+
+    def test_subject_goes_with_its_predicate(self):
+        """의인은은 노래하고 기뻐하느니라와 한 줄. 앞 절 꼬리에 붙지 않는다."""
+        self.assertEqual(lines_of("잠언 29:6"),
+                         ["악인이 범죄하는 것은",
+                          "스스로 올무가 되게 하는 것이나",
+                          "의인은 노래하고 기뻐하느니라"])
+
+    def test_serial_verbs_are_one_predicate(self):
+        """도와 건지시되 · 건져 구원하심은 — 보조적 연결어미 뒤의 용언은 같은 서술이다."""
+        self.assertEqual(lines_of("시편 37:40"),
+                         ["여호와께서 그들을 도와 건지시되",
+                          "악인들에게서 건져 구원하심은",
+                          "그를 의지한 까닭이로다"])
+
+    def test_subject_is_not_left_on_the_line_above_its_verb(self):
+        """주어 뒤에 서술어가 바로 오면 주어를 윗줄에 떼어 놓지 않는다 (기준 2).
+
+        전수로 16절을 바꾸는 규칙인데, 잠언 29:6은 「것이나」 태그 보정만으로도 맞아서
+        그 구절만으로는 이 규칙이 일하는지 알 수 없었다 — 그래서 사례를 따로 둔다."""
+        self.assertEqual(lines_of("시편 118:4"),
+                         ["이제 여호와를 경외하는 자는 말하기를",
+                          "그의 인자하심이 영원하다 할지로다"])
+
+    def test_repeated_imperatives_are_not_chained(self):
+        """「찬송하라 찬송하라」는 이어진 서술이 아니다 — kiwi가 명령형 라를 EC로 읽는다."""
+        self.assertEqual(lines_of("시편 47:6"),
+                         ["찬송하라 하나님을 찬송하라",
+                          "찬송하라 우리 왕을 찬송하라"])
+
+    def test_object_stays_with_its_verb(self):
+        """기준 5 — 목적어 뒤에 타동사가 바로 오면 그 사이에서 끊지 않는다."""
+        bad = []
+        for ref, v in VERSES.items():
+            lines = lines_of(ref)
+            if len(lines) < 2:
+                continue
+            info = generate._word_endings(v["text"])
+            preds = generate._word_is_predicate(v["text"])
+            for li in range(len(lines) - 1):
+                k = sum(len(x.split()) for x in lines[:li + 1])
+                if info and preds and k < len(preds) and info[k - 1][0] == "JKO" and preds[k]:
+                    bad.append(ref)
+        # 에베소서 6:24는 끊을 자리가 전부 금지다. 두 줄로 들어가는 자리가 「그리스도를 │ 변함」
+        # 하나뿐이고 나머지는 맨명사·관형사·변함│없이 — 전부 더 심한 찢김이다. 등급제가
+        # 가장 가벼운 쪽을 고른 것이고, 그게 이 구조가 하라고 만든 일이다.
+        self.assertEqual(bad, ["에베소서 6:24"],
+                         f"목적어와 타동사 사이에서 끊긴 구절이 달라졌다: {bad[:5]}")
+
+    def test_no_break_leaves_a_bare_noun_hanging(self):
+        """조사 없는 명사 뒤에서 끊는 것은 동격일 때뿐이다."""
+        bare = []
+        for ref, v in VERSES.items():
+            lines = lines_of(ref)
+            if len(lines) < 2:
+                continue
+            info = generate._word_endings(v["text"])
+            for li in range(len(lines) - 1):
+                k = sum(len(x.split()) for x in lines[:li + 1])
+                if info and k - 1 < len(info) and info[k - 1][0] in ("NNG", "NNP"):
+                    bare.append(ref)
+        self.assertEqual(bare, [], f"맨명사 뒤에서 끊긴 구절: {bare[:5]}")
+
+
 class BoundNounsClosePhrases(unittest.TestCase):
     """F-4c — 대로·것·바·줄은 앞의 관형절을 닫는다. 붙이는 말로 보면 멀쩡한 자리가 나빠진다."""
 

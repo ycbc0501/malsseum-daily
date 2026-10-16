@@ -316,8 +316,57 @@ def _word_endings(text):
     info = []
     for e in ends:
         finals = [m for m in toks if m.start + m.len == e]
-        info.append((finals[-1].tag, finals[-1].form) if finals else (None, ""))
+        if not finals:
+            info.append((None, ""))
+            continue
+        tag, form = finals[-1].tag, finals[-1].form
+        # 「…하는 것이나」의 이나는 접속조사가 아니라 이(VCP)+나(EC), 즉 '…이지만'이다.
+        # kiwi는 이걸 JC로 읽고, JC는 접속쌍을 쪼개지 말라는 금지에 걸린다 — 그래서
+        # 잠언 29:6이 절 경계인 「것이나」에서 끊지 못하고 보어 「올무가」를 찢었다.
+        # 의존명사 뒤의 **이나**만 고친다. 같은 자리의 과/와(「자와」·「것과」)는 진짜 접속이다.
+        if tag == "JC" and form == "이나":
+            prev = [m for m in toks if m.start + m.len == e - len(form)]
+            if prev and prev[-1].tag == "NNB":
+                tag = "EC"
+        info.append((tag, form))
     return info
+
+
+def _is_verb(tag):
+    """kiwi marks irregular conjugation with a suffix — 받다 is VV-R, 돕다 is VV-I. Comparing
+    tags with == silently misses every irregular verb, which is how 「구원 │ 받을」 walked past
+    a rule written to catch exactly it."""
+    return bool(tag) and tag.split("-")[0] in ("VV", "VA", "VX", "VCP", "VCN", "XSV", "XSA")
+
+
+def _word_is_predicate(text):
+    """어절마다 '이 말이 서술어인가' — 형태소 전체를 보고 판단한다.
+
+    머리도 끝도 모자란다. 「노래하고」는 노래(NNG)+하(XSV)+고(EC), 「구원하심은」은
+    구원(NNG)+하(XSV)+시+ㅁ(ETN)+은(JX)이라 **머리가 명사**다. 한국어의 '하다' 동사가
+    전부 그렇다. 머리만 보면 「의인은 │ 노래하고」와 「건져 │ 구원하심은」이 둘 다
+    "뒤에 서술어가 없다"로 읽히고, 그게 2026-10-16에 두 구절이 틀리게 나온 이유다.
+
+    관형형(ETM)으로 끝나면 제외한다 — 「많은」은 용언이지만 앞 주어의 서술어가 아니라
+    뒤 체언을 꾸미는 말이고, 그걸 빼지 않으면 멀쩡한 자리가 전부 금지된다.
+    """
+    k = _kiwi()
+    if not k:
+        return None
+    words = text.split()
+    spans, pos = [], 0
+    for w in words:
+        start = text.index(w, pos)
+        spans.append((start, start + len(w)))
+        pos = start + len(w)
+    toks = k.tokenize(text)
+    out = []
+    for a, b in spans:
+        ms = [m for m in toks if m.start >= a and m.start + m.len <= b]
+        has_verb = any(_is_verb(m.tag) for m in ms)
+        adnominal = bool(ms) and ms[-1].tag == "ETM"
+        out.append(has_verb and not adnominal)
+    return out
 
 
 def _word_heads(text):
@@ -384,6 +433,13 @@ _CONJ_FORMS = ("과", "와", "이나", "랑", "이랑")
 #   같이·처럼·만큼  comparative suffixes on the word before (자비로우심│같이, 것│같이)
 #   없이            only ever ends a compound (변함│없이, 거침│없이, 끊임│없이)
 _BIND_LEFT = ("하여금", "같이", "처럼", "만큼", "없이")
+# 같이·처럼·만큼 are two-faced. kiwi tags them MAG, which puts them in _FWD_NOUN and welds them
+# to the word AFTER; _BIND_LEFT welds them to the word BEFORE. Welded on both sides, a line can
+# neither end nor start with one — which is why 요한복음 15:12 could not break at "것 같이" and
+# stranded 너희도 instead. As a comparative they attach LEFT only and CLOSE the comparison, so
+# the boundary after them is a good one.
+_COMPARATIVE = ("같이", "처럼", "만큼")
+
 _POSITION_NOUNS = ("안", "밖", "위", "아래", "속", "중", "사이", "앞", "뒤", "곁", "가운데")
 
 
@@ -404,6 +460,7 @@ def balanced_split(draw, text, font, max_w):
 
     info = _word_endings(text)                        # (tag, form) per word, or None
     heads = _word_heads(text)                         # first morpheme per word, or None
+    preds = _word_is_predicate(text)                  # is each word a (non-adnominal) predicate?
     def tag(i):
         return info[i][0] if info and 0 <= i < n else None
 
@@ -436,6 +493,8 @@ def balanced_split(draw, text, font, max_w):
             return TEAR_PHRASE
         if nxt_form in _POSITION_NOUNS and t in ("NNG", "NNP"):
             return TEAR_PHRASE
+        if words[i] in _COMPARATIVE:                  # 「것 같이 │」 closes the comparison
+            return 0
         if t in _FWD_NOUN:                            # modifier / conjunction / adverb → next word
             return TEAR_PHRASE
         if t == "NP":                                # a bare pronoun modifies the next word (너희│마음, 내│안에)
@@ -452,6 +511,42 @@ def balanced_split(draw, text, font, max_w):
         # ("말씀하신 대로 │ 종을") — treating them as glue moved two good breaks to worse ones.
         if t in ("NNG", "NNP") and head_tag(i + 1) in ("NNG", "NNP"):
             return TEAR_PHRASE
+        # 조사 없는 명사 + 용언 = 복합 서술어다 (구원 받다 · 경배 하다). 붙여 쓰는 일도 많다.
+        # 히브리서 1:14가 「영으로서 구원 │ 받을 상속자들을」로 나가고 있었다.
+        if t in ("NNG", "NNP") and _is_verb(head_tag(i + 1)):
+            return TEAR_PHRASE
+        # 「핵이 바로 이어지면 끊지 않는다」 — 박연옥(2021) 의미단위 끊어 읽기 10개 기준의
+        # 4·5·6·10번이 전부 같은 말을 한다: 부사어+용언, 목적어+타동사, 관형어+체언,
+        # 보어+되다가 **바로** 이어지면 그 사이가 아니라 그 뒤에서 끊는다. 아래 셋은 그
+        # 원리를 주어·주제어·연결어미에 적용한 것이고, 세 건의 실패가 전부 여기 있었다.
+        def finite_predicate(j):
+            return bool(preds) and 0 <= j < n and preds[j]
+
+        # 기준 3 — 연결어미 둘이 나란하면 **뒤쪽**에서 끊는다. 「밥을 먹고 산책하니까 /
+        # 소화가 잘 된다」가 논문의 예문이고, 시편 37:40의 「도와 │ 건지시되」·
+        # 「건져 │ 구원하심은」이 정확히 같은 모양이다. 두 용언은 한 서술이다.
+        #
+        # 모든 EC가 아니라 **보조적 연결어미만** 이어진다. kiwi는 명령형 종결 「찬송하라」의
+        # 라도 EC로 읽어서, 전부를 걸면 시편 47:6의 나란한 명령문 두 개가 한 줄로 붙는다.
+        # 전수로 보면 갈림이 분명하다 — 게 101 · 지 90 · 어 56 · 고 34 는 뒤 용언에 넘기고,
+        # 라 18 · 다 11 · 리라 5 는 문장을 끝낸다.
+        if t == "EC" and form in _AUX_EC and finite_predicate(i + 1):
+            return TEAR_CLAUSE
+        # 기준 2 — 주어 뒤에 서술어가 바로 오면 주어 뒤에서 끊지 않는다.
+        # 잠언 29:6 「의인은 │ 노래하고 기뻐하느니라」.
+        if t in ("JKS", "JX") and finite_predicate(i + 1):
+            return TEAR_CLAUSE
+        # 「주어+부사어」는 금지하지 않는다. 논문 기준 2는 이 경우를 **화자의 의도에 따라**
+        # 달라질 수 있다고 명시한다(「나는 지금/ 숙제를 한다」 · 「나는/ 지금 숙제를 한다」).
+        # 요한복음 15:12의 「너희도 │ 서로」는 금지해서가 아니라 더 강한 경계(「것 같이」,
+        # 3점)가 생겨서 해결된다 — 그 경계는 같이가 양쪽에 용접돼 있어서 막혀 있었다.
+        # 기준 5 — 목적어 뒤에 타동사가 **바로** 이어지면 그 사이에서 끊지 않는다.
+        # (「제가 비싸지 않고 깨끗한 곳을/ 찾아 볼게요」처럼 목적어가 길면 논문도 끊는다 —
+        #  그건 여기서 금지가 아니라 비용이고, 다른 자리가 전부 더 나쁘면 이쪽이 선택된다.)
+        if t == "JKO" and finite_predicate(i + 1):
+            return TEAR_CLAUSE
+        # 아래는 JKO를 **무조건** 막았던 2026-09-21의 기록이다. 조건 없는 금지가 틀렸던 것이고,
+        # 핵이 바로 뒤에 올 때만 막는 조건부 규칙은 논문 기준 5 그대로다.
         # NOT JKO. Adding the object particle here (죄를│자복하고) was tried on 2026-09-21 and
         # rejected on measurement: across all 694 verses it pushed three-line verses from 3 to 7
         # and forced worse breaks elsewhere — 시편 22:9 came out "하시고 내 / 어머니의", splitting a
@@ -462,10 +557,10 @@ def balanced_split(draw, text, font, max_w):
         # 보조적 연결어미 + 보조용언 = ONE predicate, never two lines:
         #   정직하지│못하나 · 두려워하지│말라 · 믿고│있는 · 자복하고│버리는
         # This is the break that shipped on 하박국 2:4 (2026-09-21) and it was not an accident of
-        # balance — "정직하지" ends in EC, so `is_clause_end` scored it as a PREFERRED break. It is
+        # balance — "정직하지" ends in EC, so `boundary()` scores it 3, a PREFERRED break. It is
         # the opposite of a clause end. Kiwi tags the auxiliary itself VX, which is exactly the
         # signal: an EC followed by a VX is the middle of a verb, not the end of a clause.
-        if t == "EC" and form in _AUX_EC and head_tag(i + 1) == "VX":
+        if t == "EC" and form in _AUX_EC and (head_tag(i + 1) or "").split("-")[0] == "VX":
             return TEAR_PHRASE
         # MILD — a complete phrase parted from the predicate it serves. Still wrong, but a
         # reader can follow it; when a verse offers nothing better this is the one to take.
@@ -475,8 +570,29 @@ def balanced_split(draw, text, font, max_w):
             return TEAR_CLAUSE
         return 0
 
-    def is_clause_end(i):                             # a natural, preferred break point
-        return is_comma(i) or tag(i) in ("EC", "EF")
+    def boundary(i):
+        """How good a break after word i is — 0 (barely allowed) to 4 (best).
+
+        박연옥(2021) 「의미단위 끊어 읽기 10개 기준」을 그대로 옮긴 순위다. 전에는 이게
+        참/거짓 두 값이었고, 그래서 연결어미와 주제어가 같은 값이었다 — 잠언 29:6이
+        「…것이나 의인은 │ 노래하고」로 나온 이유가 그것이다. 두 자리 다 '좋은 자리'라
+        길이 균형이 골랐고, 균형은 절을 가로질러 골랐다."""
+        if is_comma(i):
+            return 4                                  # 기준 7 — 쉼표는 언제나
+        t = tag(i)
+        if t == "EF" or t == "JKV":
+            return 4                                  # 종결어미 · 호격(독립어)
+        if words[i] in _COMPARATIVE:
+            return 3                                  # 비교절의 끝
+        if t == "EC":
+            return 3                                  # 기준 3 — 연결어미
+        if t in ("JKS", "JX"):
+            return 2                                  # 기준 2 — 주어 · 주제어
+        if t == "NNB" and tag(i - 1) == "ETM":
+            return 2                                  # 「말씀하신 대로 │」 — 관형절을 닫는다
+        if t in ("JKO", "JKB"):
+            return 1                                  # 기준 4·5 — 목적어 · 부사어
+        return 0
 
     seg = {}
     def seg_w(i, j):
@@ -495,8 +611,14 @@ def balanced_split(draw, text, font, max_w):
     # letting those breaks through was reading the next word's ENDING instead of its head, not
     # the size of the penalty — so the fix belonged in the rule, not in a new knob.
     TEAR_PHRASE = 100.0 * max_w                       # one word split, modifier torn off, pair split
-    TEAR_CLAUSE =   5.0 * max_w                       # a whole phrase parted from its predicate
-    P_SOFT   = 0.55 * max_w                           # allowed break that isn't a clause end/comma
+    # Strictly above the worst ALLOWED boundary (4 steps = 4.8x), so a tear is never cheaper
+    # than simply breaking at a poor-but-legal place. At 5.0x it was not, and 올무가│되게 and
+    # 건져│구원하심은 both came out as tears that cost less than the legal alternative.
+    TEAR_CLAUSE =   8.0 * max_w                       # a whole phrase parted from its predicate
+    # One step of boundary strength costs more than any possible length imbalance (which is
+    # bounded by max_w), so grammar decides where the line breaks and balance only breaks ties
+    # BETWEEN EQUALLY GOOD boundaries. That ordering is the whole point.
+    P_STEP   = 1.2 * max_w                            # cost per step below the best boundary
     P_ORPHAN = 2.0 * max_w                            # a lonely ~1-word line is bad
     P_LINE   = 0.7 * max_w                            # prefer fewer lines, all else equal
     ORPHAN_W = 0.30 * max_w
@@ -523,8 +645,8 @@ def balanced_split(draw, text, font, max_w):
                 tear = forward_attach(b)
                 if tear:
                     score += tear
-                elif not is_clause_end(b):
-                    score += P_SOFT
+                else:
+                    score += P_STEP * (4 - boundary(b))
             if best is None or score < best[0]:
                 cuts = [sum(sizes[:i]) for i in range(k)]
                 best = (score, [" ".join(words[c:c + s]) for c, s in zip(cuts, sizes)])
