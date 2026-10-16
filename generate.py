@@ -535,8 +535,27 @@ def balanced_split(draw, text, font, max_w):
 # that barely held two or three words, which reads as a mistake rather than a line. The account
 # owner asked for exactly this on 2026-09-18: the normal size, or one clearly smaller size that
 # fits three lines properly. Nothing in between, so the type never looks arbitrary.
-SMALL_RATIO = 0.80          # 44 → 35 on the reel, 40 → 32 on the feed
-MAX_LINES_AT_FULL = 2       # a third line at full size is the shape being avoided
+SMALL_RATIO = 0.80          # 44 → 35 on the reel, 40 → 32 on the feed — the net, not the plan
+# ONE SIZE (2026-10-16). A third line at full size used to be the shape being avoided, so a
+# verse that needed one shrank instead; 34 of 694 went out in small type. With 자간/장평 the
+# choice reversed: holding the size and taking a third line keeps every post the same, and
+# 660 of 694 never reach it anyway. Tightening further would have fixed those 34 by changing
+# the look of all 694 — 장평 0.64 is what it takes, against the 0.80 that was chosen by eye.
+MAX_LINES_AT_FULL = 3
+
+# The column the verse is actually set in, as a fraction of canvas width. Named because it was
+# anonymous: the reel sets type in 0.68 of the frame and the feed card in 0.85, and a sweep of
+# all 694 verses run against 0.85 reported "every verse fits at full size" while 34 of them were
+# shrinking on the reel. Anything that measures the corpus has to measure THIS column.
+REEL_COL = 0.68
+FEED_COL = 0.85
+
+
+def verse_col_w(canvas, halign="center"):
+    """Width in px of the column the verse is set in, for `canvas`."""
+    if halign != "center":
+        return int(canvas[0] * 0.60)
+    return int(canvas[0] * (REEL_COL if canvas == REEL else 0.66))
 
 
 def fit_verse(draw, text, max_w, size, lines=None):
@@ -739,7 +758,7 @@ def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "top"
     mx = int(cw * 0.08)
     if halign == "center":
         # Narrower than the old 0.85: short lines are the reference's signature.
-        col_w = int(cw * (0.68 if canvas == REEL else 0.66))
+        col_w = int(cw * (REEL_COL if canvas == REEL else 0.66))
         col_left = (cw - col_w) // 2
     else:
         col_w = int(cw * 0.60)
@@ -815,7 +834,7 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
     verse_size = 44 if canvas == REEL else 40
     mx, my = int(cw * 0.08), int(ch * 0.10)
     if halign == "center":
-        col_w = int(cw * (0.85 if canvas == REEL else 0.80))
+        col_w = int(cw * (FEED_COL if canvas == REEL else 0.80))
         col_left = (cw - col_w) // 2
     else:                                      # offset to one side → narrower column
         col_w = int(cw * 0.60)

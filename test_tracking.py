@@ -20,7 +20,10 @@ import generate
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 VERSES = json.load(open(os.path.join(HERE, "verses.json")))["verses"]
-COL_W = int(generate.REEL[0] * 0.85)
+# 0.85 was wrong and it mattered: the reel sets type in 0.68 of the frame, and measuring the
+# corpus against the wider feed column reported "every verse fits at full size" while 34 were
+# shrinking in the posts that actually shipped. Ask generate.py for the column, never retype it.
+COL_W = generate.verse_col_w(generate.REEL)
 
 
 def _fit(text):
@@ -45,9 +48,15 @@ class EveryVerseAtFullSize(unittest.TestCase):
         small = [v["ref"] for v in VERSES if _fit(v["text"])[3] != 44]
         self.assertEqual(small, [], f"{len(small)}절이 44px 아래로 내려갔다: {small[:5]}")
 
-    def test_no_verse_needs_a_third_line(self):
-        long = [v["ref"] for v in VERSES if len(_fit(v["text"])[1]) > 2]
-        self.assertEqual(long, [], f"{len(long)}절이 세 줄이 됐다: {long[:5]}")
+    def test_no_verse_needs_a_fourth_line(self):
+        """세 줄까지는 같은 크기로 간다 — 네 줄은 블록이 아니라 문단이 된다."""
+        long = [v["ref"] for v in VERSES if len(_fit(v["text"])[1]) > 3]
+        self.assertEqual(long, [], f"{len(long)}절이 네 줄이 됐다: {long[:5]}")
+
+    def test_most_verses_still_come_out_in_two(self):
+        """세 줄은 예외여야 한다. 흔해지면 조판이 아니라 압축 실패다."""
+        three = sum(1 for v in VERSES if len(_fit(v["text"])[1]) == 3)
+        self.assertLess(three, 70, f"{three}절이 세 줄 — 10%를 넘었다")
 
     def test_every_line_fits_the_column(self):
         d = ImageDraw.Draw(Image.new("RGB", (8, 8)))

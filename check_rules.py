@@ -117,6 +117,10 @@ def checks():
         and "P_FORBID" not in gen)
     yield "F4b the bare-noun rule reads the next word's head", (
         'head_tag(i + 1) in ("NNG", "NNP")' in gen)
+    yield "F2b the verse column is named, not retyped", (
+        "REEL_COL = 0.68" in gen and "def verse_col_w" in gen
+        and "0.68 if canvas" not in gen)
+    yield "F2b three lines at full size, never four", ("MAX_LINES_AT_FULL = 3" in gen)
     yield "F2b measuring and drawing read the same two numbers", (
         "def text_w" in gen and "def draw_text" in gen
         and gen.count("_tracked()") >= 3)

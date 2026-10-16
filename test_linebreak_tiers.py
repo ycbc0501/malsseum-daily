@@ -18,7 +18,7 @@ import generate
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 VERSES = {v["ref"]: v for v in json.load(open(os.path.join(HERE, "verses.json")))["verses"]}
-COL_W = int(generate.REEL[0] * 0.85)
+COL_W = generate.verse_col_w(generate.REEL)
 
 
 def lines_of(ref):
@@ -86,7 +86,7 @@ class TheCorpusDoesNotPayForIt(unittest.TestCase):
         for ref, v in VERSES.items():
             with contextlib.redirect_stdout(io.StringIO()):
                 _f, lines, _lh, size = generate.fit_verse(d, v["text"], COL_W, 44)
-            if size != 44 or len(lines) > 2:
+            if size != 44 or len(lines) > 3:
                 bad.append(ref)
         self.assertEqual(bad, [], f"{len(bad)}절이 크기나 줄수를 잃었다: {bad[:5]}")
 
