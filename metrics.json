@@ -6049,6 +6049,34 @@
   "ref": "예레미야 17:7",
   "theme": "믿음"
  },
+ "18193897933403183": {
+  "clip_novelty": 14.1,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-17",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 13,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 6.862,
+  "motion_attempts": 2,
+  "motion_sky": 12.473,
+  "published": "2026-10-17T05:07:43+09:00",
+  "ref": "요한복음 9:5",
+  "scene": "rainy_street",
+  "segments": 1,
+  "text_contrast": 7.25,
+  "text_spread": 13.9,
+  "theme": "인도",
+  "veo_attempts": [
+   2,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18200469577373007": {
   "insights": {
    "comments": 1,
