@@ -4610,6 +4610,34 @@
   "veo_calls": 3,
   "veo_seconds": 24.0
  },
+ "18118453247518421": {
+  "clip_novelty": 18.4,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-10-17",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 18,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 0.479,
+  "motion_attempts": 2,
+  "motion_sky": 0.333,
+  "published": "2026-10-17T19:19:48+09:00",
+  "ref": "요한복음 10:9",
+  "scene": "lamp_room",
+  "segments": 1,
+  "text_contrast": 4.44,
+  "text_spread": 18.7,
+  "theme": "인도",
+  "veo_attempts": [
+   2,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18118499197869926": {
   "insights": {
    "comments": 1,
