@@ -5748,6 +5748,34 @@
   "veo_calls": 3,
   "veo_seconds": 24.0
  },
+ "18155567446458791": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-18",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 15,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 0.753,
+  "motion_attempts": 1,
+  "motion_sky": 0.477,
+  "published": "2026-10-18T05:07:59+09:00",
+  "ref": "요한복음 10:14",
+  "scene": "bedroom",
+  "segments": 1,
+  "text_contrast": 2.09,
+  "text_spread": 26.8,
+  "theme": "인도",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18163589620470059": {
   "clip_novelty": 10.66,
   "clip_spoiled": false,
