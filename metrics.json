@@ -4426,6 +4426,34 @@
   "veo_calls": 5,
   "veo_seconds": 40.0
  },
+ "18116677927816134": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-10-19",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 18,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 6.081,
+  "motion_attempts": 2,
+  "motion_sky": 5.302,
+  "published": "2026-10-19T05:24:45+09:00",
+  "ref": "스가랴 2:10",
+  "scene": "flowers_vase",
+  "segments": 1,
+  "text_contrast": 1.2,
+  "text_spread": 48.1,
+  "theme": "은혜",
+  "veo_attempts": [
+   2,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18117196018823131": {
   "clip_spoiled": false,
   "cta_in_caption": false,
