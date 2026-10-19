@@ -121,6 +121,8 @@ def checks():
         and 'tag.split("-")[0]' in gen)
     yield "F4-6 the 것이나 mis-tag is corrected at source", (
         'tag == "JC" and form == "이나"' in gen)
+    yield "F4-A the per-line character capacity is pinned by a test", (
+        "WidthIsComputableNotJustMeasurable" in (HERE / "test_tracking.py").read_text())
     yield "F4-7 a clause-boundary break is free", (
         "max(0, 3 - boundary(b))" in gen)
     yield "F4-8 one line needs one clause, not just a short verse", (

@@ -83,6 +83,54 @@ class EveryVerseAtFullSize(unittest.TestCase):
         self.assertEqual(over, [], f"{len(over)}절이 단을 넘쳤다: {over[:5]}")
 
 
+class WidthIsComputableNotJustMeasurable(unittest.TestCase):
+    """RULES.md F-4-A — 한 줄에 몇 글자가 들어가는지 정확히 안다.
+
+    나눔명조에서 한글은 전부 42.00px 고정이라 폭이 계산된다. 이 식이 렌더러와 어긋나면
+    RULES.md에 적힌 「21~22자」가 거짓말이 되므로, 숫자가 아니라 이 테스트가 먼저 깨진다."""
+
+    HANGUL = 42.0
+    SPACE = 12.0
+
+    def _predict(self, s, font):
+        raw = 0.0
+        for ch in s:
+            if "가" <= ch <= "힣":
+                raw += self.HANGUL
+            elif ch == " ":
+                raw += self.SPACE
+            else:
+                raw += font.getlength(ch)
+        return (raw + (len(s) - 1) * generate.TRACK * font.size) * generate.WIDTH
+
+    def test_every_hangul_syllable_is_the_same_width(self):
+        font = generate.load_font(generate.SERIF, 44)
+        widths = {font.getlength(ch) for v in VERSES for ch in v["text"] if "가" <= ch <= "힣"}
+        self.assertEqual(widths, {self.HANGUL}, f"한글 폭이 하나가 아니다: {sorted(widths)}")
+        self.assertEqual(font.getlength(" "), self.SPACE)
+
+    def test_the_formula_matches_the_renderer_on_every_line(self):
+        d = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+        off = []
+        for v in VERSES:
+            font, lines, _lh, _size = _fit(v["text"])
+            for ln in lines:
+                if abs(self._predict(ln, font) - generate.text_w(d, ln, font)) > 0.01:
+                    off.append((v["ref"], ln))
+        self.assertEqual(off, [], f"{len(off)}줄에서 식이 렌더러와 어긋났다: {off[:3]}")
+
+    def test_the_documented_capacity_holds(self):
+        """RULES.md가 적어 둔 21~22자가 실제 상한인가."""
+        d = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+        longest = max(sum(1 for ch in ln if "가" <= ch <= "힣")
+                      for v in VERSES for ln in _fit(v["text"])[1])
+        self.assertEqual(longest, 22, f"원장의 최대 한글 글자 수가 {longest}자로 바뀌었다")
+        font = generate.load_font(generate.SERIF, 44)
+        # 5어절 22자가 단을 꽉 채운다 — 한 자 더 넣으면 넘친다.
+        self.assertLessEqual(self._predict("가" * 18 + " 가 가 가 가", font), COL_W)
+        self.assertGreater(self._predict("가" * 19 + " 가 가 가 가", font), COL_W)
+
+
 class MeasuringMatchesDrawing(unittest.TestCase):
     """② — text_w()가 내놓는 폭과 draw_text()가 칠하는 폭이 같아야 한다."""
 
