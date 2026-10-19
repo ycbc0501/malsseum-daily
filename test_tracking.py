@@ -58,6 +58,19 @@ class EveryVerseAtFullSize(unittest.TestCase):
         three = sum(1 for v in VERSES if len(_fit(v["text"])[1]) == 3)
         self.assertLess(three, 70, f"{three}절이 세 줄 — 10%를 넘었다")
 
+    def test_text_cannot_be_cut_off_by_the_frame(self):
+        """단이 꽉 차도 화면에서 잘리지는 않는다 — 단은 화면의 68%다.
+
+        「글자가 잘린다」는 이 프로젝트가 실제로 겪은 고장이라 숫자로 박아 둔다. 가장 넓은
+        줄조차 좌우에 프레임이 한참 남는다. 단을 거의 채우는 줄이 있는 것 자체는 정상이고,
+        2026-10-19에 단을 99%로 줄여 봤지만 절벽이 옮겨갈 뿐이었다."""
+        d = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+        widest = max(generate.text_w(d, ln, _fit(v["text"])[0])
+                     for v in VERSES for ln in _fit(v["text"])[1])
+        side = (generate.REEL[0] - widest) / 2
+        self.assertGreater(side, 100,
+                           f"가장 넓은 줄 {widest:.0f}px, 좌우 여백 {side:.0f}px")
+
     def test_every_line_fits_the_column(self):
         d = ImageDraw.Draw(Image.new("RGB", (8, 8)))
         over = []

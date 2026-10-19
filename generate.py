@@ -684,13 +684,23 @@ MAX_LINES_AT_FULL = 3
 # shrinking on the reel. Anything that measures the corpus has to measure THIS column.
 REEL_COL = 0.68
 FEED_COL = 0.85
+# No safety margin on the column, and that is deliberate. One was tried at 99% on 2026-10-19
+# because four lines sat within 2.3px of the edge — it bought nothing. A splitter packs each
+# line up to its column, so shrinking the column just moves the cliff: three different lines
+# then sat 1.7px from the new edge, and two verses paid a third line for it.
+#
+# Lines filling the column is what a line-breaker does. What matters is measurable and holds:
+# no line overflows (0 of 1443), painted ink runs SHORTER than text_w measures (side bearings),
+# and the column is 68% of the frame, so 173px of frame sits either side — text cannot be cut
+# off even if a line did overflow.
+COL_SAFETY = 1.0
 
 
 def verse_col_w(canvas, halign="center"):
     """Width in px of the column the verse is set in, for `canvas`."""
     if halign != "center":
-        return int(canvas[0] * 0.60)
-    return int(canvas[0] * (REEL_COL if canvas == REEL else 0.66))
+        return int(canvas[0] * 0.60 * COL_SAFETY)
+    return int(canvas[0] * (REEL_COL if canvas == REEL else 0.66) * COL_SAFETY)
 
 
 def fit_verse(draw, text, max_w, size, lines=None):
@@ -893,7 +903,7 @@ def render_text_overlay(verse, out_path, canvas=REEL, placement=("center", "top"
     mx = int(cw * 0.08)
     if halign == "center":
         # Narrower than the old 0.85: short lines are the reference's signature.
-        col_w = int(cw * (REEL_COL if canvas == REEL else 0.66))
+        col_w = int(cw * (REEL_COL if canvas == REEL else 0.66) * COL_SAFETY)
         col_left = (cw - col_w) // 2
     else:
         col_w = int(cw * 0.60)
@@ -969,7 +979,7 @@ def render(verse, theme_name, handle, out_path, photo=None, canvas=FEED,
     verse_size = 44 if canvas == REEL else 40
     mx, my = int(cw * 0.08), int(ch * 0.10)
     if halign == "center":
-        col_w = int(cw * (FEED_COL if canvas == REEL else 0.80))
+        col_w = int(cw * (FEED_COL if canvas == REEL else 0.80) * COL_SAFETY)
         col_left = (cw - col_w) // 2
     else:                                      # offset to one side → narrower column
         col_w = int(cw * 0.60)
