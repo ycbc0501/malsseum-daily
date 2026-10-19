@@ -58,10 +58,12 @@ class ForcedChoiceTakesTheMildestTear(unittest.TestCase):
     """끊을 자리가 전부 금지일 때, 가장 가벼운 찢김을 고른다."""
 
     def test_the_conjoined_pair_survives(self):
-        # 하나님의(관형격) · 말씀과(접속조사) · 기도로(부사격→서술어) — 셋 다 금지.
-        # 접속쌍을 쪼개는 것보다 구를 서술어에서 떼는 쪽이 가볍다.
-        lines = lines_of("디모데전서 4:5")
-        self.assertEqual(lines, ["하나님의 말씀과 기도로", "거룩하여짐이라"], lines)
+        """하나님의(관형격) · 말씀과(접속조사) · 기도로(부사격→서술어) — 끊을 자리가 전부 금지다.
+
+        찢김에 등급을 둔 건 이 구절 때문이었다. 그런데 절이 하나뿐이고 567px이라 단(734px)에
+        들어간다 — 2026-10-19에 「절이 하나면 한 줄」이 되면서 **찢을 일 자체가 없어졌다.**
+        등급은 여전히 필요하다(에베소서 6:24는 한 줄에 안 들어가고 여전히 찢어야 한다)."""
+        self.assertEqual(lines_of("디모데전서 4:5"), ["하나님의 말씀과 기도로 거룩하여짐이라"])
 
     def test_the_complement_stays_with_its_verb(self):
         lines = lines_of("잠언 29:6")
@@ -106,6 +108,50 @@ class SenseGroupsFromThePaper(unittest.TestCase):
         self.assertEqual(lines_of("시편 118:4"),
                          ["이제 여호와를 경외하는 자는 말하기를",
                           "그의 인자하심이 영원하다 할지로다"])
+
+    def test_line_count_comes_from_clause_count(self):
+        """줄 수는 절 수에서 나온다 — 절을 가로질러 줄을 아끼지 않는다.
+
+        전에는 한 등급 내려간 경계 하나가 절 경계 두 개와 같은 값이었다(비용이 선형이라
+        1×2 = 2×1). 그래서 예레미야 31:17이 세 절인데 「너의 자녀가 │ 자기들의」로 두 줄이
+        됐다. 절 경계에서 끊는 건 이제 공짜고, 그 아래는 가파르게 매긴다."""
+        self.assertEqual(lines_of("예레미야 31:17"),
+                         ["너의 장래에 소망이 있을 것이라",
+                          "너의 자녀가 자기들의 지경으로 돌아오리라",
+                          "여호와의 말씀이니라"])
+
+    def test_two_lines_when_two_lines_fit(self):
+        """거꾸로도 성립한다 — 잠언 13:18은 세 줄이지만 그건 두 줄이 **안 들어가서**다.
+
+        2줄 판(「…궁핍과 수욕이 이르거니와」)은 741px이고 단은 734px다. 7px 차이다.
+        단이 넓어지면 이 테스트가 깨지고, 그때는 두 줄이 맞는 답이다."""
+        d = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+        font = generate.load_font(generate.SERIF, 44)
+        two = "훈계를 저버리는 자에게는 궁핍과 수욕이 이르거니와"
+        self.assertGreater(generate.text_w(d, two, font), COL_W,
+                           "2줄 판이 단에 들어간다 — 그러면 세 줄은 틀렸다")
+        self.assertEqual(len(lines_of("잠언 13:18")), 3)
+
+    def test_one_clause_is_one_line(self):
+        """절이 하나면 한 줄. 모양을 위해 주제어를 혼자 세우지 않는다.
+
+        옛 기준은 폭 하나였고(단의 0.55) 둘 다 틀렸다 — 사도행전 13:52(503px)를 쪼갰고,
+        두 절짜리 시편 81:13(733px)은 단을 가득 채운 한 줄로 둘 뻔했다."""
+        self.assertEqual(lines_of("사도행전 13:52"), ["제자들은 기쁨과 성령이 충만하니라"])
+        self.assertEqual(len(lines_of("시편 81:13")), 2)
+
+    def test_coordinated_verbs_may_break(self):
+        """-며로 대등하게 이어진 용언은 보조 구성이 아니다 — 끊어도 된다.
+
+        「맛보아 알지어다」를 막던 규칙이 연결어미를 가리지 않아서 「떨며 │ 즐거워할지어다」
+        까지 막았고, 시편 2:11이 두 절인데 한 줄이 될 뻔했다."""
+        self.assertEqual(len(lines_of("시편 2:11")), 2)
+        habakkuk = "너희는 여호와의 선하심을 맛보아 알지어다 그에게 피하는 자는 복이 있도다"
+        d = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+        with contextlib.redirect_stdout(io.StringIO()):
+            lines = generate.balanced_split(d, habakkuk,
+                                            generate.load_font(generate.SERIF, 44), COL_W)
+        self.assertTrue(any("맛보아 알지어다" in ln for ln in lines), lines)
 
     def test_repeated_imperatives_are_not_chained(self):
         """「찬송하라 찬송하라」는 이어진 서술이 아니다 — kiwi가 명령형 라를 EC로 읽는다."""

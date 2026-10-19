@@ -121,6 +121,10 @@ def checks():
         and 'tag.split("-")[0]' in gen)
     yield "F4-6 the 것이나 mis-tag is corrected at source", (
         'tag == "JC" and form == "이나"' in gen)
+    yield "F4-7 a clause-boundary break is free", (
+        "max(0, 3 - boundary(b))" in gen)
+    yield "F4-8 one line needs one clause, not just a short verse", (
+        "one_line_ok" in gen and "boundary(i) >= 3" in gen)
     yield "F4a tears are ranked, not one flat penalty", (
         "TEAR_PHRASE" in gen and "TEAR_CLAUSE" in gen
         and "P_FORBID" not in gen)

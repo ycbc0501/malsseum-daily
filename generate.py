@@ -552,8 +552,10 @@ def balanced_split(draw, text, font, max_w):
         # and forced worse breaks elsewhere — 시편 22:9 came out "하시고 내 / 어머니의", splitting a
         # 관형사 off its noun, which is a worse tear than the one it fixed. A constraint that has
         # to be paid for somewhere else is not free, and the corpus is where the bill shows up.
-        if t == "EC" and nxt == "EF":                # connective → completing final verb (맛보아│알지어다)
-            return TEAR_PHRASE
+        # (「맛보아 │ 알지어다」를 막던 EC→EF 규칙은 지웠다. 연결어미를 가리지 않아서 대등하게
+        #  이어진 것까지 막았다 — 시편 2:11의 「떨며 │ 즐거워할지어다」가 그래서 끊기지 못했고,
+        #  두 절짜리 구절이 단을 가득 채운 한 줄로 나갔다. 보조 구성은 바로 위 _AUX_EC 규칙이
+        #  이미 막는다: 맛보아의 「아」는 그 목록에 있고 떨며의 「며」는 없다.)
         # 보조적 연결어미 + 보조용언 = ONE predicate, never two lines:
         #   정직하지│못하나 · 두려워하지│말라 · 믿고│있는 · 자복하고│버리는
         # This is the break that shipped on 하박국 2:4 (2026-09-21) and it was not an accident of
@@ -615,15 +617,26 @@ def balanced_split(draw, text, font, max_w):
     # than simply breaking at a poor-but-legal place. At 5.0x it was not, and 올무가│되게 and
     # 건져│구원하심은 both came out as tears that cost less than the legal alternative.
     TEAR_CLAUSE =   8.0 * max_w                       # a whole phrase parted from its predicate
-    # One step of boundary strength costs more than any possible length imbalance (which is
-    # bounded by max_w), so grammar decides where the line breaks and balance only breaks ties
-    # BETWEEN EQUALLY GOOD boundaries. That ordering is the whole point.
-    P_STEP   = 1.2 * max_w                            # cost per step below the best boundary
+    # A break at a clause boundary (4 or 3 — 쉼표·종결어미·호격·연결어미·비교절의 끝) is FREE,
+    # and anything below it is charged steeply. Cost used to be linear in the gap from 4, which
+    # made two clause-boundary breaks cost exactly the same as one mid-clause break — so the
+    # splitter would cross a clause to save a line. 예레미야 31:17 came out as two lines cut at
+    # 「너의 자녀가 │ 자기들의」 instead of three, one per clause. The line count should FALL OUT
+    # of how many clauses there are, not be traded against them.
+    P_STEP   = 2.0 * max_w                            # cost per step below a clause boundary
     P_ORPHAN = 2.0 * max_w                            # a lonely ~1-word line is bad
     P_LINE   = 0.7 * max_w                            # prefer fewer lines, all else equal
     ORPHAN_W = 0.30 * max_w
 
-    kmin = 1 if seg_w(0, n - 1) <= 0.55 * max_w else 2   # medium/long verses use ≥2 lines
+    # Lines follow clauses, and that settles the one-line case too. 사도행전 13:52 「제자들은
+    # 기쁨과 성령이 충만하니라」 is ONE clause — its only break points are a topic marker and a
+    # conjunction — so splitting it stood a two-syllable topic on a line of its own to serve a
+    # shape. 시편 81:13 「…들으라 이스라엘아 내 도를 따르라」 also fits on one line (733px of a
+    # 734px column) but is two clauses, and set as one it is a wall of text edge to edge.
+    # The old test was width alone (0.55 of the column), which got both of these wrong.
+    one_line_ok = seg_w(0, n - 1) <= max_w and not any(
+        boundary(i) >= 3 and not forward_attach(i) for i in range(n - 1))
+    kmin = 1 if one_line_ok else 2
     best = None
     for k in range(kmin, n + 1):
         for sizes in _compositions(n, k):
@@ -646,7 +659,7 @@ def balanced_split(draw, text, font, max_w):
                 if tear:
                     score += tear
                 else:
-                    score += P_STEP * (4 - boundary(b))
+                    score += P_STEP * max(0, 3 - boundary(b))
             if best is None or score < best[0]:
                 cuts = [sum(sizes[:i]) for i in range(k)]
                 best = (score, [" ".join(words[c:c + s]) for c, s in zip(cuts, sizes)])
