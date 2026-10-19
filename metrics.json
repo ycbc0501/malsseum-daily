@@ -7193,6 +7193,34 @@
   "veo_calls": 7,
   "veo_seconds": 56.0
  },
+ "18498113860097070": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-10-19",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 6,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 15.79,
+  "motion_attempts": 2,
+  "motion_sky": 1.743,
+  "published": "2026-10-19T19:40:15+09:00",
+  "ref": "빌레몬서 1:25",
+  "scene": "rainy_street",
+  "segments": 1,
+  "text_contrast": 12.31,
+  "text_spread": 2.3,
+  "theme": "은혜",
+  "veo_attempts": [
+   2,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18556966612078430": {
   "cta_in_caption": false,
   "date": "2026-09-06",
