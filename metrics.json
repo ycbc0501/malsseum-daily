@@ -6800,6 +6800,34 @@
   "text_spread": 6.7,
   "theme": "위로"
  },
+ "18388490341232131": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-10-20",
+  "duration": 7.67,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 9,
+  "gate_skipped": 0,
+  "insights": {},
+  "motion": 4.003,
+  "motion_attempts": 2,
+  "motion_sky": 0.373,
+  "published": "2026-10-20T05:29:36+09:00",
+  "ref": "베드로후서 1:2",
+  "scene": "wheat_field",
+  "segments": 1,
+  "text_contrast": 7.1,
+  "text_spread": 8.1,
+  "theme": "은혜",
+  "veo_attempts": [
+   2,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18404246590080864": {
   "cta_in_caption": false,
   "date": "2026-08-19",
