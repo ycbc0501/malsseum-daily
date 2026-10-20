@@ -3247,6 +3247,35 @@
   "ref": "잠언 27:17",
   "theme": "지혜"
  },
+ "18092689046697961": {
+  "clip_novelty": 8.28,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-20",
+  "duration": 15.33,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 13,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 5.476,
+  "motion_attempts": 1,
+  "motion_sky": 2.096,
+  "published": "2026-10-20T19:08:44+09:00",
+  "ref": "스가랴 8:22",
+  "scene": "mist_mountain",
+  "segments": 2,
+  "text_contrast": 8.34,
+  "text_spread": 7.5,
+  "theme": "은혜",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18093297284386876": {
   "cta_in_caption": false,
   "date": "2026-08-20",
