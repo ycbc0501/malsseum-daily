@@ -39,3 +39,4 @@ music/*.bak
 # GitHub Actions would run it too, and the account would post FOUR times a day.
 *.sync-conflict-*
 .syncthing.*.tmp
+.samples/
