@@ -3184,6 +3184,35 @@
   "text_spread": 2.4,
   "theme": "담대"
  },
+ "18089317754268188": {
+  "clip_novelty": 3.95,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-21",
+  "duration": 15.33,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 9,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 13.806,
+  "motion_attempts": 1,
+  "motion_sky": 0.513,
+  "published": "2026-10-21T05:07:57+09:00",
+  "ref": "디모데후서 4:22",
+  "scene": "sea",
+  "segments": 2,
+  "text_contrast": 10.01,
+  "text_spread": 7.7,
+  "theme": "은혜",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18089544971443446": {
   "cta_in_caption": false,
   "date": "2026-08-14",
