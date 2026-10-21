@@ -6375,6 +6375,35 @@
   "permalink": "https://www.instagram.com/reel/DZ_bNzOjYi7/",
   "published": "2026-06-25T01:49:56+0000"
  },
+ "18183386875427727": {
+  "clip_novelty": 9.84,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-22",
+  "duration": 15.33,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 14,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 4.724,
+  "motion_attempts": 1,
+  "motion_sky": 7.534,
+  "published": "2026-10-22T05:06:14+09:00",
+  "ref": "디모데전서 1:14",
+  "scene": "rainy_street",
+  "segments": 2,
+  "text_contrast": 11.34,
+  "text_spread": 3.9,
+  "theme": "은혜",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18184975261417253": {
   "clip_novelty": 4.97,
   "clip_spoiled": false,
