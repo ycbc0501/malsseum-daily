@@ -5485,6 +5485,35 @@
   "text_spread": 3.2,
   "theme": "지혜"
  },
+ "18129917884873149": {
+  "clip_novelty": 11.77,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-21",
+  "duration": 15.33,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 10,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 0.966,
+  "motion_attempts": 1,
+  "motion_sky": 0.915,
+  "published": "2026-10-21T19:15:02+09:00",
+  "ref": "유다서 1:2",
+  "scene": "candle",
+  "segments": 2,
+  "text_contrast": 5.04,
+  "text_spread": 17.5,
+  "theme": "은혜",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18131996386783452": {
   "clip_novelty": 0.0,
   "clip_spoiled": false,
