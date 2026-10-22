@@ -240,6 +240,32 @@
   "text_spread": 1.5,
   "theme": "평안"
  },
+ "17885806824624875": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-23",
+  "duration": 30.0,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 11,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 99.0,
+  "motion_attempts": 1,
+  "motion_sky": 99.0,
+  "published": "2026-10-23T05:18:46+09:00",
+  "ref": "고린도후서 6:1",
+  "scene": "wheat_field",
+  "segments": 0,
+  "text_contrast": 2.75,
+  "text_spread": 10.0,
+  "theme": "은혜",
+  "veo_attempts": [],
+  "veo_calls": 1,
+  "veo_seconds": 8.0
+ },
  "17889545238418332": {
   "insights": {
    "comments": 1,
