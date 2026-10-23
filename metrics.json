@@ -3573,6 +3573,32 @@
   "ref": "고린도전서 16:14",
   "theme": "사랑"
  },
+ "18094411199172756": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-24",
+  "duration": 30.0,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 10,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 99.0,
+  "motion_attempts": 1,
+  "motion_sky": 99.0,
+  "published": "2026-10-24T05:06:31+09:00",
+  "ref": "고린도후서 13:13",
+  "scene": "reflection_lake",
+  "segments": 0,
+  "text_contrast": 9.72,
+  "text_spread": 7.9,
+  "theme": "은혜",
+  "veo_attempts": [],
+  "veo_calls": 1,
+  "veo_seconds": 8.0
+ },
  "18095365541029403": {
   "insights": {
    "comments": 1,
