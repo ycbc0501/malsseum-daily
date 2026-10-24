@@ -3731,6 +3731,32 @@
   "veo_calls": 3,
   "veo_seconds": 24.0
  },
+ "18097419485674468": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-25",
+  "duration": 29.57,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 6,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 99.0,
+  "motion_attempts": 1,
+  "motion_sky": 99.0,
+  "published": "2026-10-25T05:06:41+09:00",
+  "ref": "데살로니가후서 3:18",
+  "scene": "rainy_street",
+  "segments": 0,
+  "text_contrast": 12.77,
+  "text_spread": 2.3,
+  "theme": "은혜",
+  "veo_attempts": [],
+  "veo_calls": 1,
+  "veo_seconds": 8.0
+ },
  "18097426379098134": {
   "insights": {
    "comments": 1,
