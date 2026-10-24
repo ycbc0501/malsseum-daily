@@ -2573,6 +2573,32 @@
   "ref": "빌립보서 4:7",
   "theme": "평안"
  },
+ "18044011721837097": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-24",
+  "duration": 30.0,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 5,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 99.0,
+  "motion_attempts": 1,
+  "motion_sky": 99.0,
+  "published": "2026-10-24T19:00:45+09:00",
+  "ref": "골로새서 1:14",
+  "scene": "mist_mountain",
+  "segments": 0,
+  "text_contrast": 4.94,
+  "text_spread": 6.0,
+  "theme": "은혜",
+  "veo_attempts": [],
+  "veo_calls": 1,
+  "veo_seconds": 8.0
+ },
  "18046415942592838": {
   "insights": {
    "comments": 1,
