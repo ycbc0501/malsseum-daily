@@ -254,13 +254,13 @@
   "insights": {
    "comments": 1,
    "comments_field": "comments_count",
-   "likes": 17,
+   "likes": 18,
    "likes_field": "like_count",
    "reposts": 0,
    "reposts_field": "reposts_count",
    "shares": 1,
    "shares_field": "shares_count",
-   "views": 199,
+   "views": 203,
    "views_field": "total_views_count"
   },
   "kind": "REELS",
@@ -281,7 +281,7 @@
    "is_ai_generated": false,
    "is_comment_enabled": true,
    "is_shared_to_feed": true,
-   "like_count": 17,
+   "like_count": 18,
    "media_audio_type": "ORIGINAL_SOUND",
    "media_product_type": "REELS",
    "media_type": "VIDEO",
@@ -290,8 +290,8 @@
    "shortcode": "Dez0nIIkr3B",
    "timestamp": "2026-10-22T20:17:56+0000",
    "total_comments_count": 1,
-   "total_like_count": 17,
-   "total_views_count": 199
+   "total_like_count": 18,
+   "total_views_count": 203
   },
   "permalink": "https://www.instagram.com/reel/Dez0nIIkr3B/",
   "published": "2026-10-23T05:18:46+09:00",
@@ -1385,10 +1385,49 @@
   "gate_ran": 4,
   "gate_skipped": 0,
   "image_model": "gemini-3-pro-image",
-  "insights": {},
+  "insights": {
+   "comments": 1,
+   "comments_field": "comments_count",
+   "likes": 1,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count",
+   "views": 16,
+   "views_field": "total_views_count"
+  },
+  "kind": "REELS",
   "motion": 99.0,
   "motion_attempts": 1,
   "motion_sky": 99.0,
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 1,
+   "copyright_check_information": {
+    "status": {
+     "matches_found": false,
+     "status": "complete"
+    }
+   },
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "is_shared_to_feed": true,
+   "like_count": 1,
+   "media_audio_type": "ORIGINAL_SOUND",
+   "media_product_type": "REELS",
+   "media_type": "VIDEO",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "De7iE69idU5",
+   "timestamp": "2026-10-25T20:09:56+0000",
+   "total_comments_count": 1,
+   "total_like_count": 1,
+   "total_views_count": 16
+  },
+  "permalink": "https://www.instagram.com/reel/De7iE69idU5/",
   "published": "2026-10-26T05:10:48+09:00",
   "ref": "베드로후서 3:8",
   "scene": "mist_mountain",
@@ -2278,13 +2317,13 @@
   "insights": {
    "comments": 1,
    "comments_field": "comments_count",
-   "likes": 17,
+   "likes": 18,
    "likes_field": "like_count",
    "reposts": 0,
    "reposts_field": "reposts_count",
    "shares": 0,
    "shares_field": "shares_count",
-   "views": 192,
+   "views": 195,
    "views_field": "total_views_count"
   },
   "kind": "REELS",
@@ -2305,7 +2344,7 @@
    "is_ai_generated": false,
    "is_comment_enabled": true,
    "is_shared_to_feed": true,
-   "like_count": 17,
+   "like_count": 18,
    "media_audio_type": "ORIGINAL_SOUND",
    "media_product_type": "REELS",
    "media_type": "VIDEO",
@@ -2314,8 +2353,8 @@
    "shortcode": "DeyvNk0ggQ8",
    "timestamp": "2026-10-22T10:11:32+0000",
    "total_comments_count": 1,
-   "total_like_count": 17,
-   "total_views_count": 192
+   "total_like_count": 18,
+   "total_views_count": 195
   },
   "permalink": "https://www.instagram.com/reel/DeyvNk0ggQ8/",
   "published": "2026-10-22T19:12:21+09:00",
@@ -2613,13 +2652,13 @@
   "insights": {
    "comments": 3,
    "comments_field": "comments_count",
-   "likes": 9,
+   "likes": 13,
    "likes_field": "like_count",
    "reposts": 0,
    "reposts_field": "reposts_count",
    "shares": 0,
    "shares_field": "shares_count",
-   "views": 165,
+   "views": 176,
    "views_field": "total_views_count"
   },
   "kind": "REELS",
@@ -2640,7 +2679,7 @@
    "is_ai_generated": false,
    "is_comment_enabled": true,
    "is_shared_to_feed": true,
-   "like_count": 9,
+   "like_count": 13,
    "media_audio_type": "ORIGINAL_SOUND",
    "media_product_type": "REELS",
    "media_type": "VIDEO",
@@ -2649,8 +2688,8 @@
    "shortcode": "De33eeUGAtR",
    "timestamp": "2026-10-24T09:59:58+0000",
    "total_comments_count": 3,
-   "total_like_count": 9,
-   "total_views_count": 165
+   "total_like_count": 13,
+   "total_views_count": 176
   },
   "permalink": "https://www.instagram.com/reel/De33eeUGAtR/",
   "published": "2026-10-24T19:00:45+09:00",
@@ -2957,13 +2996,13 @@
   "insights": {
    "comments": 1,
    "comments_field": "comments_count",
-   "likes": 15,
+   "likes": 16,
    "likes_field": "like_count",
    "reposts": 0,
    "reposts_field": "reposts_count",
    "shares": 6,
    "shares_field": "shares_count",
-   "views": 324,
+   "views": 325,
    "views_field": "total_views_count"
   },
   "kind": "REELS",
@@ -2984,7 +3023,7 @@
    "is_ai_generated": false,
    "is_comment_enabled": true,
    "is_shared_to_feed": true,
-   "like_count": 15,
+   "like_count": 16,
    "media_audio_type": "ORIGINAL_SOUND",
    "media_product_type": "REELS",
    "media_type": "VIDEO",
@@ -2993,8 +3032,8 @@
    "shortcode": "DehyulhDDhe",
    "timestamp": "2026-10-15T20:15:05+0000",
    "total_comments_count": 1,
-   "total_like_count": 15,
-   "total_views_count": 324
+   "total_like_count": 16,
+   "total_views_count": 325
   },
   "permalink": "https://www.instagram.com/reel/DehyulhDDhe/",
   "published": "2026-10-16T05:15:49+09:00",
@@ -3559,7 +3598,7 @@
    "reposts_field": "reposts_count",
    "shares": 0,
    "shares_field": "shares_count",
-   "views": 252,
+   "views": 256,
    "views_field": "total_views_count"
   },
   "kind": "REELS",
@@ -3590,7 +3629,7 @@
    "timestamp": "2026-10-20T10:08:03+0000",
    "total_comments_count": 1,
    "total_like_count": 28,
-   "total_views_count": 252
+   "total_views_count": 256
   },
   "permalink": "https://www.instagram.com/reel/DetlN0YimH-/",
   "published": "2026-10-20T19:08:44+09:00",
@@ -3678,13 +3717,13 @@
   "insights": {
    "comments": 3,
    "comments_field": "comments_count",
-   "likes": 29,
+   "likes": 32,
    "likes_field": "like_count",
    "reposts": 1,
    "reposts_field": "reposts_count",
    "shares": 0,
    "shares_field": "shares_count",
-   "views": 305,
+   "views": 320,
    "views_field": "total_views_count"
   },
   "kind": "REELS",
@@ -3705,7 +3744,7 @@
    "is_ai_generated": false,
    "is_comment_enabled": true,
    "is_shared_to_feed": true,
-   "like_count": 29,
+   "like_count": 32,
    "media_audio_type": "ORIGINAL_SOUND",
    "media_product_type": "REELS",
    "media_type": "VIDEO",
@@ -3714,8 +3753,8 @@
    "shortcode": "De2YAS3j68q",
    "timestamp": "2026-10-23T20:05:42+0000",
    "total_comments_count": 3,
-   "total_like_count": 29,
-   "total_views_count": 305
+   "total_like_count": 32,
+   "total_views_count": 320
   },
   "permalink": "https://www.instagram.com/reel/De2YAS3j68q/",
   "published": "2026-10-24T05:06:31+09:00",
@@ -3808,15 +3847,15 @@
   "gate_skipped": 0,
   "image_model": "gemini-3-pro-image",
   "insights": {
-   "comments": 1,
+   "comments": 3,
    "comments_field": "comments_count",
-   "likes": 4,
+   "likes": 10,
    "likes_field": "like_count",
    "reposts": 0,
    "reposts_field": "reposts_count",
-   "shares": 0,
+   "shares": 2,
    "shares_field": "shares_count",
-   "views": 35,
+   "views": 197,
    "views_field": "total_views_count"
   },
   "kind": "REELS",
@@ -3827,7 +3866,7 @@
    "boost_eligibility_info": {
     "eligible_to_boost": true
    },
-   "comments_count": 1,
+   "comments_count": 3,
    "copyright_check_information": {
     "status": {
      "matches_found": false,
@@ -3837,17 +3876,17 @@
    "is_ai_generated": false,
    "is_comment_enabled": true,
    "is_shared_to_feed": true,
-   "like_count": 4,
+   "like_count": 10,
    "media_audio_type": "ORIGINAL_SOUND",
    "media_product_type": "REELS",
    "media_type": "VIDEO",
    "reposts_count": 0,
-   "shares_count": 0,
+   "shares_count": 2,
    "shortcode": "De480SAFM6j",
    "timestamp": "2026-10-24T20:05:51+0000",
-   "total_comments_count": 1,
-   "total_like_count": 4,
-   "total_views_count": 35
+   "total_comments_count": 3,
+   "total_like_count": 10,
+   "total_views_count": 197
   },
   "permalink": "https://www.instagram.com/reel/De480SAFM6j/",
   "published": "2026-10-25T05:06:41+09:00",
@@ -4242,6 +4281,40 @@
   "ref": "애가 3:23",
   "theme": "감사"
  },
+ "18105123755626388": {
+  "insights": {
+   "comments": 3,
+   "comments_field": "comments_count",
+   "likes": 7,
+   "likes_field": "like_count",
+   "reposts": 0,
+   "reposts_field": "reposts_count",
+   "shares": 0,
+   "shares_field": "shares_count"
+  },
+  "kind": "FEED",
+  "node": {
+   "boost_eligibility_info": {
+    "eligible_to_boost": true
+   },
+   "comments_count": 3,
+   "is_ai_generated": false,
+   "is_comment_enabled": true,
+   "like_count": 7,
+   "media_product_type": "FEED",
+   "media_type": "CAROUSEL_ALBUM",
+   "reposts_count": 0,
+   "shares_count": 0,
+   "shortcode": "De6LBauFwHy",
+   "timestamp": "2026-10-25T07:28:57+0000",
+   "total_comments_count": 3,
+   "total_like_count": 7
+  },
+  "permalink": "https://www.instagram.com/p/De6LBauFwHy/",
+  "published": "2026-10-25T07:28:57+0000",
+  "ref": "신명기 5:10",
+  "theme": "은혜"
+ },
  "18105405398002930": {
   "insights": {
    "comments": 1,
@@ -4267,13 +4340,13 @@
   "insights": {
    "comments": 3,
    "comments_field": "comments_count",
-   "likes": 13,
+   "likes": 15,
    "likes_field": "like_count",
    "reposts": 0,
    "reposts_field": "reposts_count",
    "shares": 0,
    "shares_field": "shares_count",
-   "views": 170,
+   "views": 179,
    "views_field": "total_views_count"
   },
   "kind": "REELS",
@@ -4294,7 +4367,7 @@
    "is_ai_generated": false,
    "is_comment_enabled": true,
    "is_shared_to_feed": true,
-   "like_count": 13,
+   "like_count": 15,
    "media_audio_type": "ORIGINAL_SOUND",
    "media_product_type": "REELS",
    "media_type": "VIDEO",
@@ -4303,8 +4376,8 @@
    "shortcode": "De1Tb9qjJaS",
    "timestamp": "2026-10-23T10:06:33+0000",
    "total_comments_count": 3,
-   "total_like_count": 13,
-   "total_views_count": 170
+   "total_like_count": 15,
+   "total_views_count": 179
   },
   "permalink": "https://www.instagram.com/reel/De1Tb9qjJaS/",
   "published": "2026-10-23T19:07:27+09:00",
@@ -4937,13 +5010,13 @@
   "insights": {
    "comments": 3,
    "comments_field": "comments_count",
-   "likes": 29,
+   "likes": 30,
    "likes_field": "like_count",
    "reposts": 0,
    "reposts_field": "reposts_count",
    "shares": 7,
    "shares_field": "shares_count",
-   "views": 349,
+   "views": 350,
    "views_field": "total_views_count"
   },
   "kind": "REELS",
@@ -4958,7 +5031,7 @@
    "is_ai_generated": false,
    "is_comment_enabled": true,
    "is_shared_to_feed": true,
-   "like_count": 29,
+   "like_count": 30,
    "media_audio_type": "ORIGINAL_SOUND",
    "media_product_type": "REELS",
    "media_type": "VIDEO",
@@ -4967,8 +5040,8 @@
    "shortcode": "DdpJDp5j1Ms",
    "timestamp": "2026-09-23T20:13:32+0000",
    "total_comments_count": 3,
-   "total_like_count": 29,
-   "total_views_count": 349
+   "total_like_count": 30,
+   "total_views_count": 350
   },
   "permalink": "https://www.instagram.com/reel/DdpJDp5j1Ms/",
   "published": "2026-09-24T05:15:01+09:00",
@@ -5000,7 +5073,7 @@
    "reposts_field": "reposts_count",
    "shares": 0,
    "shares_field": "shares_count",
-   "views": 287,
+   "views": 288,
    "views_field": "total_views_count"
   },
   "kind": "REELS",
@@ -5031,7 +5104,7 @@
    "timestamp": "2026-10-18T20:24:00+0000",
    "total_comments_count": 1,
    "total_like_count": 21,
-   "total_views_count": 287
+   "total_views_count": 288
   },
   "permalink": "https://www.instagram.com/reel/DepiIdPEWzo/",
   "published": "2026-10-19T05:24:45+09:00",
@@ -5985,13 +6058,13 @@
   "insights": {
    "comments": 1,
    "comments_field": "comments_count",
-   "likes": 17,
+   "likes": 18,
    "likes_field": "like_count",
    "reposts": 0,
    "reposts_field": "reposts_count",
    "shares": 0,
    "shares_field": "shares_count",
-   "views": 303,
+   "views": 304,
    "views_field": "total_views_count"
   },
   "kind": "REELS",
@@ -6012,7 +6085,7 @@
    "is_ai_generated": false,
    "is_comment_enabled": true,
    "is_shared_to_feed": true,
-   "like_count": 17,
+   "like_count": 18,
    "media_audio_type": "ORIGINAL_SOUND",
    "media_product_type": "REELS",
    "media_type": "VIDEO",
@@ -6021,8 +6094,8 @@
    "shortcode": "DeeIlqbkpwM",
    "timestamp": "2026-10-14T10:09:16+0000",
    "total_comments_count": 1,
-   "total_like_count": 17,
-   "total_views_count": 303
+   "total_like_count": 18,
+   "total_views_count": 304
   },
   "permalink": "https://www.instagram.com/reel/DeeIlqbkpwM/",
   "published": "2026-10-14T19:10:02+09:00",
@@ -6424,13 +6497,13 @@
   "insights": {
    "comments": 3,
    "comments_field": "comments_count",
-   "likes": 43,
+   "likes": 46,
    "likes_field": "like_count",
    "reposts": 1,
    "reposts_field": "reposts_count",
    "shares": 3,
    "shares_field": "shares_count",
-   "views": 714,
+   "views": 723,
    "views_field": "total_views_count"
   },
   "kind": "REELS",
@@ -6451,7 +6524,7 @@
    "is_ai_generated": false,
    "is_comment_enabled": true,
    "is_shared_to_feed": true,
-   "like_count": 43,
+   "like_count": 46,
    "media_audio_type": "ORIGINAL_SOUND",
    "media_product_type": "REELS",
    "media_type": "VIDEO",
@@ -6460,8 +6533,8 @@
    "shortcode": "DeZRt-pD8KU",
    "timestamp": "2026-10-12T12:52:47+0000",
    "total_comments_count": 3,
-   "total_like_count": 43,
-   "total_views_count": 714
+   "total_like_count": 46,
+   "total_views_count": 723
   },
   "permalink": "https://www.instagram.com/reel/DeZRt-pD8KU/",
   "published": "2026-10-12T21:54:27+09:00",
@@ -6847,13 +6920,13 @@
   "insights": {
    "comments": 3,
    "comments_field": "comments_count",
-   "likes": 22,
+   "likes": 23,
    "likes_field": "like_count",
-   "reposts": 0,
+   "reposts": 1,
    "reposts_field": "reposts_count",
-   "shares": 1,
+   "shares": 2,
    "shares_field": "shares_count",
-   "views": 260,
+   "views": 323,
    "views_field": "total_views_count"
   },
   "kind": "REELS",
@@ -6874,17 +6947,17 @@
    "is_ai_generated": false,
    "is_comment_enabled": true,
    "is_shared_to_feed": true,
-   "like_count": 22,
+   "like_count": 23,
    "media_audio_type": "ORIGINAL_SOUND",
    "media_product_type": "REELS",
    "media_type": "VIDEO",
-   "reposts_count": 0,
-   "shares_count": 1,
+   "reposts_count": 1,
+   "shares_count": 2,
    "shortcode": "DexOW_zCEO6",
    "timestamp": "2026-10-21T20:05:17+0000",
    "total_comments_count": 3,
-   "total_like_count": 22,
-   "total_views_count": 260
+   "total_like_count": 23,
+   "total_views_count": 323
   },
   "permalink": "https://www.instagram.com/reel/DexOW_zCEO6/",
   "published": "2026-10-22T05:06:14+09:00",
@@ -7970,7 +8043,7 @@
    "reposts_field": "reposts_count",
    "shares": 1,
    "shares_field": "shares_count",
-   "views": 292,
+   "views": 294,
    "views_field": "total_views_count"
   },
   "kind": "REELS",
@@ -8001,7 +8074,7 @@
    "timestamp": "2026-10-19T10:39:27+0000",
    "total_comments_count": 1,
    "total_like_count": 30,
-   "total_views_count": 292
+   "total_views_count": 294
   },
   "permalink": "https://www.instagram.com/reel/DerEBDkjnjc/",
   "published": "2026-10-19T19:40:15+09:00",
