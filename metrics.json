@@ -4067,6 +4067,32 @@
   "ref": "데살로니가전서 5:17",
   "theme": "평안"
  },
+ "18098714576542544": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-27",
+  "duration": 30.0,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 1,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 99.0,
+  "motion_attempts": 1,
+  "motion_sky": 99.0,
+  "published": "2026-10-27T19:17:40+09:00",
+  "ref": "전도서 2:13",
+  "scene": "sea",
+  "segments": 0,
+  "text_contrast": 8.43,
+  "text_spread": 9.4,
+  "theme": "지혜",
+  "veo_attempts": [],
+  "veo_calls": 1,
+  "veo_seconds": 8.0
+ },
  "18098864771250562": {
   "insights": {
    "comments": 1,
