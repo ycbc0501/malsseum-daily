@@ -7620,6 +7620,32 @@
   "ref": "요한복음 8:12",
   "theme": "은혜"
  },
+ "18341649592261037": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-28",
+  "duration": 30.0,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 6,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 99.0,
+  "motion_attempts": 1,
+  "motion_sky": 99.0,
+  "published": "2026-10-28T05:16:17+09:00",
+  "ref": "로마서 12:11",
+  "scene": "rainy_street",
+  "segments": 0,
+  "text_contrast": 11.76,
+  "text_spread": 3.1,
+  "theme": "지혜",
+  "veo_attempts": [],
+  "veo_calls": 1,
+  "veo_seconds": 8.0
+ },
  "18362043541209025": {
   "insights": {
    "comments": 1,
