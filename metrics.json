@@ -6668,6 +6668,32 @@
   "veo_calls": 3,
   "veo_seconds": 24.0
  },
+ "18147904420497149": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-28",
+  "duration": 30.0,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 8,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 99.0,
+  "motion_attempts": 1,
+  "motion_sky": 99.0,
+  "published": "2026-10-28T20:07:20+09:00",
+  "ref": "고린도전서 1:25",
+  "scene": "rainy_street",
+  "segments": 0,
+  "text_contrast": 8.88,
+  "text_spread": 5.1,
+  "theme": "지혜",
+  "veo_attempts": [],
+  "veo_calls": 1,
+  "veo_seconds": 8.0
+ },
  "18148538053509674": {
   "insights": {
    "comments": 1,
