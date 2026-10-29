@@ -1518,6 +1518,32 @@
   "ref": "시편 73:26",
   "theme": "위로"
  },
+ "17978294148138057": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-29",
+  "duration": 27.13,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 1,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 99.0,
+  "motion_attempts": 1,
+  "motion_sky": 99.0,
+  "published": "2026-10-29T20:24:35+09:00",
+  "ref": "골로새서 2:3",
+  "scene": "sea",
+  "segments": 0,
+  "text_contrast": 6.94,
+  "text_spread": 6.0,
+  "theme": "지혜",
+  "veo_attempts": [],
+  "veo_calls": 1,
+  "veo_seconds": 8.0
+ },
  "17979680004102530": {
   "insights": {
    "comments": 1,
