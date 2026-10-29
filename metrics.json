@@ -4536,6 +4536,32 @@
   "ref": "신명기 5:10",
   "theme": "은혜"
  },
+ "18105157199145098": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-30",
+  "duration": 30.0,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 5,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 99.0,
+  "motion_attempts": 1,
+  "motion_sky": 99.0,
+  "published": "2026-10-30T05:07:10+09:00",
+  "ref": "베드로전서 3:11",
+  "scene": "mist_mountain",
+  "segments": 0,
+  "text_contrast": 5.09,
+  "text_spread": 4.2,
+  "theme": "지혜",
+  "veo_attempts": [],
+  "veo_calls": 1,
+  "veo_seconds": 8.0
+ },
  "18105405398002930": {
   "insights": {
    "comments": 1,
