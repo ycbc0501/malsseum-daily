@@ -6540,6 +6540,32 @@
   "ref": "골로새서 3:23",
   "theme": "인도"
  },
+ "18133934327484160": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-31",
+  "duration": 30.0,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 4,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 99.0,
+  "motion_attempts": 1,
+  "motion_sky": 99.0,
+  "published": "2026-10-31T05:02:29+09:00",
+  "ref": "마태복음 23:11",
+  "scene": "mist_mountain",
+  "segments": 0,
+  "text_contrast": 7.41,
+  "text_spread": 9.2,
+  "theme": "지혜",
+  "veo_attempts": [],
+  "veo_calls": 1,
+  "veo_seconds": 8.0
+ },
  "18135835636533896": {
   "insights": {
    "comments": 3,
