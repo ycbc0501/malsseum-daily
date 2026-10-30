@@ -4413,6 +4413,32 @@
   "text_spread": 2.1,
   "theme": "위로"
  },
+ "18102136580548285": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-30",
+  "duration": 28.94,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 4,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 99.0,
+  "motion_attempts": 1,
+  "motion_sky": 99.0,
+  "published": "2026-10-30T20:17:44+09:00",
+  "ref": "전도서 4:9",
+  "scene": "mist_mountain",
+  "segments": 0,
+  "text_contrast": 9.06,
+  "text_spread": 1.8,
+  "theme": "지혜",
+  "veo_attempts": [],
+  "veo_calls": 1,
+  "veo_seconds": 8.0
+ },
  "18102279007972432": {
   "insights": {
    "comments": 1,
