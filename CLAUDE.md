@@ -202,6 +202,43 @@ boost_eligibility_info={"eligible_to_boost":true}  media_audio_type  is_shared_t
 실패한다(역테스트 확인). 아직 안 한 것: **저녁 슬롯 폐지**(§9.1) — 하면 Veo가 다시 반이 되지만
 발행 빈도 결정이라 승인 대기 중.
 
+## 2026-10-31 — **Google이 Veo를 치웠다. 15개 릴이 조용히 정지 이미지로 나갔다** (STRATEGY.md §18)
+
+원석님이 "영상이 안 올라오네, 다 이미지로 가는거야?"라고 물어서 확인했더니 맞았다 — 그런데
+설정을 바꾼 적이 없었다. **2026-10-23 05:18 KST부터 구글이 예고 없이
+`veo-3.1-fast-generate-preview`를 API에서 치웠다.** 직접 호출로 받은 에러:
+`models/veo-3.1-fast-generate-preview is no longer available`. 이 키로 받는 모델 **60개 중
+영상 생성(`predictLongRunning`)을 지원하는 게 하나도 없다** — 구글이 권한 대안으로 제시한
+`gemini-omni-1.1-flash`도 `generateContent`만 지원해 영상과 무관하다. 매 호출이 즉시 404로
+실패해 기존 폴백(정지+줌)으로 떨어졌고, **`watch.py`는 이 종류의 실패를 전혀 보지 않아서**
+2026-10-30까지 **15개 릴이 연속으로** 움직임 없이 나가는 동안 아무 경보도 없었다
+(`metrics.json`의 `segments=0, veo_seconds=8.0`이 10-23 이후 예외 없이 반복).
+
+**대안은 이미 가지고 있던 자격증명 안에 있었다.** 정지 이미지에 쓰던 Higgsfield 계정
+(`HF_API_KEY`/`HF_API_SECRET`, `fetch_higgsfield.py`)이 Wan 2.7 image-to-video도 제공한다
+(`api.higgsfield.ai/wan/v2.7/image-to-video`) — **새 자격증명이 필요 없었다.** `fetch_veo.py`를
+이 엔드포인트로 교체했다. 함수 시그니처(`animate(still_png, dest, ...)`)와 모듈 상수
+(`MOTION`/`CALMER`/`CONTINUE`/`CALLS`/`SECONDS_PER_CALL`)는 그대로라 `daily_post.py`는 한 줄도
+안 바꿨다. **실제 자격증명으로 실제 호출해서 검증했다**(`output/_bg.png` 입력): 8.03초,
+720x1280(9:16 자동 유지, aspect 파라미터 없음), 카메라 고정, 0·4·7초 프레임을 직접 비교해 구도
+유지 확인, `make_video.motion_score`로 재니 overall 1.50(목표 1.5에 근접) — 기존 Veo 프롬프트
+문구가 그대로 통한다.
+
+비용은 초당 $0.05 견적(구독 할인 미적용, ₩1,333/$ 환율) ≈ **₩66.65/초 — 옛 Veo ₩138.33/초의
+절반 이하.** `metrics.VEO_WON_PER_SECOND`를 갱신했고 **아직 청구서가 아니라 견적**이라고
+주석에 명시했다(실제 Higgsfield 청구서가 오면 재보정 필요). `test_veo_budget.py`는 이제 이
+상수를 중복 하드코딩하지 않고 `metrics.py`에서 직접 가져온다 — 공급자가 또 바뀌어도 두 파일이
+따로 썩을 수 없게. 재계산한 월 최악 비용 ₩95,976(기존 ₩199,192의 절반 이하). `RULES.md` E-0
+개정, `check_rules.py`·`test_veo_budget.py` 전부 통과(E0/E0c/E0d/E3 포함), `verify.sh`의 다른
+실패 2건(`test_catalog.py`, `test_linebreak_tiers.py`)은 이 변경과 무관한 기존 결함으로
+확인했다(스태시 후 재현).
+
+**남은 것 — 이름 부채:** `fetch_veo.py`라는 파일명/모듈명이 더 이상 사실과 다르다(Veo를 안
+쓴다). 최소 변경으로 빨리 고치려고 리네임은 하지 않았다 — `daily_post.py`·`check_rules.py`·
+`test_chuseok.py` 세 곳이 `fetch_veo.`를 참조한다. 리네임은 기계적이라 다음 세션에 해도 된다.
+**`watch.py`에 "Veo 연속 실패/폴백" 경보가 아직 없다** — 이번처럼 8일을 조용히 흘려보내지 않을
+유일한 방법인데 아직 손대지 않았다.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_higgsfield.py` (image + gates),
 `fetch_veo.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually

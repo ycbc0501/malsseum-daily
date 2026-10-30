@@ -1,26 +1,37 @@
 #!/usr/bin/env python3
 """
-Animate a still image into a short cinematic clip via Google Veo 3.1 (image-to-video),
-using the SAME Gemini API key as the Nano Banana stills — no new account or SDK. This turns
-a grand background still into REAL motion (drifting clouds, shifting light) for the Reel,
-instead of a Ken Burns zoom on a frozen picture.
+Animate a still image into a short cinematic clip.
+
+Was Google Veo (predictLongRunning on generativelanguage.googleapis.com). On 2026-10-23 Google
+pulled the model out from under us without warning: every call started returning
+"models/veo-3.1-fast-generate-preview is no longer available", and NOT A SINGLE model exposed by
+this API key still supports predictLongRunning (checked by listing all 60 models on 2026-10-31 —
+zero have any video-generation method; Google's suggested replacement, gemini-omni-1.1-flash, only
+supports generateContent and cannot make video at all). The error was never loud: daily_post.py's
+existing except-and-fall-back-to-a-zoom-still swallowed it cleanly, so 15 reels in a row shipped as
+motionless stills with nobody told (STRATEGY.md §18).
+
+Now Higgsfield — the SAME account already used for the still backgrounds (fetch_higgsfield.py),
+same HF_API_KEY/HF_API_SECRET, no new credential. Their Wan 2.7 image-to-video model
+(api.higgsfield.ai/wan/v2.7/image-to-video) takes the still, a motion prompt and a negative
+prompt, and returns an mp4 — verified for real on 2026-10-31 with output/_bg.png: 8.03s,
+720x1280 (the input's own 9:16 kept automatically — there is no aspect-ratio field to set), camera
+locked, composition unchanged frame 0 → 4 → 7. $0.05/s pay-as-you-go, no subscription — about half
+of Veo's ₩138/s (metrics.VEO_WON_PER_SECOND; update that constant once a real invoice replaces the
+quoted rate).
 
     python3 fetch_veo.py still.png out.mp4
 """
 
-import base64
-import json
 import sys
 import time
-import urllib.request
 
-import fetch_higgsfield as hf   # reuse _gemini_key()
+import fetch_higgsfield as hf   # reuse _credentials() — same Higgsfield account as the stills
 
-VEO_MODEL = "veo-3.1-fast-generate-preview"   # "fast" tier: good motion, lower cost than full
-API = "https://generativelanguage.googleapis.com/v1beta"
+APPLICATION = "wan/v2.7/image-to-video"
 
 # Locked camera + BARELY-THERE motion, so the composition (and the clear center band the verse
-# sits on) never shifts AND the scene never looks frantic. Veo's fast tier tends to over-animate,
+# sits on) never shifts AND the scene never looks frantic. Fast video models tend to over-animate,
 # so the prompt pushes hard toward "a living photograph that only breathes" — the fast waves /
 # rushing traffic came from asking for too much motion, not from any speed bug downstream.
 MOTION = (
@@ -30,10 +41,11 @@ MOTION = (
 )
 
 # Prefixed to MOTION when animating the tail frame of an earlier segment, so the segments read as
-# ONE continuous shot rather than two takes of the same place. Length has to come from Veo itself
-# (CONTENT_RULE 6) — this is the "genuine continuation" that rule allows, as opposed to a loop.
-# Retrying with the SAME prompt is three draws from one distribution: if Veo over-animates a given
-# image it will do so again. So each retry escalates the demand. Index 0 is the plain prompt.
+# ONE continuous shot rather than two takes of the same place. Length has to come from the model
+# itself (CONTENT_RULE 6) — this is the "genuine continuation" that rule allows, as opposed to a
+# loop. Retrying with the SAME prompt is three draws from one distribution: if the model
+# over-animates a given image it will do so again. So each retry escalates the demand. Index 0 is
+# the plain prompt.
 CALMER = [
     "",
     (" Even less motion than that — about a quarter of what you would normally animate. Sky, cloud "
@@ -63,46 +75,63 @@ NEG = ("timelapse, sped up, fast-forward, accelerated motion, fast movement, "
        "elements appearing or disappearing, growing, strobing")
 
 
-# Veo bills per generated second whether the take is used or not, and it is ~80% of this
-# project's spend. Counting calls here makes the bill a number in metrics.json rather than an
-# estimate reconstructed from logs after the fact.
+# Billed per generated second whether the take is used or not, and it is the dominant cost line.
+# Counting calls here makes the bill a number in metrics.json rather than an estimate
+# reconstructed from logs after the fact.
 CALLS = [0]
 SECONDS_PER_CALL = 8.0
 
 
-def animate(still_png, dest, aspect="9:16", prompt=MOTION, timeout_s=420, poll_s=10):
-    """Submit `still_png` to Veo image-to-video, poll the long-running op, download the mp4
-    to `dest`. Raises on error/timeout so callers can fall back to a zoom still."""
-    CALLS[0] += 1
-    key = hf._gemini_key()
-    img_b64 = base64.b64encode(open(still_png, "rb").read()).decode()
-    import content_law
-    # The still went through every gate and then Veo introduced what the gates forbid — a person
-    # walking in, water pouring sideways, the empty upper band dissolving. The motion prompt had
-    # never carried the laws at all: no mention of hands, of CGI, of physics, of looking filmed.
-    body = {"instances": [{"prompt": content_law.for_video(prompt),
-                           "image": {"bytesBase64Encoded": img_b64, "mimeType": "image/png"}}],
-            "parameters": {"aspectRatio": aspect,
-                           "negativePrompt": NEG + ", " + content_law.NEG_TERMS}}
-    url = f"{API}/models/{VEO_MODEL}:predictLongRunning?key={key}"
-    req = urllib.request.Request(url, data=json.dumps(body).encode(),
-                                 headers={"Content-Type": "application/json"}, method="POST")
-    op = json.load(urllib.request.urlopen(req, timeout=120))["name"]
+def animate(still_png, dest, aspect="9:16", prompt=MOTION, timeout_s=420, poll_s=5):
+    """Submit `still_png` for image-to-video, poll the request, download the mp4 to `dest`.
+    Raises on error/timeout so callers can fall back to a zoom still.
 
-    status_url = f"{API}/{op}?key={key}"
+    `aspect` is accepted for call-site compatibility but unused: Wan 2.7 has no aspect-ratio
+    parameter and simply keeps the input image's own ratio, which is already 9:16 (generate.REEL)
+    for every still this pipeline makes."""
+    CALLS[0] += 1
+    import content_law
+    import higgsfield_client as h
+    from PIL import Image
+
+    client = h.SyncClient(api_key=hf._credentials())
+    img = Image.open(still_png)
+    img_url = client.upload_image(img, format="png")
+
+    args = {
+        "image_url": img_url,
+        "prompt": content_law.for_video(prompt),
+        "negative_prompt": NEG + ", " + content_law.NEG_TERMS,
+        "duration": int(SECONDS_PER_CALL),
+        "resolution": "720p",
+    }
+    ctrl = client.submit(APPLICATION, args)
+
+    # client.submit()/.get() poll forever with no ceiling (confirmed in higgsfield_client's
+    # poll_request_status: `while True`) — the same unbounded-hang shape the old Google poll loop
+    # was written to avoid, so this keeps that same explicit timeout rather than trusting the SDK.
     waited = 0
-    while waited < timeout_s:
-        d = json.load(urllib.request.urlopen(status_url, timeout=30))
-        if d.get("done"):
-            if "error" in d:
-                raise RuntimeError(f"veo error: {d['error']}")
-            uri = d["response"]["generateVideoResponse"]["generatedSamples"][0]["video"]["uri"]
-            dl = uri + ("&" if "?" in uri else "?") + "key=" + key
-            urllib.request.urlretrieve(dl, dest)
-            return dest
+    status = ctrl.status()
+    while not isinstance(status, h.DONE_STATUSES):
+        if waited >= timeout_s:
+            raise RuntimeError(f"higgsfield: timed out after {timeout_s}s")
         time.sleep(poll_s)
         waited += poll_s
-    raise RuntimeError(f"veo: timed out after {timeout_s}s")
+        status = ctrl.status()
+
+    if isinstance(status, h.NSFW):
+        raise RuntimeError("higgsfield: flagged NSFW")
+    if isinstance(status, (h.Failed, h.Cancelled)):
+        raise RuntimeError(f"higgsfield: request {type(status).__name__.lower()}")
+
+    result = ctrl.get()
+    video = result.get("video") or {}
+    url = video.get("url")
+    if not url:
+        raise RuntimeError(f"higgsfield: no video in response ({result})")
+    import urllib.request
+    urllib.request.urlretrieve(url, dest)
+    return dest
 
 
 if __name__ == "__main__":

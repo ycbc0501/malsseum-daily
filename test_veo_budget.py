@@ -22,6 +22,7 @@ import pathlib
 import re
 
 import daily_post
+import metrics
 
 SRC = pathlib.Path(__file__).with_name("daily_post.py").read_text()
 
@@ -31,8 +32,10 @@ NON_VEO_WON = 60_000
 VEO_BUDGET_WON = MONTHLY_CAP_WON - NON_VEO_WON
 POSTS_PER_DAY = 2
 SECONDS_PER_CALL = 8.0
-# Derived from the September invoice, same constant metrics.py prices the ledger with.
-WON_PER_SECOND = 193659 / 1400
+# The SAME constant metrics.py prices the ledger with — imported, not copied, because a copy is
+# exactly how the provider switch on 2026-10-31 (Google Veo → Higgsfield Wan 2.7, see metrics.py)
+# would otherwise have left this file asserting a budget against a price nobody charges any more.
+WON_PER_SECOND = metrics.VEO_WON_PER_SECOND
 
 bad = 0
 
