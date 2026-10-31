@@ -305,6 +305,35 @@
   "veo_calls": 1,
   "veo_seconds": 8.0
  },
+ "17887560309689820": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-11-01",
+  "duration": 7.68,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 16,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 1.659,
+  "motion_attempts": 1,
+  "motion_sky": 1.618,
+  "published": "2026-11-01T05:12:00+09:00",
+  "ref": "로마서 12:21",
+  "scene": "bedroom",
+  "segments": 1,
+  "text_contrast": 4.27,
+  "text_spread": 16.0,
+  "theme": "지혜",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "17889545238418332": {
   "insights": {
    "comments": 1,
