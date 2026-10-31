@@ -148,14 +148,23 @@ class MeasuringMatchesDrawing(unittest.TestCase):
         """잰 폭은 자폭, 그린 폭은 잉크 범위다 — 마지막 글자의 사이드베어링만큼 늘 짧다.
 
         그 차이는 글자 수와 무관한 상수여야 한다. 그리는 쪽이 재는 쪽과 다른
-        TRACK/WIDTH를 쓰면 차이가 길이에 **비례해서** 벌어지고, 그때 이 테스트가 잡는다."""
+        TRACK/WIDTH를 쓰면 차이가 길이에 **비례해서** 벌어지고, 그때 이 테스트가 잡는다.
+
+        painted는 getbbox()라 정수 픽셀로 양자화된다 — 2026-10-30 CI(Linux FreeType)에서
+        한 샘플이 measured=476.88 / painted=477로, 양자화 반올림만큼(<1px) 뒤집혔다(로컬
+        macOS에서는 477보다 작게 나와 통과했다). 그 반전은 사이드베어링이 사라졌다는 뜻이 아니라
+        서브픽셀 경계가 정수 그리드에 반올림되는 잡음이므로, 1px 슬랙을 둔다. 진짜 버그(재는
+        쪽과 그리는 쪽이 다른 TRACK/WIDTH를 써서 차이가 글자 수에 비례해 벌어지는 것)는
+        아래 두 assertion이 여전히 잡는다."""
         d = ImageDraw.Draw(Image.new("RGB", (8, 8)))
         font = generate.load_font(generate.SERIF, 44)
         gaps = []
         for s in self.SAMPLES:
             measured = generate.text_w(d, s, font)
             painted = self._painted_width(s, font)
-            self.assertGreater(measured, painted, f"{s!r}: 그린 게 잰 것보다 넓다")
+            self.assertGreaterEqual(measured + 1.0, painted,
+                                     f"{s!r}: 그린 게 잰 것보다 1px 넘게 넓다 "
+                                     f"(measured={measured}, painted={painted})")
             gaps.append(measured - painted)
         self.assertLess(max(gaps), 44, f"차이가 한 글자를 넘는다: {gaps}")
         self.assertLess(max(gaps) - min(gaps), 0.5 * 44,

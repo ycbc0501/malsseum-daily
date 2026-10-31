@@ -31,7 +31,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install deps
-        run: pip install pillow kiwipiepy
+        run: pip install pillow "kiwipiepy==0.24.1"
 
       - name: Build the 3 slides
         env:

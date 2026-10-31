@@ -26,7 +26,9 @@ done
 PY=python3
 if ! $PY -c "import yaml, kiwipiepy, imageio_ffmpeg, PIL" 2>/dev/null; then
   if command -v uv >/dev/null 2>&1; then
-    PY="uv run --quiet --with pyyaml --with kiwipiepy --with imageio-ffmpeg --with pillow python"
+    # Pinned to match the workflows (H0-6): pip and uv pick different "latest" on the same day
+    # if left unpinned, and the tagger they load changes which lines break (시편 68:19, 10-31).
+    PY="uv run --quiet --with pyyaml --with kiwipiepy==0.24.1 --with imageio-ffmpeg --with pillow python"
   else
     echo "FAIL  missing deps — run: pip install pyyaml kiwipiepy imageio-ffmpeg pillow"
     exit 1

@@ -68,7 +68,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install deps
-        run: pip install pillow higgsfield-client kiwipiepy imageio-ffmpeg
+        run: pip install pillow higgsfield-client "kiwipiepy==0.24.1" imageio-ffmpeg
 
       - name: Wait for target time (05:00 or 19:00 KST ±10), build the Reel (Nano Banana Pro + music)
         id: build

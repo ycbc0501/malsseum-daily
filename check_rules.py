@@ -25,6 +25,8 @@ def checks():
     daily_post_src = (HERE / "daily_post.py").read_text()
     carousel_wf = (HERE / ".github/workflows/weekly-carousel.yml").read_text()
     carousel = (HERE / "carousel_post.py").read_text()
+    checks_wf = (HERE / ".github/workflows/checks.yml").read_text()
+    verify_sh = (HERE / "verify.sh").read_text()
     scenes = [s for items in hf.SCENE_GROUPS.values() for s in items]
     verses = json.load(open(HERE / "verses.json"))["verses"]
 
@@ -485,6 +487,18 @@ def checks():
     yield "G1 the watcher runs often enough to be timely", len(
         [l for l in (HERE / ".github/workflows/watch.yml").read_text().splitlines()
          if "cron:" in l]) >= 4
+
+    # H0-6: pip and uv picked DIFFERENT "latest" kiwipiepy on the same day (2026-10-31, 0.24.1 vs
+    # 0.23.2) and disagreed on where 시편 68:19 breaks. Unpinned, "it passed in CI" and "it fails
+    # locally" can both be true at once because they are not running the same tagger.
+    kiwi_pins = {
+        name: m.group(1) if (m := re.search(r"kiwipiepy==([0-9][0-9.]*)", text)) else None
+        for name, text in (
+            ("daily-post.yml", daily), ("checks.yml", checks_wf),
+            ("weekly-carousel.yml", carousel_wf), ("verify.sh", verify_sh))
+    }
+    yield "H0-6 kiwipiepy is pinned everywhere it is installed", all(kiwi_pins.values())
+    yield "H0-6 every pin is the same version", len(set(kiwi_pins.values())) == 1
 
 
 def main():
