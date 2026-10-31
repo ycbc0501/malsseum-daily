@@ -6,7 +6,7 @@
   },
   "followers_count": {
    "ok": true,
-   "sample": 215
+   "sample": 227
   },
   "follows_count": {
    "ok": true,
@@ -26,7 +26,7 @@
   },
   "media_count": {
    "ok": true,
-   "sample": 195
+   "sample": 244
   },
   "name": {
    "ok": true,
@@ -250,7 +250,7 @@
   }
  },
  "base": "https://graph.facebook.com/v21.0",
- "checked": "2026-10-07 14:54 KST",
+ "checked": "2026-11-01 06:38 KST",
  "login": "Facebook Login",
  "media_fields": {
   "alt_text": {
@@ -266,7 +266,7 @@
   "caption": {
    "ok": true,
    "present": true,
-   "sample": "이 모든 것 위에 사랑을 더하라 이는 온전하게 매는 띠니라\n[골로새서 3:14]\n\n온전함은 개별적인 노력의 합이 아니라 그 모든 것을 묶는 사랑입니다."
+   "sample": "악에게 지지 말고 선으로 악을 이기라\n[로마서 12:21]\n\n초점은 악에 대한 반응이 아니라 선을 향한 능동적인 선택입니다."
   },
   "comments_count": {
    "ok": true,
@@ -276,7 +276,7 @@
   "id": {
    "ok": true,
    "present": true,
-   "sample": "17931185382408041"
+   "sample": "17887560309689820"
   },
   "is_ai_generated": {
    "ok": true,
@@ -316,7 +316,7 @@
   "permalink": {
    "ok": true,
    "present": true,
-   "sample": "https://www.instagram.com/reel/DeKmqJGEWLW/"
+   "sample": "https://www.instagram.com/reel/DfK-9gaiIOg/"
   },
   "reposts_count": {
    "ok": true,
@@ -336,7 +336,7 @@
   "shortcode": {
    "ok": true,
    "present": true,
-   "sample": "DeKmqJGEWLW"
+   "sample": "DfK-9gaiIOg"
   },
   "thumbnail_url": {
    "ok": true,
@@ -346,7 +346,7 @@
   "timestamp": {
    "ok": true,
    "present": true,
-   "sample": "2026-10-06T20:07:11+0000"
+   "sample": "2026-10-31T20:11:00+0000"
   },
   "total_comments_count": {
    "ok": true,
@@ -361,49 +361,49 @@
   "total_views_count": {
    "ok": true,
    "present": true,
-   "sample": 52
+   "sample": 145
   }
  },
  "media_metrics": {
   "comments": {
    "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
    "ok": false,
-   "probed_on": "18097426379098134"
+   "probed_on": "17887560309689820"
   },
   "crossposted_views": {
    "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
    "ok": false,
-   "probed_on": "17931185382408041"
+   "probed_on": "17887560309689820"
   },
   "facebook_views": {
    "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
    "ok": false,
-   "probed_on": "18097426379098134"
+   "probed_on": "17887560309689820"
   },
   "follows": {
-   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
-   "ok": false,
+   "error": "no media of type FEED/STORY to probe against",
+   "ok": null,
    "probed_on": "18097426379098134"
   },
   "ig_reels_avg_watch_time": {
    "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
    "ok": false,
-   "probed_on": "17931185382408041"
+   "probed_on": "17887560309689820"
   },
   "ig_reels_video_view_total_time": {
    "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
    "ok": false,
-   "probed_on": "17931185382408041"
+   "probed_on": "17887560309689820"
   },
   "impressions": {
-   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
-   "ok": false,
+   "error": "no media of type FEED/STORY to probe against",
+   "ok": null,
    "probed_on": "18097426379098134"
   },
   "likes": {
    "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
    "ok": false,
-   "probed_on": "18097426379098134"
+   "probed_on": "17887560309689820"
   },
   "link_clicks": {
    "error": "no media of type STORY to probe against",
@@ -414,24 +414,24 @@
    "ok": null
   },
   "profile_activity": {
-   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
-   "ok": false,
+   "error": "no media of type FEED/STORY to probe against",
+   "ok": null,
    "probed_on": "18097426379098134"
   },
   "profile_visits": {
-   "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
-   "ok": false,
+   "error": "no media of type FEED/STORY to probe against",
+   "ok": null,
    "probed_on": "18097426379098134"
   },
   "reach": {
    "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
    "ok": false,
-   "probed_on": "18097426379098134"
+   "probed_on": "17887560309689820"
   },
   "reels_skip_rate": {
    "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
    "ok": false,
-   "probed_on": "17931185382408041"
+   "probed_on": "17887560309689820"
   },
   "replies": {
    "error": "no media of type STORY to probe against",
@@ -440,42 +440,42 @@
   "reposts": {
    "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
    "ok": false,
-   "probed_on": "18097426379098134"
+   "probed_on": "17887560309689820"
   },
   "saved": {
    "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
    "ok": false,
-   "probed_on": "18097426379098134"
+   "probed_on": "17887560309689820"
   },
   "shares": {
    "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
    "ok": false,
-   "probed_on": "18097426379098134"
+   "probed_on": "17887560309689820"
   },
   "total_comments": {
    "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
    "ok": false,
-   "probed_on": "18097426379098134"
+   "probed_on": "17887560309689820"
   },
   "total_interactions": {
    "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
    "ok": false,
-   "probed_on": "18097426379098134"
+   "probed_on": "17887560309689820"
   },
   "total_likes": {
    "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
    "ok": false,
-   "probed_on": "18097426379098134"
+   "probed_on": "17887560309689820"
   },
   "total_views": {
    "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
    "ok": false,
-   "probed_on": "18097426379098134"
+   "probed_on": "17887560309689820"
   },
   "views": {
    "error": "HTTP 400: (#10) Application does not have permission for this action (type=OAuthException, code=10, subcode=None)",
    "ok": false,
-   "probed_on": "18097426379098134"
+   "probed_on": "17887560309689820"
   }
  },
  "probed_media": [
@@ -502,6 +502,30 @@
   {
    "id": "18097426379098134",
    "product_type": "FEED"
+  },
+  {
+   "id": "17887560309689820",
+   "product_type": "REELS"
+  },
+  {
+   "id": "18099987467554212",
+   "product_type": "REELS"
+  },
+  {
+   "id": "18133934327484160",
+   "product_type": "REELS"
+  },
+  {
+   "id": "18102136580548285",
+   "product_type": "REELS"
+  },
+  {
+   "id": "18105157199145098",
+   "product_type": "REELS"
+  },
+  {
+   "id": "17978294148138057",
+   "product_type": "REELS"
   }
  ],
  "scopes": [
@@ -511,5 +535,6 @@
   "pages_read_engagement",
   "pages_show_list",
   "public_profile"
- ]
+ ],
+ "scopes_error": "{'message': 'Error validating application. Invalid application ID.', 'type': 'OAuthException', 'code': 190, 'fbtrace_id': 'A3s6tizsmgVyuLNEK2ygx6r'}"
 }
