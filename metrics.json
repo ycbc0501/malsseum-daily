@@ -4284,6 +4284,35 @@
   "ref": "시편 1:2",
   "theme": "인도"
  },
+ "18099987467554212": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-10-31",
+  "duration": 7.68,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 11,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 3.489,
+  "motion_attempts": 1,
+  "motion_sky": 0.912,
+  "published": "2026-10-31T19:54:20+09:00",
+  "ref": "누가복음 2:52",
+  "scene": "wheat_field",
+  "segments": 1,
+  "text_contrast": 9.24,
+  "text_spread": 5.3,
+  "theme": "지혜",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18100530731167530": {
   "insights": {
    "comments": 1,
