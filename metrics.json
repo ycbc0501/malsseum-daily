@@ -6377,6 +6377,35 @@
   "veo_calls": 6,
   "veo_seconds": 48.0
  },
+ "18128513422852002": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-11-02",
+  "duration": 7.68,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 2,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 12.137,
+  "motion_attempts": 2,
+  "motion_sky": 0.906,
+  "published": "2026-11-02T05:04:43+09:00",
+  "ref": "히브리서 1:14",
+  "scene": "sea",
+  "segments": 1,
+  "text_contrast": 9.72,
+  "text_spread": 6.9,
+  "theme": "위로",
+  "veo_attempts": [
+   2,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18129174019673443": {
   "insights": {
    "comments": 1,
