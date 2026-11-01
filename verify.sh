@@ -13,7 +13,7 @@ cd "$(dirname "$0")"
 # Missing dependencies must not look like broken code. The line-break rule needs the Korean
 # tagger, and without it its tests fail exactly as though the rule had regressed — which is the
 # same trap as the YAML parser below. Say which it is.
-for _mod in yaml kiwipiepy imageio_ffmpeg PIL; do
+for _mod in yaml kiwipiepy imageio_ffmpeg PIL numpy; do
   python3 -c "import $_mod" 2>/dev/null && continue
   if command -v uv >/dev/null 2>&1; then continue; fi          # uv supplies them below
   echo "CANNOT VERIFY  $_mod is not installed — run: pip install $_mod"
@@ -24,13 +24,13 @@ done
 # audit_env.py parses the workflows, so it needs a YAML parser. Prefer a python that has one:
 # uv can supply it without touching the system install. CI installs it directly.
 PY=python3
-if ! $PY -c "import yaml, kiwipiepy, imageio_ffmpeg, PIL" 2>/dev/null; then
+if ! $PY -c "import yaml, kiwipiepy, imageio_ffmpeg, PIL, numpy" 2>/dev/null; then
   if command -v uv >/dev/null 2>&1; then
     # Pinned to match the workflows (H0-6): pip and uv pick different "latest" on the same day
     # if left unpinned, and the tagger they load changes which lines break (시편 68:19, 10-31).
-    PY="uv run --quiet --with pyyaml --with kiwipiepy==0.24.1 --with imageio-ffmpeg --with pillow python"
+    PY="uv run --quiet --with pyyaml --with kiwipiepy==0.24.1 --with imageio-ffmpeg --with pillow --with numpy python"
   else
-    echo "FAIL  missing deps — run: pip install pyyaml kiwipiepy imageio-ffmpeg pillow"
+    echo "FAIL  missing deps — run: pip install pyyaml kiwipiepy imageio-ffmpeg pillow numpy"
     exit 1
   fi
 fi

@@ -50,8 +50,12 @@ def render_text_slide(out_path, body, header=""):
     block_h = len(lines) * line_h
     top = (ch - block_h) // 2
     for ln in lines:
+        # generate.draw_text, NOT d.text. text_w applies 자간/장평 (generate.TRACK/WIDTH) and
+        # d.text does not, so measuring with one and drawing with the other centred the line on
+        # a width 20% narrower than the glyphs actually painted — every line sat right of centre.
+        # It shipped that way on 10-25 and 11-01 and the account owner deleted the post.
         w = generate.text_w(d, ln, font)
-        d.text(((cw - w) // 2, top), ln, font=font, fill=INK)
+        generate.draw_text(img, ((cw - w) // 2, top), ln, font, INK + (255,))
         top += line_h
     if header:
         hf = generate.load_font(generate.SERIF, 30)

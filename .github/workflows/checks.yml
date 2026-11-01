@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install deps
-        run: pip install pyyaml pillow "kiwipiepy==0.24.1" imageio-ffmpeg
+        run: pip install pyyaml pillow "kiwipiepy==0.24.1" imageio-ffmpeg numpy
       # ONE entry point, and it finds tests and audits by glob. Adding a check means adding the
       # file, not remembering to add a line here too.
       - name: verify

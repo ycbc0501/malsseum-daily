@@ -69,5 +69,48 @@ class CarouselDoesNotFillTheDailySlot(unittest.TestCase):
         self.assertFalse(self._with(rows, lambda: self.watch.slot_is_filled(19)))
 
 
+class MotionLossIsAnnounced(unittest.TestCase):
+    """움직임이 조용히 사라지는 것 — 2026-10-23~31에 15건이 그렇게 나갔다.
+
+    구글이 Veo 모델을 예고 없이 내렸고 모든 호출이 404로 정지 화면 폴백에 떨어졌다.
+    아무것도 실패하지 않았으므로 아무 경보도 없었고, 8일 뒤 계정 주인이 눈으로 발견했다."""
+
+    def _ledger(self, segments_newest_first):
+        import datetime as dt
+        base = dt.datetime(2026, 10, 31, 5, 0)
+        return {str(i): {"published": (base - dt.timedelta(hours=12 * i)).isoformat(),
+                         "segments": seg}
+                for i, seg in enumerate(segments_newest_first)}
+
+    def _run(self, segments_newest_first):
+        import watch
+        with mock.patch.object(watch, "_load",
+                               return_value=self._ledger(segments_newest_first)):
+            return watch.still_run()
+
+    def test_a_single_fallback_is_not_news(self):
+        import watch
+        self.assertLess(self._run([0, 1, 1, 1]), watch.MOTION_DEAD_RUN)
+
+    def test_a_run_of_fallbacks_is(self):
+        import watch
+        self.assertGreaterEqual(self._run([0, 0, 0, 1, 1]), watch.MOTION_DEAD_RUN)
+
+    def test_the_october_outage_would_have_been_caught(self):
+        import watch
+        self.assertGreaterEqual(self._run([0] * 15 + [1]), watch.MOTION_DEAD_RUN)
+
+    def test_motion_returning_clears_it(self):
+        self.assertEqual(self._run([1, 0, 0, 0, 0]), 0)
+
+    def test_posts_without_the_field_do_not_count_as_motion_loss(self):
+        """segments 가 없는 옛 글은 0으로 **추측하지 않는다** — 세지 않고 멈춘다."""
+        import datetime as dt, watch
+        led = {"a": {"published": "2026-10-20T05:00:00", "likes": 3},
+               "b": {"published": "2026-10-21T05:00:00", "segments": 1}}
+        with mock.patch.object(watch, "_load", return_value=led):
+            self.assertEqual(watch.still_run(), 0)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -113,6 +113,10 @@ def checks():
     # C4f — the weekly carousel is a FEED post and must not fill a daily reel slot.
     yield "C4f daily_post counts only reels for a slot", (
         'media_product_type") != "REELS"' in dp)
+    yield "C4g motion loss alerts before a week of stills", (
+        "MOTION_DEAD_RUN" in wt and "def still_run" in wt)
+    yield "C4f the half-day test has one implementation per path", (
+        wt.count("timedelta(hours=12)") == 1)
     yield "C4f the watcher counts only reels too", (
         'media_product_type") != "REELS"' in wt)
     gen = (HERE / "generate.py").read_text()

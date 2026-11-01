@@ -41,6 +41,11 @@ DEAD_LIKES, DEAD_RUN = 1, 4      # 4 posts in a row at 1 like or fewer
 SLOTS = (5, 19)          # KST hours the account posts at
 GRACE_H = 2              # late by more than this and something is wrong, not just slow
 COOLDOWN_DAYS = 5        # one alert per episode, not one per day
+# Motion can disappear without anything failing. Google withdrew the Veo model on 2026-10-23
+# and every call 404'd straight into the still-image fallback; 15 reels went out motionless
+# over eight days and no alert existed to say so. A fallback records segments=0, so a run of
+# them is the signal. Three is one and a half days — long enough not to fire on one bad night.
+MOTION_DEAD_RUN = 3
 
 
 def _load(path, default):
@@ -181,10 +186,7 @@ def findings(prev=None):
             deadline = slot + datetime.timedelta(hours=GRACE_H)
             if now < deadline:
                 continue                     # not late yet
-            # The slot owns its half of the day — the same split slot_already_filled() uses.
-            lo = datetime.datetime.combine(day, datetime.time(0 if hour < 12 else 12), tzinfo=KST)
-            hi = lo + datetime.timedelta(hours=12)
-            if any(lo <= w < hi for w in published):
+            if slot_is_filled(hour, now=slot, times=published):
                 continue
             late = (now - slot).total_seconds() / 3600
             found.append((f"missed-{day}-{hour}",
@@ -202,6 +204,11 @@ def findings(prev=None):
                                   f"최근 {len(recent)}개 중앙값 {r:.0f} ← 직전 {len(base)}개 {b:.0f} "
                                   f"({r / b * 100:.0f}%)"))
 
+    still = still_run()
+    if still >= MOTION_DEAD_RUN:
+        found.append(("motion", f"⚠️ 최근 {still}개 연속 **움직임 없이** 나갔습니다 (정지 화면 폴백)\n"
+                                f"모션 공급자가 죽었는지 확인하세요 — fetch_motion.py"))
+
     tail = [l for _, l in mature[-DEAD_RUN:]]
     if len(tail) == DEAD_RUN and all(l <= DEAD_LIKES for l in tail):
         found.append(("dead", f"⚠️ 최근 {DEAD_RUN}개 연속 반응 거의 없음 (좋아요 {tail})\n"
@@ -212,12 +219,37 @@ def findings(prev=None):
 FAILED_PREFIX = "failed-"        # one key per slot that has alerted as failed
 
 
-def slot_is_filled(hour, now=None):
-    """Did the half-day this slot owns already get a post? Asked of Instagram (RULES C4)."""
+def still_run():
+    """How many of the most recent posts in a row fell back to a still (segments == 0).
+
+    Read from metrics.json rather than the API: whether motion was produced is OUR record,
+    not something Instagram reports. A post with no `segments` key predates the field and
+    stops the count rather than being guessed at."""
+    rows = []
+    for v in _load(os.path.join(HERE, "metrics.json"), {}).values():
+        when = (v.get("published") or "")[:19]
+        if when and "segments" in v:
+            rows.append((when, v.get("segments")))
+    rows.sort()
+    run = 0
+    for _when, segments in reversed(rows):
+        if segments == 0:
+            run += 1
+        else:
+            break
+    return run
+
+
+def slot_is_filled(hour, now=None, times=None):
+    """Did the half-day this slot owns already get a REEL? Asked of Instagram (RULES C4·C4f).
+
+    `times` lets a caller that already fetched the list reuse it — findings() asks about four
+    slots and must not make four API calls. It used to inline this same half-day arithmetic
+    instead, which is how one question came to have three implementations."""
     now = now or datetime.datetime.now(KST)
     lo = datetime.datetime.combine(now.date(), datetime.time(0 if hour < 12 else 12), tzinfo=KST)
     hi = lo + datetime.timedelta(hours=12)
-    return any(lo <= w < hi for w in published_times())
+    return any(lo <= w < hi for w in (published_times() if times is None else times))
 
 
 def post_failed(hour, link):
