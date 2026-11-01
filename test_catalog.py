@@ -18,6 +18,7 @@ import json
 import os
 import sys
 import tempfile
+from datetime import datetime, timedelta, timezone
 
 import ig_catalog
 import insights
@@ -136,7 +137,16 @@ metrics.FILE = os.path.join(_tmp, "metrics.json")
 insights.ACCOUNT = os.path.join(_tmp, "account.json")
 insights.FOLLOWERS = os.path.join(_tmp, "followers.json")
 
-MEDIA = {"id": "m1", "timestamp": "2026-10-06T20:00:00+0000", "media_product_type": "REELS",
+# Relative to "now", not a fixed calendar date: insights.backfill() only chases the scoped
+# reach/skip-rate endpoint for posts younger than metrics.MATURE_DAYS (_is_young()). A hardcoded
+# 2026-10-06 here passed while this file was new and silently started failing once real wall-clock
+# time carried the post past that window — the merge logic it was testing never even ran, and the
+# failure read as "the endpoint stopped winning over the plain field" when the real cause was
+# "the test post aged out and the endpoint call was skipped." (found 2026-11-01, post was 26 days
+# old by then). house style for this is test_prune.py's `now - timedelta(days=N)`.
+_YOUNG = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S+0000")
+
+MEDIA = {"id": "m1", "timestamp": _YOUNG, "media_product_type": "REELS",
          "media_type": "VIDEO", "permalink": "p", "caption": "x [요한복음 3:16]",
          "like_count": 9, "comments_count": 2, "shares_count": 3, "total_views_count": 400,
          "total_like_count": 9, "total_comments_count": 2, "reposts_count": 1,
@@ -157,7 +167,7 @@ def run_backfill(start, media=None, fresh=None):
 
 
 os.environ["IG_USER_ID"], os.environ["IG_ACCESS_TOKEN"] = "u", "t"
-ins, node = run_backfill({"published": "2026-10-06T20:00:00+0000", "ref": "요한복음 3:16",
+ins, node = run_backfill({"published": _YOUNG, "ref": "요한복음 3:16",
                           "insights": {"likes": 2}})
 check("an UNMARKED stored value is refreshed from the plain field (the 골로새서 likes=2 bug)",
       ins.get("likes") == 9)
@@ -170,16 +180,16 @@ check("plain fields are kept on the entry as inputs too",
 check("the expiring CDN thumbnail is not written into a committed ledger",
       "thumbnail_url" not in node and "caption" not in node)
 
-ins, _ = run_backfill({"published": "2026-10-06T20:00:00+0000",
+ins, _ = run_backfill({"published": _YOUNG,
                        "insights": {"views": 999, "views_api": True}})
 check("an endpoint value is NOT overwritten by a plain field", ins.get("views") == 999)
 
-ins, _ = run_backfill({"published": "2026-10-06T20:00:00+0000",
+ins, _ = run_backfill({"published": _YOUNG,
                        "insights": {"views": 260, "views_manual": True}})
 check("a hand-entered value IS replaced by the API's", ins.get("views") == 400)
 check("and its hand-entered marker is cleared", "views_manual" not in ins)
 
-ins, _ = run_backfill({"published": "2026-10-06T20:00:00+0000", "insights": {}},
+ins, _ = run_backfill({"published": _YOUNG, "insights": {}},
                       fresh={"views": 500, "reach": 233, "reels_skip_rate": 85.2})
 check("an endpoint answer wins over the plain field", ins.get("views") == 500)
 check("and is marked as the endpoint's, so the field stops overwriting it",

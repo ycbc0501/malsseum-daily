@@ -256,6 +256,26 @@ Google Veo를 가리키고 있었다. 둘 다 "무엇을 하는지"로 바꿔 �
 **날짜 있는 과거 로그(`notes/*.md`, 이 파일의 지난 항목들)는 안 건드렸다** — 그 당시 실제
 파일명이 그거였으니 역사 기록으로 맞다. `verify.sh` 전부 통과 확인 후 커밋.
 
+## 2026-11-01 밤 — `test_catalog.py`가 "곧 다시 깨질" 모양으로 고쳐져 있었다
+
+원석님이 "fix"라고만 쓰셔서, 전 턴에서 "무관한 기존 결함"이라고만 적어뒀던 `test_catalog.py`
+실패를 실제로 고쳤다. 원인은 날짜 하드코딩 — `MEDIA`와 세 군데 `run_backfill()` 호출이 전부
+`"published": "2026-10-06T20:00:00+0000"`를 썼는데, `insights.backfill()`은 `_is_young()`으로
+**`metrics.MATURE_DAYS`(14일) 안의 글만** 도달(`reach`) 같은 과금 엔드포인트를 부른다. 이 테스트가
+쓰인 10-07에는 "오늘"이었던 그 날짜가, 오늘(11-01) 기준 26일 전이라 **엔드포인트 호출 자체가
+건너뛰어졌다** — "엔드포인트가 평문 필드를 이긴다"는 검증 세 줄이 **검증하려던 코드 경로를 한
+번도 타지 않고** 실패한 것이었다. 테스트가 깨진 이유와 테스트가 말하는 이유가 달랐다.
+
+고친 법: 하드코딩된 날짜를 지우고 `_YOUNG = datetime.now(timezone.utc) - timedelta(days=1)`로
+교체 — `test_prune.py`가 이미 쓰던 양식이다(`now - timedelta(days=N)`). 이러면 테스트가 **언제
+돌려도** "어제 올라온 글"을 기술하므로 다시는 날짜 때문에 저절로 안 깨진다. `verify.sh` 전체
+재확인, 통과.
+
+**찾은 교훈:** 지난 턴에 "pre-existing, unrelated"라고 적은 것 자체는 사실이었다(내가 만든 결함이
+아니었다) — 하지만 "unrelated니까 안 고쳐도 된다"로 끝낸 게 틀렸다. 날짜 하드코딩은 **시간이
+지나면 반드시 다시 터지는 종류**라, 발견한 자리에서 고치지 않으면 다음에 또 "원인 불명 테스트
+실패"로 재발한다.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually
