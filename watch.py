@@ -86,6 +86,11 @@ def published_times():
         import post_instagram
         out = []
         for m in post_instagram.recent_media(limit=12):
+            # REELS only. The weekly carousel is a FEED post and it does NOT stand in for the
+            # daily reel — counting it made this watcher report the evening slot filled on every
+            # Sunday the carousel drifted past noon, so the missing reel was never announced.
+            if m.get("media_product_type") != "REELS":
+                continue
             stamp = (m.get("timestamp") or "")[:19]
             if stamp:
                 out.append(datetime.datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%S")

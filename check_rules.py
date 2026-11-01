@@ -108,6 +108,13 @@ def checks():
         "no sky, no horizon" in hf.INDOOR_TOP and "the room's own wall" in hf.INDOOR_TOP)
     yield "A2b the law forbids a pasted panel and a hard seam", (
         "panel, band or backdrop" in law and "straight edge cutting it into zones" in law)
+    dp = (HERE / "daily_post.py").read_text()
+    wt = (HERE / "watch.py").read_text()
+    # C4f — the weekly carousel is a FEED post and must not fill a daily reel slot.
+    yield "C4f daily_post counts only reels for a slot", (
+        'media_product_type") != "REELS"' in dp)
+    yield "C4f the watcher counts only reels too", (
+        'media_product_type") != "REELS"' in wt)
     gen = (HERE / "generate.py").read_text()
     # F-2b: one type size, and the two numbers that make it possible. The 35px fallback stays
     # in the code as a net, but every verse we ship must clear the bar at full size.

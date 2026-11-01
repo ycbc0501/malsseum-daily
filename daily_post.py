@@ -168,6 +168,13 @@ def slot_state(hour):
         today = datetime.now(KST).date()
         want_pm = hour >= 12
         for m in post_instagram.recent_media(limit=8):
+            # REELS only — the weekly carousel is a FEED post and does not fill a daily slot.
+            # It posted at 17:58 KST on 2026-11-01 (its Sunday cron drifted ~7h), this function
+            # answered "filled", and the evening reel stood down. Every Sunday since the carousel
+            # began: 10-18, 10-25, 11-01 all have a carousel and no evening reel. Nothing failed,
+            # so nothing alerted — watch.py read the same half-day and agreed.
+            if m.get("media_product_type") != "REELS":
+                continue
             ts = m.get("timestamp") or ""
             when = datetime.strptime(ts[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc).astimezone(KST)
             if when.date() == today and (when.hour >= 12) == want_pm:
