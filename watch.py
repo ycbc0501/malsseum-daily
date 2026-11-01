@@ -209,6 +209,12 @@ def findings(prev=None):
         found.append(("motion", f"⚠️ 최근 {still}개 연속 **움직임 없이** 나갔습니다 (정지 화면 폴백)\n"
                                 f"모션 공급자가 죽었는지 확인하세요 — fetch_motion.py"))
 
+    unchecked = unchecked_run()
+    if unchecked >= MOTION_DEAD_RUN:
+        found.append(("unchecked", f"⚠️ 최근 {unchecked}개 연속 **구도 검사를 통과하지 못한** 사진이 "
+                                   f"나갔습니다\n게이트가 시도를 다 쓰고 포기하는 중입니다 — "
+                                   f"프롬프트나 한계값 확인"))
+
     tail = [l for _, l in mature[-DEAD_RUN:]]
     if len(tail) == DEAD_RUN and all(l <= DEAD_LIKES for l in tail):
         found.append(("dead", f"⚠️ 최근 {DEAD_RUN}개 연속 반응 거의 없음 (좋아요 {tail})\n"
@@ -219,25 +225,37 @@ def findings(prev=None):
 FAILED_PREFIX = "failed-"        # one key per slot that has alerted as failed
 
 
-def still_run():
-    """How many of the most recent posts in a row fell back to a still (segments == 0).
+def _tail_run(field, bad):
+    """How many of the most recent posts IN A ROW have `field` == `bad`.
 
-    Read from metrics.json rather than the API: whether motion was produced is OUR record,
-    not something Instagram reports. A post with no `segments` key predates the field and
-    stops the count rather than being guessed at."""
-    rows = []
-    for v in _load(os.path.join(HERE, "metrics.json"), {}).values():
-        when = (v.get("published") or "")[:19]
-        if when and "segments" in v:
-            rows.append((when, v.get("segments")))
-    rows.sort()
+    One helper, not one function per field — this session shipped two defects whose whole
+    cause was the same question implemented twice. Read from metrics.json, because whether
+    motion was produced or the gate passed is OUR record, not something Instagram reports.
+    A post that predates the field stops the count rather than being guessed at: absence of
+    evidence is not evidence, and a silent zero here would invent an outage."""
+    rows = sorted((v.get("published") or "", v.get(field))
+                  for v in _load(os.path.join(HERE, "metrics.json"), {}).values()
+                  if (v.get("published") or "") and field in v)
     run = 0
-    for _when, segments in reversed(rows):
-        if segments == 0:
-            run += 1
-        else:
+    for _when, value in reversed(rows):
+        if value != bad:
             break
+        run += 1
     return run
+
+
+def still_run():
+    """Posts in a row that fell back to a still image (segments == 0)."""
+    return _tail_run("segments", 0)
+
+
+def unchecked_run():
+    """Posts in a row whose picture the composition gate had REJECTED (gate_passed False).
+
+    The gate can run out of tries and ship anyway — that is deliberate, an empty slot is worse
+    than an imperfect picture. But it means "what we publish has passed" is false and nobody
+    is told. Across the ledger 37 of 79 went out this way."""
+    return _tail_run("gate_passed", False)
 
 
 def slot_is_filled(hour, now=None, times=None):

@@ -88,6 +88,32 @@ class MotionLossIsAnnounced(unittest.TestCase):
                                return_value=self._ledger(segments_newest_first)):
             return watch.still_run()
 
+    def _gate_run(self, passed_newest_first):
+        import datetime as dt, watch
+        base = dt.datetime(2026, 10, 31, 5, 0)
+        led = {str(i): {"published": (base - dt.timedelta(hours=12 * i)).isoformat(),
+                        "gate_passed": p}
+               for i, p in enumerate(passed_newest_first)}
+        with mock.patch.object(watch, "_load", return_value=led):
+            return watch.unchecked_run()
+
+    def test_a_rejected_picture_shipping_three_times_is_announced(self):
+        import watch
+        self.assertGreaterEqual(self._gate_run([False, False, False, True]),
+                                watch.MOTION_DEAD_RUN)
+
+    def test_one_rejected_picture_is_not_news(self):
+        import watch
+        self.assertLess(self._gate_run([False, True, True]), watch.MOTION_DEAD_RUN)
+
+    def test_the_two_counters_do_not_share_a_field(self):
+        """같은 질문을 두 번 구현하지 않는다 — 한 헬퍼에 필드만 다르다."""
+        import watch, inspect
+        src = inspect.getsource(watch)
+        self.assertEqual(src.count("def _tail_run"), 1)
+        self.assertIn('_tail_run("segments", 0)', src)
+        self.assertIn('_tail_run("gate_passed", False)', src)
+
     def test_a_single_fallback_is_not_news(self):
         import watch
         self.assertLess(self._run([0, 1, 1, 1]), watch.MOTION_DEAD_RUN)
