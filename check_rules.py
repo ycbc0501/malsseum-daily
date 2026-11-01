@@ -11,7 +11,7 @@ import re
 import sys
 
 import daily_post
-import fetch_higgsfield as hf
+import fetch_image as hf
 import generate
 
 HERE = pathlib.Path(__file__).parent
@@ -151,7 +151,7 @@ def checks():
     yield "A7 dread is still banned", all(
         w in hf.QUALITY for w in ("gloomy", "ominous", "bleak"))
     yield "A  a rejected render retries on a different scene", "index + a - 1" in (
-        HERE / "fetch_higgsfield.py").read_text()
+        HERE / "fetch_image.py").read_text()
     yield "B1 verses are verbatim (generated, not hand-written)", (HERE / "build_verses.py").exists()
     yield "B3 pool lasts a year at 2/day", len(verses) / 2 > 330
     yield "C2 reel queue", "concurrency:" in daily
@@ -216,16 +216,16 @@ def checks():
     # measurement. The property, not the constant, is what is enforced here.
     yield "F2c clearance is measured against the picture's own busyness", (
         hasattr(hf, "CLEAR_RISE") and 0.0 < hf.CLEAR_RISE < 1.0
-        and "quiet + CLEAR_RISE" in (HERE / "fetch_higgsfield.py").read_text())
+        and "quiet + CLEAR_RISE" in (HERE / "fetch_image.py").read_text())
     # …and the quiet reference must be read from above the verse block (25.6%), so the number does
     # not change depending on whether text has been composited.
     yield "F2c the quiet reference is read above the verse block", (
-        "int(h * 0.20)" in (HERE / "fetch_higgsfield.py").read_text())
+        "int(h * 0.20)" in (HERE / "fetch_image.py").read_text())
     # A5b — the seam gate must be MEASURED and must run even when the model said yes, because on
     # 2026-09-14 the model said yes to a stacked composite and it shipped.
     yield "A5b stacked composites are measured, not asked about", hasattr(hf, "has_seam")
     yield "A5b the seam gate runs even when the model approves", (
-        "if ok and has_seam(dest)" in (HERE / "fetch_higgsfield.py").read_text())
+        "if ok and has_seam(dest)" in (HERE / "fetch_image.py").read_text())
     yield "A5b both thresholds must trip", (
         hf.SEAM_JUMP >= 5.0 and hf.SEAM_RATIO >= 20.0)
     # F2a — seam_score is blind between 18% and 45% of the height, which is exactly where
@@ -233,7 +233,7 @@ def checks():
     # 32.1% and has_seam reported ok. A second gate covers that band by measuring STRAIGHTNESS.
     yield "F2a a ruled line across the top is measured", hasattr(hf, "has_ruled_line")
     yield "F2a the ruled-line gate runs even when the model approves", (
-        "if ok and has_ruled_line(dest)" in (HERE / "fetch_higgsfield.py").read_text())
+        "if ok and has_ruled_line(dest)" in (HERE / "fetch_image.py").read_text())
     # The window has to still cover the band seam_score skips, or the blind spot is back.
     yield "F2a the ruled-line window covers seam_score's blind band", (
         hf.RULED_FROM <= 0.18 and hf.RULED_UPTO >= 0.40)
@@ -280,7 +280,7 @@ def checks():
         and chuseok.startswith(plain) and chuseok.endswith("풍성한 한가위 보내세요."))
     yield "B5b the greeting never reaches the frame", not any(
         any(g in (HERE / f).read_text() for g in set(daily_post.GREETINGS.values()))
-        for f in ("generate.py", "content_law.py", "fetch_veo.py", "fetch_higgsfield.py"))
+        for f in ("generate.py", "content_law.py", "fetch_motion.py", "fetch_image.py"))
     yield "B5 the line is one quiet sentence, not a sermon", (
         reflection.MAX_CHARS <= 60 and reflection._clean("오늘도 힘내세요.") is None
         and reflection._clean("이 말씀을 붙들고 오늘을 삽시다.") is None)
@@ -448,16 +448,16 @@ def checks():
     # G-3.8 The probe must say out loud that its ❌ is not evidence a metric is unavailable.
     yield "G3.8 the probe warns that (#10) cannot prove absence", (
         "NOT 'this metric does not exist'" in inspect.getsource(_pr.show))
-    import fetch_veo
+    import fetch_motion
     yield "E3 retries escalate the demand", (
-        len(fetch_veo.CALMER) == 3 and "frozen photograph" in fetch_veo.CALMER[2].lower()
-        and daily_src.count("fetch_veo.CALMER[attempt - 1]") == 2)
+        len(fetch_motion.CALMER) == 3 and "frozen photograph" in fetch_motion.CALMER[2].lower()
+        and daily_src.count("fetch_motion.CALMER[attempt - 1]") == 2)
     yield "E8 shipped motion is recorded", '"motion": round(ov, 3)' in daily_src
     # A gate that silently stopped running must be a number, not a log line. Posts ship with
     # gate_ran / gate_skipped so "was this checked at all" is answerable afterwards.
     yield "H0c a gate that never ran is recorded and warned about", (
         '"gate_ran"' in daily_src and "never reached the model" in daily_src
-        and "GATE_RAN" in (HERE / "fetch_higgsfield.py").read_text())
+        and "GATE_RAN" in (HERE / "fetch_image.py").read_text())
     # The clip inspection must see the RAW Veo output. If it ever ran after the verse was
     # composited it would reject every take for containing writing — verified by measurement.
     yield "A2f clip inspection runs before the verse is composited", (

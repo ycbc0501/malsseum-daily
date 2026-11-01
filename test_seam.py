@@ -22,7 +22,7 @@ import tempfile
 
 from PIL import Image
 
-import fetch_higgsfield as hf
+import fetch_image as hf
 
 W, H = 540, 960
 

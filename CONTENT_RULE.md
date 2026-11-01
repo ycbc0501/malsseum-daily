@@ -36,7 +36,7 @@ a spectacular photograph competes with the verse and wins. Reference: **@dailyma
 - **A missed post is never silent:** any failed/cancelled run opens a GitHub issue.
 
 ## 2. Themes — at least 20, always rotating, never overlapping
-- `fetch_higgsfield.SCENE_GROUPS` holds **≥20 distinct visual themes** (currently 36) in two families:
+- `fetch_image.SCENE_GROUPS` holds **≥20 distinct visual themes** (currently 36) in two families:
   - **Quiet nature & architecture:** sea, forest path, cathedral, misty mountain, rainy street, wheat field, reflection lake, lighthouse, snowfall, canal town, chapel, wilderness, river, archway/ruins, blossom, starfield, harbor, winter trees, storm sky, rain pond, shore, waterfall, dusk sky (어스름), candle, still water.
   - **Everyday & intimate** (added 2026-07-30, the @dailymayim register): window light, bedroom, lamp-lit room, flowers in a vase, curtain, desk, café table, alley, city at night, field flowers, country road. This family exists **because it lets the verse lead** — an ordinary room has far less to say than a monumental landscape.
 - **Base prompts name the SUBJECT and weather ONLY — never the time of day, never the brightness.**
@@ -109,7 +109,7 @@ spectacular. If a render is impressive, it is wrong.
 - **Composition gate:** `check_composition()` (gemini-2.5-pro, `_CHECK_PROMPT`) inspects every render for vertical-mirror / stacked-duplicate / wrong-reflection / fake-CGI / warped structures; `generate_checked()` regenerates up to 3×. Best-effort (never blocks a post on a flaky check), but it is the substitute for a human eye — keep it strict without false-flagging normal single-horizon landscapes.
 
 ## 5. Motion — real-time, calm, never fast
-- Veo prompt (`fetch_veo.py`) forces **real-time 1× playback, ~8s, camera locked, clouds barely moving**. No artificial slow-mo / interpolation / frozen-sky compositing (they bug out and look weird).
+- Veo prompt (`fetch_motion.py`) forces **real-time 1× playback, ~8s, camera locked, clouds barely moving**. No artificial slow-mo / interpolation / frozen-sky compositing (they bug out and look weird).
 - **Motion gate:** `make_video.motion_score()` with **`MOTION_MAX=2.0`, `SKY_MAX=0.45`**. Up to **three** Veo attempts, **keeping the calmest** (ranked on the worse of the two normalised axes) rather than the first one that squeaks under the bar; still too fast → fall back to a **calm still**. A frantic clip can never post itself.
 - **Tightened 2026-08-05.** The old 2.6/0.7 sat roughly twice the measured calm reference (1.7/0.35) and let visibly racing clouds and churning water reach the feed. Keeping the calmest of three attempts is what makes the tighter bar affordable — without it, a stricter threshold only buys more still fallbacks instead of better motion.
 - The rule-6 continuation chain seeds from that **calmest** take, not from whichever attempt Veo generated last — otherwise a rejected frantic opening would still set the motion for every segment after it.

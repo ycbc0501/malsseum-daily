@@ -14,7 +14,7 @@ import tempfile
 
 from PIL import Image, ImageDraw
 
-import fetch_higgsfield as F
+import fetch_image as F
 
 FAIL = []
 

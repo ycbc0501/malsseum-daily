@@ -9,7 +9,7 @@ butts it against the scene — which is exactly what shipped on 09-14 and 09-17.
 prompt had never been given the same laws at all: no mention of hands, of CGI, of physics, or of
 looking like a real photograph. So Veo walked people into frame and poured water sideways.
 
-The rules live here, once. `fetch_higgsfield` (the still) and `fetch_veo` (the motion) both build
+The rules live here, once. `fetch_image` (the still) and `fetch_motion` (the motion) both build
 their prompts from LAW, so a rule added here reaches both. The human-readable statement of the same
 laws is RULES.md section A; check_rules.py asserts the two agree.
 """
@@ -33,7 +33,7 @@ LAW = (
 # Terms for the negativePrompt field, where the model supports one. Same laws, stated as things to
 # exclude — a negative prompt is a different lever from an instruction and both are worth using.
 # For the negativePrompt field. Kept short and non-overlapping: this used to be concatenated onto
-# fetch_veo.NEG and the two listed "text, people, watermark, logo" twice over.
+# fetch_motion.NEG and the two listed "text, people, watermark, logo" twice over.
 NEG_TERMS = (
     "text, letters, numbers, signage, watermark, logo, "
     "person, people, face, hands, limbs, silhouette, crowd, reflection of a person, "

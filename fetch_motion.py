@@ -11,7 +11,7 @@ supports generateContent and cannot make video at all). The error was never loud
 existing except-and-fall-back-to-a-zoom-still swallowed it cleanly, so 15 reels in a row shipped as
 motionless stills with nobody told (STRATEGY.md §18).
 
-Now Higgsfield — the SAME account already used for the still backgrounds (fetch_higgsfield.py),
+Now Higgsfield — the SAME account already used for the still backgrounds (fetch_image.py),
 same HF_API_KEY/HF_API_SECRET, no new credential. Their Wan 2.7 image-to-video model
 (api.higgsfield.ai/wan/v2.7/image-to-video) takes the still, a motion prompt and a negative
 prompt, and returns an mp4 — verified for real on 2026-10-31 with output/_bg.png: 8.03s,
@@ -20,13 +20,13 @@ locked, composition unchanged frame 0 → 4 → 7. $0.05/s pay-as-you-go, no sub
 of Veo's ₩138/s (metrics.VEO_WON_PER_SECOND; update that constant once a real invoice replaces the
 quoted rate).
 
-    python3 fetch_veo.py still.png out.mp4
+    python3 fetch_motion.py still.png out.mp4
 """
 
 import sys
 import time
 
-import fetch_higgsfield as hf   # reuse _credentials() — same Higgsfield account as the stills
+import fetch_image as hf   # reuse _credentials() — same Higgsfield account as the stills
 
 APPLICATION = "wan/v2.7/image-to-video"
 

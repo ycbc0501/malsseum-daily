@@ -67,7 +67,7 @@ def main():
     # 5. Caption only. Not one prompt or render module may carry the string — LAW rule 1 forbids
     #    writing in frame, and this feature must not have quietly become an exception to it.
     here = os.path.dirname(os.path.abspath(__file__))
-    for f in ("generate.py", "content_law.py", "fetch_veo.py", "fetch_higgsfield.py",
+    for f in ("generate.py", "content_law.py", "fetch_motion.py", "fetch_image.py",
               "make_video.py", "carousel.py"):
         p = os.path.join(here, f)
         if os.path.exists(p) and any(g in open(p, encoding="utf-8").read()

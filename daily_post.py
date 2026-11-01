@@ -29,7 +29,7 @@ from datetime import datetime, timedelta, timezone
 import generate
 import hashtags
 import post_instagram
-import fetch_higgsfield
+import fetch_image
 import fetch_videos
 import make_video
 
@@ -209,7 +209,7 @@ def clip_survives_inspection(clip, tag=""):
 
     Best-effort: any failure to inspect returns True, because a flaky checker must not cost a post.
     """
-    import fetch_higgsfield
+    import fetch_image
     dur = make_video._duration(clip) or 8.0
 
     # Measured first, because the model does not see this one. A vision check is given ONE frame
@@ -244,7 +244,7 @@ def clip_survives_inspection(clip, tag=""):
         png = os.path.join(generate.OUT_DIR, f"_inspect_{where}.png")
         try:
             make_video.frame_at(clip, when, png)
-            ok, why = fetch_higgsfield.check_composition(png)
+            ok, why = fetch_image.check_composition(png)
         except Exception as e:
             print(f"  clip inspection skipped at {where} ({e})")
             continue
@@ -547,7 +547,7 @@ def main():
     post_i = state.get("post_i", 0)   # monotonic counter → rotates the light/angle variation
     scene_cats = state.setdefault("used_scene_cats", [])
     # Skip forward past any theme used in the last 2 posts so the feed never clusters (e.g. 3 water scenes).
-    scene_i, scene_cat = fetch_higgsfield.pick_scene(scene_i, scene_cats)
+    scene_i, scene_cat = fetch_image.pick_scene(scene_i, scene_cats)
     # The verse must land on ONE precisely-contrasting tone. COMPOSE asks the model for a flat even
     # area, but a prompt is a request, not a guarantee — so we MEASURE the render under the real glyph
     # mask and regenerate when it fails. Same shape as the composition and motion gates: the pipeline
@@ -586,10 +586,10 @@ def main():
             # (a café sign renders as broken lettering no matter how often you redraw it), so it
             # reports which scene actually shipped and the ledger records THAT, not the one we asked
             # for — otherwise the same scene comes round again far too early.
-            bg, scene_i, gate_passed = fetch_higgsfield.generate_checked(
+            bg, scene_i, gate_passed = fetch_image.generate_checked(
                 bg, scene_i, placement, aspect="9:16", var_t=post_i,
                 deadline_s=IMAGE_DEADLINE_S)
-            scene_cat = fetch_higgsfield.SCENE_CATS[scene_i]
+            scene_cat = fetch_image.SCENE_CATS[scene_i]
             ok, why, stats = generate.text_area_ok(bg, ink, canvas=generate.REEL)
             print(f"text-area gate attempt {attempt}: {why} "
                   f"(contrast {stats['contrast']}, spread {stats['spread']}, mean {stats['mean']})")
@@ -653,7 +653,7 @@ def main():
     motion_attempts = 0
     spoiled = False
     veo_calls = 0            # billed seconds = this × 8; the dominant cost line
-    # NO `import fetch_higgsfield` here. The module is imported at the top of the file, and a
+    # NO `import fetch_image` here. The module is imported at the top of the file, and a
     # local import anywhere in this function makes the name local for the WHOLE function —
     # so pick_scene() ~90 lines above raised UnboundLocalError and every run from 09-18 19:00
     # to 09-19 19:00 died after building the reel. Python accepts this at compile time; only
@@ -665,7 +665,7 @@ def main():
     # it per segment is what makes the next such question measurable instead of reconstructed.
     veo_attempts = []
     try:
-        import fetch_veo
+        import fetch_motion
         clip = os.path.join(generate.OUT_DIR, "_veo.mp4")
         best = os.path.join(generate.OUT_DIR, "_veo_best.mp4")
         ov = sky = 99.0
@@ -674,9 +674,9 @@ def main():
         # ONE take unless something real is wrong with it. VEO_TRIES is a ceiling for the case
         # where the clip is genuinely defective, not a routine cost.
         for attempt in range(1, VEO_TRIES + 1):
-            # Escalate the demand each try rather than redraw the same request — see fetch_veo.CALMER.
+            # Escalate the demand each try rather than redraw the same request — see fetch_motion.CALMER.
             motion_attempts = attempt
-            fetch_veo.animate(bg, clip, prompt=fetch_veo.MOTION + fetch_veo.CALMER[attempt - 1])
+            fetch_motion.animate(bg, clip, prompt=fetch_motion.MOTION + fetch_motion.CALMER[attempt - 1])
             o, s = make_video.motion_score(clip)
             print(f"veo motion attempt {attempt}: overall {o:.2f}, sky {s:.2f}")
             # A clip is only as calm as its WORST axis, so rank on the larger of the two ratios.
@@ -694,7 +694,7 @@ def main():
         # A scene Veo spoils every time would otherwise ship silently: the best-of-N still picks
         # one, and nothing said that all of them broke a rule. Recorded as well as printed, so
         # "which scenes can Veo not animate cleanly" becomes answerable from metrics.json.
-        ran, skipped = fetch_higgsfield.GATE_RAN
+        ran, skipped = fetch_image.GATE_RAN
         if ran == 0 and skipped:
             print(f"WARNING: the composition gate never reached the model ({skipped} attempts all "
                   f"errored) — this post shipped with NO image check at all")
@@ -745,8 +745,8 @@ def main():
                     seg_tries = 0
                     for attempt in range(1, CHAIN_TRIES + 1):
                         seg_tries = attempt
-                        fetch_veo.animate(seed, nxt, prompt=fetch_veo.CONTINUE + fetch_veo.MOTION
-                                          + fetch_veo.CALMER[attempt - 1])
+                        fetch_motion.animate(seed, nxt, prompt=fetch_motion.CONTINUE + fetch_motion.MOTION
+                                          + fetch_motion.CALMER[attempt - 1])
                         o, sk = make_video.motion_score(nxt)
                         print(f"veo segment {seg} attempt {attempt}: overall {o:.2f}, sky {sk:.2f}")
                         seg_clean = clip_survives_inspection(nxt, tag=f"segment {seg} attempt {attempt} ")
@@ -768,7 +768,7 @@ def main():
             # FORWARD ONLY, native speed. Never boomerang/reverse the clip — playing footage backwards
             # is exactly the kind of artificial post-processing that is banned (water and light running
             # backwards reads as fake). Length comes from Veo itself, not from replaying frames.
-            veo_calls = fetch_veo.CALLS[0]
+            veo_calls = fetch_motion.CALLS[0]
             joined = make_video.chain_clips(
                 segments, os.path.join(generate.OUT_DIR, "_veo_long.mp4"))
             # Cap at the hymn. Four good segments run ~31s, just past Lyria's 30s clip, and the
@@ -789,7 +789,7 @@ def main():
             print(f"reel(still-fallback): {verse['ref']}")
     except Exception as e:
         try:
-            veo_calls = fetch_veo.CALLS[0]
+            veo_calls = fetch_motion.CALLS[0]
         except Exception:
             pass
         print(f"veo motion failed ({e}) → background-zoom still")
@@ -848,12 +848,12 @@ def main():
                    # False means the picture that shipped had been REJECTED by the gate — the one
                    # number that says whether "what we publish has passed" actually held.
                    "gate_passed": bool(gate_passed),
-                   "gate_ran": fetch_higgsfield.GATE_RAN[0],
-                   "gate_skipped": fetch_higgsfield.GATE_RAN[1],
+                   "gate_ran": fetch_image.GATE_RAN[0],
+                   "gate_skipped": fetch_image.GATE_RAN[1],
                    # Which image model produced the picture. The pro model goes 503 under
                    # load and we fall back to a softer one; without this the drop in
                    # quality would be invisible and blamed on the prompt.
-                   "image_model": fetch_higgsfield.IMAGE_MODEL_USED[0],
+                   "image_model": fetch_image.IMAGE_MODEL_USED[0],
                    "scene": scene_cat,
                    # The follow CTA left the caption on 2026-08-01 (rule 10). metrics.report()
                    # groups on this, so the change is answerable later instead of argued about;

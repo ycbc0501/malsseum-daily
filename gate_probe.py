@@ -18,7 +18,7 @@ billed, so the default is small.
 import os
 import sys
 
-import fetch_higgsfield as hf
+import fetch_image as hf
 
 
 def main():

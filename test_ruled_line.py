@@ -59,7 +59,7 @@ import tempfile
 
 from PIL import Image
 
-import fetch_higgsfield as hf
+import fetch_image as hf
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "testdata")

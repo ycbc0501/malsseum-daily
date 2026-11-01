@@ -49,7 +49,7 @@ def shadowed_imports():
     the attribute exists, the module imports, the file compiles. Only running that exact line
     finds it.
 
-    It cost four consecutive posts on 2026-09-18/19: daily_post.main() imported fetch_higgsfield
+    It cost four consecutive posts on 2026-09-18/19: daily_post.main() imported fetch_image
     ninety lines below its first use, so every run built the whole reel — image, Veo, music —
     and then died before publishing."""
     for path in sorted(HERE.glob("*.py")):

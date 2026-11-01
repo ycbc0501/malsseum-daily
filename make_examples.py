@@ -9,7 +9,7 @@
 다시 짜게 된다. 2026-10 세션에서만 다섯 번 그랬다. 샘플은 **실제 렌더 경로**
 (`generate.render_text_overlay`)를 타야 의미가 있으므로 여기서 한 번만 짜 둔다.
 
-배경은 `--bg`로 준 폴더에서 재사용하고, 모자라면 `fetch_higgsfield`로 만든다
+배경은 `--bg`로 준 폴더에서 재사용하고, 모자라면 `fetch_image`로 만든다
 (이미지 1장 ≈ ₩250, 영상은 만들지 않는다 — 조판을 보는 데는 정지 화면이면 된다).
 """
 import argparse
@@ -59,18 +59,18 @@ def _backgrounds(folder, need):
     paths = [os.path.join(folder, f) for f in have][:need]
     if len(paths) >= need:
         return paths
-    import fetch_higgsfield
+    import fetch_image
     state_i = 0
     with contextlib.suppress(Exception):
         with open(os.path.join(HERE, "state.json")) as f:
             state_i = json.load(f).get("scene_i", 0)
     for n in range(len(paths), need):
         out = os.path.join(folder, f"bg{n + 1:02d}.png")
-        idx = (state_i + n * 13) % len(fetch_higgsfield.SCENES)
+        idx = (state_i + n * 13) % len(fetch_image.SCENES)
         with contextlib.redirect_stdout(io.StringIO()):
-            fetch_higgsfield.generate_background(out, idx, ("center", "top"),
+            fetch_image.generate_background(out, idx, ("center", "top"),
                                                  aspect="9:16", var_t=n * 5)
-        print(f"  배경 {n + 1}/{need}  {fetch_higgsfield.SCENE_CATS[idx]}", flush=True)
+        print(f"  배경 {n + 1}/{need}  {fetch_image.SCENE_CATS[idx]}", flush=True)
         paths.append(out)
     return paths
 

@@ -104,7 +104,7 @@ def published_kst(entry):
 # Google Veo died 2026-10-23 (model pulled from the API with no warning — every call 404'd and
 # fell back to a motionless still for 15 posts straight before anyone noticed, STRATEGY.md §18).
 # Replaced 2026-10-31 with Higgsfield's Wan 2.7 image-to-video (same account as the stills,
-# fetch_veo.py) at its quoted pay-as-you-go rate: $0.05/s, no subscription discount assumed, at
+# fetch_motion.py) at its quoted pay-as-you-go rate: $0.05/s, no subscription discount assumed, at
 # ~₩1,333/$ (2026-10-30 mid-market). This is a QUOTED list rate, not an invoiced one yet — the old
 # ₩193,659/1,400s constant below WAS an actual September invoice; this isn't, so recalibrate once
 # a real Higgsfield bill arrives.

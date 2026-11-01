@@ -13,7 +13,7 @@ import json
 import sys
 import urllib.request
 
-import fetch_higgsfield as hf   # reuse _gemini_key()
+import fetch_image as hf   # reuse _gemini_key()
 
 MODEL = "lyria-3-clip-preview"   # 30s instrumental clip
 API = "https://generativelanguage.googleapis.com/v1beta"

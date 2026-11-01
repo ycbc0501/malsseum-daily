@@ -101,7 +101,7 @@ def line(verse):
     # again before giving up — the same reason the publish path retries 2207076.
     for attempt in range(ATTEMPTS):
         try:
-            import fetch_higgsfield as hf
+            import fetch_image as hf
             body = {"contents": [{"parts": [{"text": _PROMPT.format(
                         text=verse["text"], ref=verse["ref"], max=MAX_CHARS)}]}],
                     "generationConfig": {"temperature": 0.9, "maxOutputTokens": 4096}}

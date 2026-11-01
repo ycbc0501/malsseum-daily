@@ -239,8 +239,25 @@ boost_eligibility_info={"eligible_to_boost":true}  media_audio_type  is_shared_t
 **`watch.py`에 "Veo 연속 실패/폴백" 경보가 아직 없다** — 이번처럼 8일을 조용히 흘려보내지 않을
 유일한 방법인데 아직 손대지 않았다.
 
-Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_higgsfield.py` (image + gates),
-`fetch_veo.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
+## 2026-11-01 — 이름 부채 정리: `fetch_higgsfield.py`→`fetch_image.py`, `fetch_veo.py`→`fetch_motion.py`
+
+10-31 로그에 적어둔 "남은 것"을 처리했다. 두 파일 다 **공급자 이름이 아니라 역할 이름**으로
+바꿨다 — `fetch_higgsfield.py`는 실제로는 **Gemini**로 이미지를 생성하고(기본 `MODEL = "gemini"`,
+`gemini-3-pro-image`), Higgsfield는 한 번도 안 쓰이는 폴백 경로(`soul`/`flux`)로만 남아 있었다.
+반대로 `fetch_veo.py`는 10-23 이후 **Higgsfield** Wan 2.7로 모션을 만드는데 이름은 옛 공급자
+Google Veo를 가리키고 있었다. 둘 다 "무엇을 하는지"로 바꿔 혼동의 뿌리를 없앴다
+(원석님이 "Higgsfield도 쓰나, Gemini만 쓰는 줄 알았다"고 물은 게 바로 이 이름 때문이었다).
+
+함수·상수 이름은 전부 그대로다(`generate_background`, `animate`, `MOTION`/`CALMER`/`CALLS` 등) —
+바뀐 건 **파일명과 import 문뿐**이다. `daily_post.py`·`check_rules.py`·`test_chuseok.py`·
+`gate_probe.py`·`test_seam.py`·`reflection.py`·`make_examples.py`·`fetch_lyria.py`·
+`test_ruled_line.py`·`test_clearance.py`·`content_law.py`·`audit_refs.py`·`metrics.py`
+13곳 전부 기계적으로 치환, `RULES.md`·`CONTENT_RULE.md`의 모듈 참조도 같이 갱신했다.
+**날짜 있는 과거 로그(`notes/*.md`, 이 파일의 지난 항목들)는 안 건드렸다** — 그 당시 실제
+파일명이 그거였으니 역사 기록으로 맞다. `verify.sh` 전부 통과 확인 후 커밋.
+
+Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
+`fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually
 publishes in CI). No-repeat ledgers live in `state.json`; performance in `metrics.json`
 (`metrics.py`, backfilled by `insights.py`); comment replies in `comments.json`.
