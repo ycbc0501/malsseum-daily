@@ -5,6 +5,17 @@ This repo runs a fully hands-off Korean daily Bible-verse Instagram account for 
 The numeric `IG_USER_ID` is unchanged by the rename, so nothing in the API path breaks;
 the handle is never hardcoded (`post_instagram.username()`).
 
+## ⛔ 먼저 — 절대 건드리지 않는 것
+
+**`wonsukwaynelee` 는 계정 주인의 개인 인스타그램 계정입니다. 프로페셔널 계정으로
+전환하지 않습니다. 어떤 상황에서도. 전환은 되돌릴 수 없습니다.**
+
+2026-11-02에 누를 뻔했습니다 — Instagram 비즈니스 로그인 승인 주소는 **브라우저의 활성
+세션**을 그대로 쓰고 어느 계정인지 묻지 않습니다. 활성 계정이 `wonsukwaynelee` 였고
+개인 계정이라 「Change to professional account?」 버튼이 떴습니다.
+**승인 주소를 열기 전에 활성 계정이 @saintseoul_studio 인지 먼저 확인하십시오.**
+자세한 것과 그 밖의 되돌릴 수 없는 계정 변경은 [RULES.md](RULES.md) **0절**.
+
 **Before making ANY change to the posting pipeline, read [RULES.md](RULES.md) — the single
 authority — and verify every rule there still holds after your change.** If a rule intentionally
 changes, update RULES.md in the same commit so it never drifts from the code. New rules go in

@@ -108,6 +108,16 @@ def checks():
         "no sky, no horizon" in hf.INDOOR_TOP and "the room's own wall" in hf.INDOOR_TOP)
     yield "A2b the law forbids a pasted panel and a hard seam", (
         "panel, band or backdrop" in law and "straight edge cutting it into zones" in law)
+    # Section 0 — the account that must never be touched. Enforced as PRESENCE in both files,
+    # because it cannot be enforced in code: nothing in this repo converts an account. What it
+    # guards against is a button being clicked, so the rule has to sit where it is read first.
+    rules_md = (HERE / "RULES.md").read_text()
+    claude_md = (HERE / "CLAUDE.md").read_text()
+    yield "0-1 wonsukwaynelee is named as never-touch in RULES.md", (
+        "wonsukwaynelee" in rules_md and "되돌릴 수 없" in rules_md)
+    yield "0-1 and in CLAUDE.md, ahead of the pipeline instructions", (
+        "wonsukwaynelee" in claude_md
+        and claude_md.index("wonsukwaynelee") < claude_md.index("read [RULES.md]"))
     dp = (HERE / "daily_post.py").read_text()
     wt = (HERE / "watch.py").read_text()
     # C4f — the weekly carousel is a FEED post and must not fill a daily reel slot.
