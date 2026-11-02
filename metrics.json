@@ -4420,6 +4420,35 @@
   "veo_calls": 2,
   "veo_seconds": 16.0
  },
+ "18100188113652255": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-11-02",
+  "duration": 15.37,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 14,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 2.35,
+  "motion_attempts": 1,
+  "motion_sky": 0.787,
+  "published": "2026-11-02T22:20:38+09:00",
+  "ref": "고린도후서 1:5",
+  "scene": "reflection_lake",
+  "segments": 2,
+  "text_contrast": 10.21,
+  "text_spread": 3.3,
+  "theme": "위로",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18100530731167530": {
   "insights": {
    "comments": 1,
