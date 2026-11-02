@@ -5553,6 +5553,35 @@
   "veo_calls": 3,
   "veo_seconds": 24.0
  },
+ "18115847411335702": {
+  "clip_novelty": 1.11,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-11-03",
+  "duration": 7.68,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 16,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 1.153,
+  "motion_attempts": 1,
+  "motion_sky": 1.102,
+  "published": "2026-11-03T08:09:50+09:00",
+  "ref": "베드로전서 2:19",
+  "scene": "bedroom",
+  "segments": 1,
+  "text_contrast": 5.66,
+  "text_spread": 13.5,
+  "theme": "위로",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18116084531097948": {
   "clip_spoiled": false,
   "cta_in_caption": false,
