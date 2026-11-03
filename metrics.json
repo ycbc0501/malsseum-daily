@@ -7504,6 +7504,35 @@
   "veo_calls": 3,
   "veo_seconds": 24.0
  },
+ "18153222415555825": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-11-04",
+  "duration": 15.37,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 18,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 1.512,
+  "motion_attempts": 1,
+  "motion_sky": 1.461,
+  "published": "2026-11-04T06:00:24+09:00",
+  "ref": "마태복음 9:36",
+  "scene": "lamp_room",
+  "segments": 2,
+  "text_contrast": 4.68,
+  "text_spread": 14.9,
+  "theme": "위로",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18155567446458791": {
   "clip_novelty": 0.0,
   "clip_spoiled": false,
