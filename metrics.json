@@ -1972,6 +1972,35 @@
   "veo_calls": 6,
   "veo_seconds": 48.0
  },
+ "18000167955015587": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-11-03",
+  "duration": 7.68,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 11,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 3.923,
+  "motion_attempts": 1,
+  "motion_sky": 1.402,
+  "published": "2026-11-03T21:49:17+09:00",
+  "ref": "예레미야 31:17",
+  "scene": "wheat_field",
+  "segments": 1,
+  "text_contrast": 9.53,
+  "text_spread": 6.7,
+  "theme": "위로",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18001987589996412": {
   "cta_in_caption": false,
   "date": "2026-08-28",
