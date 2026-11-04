@@ -6740,6 +6740,35 @@
   "ref": "시편 9:9",
   "theme": "위로"
  },
+ "18129660362487831": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-11-04",
+  "duration": 7.68,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 17,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 1.77,
+  "motion_attempts": 1,
+  "motion_sky": 1.167,
+  "published": "2026-11-04T22:02:49+09:00",
+  "ref": "로마서 8:18",
+  "scene": "snowfall",
+  "segments": 1,
+  "text_contrast": 2.86,
+  "text_spread": 7.1,
+  "theme": "위로",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18129777199780094": {
   "cta_in_caption": false,
   "date": "2026-09-13",
