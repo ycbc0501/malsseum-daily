@@ -445,6 +445,60 @@ def _weave():
 
 SCENES, SCENE_CATS = _weave()
 
+# SCENE_STRUCTURE — a coarser grouping than SCENE_GROUPS, by what the picture READS AS to a
+# viewer rather than by what prompt wrote it. 70 category keys avoid repeating EACH OTHER
+# (pick_scene below), but many of them are compositionally the same shot: `sea`, `shore`,
+# `harbor`, `reflection_lake`, `river`, `waterfall`, `rain_pond`, `still_water` are nine distinct
+# dict keys that all render as "a wide body of water under open sky" — nothing stops them running
+# back-to-back. That is exactly what the account owner flagged on 2026-11-04 looking at the live
+# grid: "같은구조의 방 바다 들판 좀 따분한거같은데" (room/ocean/field, same structure, repeating) —
+# even though the no-repeat ledger was working correctly BY CATEGORY the whole time. The 2026-09
+# fix for "다 무슨 방에서" (all rooms) only balanced indoor vs outdoor ratio (_weave above); it never
+# addressed clustering WITHIN outdoor, which is what the grid actually showed.
+# Every SCENE_GROUPS key must appear here exactly once — test_scene_structure.py and check_rules.py
+# both enforce completeness, so adding a scene family without registering its bucket fails loudly
+# instead of quietly reintroducing the same clustering.
+SCENE_STRUCTURE = {
+    # room — an indoor establishing shot: furniture/architecture frames the whole picture.
+    "bedroom": "room", "lamp_room": "room", "window_light": "room", "desk": "room",
+    "cathedral": "room",
+
+    # water — a body of water (sea/lake/river/harbor/falls) is the dominant subject.
+    "sea": "water", "reflection_lake": "water", "river": "water", "harbor": "water",
+    "rain_pond": "water", "shore": "water", "waterfall": "water", "still_water": "water",
+    "boat_moored": "water", "bridge_small": "water", "stepping_stones": "water",
+    "lighthouse": "water",
+
+    # sky_mountain — wide sky or a mountain/hill ridge is the subject, no close foreground.
+    "mist_mountain": "sky_mountain", "wilderness": "sky_mountain", "starfield": "sky_mountain",
+    "storm_sky": "sky_mountain", "dusk_sky": "sky_mountain", "city_night": "sky_mountain",
+
+    # field — open field, meadow, crop land, or a road/path running through open ground.
+    "wheat_field": "field", "field_flowers": "field", "country_road": "field",
+    "haystack": "field", "hedgerow": "field", "picket_fence": "field", "garden_gate": "field",
+    "stone_path": "field", "clothesline": "field", "wooden_bench": "field",
+    "cafe_table": "field",
+
+    # forest — trees/woodland fill the frame.
+    "forest_path": "forest", "snowfall": "forest", "winter_trees": "forest",
+    "blossom": "forest", "orchard": "forest",
+
+    # landmark — a man-made structure (street, chapel, archway, well) is the subject, small scale.
+    "rainy_street": "landmark", "canal_town": "landmark", "chapel": "landmark",
+    "archway": "landmark", "alley": "landmark", "well": "landmark",
+
+    # still_life — one close small object/furnishing fills the frame (2026-09-06 expansion).
+    "flowers_vase": "still_life", "curtain": "still_life", "tea_cup": "still_life",
+    "bread_table": "still_life", "morning_table": "still_life", "folded_laundry": "still_life",
+    "doorway": "still_life", "candle_still": "still_life", "coat_hook": "still_life",
+    "key_bowl": "still_life", "small_dish": "still_life", "sparrow": "still_life",
+    "cat_window": "still_life", "hanging_lamp": "still_life", "potted_plant": "still_life",
+    "wool_blanket": "still_life", "bowl_of_fruit": "still_life", "washed_dishes": "still_life",
+    "sewing": "still_life", "shoes_by_door": "still_life", "umbrella_stand": "still_life",
+    "linen_cloth": "still_life", "water_glass": "still_life", "basket": "still_life",
+    "candle": "still_life",
+}
+
 # VARIATION — so even the SAME theme looks substantially different each time it recurs. LIGHT sets a
 # colour/light palette (not a strict clock-time, so it never contradicts a scene, e.g. stars or a
 # candle), VANTAGE sets the camera angle/distance. Keyed on a MONOTONIC per-post counter, not the
@@ -498,13 +552,28 @@ def scene_variation(t, indoors=False):
     vi = (t // len(light_pool)) % len(VANTAGE)
     return ", ".join([light, VANTAGE[vi]])
 
-def pick_scene(start, recent_cats, avoid=2):
+def pick_scene(start, recent_cats, avoid=2, avoid_structure=4):
     """Choose the next scene index, skipping forward past any whose THEME appears in the last
-    `avoid` posts — so themes never cluster even if the gate rejects/falls back. Returns
-    (index, category). Caller advances scene_i to index+1 and records the category."""
+    `avoid` posts — so themes never cluster even if the gate rejects/falls back. ALSO skips
+    forward past any whose STRUCTURAL BUCKET (SCENE_STRUCTURE — room/water/field/... the thing a
+    viewer actually sees) appears in the last `avoid_structure` posts, so nine different water
+    categories can no longer stand in for each other and read as "ocean, ocean, ocean" the way
+    the exact-category check alone let them (2026-11-04). `avoid_structure` defaults to 4 to
+    match the 4 entries daily_post.py keeps in state["used_scene_cats"] — there is no history
+    beyond that to check against. If the structural constraint can't be met (a bucket has too few
+    categories to dodge `avoid_structure` recent buckets), it is relaxed rather than ever
+    blocking a post over variety — variety is a quality goal, never a publishing gate.
+    Returns (index, category). Caller advances scene_i to index+1 and records the category."""
     recent = list(recent_cats)[-avoid:] if avoid else []
+    recent_structs = {SCENE_STRUCTURE.get(c) for c in list(recent_cats)[-avoid_structure:]} \
+        if avoid_structure else set()
     n = len(SCENES)
     for step in range(n):
+        i = (start + step) % n
+        cat = SCENE_CATS[i]
+        if cat not in recent and SCENE_STRUCTURE.get(cat) not in recent_structs:
+            return i, cat
+    for step in range(n):                 # relax: structure alone must never starve posting
         i = (start + step) % n
         if SCENE_CATS[i] not in recent:
             return i, SCENE_CATS[i]

@@ -287,6 +287,47 @@ Google Veo를 가리키고 있었다. 둘 다 "무엇을 하는지"로 바꿔 �
 지나면 반드시 다시 터지는 종류**라, 발견한 자리에서 고치지 않으면 다음에 또 "원인 불명 테스트
 실패"로 재발한다.
 
+## 2026-11-04 — 그리드가 "방·바다·들판 반복"으로 보인 이유 + 레퍼런스 스터디 봇 (STRATEGY.md로는 안 남김, RULES.md D-1/D-2)
+
+원석님이 실제 그리드 스크린샷을 보고 그대로 짚었다: "같은구조의 방 바다 들판 좀 따분한거같은데."
+`pick_scene()`의 no-repeat 원장은 **정확히 설계대로** 작동하고 있었다 — 지난 2건과 같은
+**카테고리 키**만 피한다. 문제는 70개 카테고리 중 `sea`·`shore`·`harbor`·`reflection_lake`·
+`river`·`waterfall`·`rain_pond`·`still_water` 여덟 개가 전부 "넓은 물 위에 열린 하늘"로 **똑같이
+보인다**는 것 — 카테고리는 안 겹쳐도 사람 눈에 보이는 **구조**는 세 번 연속 겹칠 수 있었다.
+(09월의 "다 무슨 방에서 우울한 벽만" 수정은 실내/실외 **비율**만 손봤지, 실외 안에서의 구조
+쏠림은 건드린 적이 없었다.)
+
+**고친 것:** `fetch_image.SCENE_STRUCTURE`가 70개 카테고리를 7개 구조 버킷(room·water·
+sky_mountain·field·forest·landmark·still_life)으로 묶고, `pick_scene(avoid_structure=4)`가
+최근 4건과 같은 버킷을 **추가로** 피한다. 실측(동일 시작점 60회 연속 pick_scene): 구조 제약
+없이 인접 버킷 반복 **4회** → 기본값으로 **0회**. `test_scene_structure.py`가 역테스트로
+(`avoid_structure=0`에서는 반드시 반복이 생김을 먼저 확인한 뒤) 이 수치를 고정한다.
+
+**추가로 만든 것 — 2주마다 외부(@dailymayim)와 비교하는 `reference_study.py`.** D-1이 고친 건
+우리 자신과의 쏠림뿐이라, 바깥 기준이 없으면 70개 카테고리 전부가 다시 좁은 방향으로 같이
+드리프트해도 아무도 모른다. `.github/workflows/reference-study.yml`(1일·15일)이 `business_discovery`
+API를 먼저 시도하고 — **2026-11-04 기준 막혀 있음 확인**(`(#10) Application does not have
+permission for this action`, 발행에 쓰는 바로 그 토큰인데도) — 막히면 텔레그램으로 그리드
+스크린샷을 요청한다. **이 스크립트는 fetch_image.py를 절대 고치지 않는다**(check_rules.py가
+강제) — 보고서만 후보를 제시하고 실제 추가는 검토된 코드 변경이다.
+
+**바로 첫 스터디를 실제로 돌렸다**(API가 막혀 있으니 이번 대화에 원석님이 보내주신 그리드
+스크린샷 2장·24타일을 직접 판독 — `notes/reference-study/2026-11-04.md`). 결과: 레퍼런스는
+sky_mountain(25%)·room·forest·water가 고르게 섞여 있는데 우리 최근 로테이션은 still_life(정물
+클로즈업)가 28%로 쏠려 있었다. 그리고 우리 70개 카테고리 어디에도 없는 모티프 5개 —
+**불꽃놀이·주택 외관·피아노 있는 실내·옥상 전망·달이 보이는 하늘** — 를 후보로 남겼다(다음
+세션이 검토 후 추가할지 결정).
+
+**버그 하나를 그 자리에서 잡았다:** `record_run()`이 커스텀 `ledger=` 딕셔너리를 받아도
+**항상 진짜 `reference_study.json`에 저장**하고 있었다 — `test_reference_study.py`가
+`verify.sh`에서 처음 돌자마자 방금 만든 진짜 스터디 결과를 테스트 더미 데이터로 덮어썼다(같은 날
+발견). `load_ledger`/`save_ledger`/`record_run`에 `path=` 를 꿰어 테스트는 임시 파일을 쓰게
+고치고, "record_run이 명시적 경로를 줬는데도 진짜 파일을 건드리면 잡히는" 역테스트를 추가했다.
+이 저장소가 원장 유실(08-26, 09-22)마다 반복해 온 바로 그 실수의 작은 재현이었다.
+
+`RULES.md` D-1·D-2, `check_rules.py` 7개, `test_scene_structure.py` 8개·`test_reference_study.py`
+28개(역테스트 다수 포함), `verify.sh` 전체 통과 확인 후 커밋.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually

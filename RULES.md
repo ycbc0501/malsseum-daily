@@ -239,7 +239,44 @@
 
 **씬 계열을 추가하면 같은 변경에서:**
 - `INTERIOR_CATS`에 실내 여부를 등록합니다 (안 하면 방 위에 하늘이 생깁니다)
+- `SCENE_STRUCTURE`에 시각적 구조 버킷을 등록합니다 (안 하면 바로 아래 D-1이 깨집니다)
 - 게이트가 그 계열의 실패 유형을 설명하는지 확인합니다
+
+### D-1. no-repeat은 카테고리 단위였지, 사람 눈 단위가 아니었다 (2026-11-04)
+
+`pick_scene()`의 원장은 지난 2건과 같은 **카테고리 키**만 피했다 — 정확히 설계대로 작동했다.
+그런데 70개 카테고리 중 `sea`·`shore`·`harbor`·`reflection_lake`·`river`·`waterfall`·
+`rain_pond`·`still_water` 여덟 개는 전부 "넓은 물 위에 열린 하늘"로 똑같이 보인다. 카테고리는
+안 겹쳐도 **구조**는 세 번 연속 겹칠 수 있었다. 계정 주인이 실제 그리드를 보고 그대로 짚었다:
+"같은구조의 방 바다 들판 좀 따분한거같은데." (09월의 "다 무슨 방에서 우울한 벽만" 수정은
+실내/실외 **비율**만 손봤지, 실외 안에서의 구조 쏠림은 건드린 적이 없었다.)
+
+- `SCENE_STRUCTURE`가 70개 카테고리를 7개 구조 버킷(room·water·sky_mountain·field·forest·
+  landmark·still_life)으로 묶는다. `pick_scene(avoid_structure=4)`가 최근 4건과 같은 버킷을
+  **추가로** 피한다 — `state["used_scene_cats"]`가 이미 4건만 보관하므로 그 이상은 볼 수 없다.
+  구조 제약을 만족하는 씬이 없으면(버킷이 작아서) **제약을 완화**한다 — 다양성이 게시를 막는
+  일은 없다.
+- 실측(동일 시작점에서 60회 연속 pick_scene, `del cats[:-4]` 포함): 구조 제약 없이 60회 중
+  인접 버킷 반복 **4회** → `avoid_structure=4`로 **0회**. `test_scene_structure.py`가 역테스트로
+  (`avoid_structure=0`에서는 반드시 반복이 생김을 먼저 확인한 뒤) 이 수치를 고정한다.
+
+### D-2. 레퍼런스 스터디 — 2주마다 외부와 비교한다 (2026-11-04, `reference_study.py`)
+
+D-1이 고친 것은 **우리 자신과의** 쏠림이다. 바깥 기준과 비교하지 않으면 70개 카테고리 전부가
+다시 좁은 방향으로 같이 드리프트해도 아무도 모른다. 그래서 2주마다(`.github/workflows/
+reference-study.yml`, 1일·15일) `reference_study.py`가 **@dailymayim**(이 계정의 미학 기준,
+2026-07-30 전환 이후 계속)의 그리드와 우리 최근 로테이션을 `SCENE_STRUCTURE` 버킷으로 비교한다.
+
+- **자동 수집(`business_discovery`)은 2026-11-04 기준 막혀 있다** — 같은 발행 토큰인데
+  `(#10) Application does not have permission for this action`. 매번 조용히 재시도하지 않고
+  **실제 Meta 에러를 로그에 남긴 뒤**(H0) 텔레그램으로 스크린샷을 요청하는 쪽으로 넘어간다.
+  둘 중 어느 쪽이든 원장의 `next_due`는 전진한다 — 막힌 권한을 매 주기 재시도 폭주로 만들지
+  않는다.
+- **이 스크립트는 `fetch_image.py`를 절대 고치지 않는다.** 보고서(`notes/reference-study/
+  <date>.md`)는 후보만 제시한다 — 실제 추가는 `content_law.LAW` 통과, `INTERIOR_CATS`/
+  `SCENE_STRUCTURE` 등록까지 포함하는 **검토된 코드 변경**이어야 한다(D 상단 규칙 그대로).
+- 강제: `test_reference_study.py`(기한 계산·비교 로직·보고서 내용·`fetch_image.py` 미기록을
+  역테스트 포함 전수 검사) · `check_rules.py`.
 
 ## E. 영상·음악
 

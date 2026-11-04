@@ -1,0 +1,58 @@
+name: Reference study (biweekly)
+
+# 09:00 KST on the 1st and 15th (00:00 UTC) — roughly every 14 days, not exact (months aren't 28
+# days), so reference_study.py's own `due()` ledger is the real gate, not this cron expression.
+# Why this exists (2026-11-04): the account owner looked at the live grid and said it directly —
+# "같은구조의 방 바다 들판 좀 따분한거같은데" (room/ocean/field, same structure, repeating). The
+# same-day fix (RULES.md D-1) made pick_scene() avoid repeating a visual-structure BUCKET, not
+# just an exact scene category — but that only keeps us from clustering against OURSELVES. This
+# job checks against something outside our own code: @dailymayim's grid, the account this
+# project's whole visual aesthetic has been benchmarked against since 2026-07-30.
+on:
+  schedule:
+    - cron: "0 0 1,15 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Tries business_discovery first (our own token, no new credential). As of 2026-11-04 this
+      # is confirmed BLOCKED — `(#10) Application does not have permission for this action` — so
+      # in practice this step sends a Telegram reminder asking for grid screenshots instead, the
+      # same thing the account owner already did by hand once. Both paths advance the ledger's
+      # due date either way, so a blocked permission is one reminder per cycle, not a retry storm.
+      - name: Try the API, fall back to a reminder
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # reference_study.py never calls either path — it only imports fetch_image.py for
+          # SCENE_STRUCTURE/VISION_MODEL/_gemini_key(). audit_env.py's import walk is transitive
+          # and does not do reachability analysis, so it (correctly, conservatively) asks for
+          # every env fetch_image.py as a WHOLE module reads, including the Higgsfield fallback
+          # this script never reaches. Passing them costs nothing and keeps the audit honest.
+          HF_API_KEY: ${{ secrets.HF_API_KEY }}
+          HF_API_SECRET: ${{ secrets.HF_API_SECRET }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
+        run: python reference_study.py --run
+
+      - name: Save the ledger + report
+        # One implementation for every ledger — see save_ledger.sh. reference_study.json is a
+        # small append-only JSON ledger (same shape as state.json); the dated .md report under
+        # notes/reference-study/ is a new file nearly every run, so the same safe push-with-retry
+        # applies even though ledger_merge.py's semantic merge is written for JSON, not prose.
+        run: >-
+          bash save_ledger.sh 'reference study'
+          reference_study.json notes/reference-study/*.md

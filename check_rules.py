@@ -4,6 +4,7 @@
 A rule written down but not enforced is worse than no rule: it reads as a guarantee. Run this
 after touching the pipeline, and add a check here whenever a rule is added to RULES.md.
 """
+import inspect
 import json
 import os
 import pathlib
@@ -232,6 +233,31 @@ def checks():
         i for i in range(len(hf.SCENES))
         if hf.SCENE_CATS[i] in hf.INTERIOR_CATS
         and 'cloudless sky' in hf.OUTDOOR_TOP]
+    # D-1 (2026-11-04): SCENE_STRUCTURE must cover every SCENE_GROUPS key exactly, both
+    # directions — a scene family registered on only one side is a family pick_scene's structural
+    # check cannot see, which is precisely how the room/water/field clustering happened.
+    yield "D-1 every SCENE_GROUPS key has a structural bucket", (
+        set(hf.SCENE_GROUPS) <= set(hf.SCENE_STRUCTURE))
+    yield "D-1 SCENE_STRUCTURE has no stray keys outside SCENE_GROUPS", (
+        set(hf.SCENE_STRUCTURE) <= set(hf.SCENE_GROUPS))
+    yield "D-1 pick_scene avoids the recent structural bucket by default", (
+        "avoid_structure" in inspect.signature(hf.pick_scene).parameters
+        and inspect.signature(hf.pick_scene).parameters["avoid_structure"].default > 0)
+    # D-2 (2026-11-04): the biweekly reference-study bot exists, is wired to a cron, has at least
+    # one account configured, and — the actual promise in RULES.md D-2 — never writes to
+    # fetch_image.py. A script that can edit the prompt pool for itself is not "suggestions for
+    # review" no matter what its docstring claims.
+    import reference_study as _rs
+    yield "D-2 reference_study has at least one account configured", bool(_rs.REFERENCE_ACCOUNTS)
+    yield "D-2 reference_study never opens fetch_image.py for writing", not any(
+        tok in (HERE / "reference_study.py").read_text()
+        for tok in ('open("fetch_image.py", "w"', "open('fetch_image.py', 'w'",
+                    'fetch_image.py", "a"', "fetch_image.py', 'a'"))
+    ref_wf = (HERE / ".github/workflows/reference-study.yml")
+    yield "D-2 the reference-study workflow exists and is on a cron", (
+        ref_wf.exists() and "cron:" in ref_wf.read_text())
+    yield "D-2 the ledger is saved with the one shared implementation (H0-4)", (
+        "save_ledger.sh" in ref_wf.read_text())
     yield "F3 text area is measured, not assumed", hasattr(generate, "text_area_ok")
     # F2c — the clearance threshold must be relative to the picture, never an absolute edge value.
     # It was absolute (4.0) for a fortnight and rejected every render it ever saw: four CI logs,
@@ -312,7 +338,6 @@ def checks():
     yield "H0b transient publish failures retry", (
         "MediaProcessingError" in ig and "with_retry" in ig)
     # Motion must be measured a second apart, not frame to frame — see RULES.md E2.
-    import inspect
     import make_video
     src = inspect.getsource(make_video.motion_score)
     yield "E2 motion measured one second apart", "stride" in src and "fps=" in src
