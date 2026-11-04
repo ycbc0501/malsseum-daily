@@ -7208,6 +7208,35 @@
   "ref": "요한복음 16:33",
   "theme": "담대"
  },
+ "18138331858573922": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-11-05",
+  "duration": 7.68,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 6,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 1.666,
+  "motion_attempts": 1,
+  "motion_sky": 1.051,
+  "published": "2026-11-05T06:08:26+09:00",
+  "ref": "예레미야 49:11",
+  "scene": "mist_mountain",
+  "segments": 1,
+  "text_contrast": 11.44,
+  "text_spread": 5.9,
+  "theme": "위로",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18138957031595265": {
   "insights": {
    "comments": 1,
