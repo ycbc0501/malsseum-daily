@@ -1286,6 +1286,35 @@
   "ref": "나훔 1:7",
   "theme": "믿음"
  },
+ "17954089173295964": {
+  "clip_novelty": 22.36,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-11-06",
+  "duration": 7.68,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 7,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 0.916,
+  "motion_attempts": 2,
+  "motion_sky": 0.835,
+  "published": "2026-11-06T06:28:08+09:00",
+  "ref": "잠언 13:12",
+  "scene": "forest_path",
+  "segments": 1,
+  "text_contrast": 6.3,
+  "text_spread": 10.8,
+  "theme": "위로",
+  "veo_attempts": [
+   2,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "17957838336237898": {
   "clip_spoiled": false,
   "cta_in_caption": false,
