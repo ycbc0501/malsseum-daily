@@ -8726,6 +8726,35 @@
   "veo_calls": 1,
   "veo_seconds": 8.0
  },
+ "18342100063259938": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-11-05",
+  "duration": 7.68,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 11,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 1.943,
+  "motion_attempts": 1,
+  "motion_sky": 0.897,
+  "published": "2026-11-05T22:07:11+09:00",
+  "ref": "잠언 12:25",
+  "scene": "reflection_lake",
+  "segments": 1,
+  "text_contrast": 6.78,
+  "text_spread": 6.0,
+  "theme": "위로",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18362043541209025": {
   "insights": {
    "comments": 1,
