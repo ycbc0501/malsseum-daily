@@ -3478,6 +3478,35 @@
   "veo_calls": 2,
   "veo_seconds": 16.0
  },
+ "18075727343756386": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-11-07",
+  "duration": 15.37,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 17,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 1.751,
+  "motion_attempts": 1,
+  "motion_sky": 1.621,
+  "published": "2026-11-07T05:54:57+09:00",
+  "ref": "잠언 15:15",
+  "scene": "lamp_room",
+  "segments": 2,
+  "text_contrast": 3.53,
+  "text_spread": 21.7,
+  "theme": "위로",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18078365765297839": {
   "insights": {
    "comments": 1,
