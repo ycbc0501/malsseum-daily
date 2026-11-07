@@ -8207,6 +8207,34 @@
   "veo_calls": 3,
   "veo_seconds": 24.0
  },
+ "18170224870477921": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-11-07",
+  "duration": 7.68,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 13,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 0.938,
+  "motion_attempts": 1,
+  "motion_sky": 0.857,
+  "published": "2026-11-07T20:41:03+09:00",
+  "ref": "이사야 58:9",
+  "scene": "lighthouse",
+  "segments": 1,
+  "text_contrast": 7.83,
+  "text_spread": 5.3,
+  "theme": "위로",
+  "veo_attempts": [
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18171686149453004": {
   "cta_in_caption": false,
   "date": "2026-08-18",
