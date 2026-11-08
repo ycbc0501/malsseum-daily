@@ -373,6 +373,38 @@ post_i              216 → 326                        — 정상적으로 계�
 OURS_REPLACES_KEYS에서 빼면 실패함을 직접 확인) · `test_slot_media.py`에
 `SceneRotationFreezeIsAnnounced` 6개 추가. `verify.sh` 전체 통과 확인 후 커밋.
 
+## 2026-11-08 — 11/8 아침 사진 대체: Higgsfield 크레딧 소진. 그리고 Higgsfield는 **버리기로 했던 업체였다**
+
+원석님이 11/8 아침 게시물(잠언 23:18)이 영상 없이 사진으로 나간 걸 물어서, 실제 CI 로그를
+`gh run view --log`로 열어 원인을 직접 확인했다(추측 아님):
+```
+20:03:05  veo motion failed (not_enough_credits) → background-zoom still
+```
+Higgsfield 계정의 **크레딧이 바닥났다는 게 API 응답 그대로**다. 전 세션(10-31)이 "충전하면
+해결된다"고 한 건 맞았다.
+
+그런데 원석님이 이어서 지적한 게 더 큰 문제였다 — **"힉스필드 버리고 구글 쓰기로 했었잖아"**.
+저장소를 뒤져보니 그 결정은 어디에도 적혀있지 않았다(대화에서만 있었고 글로 남지 않음 —
+durability 원칙이 경고하는 바로 그 사고). 그리고 그 결정은 **이미지 쪽에서는 지켜지고 있었다**
+(`fetch_image.py`는 기본값이 Gemini, Higgsfield는 한 번도 안 쓰이는 폴백) — 원석님이 기억하는
+"써보니 큰 차이 없어서 구글로" 결정은 이미지 얘기였고 거기선 맞게 돌아가고 있다.
+
+문제는 **영상(모션)** 쪽이다. 10/23에 구글이 체험판 Veo 키를 끊었을 때, 전 세션이 임시방편으로
+"이미 계정이 있다"는 이유로 **이미지 테스트용으로 만들어뒀던 그 Higgsfield 계정**을 영상
+생성으로 돌렸다(10-31 로그). 그 순간 "이 업체는 버린다"는 결정이 조용히 뒤집혔는데, 아무도
+그걸 결정이라고 인식하지 못했다 — 그냥 "자격증명이 이미 있으니 재사용"으로 보였다. 오늘
+크레딧이 떨어진 게 그 뒤집힌 결정의 첫 청구서다.
+
+**아직 결정 안 됨 — 다음 세션/원석님이 정할 것:**
+1. 그대로 Higgsfield 충전해서 쓰기 (제일 빠름, 그런데 원석님이 이중결제·오버스펙·비싸다고 느낀
+   바로 그 업체를 계속 쓰는 것)
+2. 영상도 구글 정식 유료 Veo로 옮기기 (원래 의도에 맞음, 단 구글 클라우드 계정·결제 연결이라는
+   새 설정이 필요하고 10-31 조사로는 더 비쌀 수 있음)
+3. 제3의 업체 검토
+
+**작업 전 확인할 것:** Higgsfield 계정 자체(이메일·결제 상태)는 이 저장소에 기록이 없다 —
+원석님만 그 계정 로그인 정보를 안다. 이 세션엔 브라우저 도구가 없어 직접 확인 못 했다.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually
