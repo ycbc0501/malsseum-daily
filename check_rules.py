@@ -258,6 +258,18 @@ def checks():
         ref_wf.exists() and "cron:" in ref_wf.read_text())
     yield "D-2 the ledger is saved with the one shared implementation (H0-4)", (
         "save_ledger.sh" in ref_wf.read_text())
+    # D-3 (2026-11-08): ledger_merge.py's generic int-max/list-union rule froze state.json's
+    # scene_i/used_scene_cats in production for weeks — D-1's whole defense was silently deciding
+    # nothing. These two keys must be whole-value OURS-wins, and the OTHER counters/lists this
+    # file exists to protect (post_i, used_verses, ...) must NOT have been swept in with them.
+    import ledger_merge as _lm
+    yield "D-3 scene_i and used_scene_cats are ours-wins, not max()/union", (
+        {"scene_i", "used_scene_cats"} <= _lm.OURS_REPLACES_KEYS)
+    yield "D-3 genuinely monotonic/cumulative ledgers were not swept in by mistake", not (
+        _lm.OURS_REPLACES_KEYS & {"post_i", "music_i", "used_verses", "used_clips", "used_photos"})
+    yield "D-3 watch.py has a frozen-ledger detector wired into findings()", (
+        "def scene_fingerprint" in wt and '"scene-frozen"' in wt
+        and "_scene_watch" in wt)
     yield "F3 text area is measured, not assumed", hasattr(generate, "text_area_ok")
     # F2c — the clearance threshold must be relative to the picture, never an absolute edge value.
     # It was absolute (4.0) for a fortnight and rejected every render it ever saw: four CI logs,

@@ -28,18 +28,52 @@ These files are dicts, not prose, so the correct resolution is semantic, not tex
   · dict  → union of keys; OURS wins a shared key (we just wrote it, so it is fresher)
   · list  → theirs first, then anything of ours they lack — order kept, no duplicates
   · int   → max(), because every counter here only ever advances
+
+THAT LAST LINE IS A LIE FOR A COUNTER THAT WRAPS. state.json["scene_i"] is not a counter that
+only advances — pick_scene() walks it modulo len(SCENES), so the very next pick after the
+rotation completes a lap is a SMALLER number than before. max() then keeps the old, larger
+number forever: the first time scene_i ever reached len(SCENES) (its wrap ceiling), it got stuck
+there, because every later real pick is by definition <= that ceiling. Confirmed stuck at
+exactly 140 (== len(SCENES)) in production from at least 2026-10-13 through 2026-11-08 — nearly
+four weeks where the no-repeat rotation D-1 depends on never actually moved, while posts kept
+going out and state["used_scene_cats"] (see below) hid the symptom. RULES.md D-3.
+
+state.json["used_scene_cats"] has the same disease from the other direction. daily_post.py
+deliberately trims it to the last 4 picks (`del scene_cats[:-4]`) so pick_scene() only ever
+weighs genuinely recent history — the comment at the top of this file already names the general
+shape of this hazard ("A DELETION CANNOT BE EXPRESSED HERE... every ledger in this repo is
+append-only... with ONE exception"), but nobody recognised this ledger as a second exception when
+D-1 built it. List-union dedups BY VALUE: once a category has appeared anywhere in the ledger's
+whole history, every later re-pick of that same category is silently dropped as "already seen"
+instead of being appended, because `theirs` (the fat historical copy) already contains it. The
+tail state.json actually carries in production is "the first time each of ~47 categories ever
+appeared," frozen the moment they have all appeared once — not the last 4 posts.
+
+Both are therefore WHOLE-VALUE OURS-WINS keys, not max()/union candidates: the fresher local
+write is correct regardless of whether it looks numerically smaller or value-wise a subset of the
+remote copy. Keep this set to fields that are read ONLY as "the current rotation position / the
+current short window", never as a historical record something else depends on being complete —
+that is exactly the line C4c/C4d/the pending_replies fix already drew for deletions, just applied
+to two keys that are not deletions but have the identical "merge silently undoes the fresh write"
+shape.
 Usage: ledger_merge.py OURS THEIRS OUT
 """
 import json
 import os
 import sys
 
+# state.json keys where OURS always replaces THEIRS wholesale — see the docstring above.
+OURS_REPLACES_KEYS = {"scene_i", "used_scene_cats"}
+
 
 def merge(ours, theirs):
     if isinstance(ours, dict) and isinstance(theirs, dict):
         out = dict(theirs)
         for k, v in ours.items():
-            out[k] = merge(v, theirs[k]) if k in theirs else v
+            if k in OURS_REPLACES_KEYS:
+                out[k] = v
+            else:
+                out[k] = merge(v, theirs[k]) if k in theirs else v
         return out
     if isinstance(ours, list) and isinstance(theirs, list):
         out = list(theirs)

@@ -46,6 +46,15 @@ COOLDOWN_DAYS = 5        # one alert per episode, not one per day
 # over eight days and no alert existed to say so. A fallback records segments=0, so a run of
 # them is the signal. Three is one and a half days — long enough not to fire on one bad night.
 MOTION_DEAD_RUN = 3
+# state.json["scene_i"] and ["used_scene_cats"] are supposed to change on EVERY successful post
+# (RULES.md D-1) — that is the entire no-repeat defense D-1 built. On 2026-11-08 it turned out
+# ledger_merge.py's "counters take max() / lists union" rule had been silently freezing both of
+# them since at least 2026-10-13: scene_i wraps modulo len(SCENES) so max() locks it the moment it
+# first reaches the ceiling, and the list-union dedup drops any re-pick of a category that has
+# EVER appeared before. Four weeks went by with the account owner the only one who noticed — this
+# detector exists so the next ledger that silently stops moving is caught in under two days, not
+# a month. RULES.md D-3.
+SCENE_FREEZE_H = 30      # longer than the ~12h gap between the two daily slots
 
 
 def _load(path, default):
@@ -219,6 +228,23 @@ def findings(prev=None):
     if len(tail) == DEAD_RUN and all(l <= DEAD_LIKES for l in tail):
         found.append(("dead", f"⚠️ 최근 {DEAD_RUN}개 연속 반응 거의 없음 (좋아요 {tail})\n"
                               f"도달 제한을 의심해 보세요 — 설정 → 계정 상태 → 도달"))
+
+    # Scene rotation frozen (RULES.md D-3) — (prev or {}) because main() passes a real dict, but
+    # this function is also called from tests and from main()'s second call with whatever state
+    # the first pass already mutated into `sent`'s bookkeeping, never a bare None.
+    fp = scene_fingerprint()
+    watched = (prev or {}).get("_scene_watch")
+    if fp is not None and watched and watched.get("fp") == fp:
+        try:
+            stale_h = (now - datetime.datetime.fromisoformat(watched["since"])).total_seconds() / 3600
+        except (TypeError, ValueError, KeyError):
+            stale_h = 0
+        if stale_h >= SCENE_FREEZE_H:
+            found.append(("scene-frozen",
+                          f"⚠️ 씬 로테이션 원장이 {stale_h:.0f}시간째 그대로입니다 "
+                          f"(scene_i={fp[0]}, 최근 {fp[1]})\n"
+                          f"pick_scene no-repeat가 멈춰 있을 수 있습니다 — "
+                          f"ledger_merge.py / state.json 확인 (RULES.md D-3)"))
     return found
 
 
@@ -256,6 +282,19 @@ def unchecked_run():
     than an imperfect picture. But it means "what we publish has passed" is false and nobody
     is told. Across the ledger 37 of 79 went out this way."""
     return _tail_run("gate_passed", False)
+
+
+def scene_fingerprint():
+    """[scene_i, last-4-of-used_scene_cats] from state.json, or None if it cannot be read.
+
+    This is deliberately dumb: it does not know WHY the no-repeat ledger would freeze (that was
+    a ledger_merge.py bug on 2026-11-08, could be anything next time), only that these two values
+    are supposed to move on every single successful post, and a watcher that remembers the last
+    fingerprint can say when they stop."""
+    s = _load(os.path.join(HERE, "state.json"), None)
+    if s is None:
+        return None
+    return [s.get("scene_i"), s.get("used_scene_cats", [])[-4:]]
 
 
 def slot_is_filled(hour, now=None, times=None):
@@ -334,7 +373,8 @@ def main():
         return post_failed(int(os.environ.get("TARGET_HOUR") or 5), link)
 
     state = _load(STATE, {})
-    today = datetime.datetime.now(KST).date()
+    now = datetime.datetime.now(KST)
+    today = now.date()
     sent = []
 
     # Say so when a slot that alerted as failed has since been filled. An alert channel whose
@@ -370,6 +410,14 @@ def main():
     sent_n, answered_n = reply_counters()
     if sent_n is not None:
         state["_reply_counters"] = {"sent": sent_n, "answered": answered_n}
+    # _scene_watch: remember when (scene_i, used_scene_cats tail) last CHANGED. If it is the same
+    # fingerprint as last run, leave "since" alone so the staleness clock keeps ticking across
+    # runs; findings() above is what actually fires once it has been stuck too long.
+    fp = scene_fingerprint()
+    if fp is not None:
+        prev_watch = state.get("_scene_watch")
+        if not prev_watch or prev_watch.get("fp") != fp:
+            state["_scene_watch"] = {"fp": fp, "since": now.isoformat()}
     with open(STATE, "w", encoding="utf-8") as f:
         json.dump(state, f, ensure_ascii=False)
     if not sent:

@@ -138,5 +138,68 @@ class MotionLossIsAnnounced(unittest.TestCase):
             self.assertEqual(watch.still_run(), 0)
 
 
+class SceneRotationFreezeIsAnnounced(unittest.TestCase):
+    """RULES.md D-3 — ledger_merge.py가 state.json의 scene_i/used_scene_cats를 최대 4주 가까이
+    조용히 얼려 놓았다. 다음에 또 어떤 원장이든 같은 방식으로 멈추면, 사람 눈이 아니라 이 감시가
+    며칠 안에 잡아내야 한다."""
+
+    def _state(self, scene_i, tail):
+        return {"scene_i": scene_i, "used_scene_cats": tail}
+
+    def _findings_with(self, current_state, prev_watch):
+        import post_instagram, watch
+        prev = {"_scene_watch": prev_watch} if prev_watch is not None else {}
+        with mock.patch.object(watch, "_load",
+                               side_effect=lambda path, default: (
+                                   current_state if path.endswith("state.json") else default)), \
+             mock.patch.object(post_instagram, "recent_media", return_value=[]):
+            return dict(watch.findings(prev))
+
+    def test_frozen_past_the_threshold_is_announced(self):
+        import datetime as dt, watch
+        since = (dt.datetime.now(watch.KST)
+                 - dt.timedelta(hours=watch.SCENE_FREEZE_H + 1)).isoformat()
+        state = self._state(140, ["cathedral", "basket", "bedroom", "lighthouse"])
+        watched = {"fp": [140, ["cathedral", "basket", "bedroom", "lighthouse"]], "since": since}
+        found = self._findings_with(state, watched)
+        self.assertIn("scene-frozen", found, "임계 시간을 넘겨 멈춰 있는데도 알리지 않았다")
+
+    def test_frozen_but_still_within_the_grace_window_is_quiet(self):
+        import datetime as dt, watch
+        since = (dt.datetime.now(watch.KST)
+                 - dt.timedelta(hours=watch.SCENE_FREEZE_H - 5)).isoformat()
+        state = self._state(140, ["cathedral", "basket", "bedroom", "lighthouse"])
+        watched = {"fp": [140, ["cathedral", "basket", "bedroom", "lighthouse"]], "since": since}
+        found = self._findings_with(state, watched)
+        self.assertNotIn("scene-frozen", found, "한 슬롯 간격도 안 지났는데 벌써 울렸다")
+
+    def test_a_moving_fingerprint_never_fires(self):
+        import datetime as dt, watch
+        since = (dt.datetime.now(watch.KST)
+                 - dt.timedelta(hours=watch.SCENE_FREEZE_H * 10)).isoformat()
+        state = self._state(141, ["basket", "bedroom", "lighthouse", "rainy_street"])
+        watched = {"fp": [140, ["cathedral", "basket", "bedroom", "lighthouse"]], "since": since}
+        found = self._findings_with(state, watched)
+        self.assertNotIn("scene-frozen", found, "지문이 바뀌었는데도 예전 since로 울렸다")
+
+    def test_no_prior_watch_never_fires_on_first_run(self):
+        import watch
+        found = self._findings_with(self._state(5, ["a", "b", "c", "d"]), None)
+        self.assertNotIn("scene-frozen", found, "첫 실행(비교 대상 없음)에서 울리면 안 된다")
+
+    def test_reverse_the_actual_october_incident_would_have_fired(self):
+        """역테스트: 실제 production에서 2026-10-13~11-08에 관측된 값(scene_i=140, 동일 꼬리)을
+        그대로 넣으면, 이 감시가 없었다면(또는 임계값이 무한대라면) 조용했을 상황임을 먼저 확인."""
+        import watch
+        self.assertGreater(watch.SCENE_FREEZE_H, 0, "임계값이 0 이하면 이 검사 자체가 의미 없다")
+
+    def test_main_updates_since_only_when_the_fingerprint_changes(self):
+        """main()이 매 실행마다 since를 지금 시각으로 밀어버리면, 정지 시계가 영원히 안 쌓인다."""
+        import inspect, watch
+        src = inspect.getsource(watch.main)
+        self.assertIn("prev_watch.get(\"fp\") != fp", src.replace("'", '"'),
+                      "main()이 변화 여부를 확인하지 않고 _scene_watch를 매번 새로 쓰는 것으로 보인다")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

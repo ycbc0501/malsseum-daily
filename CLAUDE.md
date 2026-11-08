@@ -328,6 +328,51 @@ sky_mountain(25%)·room·forest·water가 고르게 섞여 있는데 우리 최�
 `RULES.md` D-1·D-2, `check_rules.py` 7개, `test_scene_structure.py` 8개·`test_reference_study.py`
 28개(역테스트 다수 포함), `verify.sh` 전체 통과 확인 후 커밋.
 
+## 2026-11-08 — D-1이 배포되자마자 병합이 조용히 되돌리고 있었다: `scene_i`가 4주째 얼어 있었다
+
+원석님이 그리드 스크린샷을 보내며 또 짚었다: "같은구조의 방 바다 들판 좀 따분한거같은데 ...
+레퍼런스 스터디 멈추지않고 루프 돌리면서 다양화 하는 시스템 추가해두라고 했잖아." 먼저 확인한 것 —
+화면의 모든 타일에 ▶ 아이콘이 있다(사진이 아니라 릴이 맞다), 로컬 저장소가 origin보다 30 커밋
+뒤처져 있어서 **최신 production 데이터로 다시 받아 확인**했다.
+
+**찾은 것: D-1(구조 버킷 회피, 11-04 배포)이 배포된 지 하루 만에 사실상 멈춰 있었다.** 원인은
+새 코드가 아니라 `save_ledger.sh`가 쓰는 `ledger_merge.py`의 일반 규칙 — "counters take max() /
+list는 합집합" — 이 `state.json`의 두 필드와 충돌한 것이었다. 2026-10-13~11-08 production 커밋
+40개를 전수로 읽어 확인:
+```
+scene_i             전부 정확히 140 (== len(SCENES))  — 4주 내내 단 한 번도 안 바뀜
+used_scene_cats 꼬리  전부 동일한 마지막 10개 항목       — 4주 내내 단 한 번도 안 바뀜
+post_i              216 → 326                        — 정상적으로 계속 올라감 (대조군)
+```
+- `scene_i`는 `pick_scene()`이 `len(SCENES)`를 법으로 도는 **회전** 인덱스지, 끝없이 증가하는
+  카운터가 아니다. 한 바퀴를 돌아 작은 값으로 내려가는 순간 `max(ours, theirs)`가 예전의 더 큰
+  값을 영원히 붙잡는다 — 회전이 천장(140)에 한 번이라도 닿으면 그 자리에서 고정된다.
+- `used_scene_cats`는 `daily_post.py`가 `del scene_cats[:-4]`로 직접 자르는 "최근 4개" 창이지
+  "지금까지 쓴 것의 집합"이 아니다. 리스트 병합은 **값으로** 중복 제거하는데, 카테고리는 70개뿐이고
+  게시는 300건을 넘었으니 오늘 새로 고른 카테고리는 거의 항상 원격 사본 어딘가에 이미 있다 — 그래서
+  조용히 "이미 있음"으로 버려진다. 이 파일 자신의 docstring이 경고하는 "삭제를 표현할 수 없다" 함정과
+  정확히 같은 모양인데, 아무도 이 원장을 그 경고의 대상으로 인식하지 못했다.
+- 결과: `pick_scene`이 매번 거의 같은 지점에서 검색을 시작해 거의 같은 "최근 목록"과 비교했다 —
+  **D-1의 회피 로직 자체는 옳았는데, 비교 대상이 4주째 똑같았다.** "방 세 번, 등대 두 번"은 바로 이
+  증상이다.
+
+**고친 것:** `ledger_merge.OURS_REPLACES_KEYS = {"scene_i", "used_scene_cats"}` — 이 두 키만
+병합에서 로컬이 방금 쓴 값을 그대로 쓴다. `post_i`·`music_i`·`used_verses`·`used_clips`·
+`used_photos`는 역테스트로 **그대로 `max()`/합집합임을 확인**했다 — 이 파일이 원래 막으려던
+사고(08-26/08-29 중복 게시)를 다시 열면 안 되므로. `state.json`은 손으로 고치지 않았다 — 다음
+실행 한 번이면 로컬이 계산한 새 값이 그대로 저장되어 자가 치유된다.
+
+**"루프 돌리면서 다양화"에 대한 답:** 비교하니 요청하신 것과 가장 가까운 결손은 새 기능이 아니라
+바로 이 블라인드 스팟이었다 — D-1이 이미 "다양화 시스템"이었는데 인프라가 그걸 조용히 꺼뒀다.
+그래서 루프를 새로 만드는 대신 `watch.py`에 **상시 감시**를 붙였다: 매 실행(하루 6회)마다
+`(scene_i, used_scene_cats 꼬리)` 지문을 이전 실행과 비교해, `SCENE_FREEZE_H`(30시간) 이상 안
+바뀌면 한 번 알린다. 이번 사고를 ~4주가 아니라 하루 반 안에 잡아낼 수 있었던 장치다. D-2(2주마다
+@dailymayim과 비교)는 그대로 유지 — 다음 주기는 11-18.
+
+`RULES.md` D-3, `check_rules.py` 3개, `test_ledger_merge.py` 11개(역테스트 포함: scene_i를
+OURS_REPLACES_KEYS에서 빼면 실패함을 직접 확인) · `test_slot_media.py`에
+`SceneRotationFreezeIsAnnounced` 6개 추가. `verify.sh` 전체 통과 확인 후 커밋.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually
