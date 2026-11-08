@@ -405,6 +405,47 @@ durability 원칙이 경고하는 바로 그 사고). 그리고 그 결정은 **
 **작업 전 확인할 것:** Higgsfield 계정 자체(이메일·결제 상태)는 이 저장소에 기록이 없다 —
 원석님만 그 계정 로그인 정보를 안다. 이 세션엔 브라우저 도구가 없어 직접 확인 못 했다.
 
+## 2026-11-09 — 10-31의 "Omni는 영상을 못 만든다"는 틀렸다: 다른 문이 있었다 (옵션 2 재오픈)
+
+원석님이 "결제 끊긴 거 아니지 않냐"고 캐물어서 `fetch_motion.py`의 404를 라이브로 다시 확인하는
+중(§ 바로 위 대화), 구글이 대안으로 제시한다던 `gemini-omni-1.1-flash`를 **10-31에 썼던 것과
+같은 방식**(`generateContent`)으로 다시 쳐봤더니 같은 에러가 나왔다: `"This model only supports
+Interactions API."` — 10-31 로그와 `fetch_motion.py` 주석이 "Omni는 `generateContent`만 지원해서
+영상과 무관하다"고 적어둔 바로 그 결론의 **근거가 된 테스트 자체가 틀린 문을 두드린 것**이었다.
+웹 검색으로 찾은 `POST /v1beta/interactions` 라는 **별도 엔드포인트**로 같은 키·같은 계정에 실제
+호출해 확인했다(추측 아님, mp4 바이트를 직접 받아 ffmpeg로 열어봤다):
+
+```
+gemini-omni-1.2-flash (2026-11-05 GA, 10-31 조사 시점엔 존재하지도 않았던 버전)
+  이미지→영상 실제 성공: 8.04s, 720x1280(9:16 명시 가능 — response_format.aspect_ratio="9:16")
+  정물(밀밭+팻말+가방, 글씨 포함) 0s/5s/9.5s 프레임 비교 — 카메라·구도·글씨 전부 고정, 왜곡 없음
+  길이는 자연어로 제어됨("exactly 8 seconds" → 8.04s), duration_seconds 파라미터는 없음(400 reject)
+  오디오가 자동으로 같이 나옴(AAC 스테레오) — 우리는 Lyria로 음악을 따로 입히므로 ffmpeg -an으로
+  버리면 그만, 막는 필드는 없음(부정 프롬프트로 조절 권장, 문서 표기)
+```
+**가격 — 실측과 문서가 맞아떨어졌다.** 720p는 초당 5,792 토큰 × $12/백만 토큰 ≈ **$0.07/s**
+(360p $0.023/s · 1080p $0.104/s). 실제 호출 토큰 사용량(57,920 토큰 / 10.03s, 15,448 토큰 / 8.04s)이
+이 요율과 거의 정확히 일치했다. **새 자격증명 필요 없음 — 지금 이미지 생성에 쓰는 바로 그
+`GEMINI_API_KEY`**. 즉 10-31/11-08 로그가 "영상도 정식 Veo로 가려면 구글 클라우드 결제 계정을
+새로 연결해야 한다"고 적어둔 건 **Vertex AI 경유 얘기였고, Interactions API 경유는 해당 없다** —
+지금 쓰는 키로 바로 된다.
+
+**비용 비교 (추정, 현재 Higgsfield 실측 ₩59,718/월 대비):**
+```
+Gemini Omni 1.2 Flash  $0.07/s(720p) → Higgsfield $0.05/s의 1.4배 → 월 ≈ ₩84,000 (추정)
+월 한도(RULES.md E-0b) ₩260,000 — 이 추정으로도 32% 수준, 한도 안에 넉넉히 들어온다
+```
+오늘 검증 호출(이미지→영상 2건 + 텍스트→영상 2건, 720p/360p 섞음)로 실제 과금 발생 —
+대략 **$1.5~2 (₩2,000~2,700)** 수준으로 추정(청구서 미확인, 견적).
+
+**아직 결정 안 됨 — 이건 "결론"이 아니라 "옵션 2가 생각보다 쉽다"는 발견이다.** 코드는 아직
+한 줄도 안 바꿨다(`fetch_motion.py`는 여전히 Higgsfield). 바꾸려면: ① `fetch_motion.animate()`를
+Interactions API 호출로 교체(엔드포인트·요청 구조가 Veo/Higgsfield 둘과도 다름 — 롱러닝 폴링이
+아니라 동기 호출, 응답이 base64 비디오를 직접 담고 있음) ② 받은 mp4에서 `-an`으로 오디오 제거
+③ `metrics.VEO_WON_PER_SECOND`를 $0.07/s 기준으로 갱신(아직 견적, 청구서 아님 — Higgsfield 때와
+같은 경고를 그대로 달아야 함) ④ `RULES.md` E-0/E-0b, `test_veo_budget.py`, `check_rules.py` 재확인.
+**원석님이 "바꿔"라고 하면 다음 세션이 이 순서대로 하면 된다** — 지금은 보고만 하고 멈췄다.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually
