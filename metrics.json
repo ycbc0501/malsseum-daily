@@ -5095,6 +5095,35 @@
   "ref": "요한일서 4:7",
   "theme": "사랑"
  },
+ "18103258472535839": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-11-09",
+  "duration": 15.37,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 15,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 0.776,
+  "motion_attempts": 1,
+  "motion_sky": 0.477,
+  "published": "2026-11-09T22:49:32+09:00",
+  "ref": "에베소서 6:23",
+  "scene": "river",
+  "segments": 2,
+  "text_contrast": 9.81,
+  "text_spread": 6.9,
+  "theme": "평안",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "18103447271242781": {
   "cta_in_caption": false,
   "date": "2026-08-26",
