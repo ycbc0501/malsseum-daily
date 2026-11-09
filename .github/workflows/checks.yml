@@ -26,3 +26,19 @@ jobs:
       # file, not remembering to add a line here too.
       - name: verify
         run: bash verify.sh
+
+      # RULES.md J-2: a red run here used to be visible only on this very page. Nothing else in
+      # the repo ever pinged anyone about it — the operational alert channel (watch.py) and this
+      # static-verification layer had never spoken to each other. Same channel as watch.py, no
+      # cooldown: `checks` has historically passed almost every time, so one failure is a signal.
+      - name: Notify on failure — otherwise this is the only place a broken rule/test is visible
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
+        # GITHUB_REPOSITORY/SHA/SERVER_URL/RUN_ID are provided by the runner already — reading
+        # them as env vars instead of ${{ }} expressions avoids mixing GitHub's templating with
+        # Python string quoting inside one `run:` block (a folded `python3 -c "..."` across
+        # several lines broke on exactly that mix once already — see git history on this line).
+        run: python3 notify_ci_failure.py

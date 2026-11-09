@@ -562,6 +562,55 @@ watch.py의 기존 슬롯-누락 감시가 더 나은 오라클이라 제외, `w
 RULES.md C의 중복/타이밍 규칙에 걸릴 수 있어 원석님 확인 필요. 그리고 위 ③의
 HEALTHCHECK_URL 가입이 유일하게 남은 사람 몫이다.
 
+## 2026-11-09 늦밤 — "감독을 한곳에서 해, 여기저기 뿌리지 말고": `control_center.py`
+
+바로 위 cron_health 작업까지 포함해 세어보니 "감독"이라는 이름 아래 이미 다섯 개의 서로
+다른 명령이 있었다 — `watch.py`(운영 알림), `check_rules.py`(코드가 규칙과 맞는지),
+`ig_doctor.py`(토큰 권한), `ig_probe.py`(그 권한 지도가 최신인지), `reference_study.py`
+(외부 비교가 기한인지). 다섯 이름을 전부 기억하고 전부 돌려야 전체 그림이 나왔다.
+
+**실제로 찾은 구멍 하나:** `checks.yml`(푸시마다 도는 verify.sh)이 실패하면 **GitHub Actions
+화면에만** 남았다. 운영 알림 채널(watch.py → 텔레그램)과 정적 검증 계층이 한 번도 서로
+말을 섞은 적이 없어서, 코드가 며칠째 깨져 있어도 아무도 몰랐을 수 있다 — 바로 이 레포가
+반복해서 걸려 넘어진 "조용한 실패" 패턴을 한 단계 위에서 재현하고 있었다.
+
+**만든 것 — 다섯 개를 다시 짜지 않고 하나로 모았다.**
+```
+python3 control_center.py            # 보고서 출력
+python3 control_center.py --notify    # 같은 보고서를 텔레그램으로 한 통
+```
+각 섹션은 기존 함수를 그대로 부른다 — `watch.findings()`(운영+크론, 이미 통합돼 있던 것),
+GitHub API로 `checks.yml` 최신 실행 결과(이전엔 알림 경로가 전혀 없던 구멍), `ig_doctor`의
+`describe()`/`NEEDED`로 토큰 권한(비싼 지표별 프로브는 안 부름 — 자주 돌려도 안전해야
+"한곳에서 보기"가 습관이 된다), `ig_probe.is_stale()`·`reference_study.due()`로 진단
+최신성. **처음 돌려보자마자 실제 문제를 하나 띄웠다** — 최근 게시 3건(11/8 05:04·20:49,
+11/9 05:09)이 연속으로 움직임 없이 나갔다. 조사해보니 새 사고가 아니라 이미 로그에 있는
+그 사고(Higgsfield 크레딧 소진, 11/9 16:10 Gemini Omni로 전환)의 흔적이었다 — 전환 커밋이
+오늘 아침 게시(05:09) **이후에** 들어갔다. 오늘 저녁 슬롯부터는 저절로 풀려야 한다.
+
+**`checks.yml`에 실패 알림 연결.** `if: failure()`로 watch.py와 같은 텔레그램 채널에
+핑한다. 처음엔 YAML 폴딩된 `python3 -c "..."` 한 줄로 썼다가 — 폴딩 규칙과 `${{ }}` 치환이
+뒤섞여 `-c` 문자열 맨 앞에 공백이 남으면서 `IndentationError`가 나는 걸 **실제로 실행해서**
+잡았다(실패할 그날에야 들켰을 버그). GitHub이 이미 주는 환경변수
+(`GITHUB_REPOSITORY`/`SHA`/`SERVER_URL`/`RUN_ID`)를 읽는 작은 파일 `notify_ci_failure.py`로
+바꿔서 `${{ }}` 치환 자체를 없앴다.
+
+**되돌릴 뻔한 사고 하나.** 역테스트로 "`check_rules.py`의 새 검사가 진짜 조작을 잡는지"
+확인하려고 `/tmp`에 백업하고 `control_center.py`를 임시로 깨뜸 — `/tmp` 쓰기가 샌드박스에
+막혀 백업이 조용히 실패했는데 그걸 못 보고 원본에 손상이 그대로 남았다. 바로 다음 명령에서
+디스크 변경 알림으로 발견하고 즉시 복구, `git diff`로 깨끗한지 재확인했다. **이 레포가 왜
+"백업 후 복구"를 원장마다 강제하는지**를 몸으로 다시 겪었다 — 백업 자체도 성공을 확인해야
+한다.
+
+`RULES.md` J-1·J-2, `check_rules.py` 5개(각각 특정 호출 문자열을 찾아 "파일이 있다"가 아니라
+"그 호출이 실제로 쓰인다"를 검사 — I-1이 이미 쓴 같은 패턴), `test_control_center.py` 25개
+(watch/cron_health/ig_doctor/ig_probe/reference_study 전부 몽키패치, 네트워크 호출 없음),
+`verify.sh` 전체 재확인 후 커밋·푸시.
+
+**남은 것:** control_center는 지금 순수 온디맨드다(사람이나 내가 필요할 때 돌림) — watch.py의
+"평소엔 조용히" 철학과 충돌하지 않게, 별도 주기적 알림은 추가하지 않았다. 필요해지면
+`--notify`를 watch.yml 같은 크론에 얹는 건 나중 결정.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually

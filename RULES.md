@@ -941,3 +941,39 @@ bash verify.sh     # 이거 하나. 푸시할 때마다 CI 가 똑같이 이걸 
 안 해도 아무것도 깨지지 않지만, **설정하기 전까지는 "GitHub Actions가 이 저장소에서
 완전히 멈췄다"는 경우를 아무도 볼 수 없다.** 설정 절차는 `notes/cron-health-2026-11-09.md`
 §3 — IG 인사이트 토큰과 같은 모양으로, 코드는 끝났고 사람의 1회 가입만 남는다.
+
+## J. 감독은 한곳에서 — `control_center.py`
+
+2026-11-09, "모든 프로세스 검수 감독을 한곳에서 해, 여기저기 뿌리지 말고"라는 지시로 만들었다.
+그 전까지 "감독"은 이름이 다른 다섯 개의 명령이었다 — `watch.py`(운영 알림), `check_rules.py`
+(코드가 이 문서와 맞는지), `ig_doctor.py`(토큰 권한), `ig_probe.py`(그 권한 지도가 최신인지),
+`reference_study.py`(외부 비교가 기한인지). 사람도 다음 세션의 나도, 다섯 이름을 전부 기억하고
+전부 돌려야 전체 그림이 나왔다. 더 나쁜 것: `checks.yml`은 **푸시마다** 돌지만 실패하면
+GitHub Actions 화면에만 남았다 — 운영 알림 채널(watch.py → 텔레그램)과 정적 검증
+계층(verify.sh → GitHub Actions)이 서로 말을 섞은 적이 없어서, 코드가 며칠째 깨져 있어도
+아무도 몰랐을 수 있다.
+
+### J-1. `control_center.py` 가 전부를 한 번에 보여준다
+
+다섯 개를 다시 만들지 않고 **각자에게 이미 있는 함수를 그대로 불러** 한 보고서로 합친다
+(`watch.findings()`, `cron_health._gh()`, `ig_doctor.secrets()/describe()/NEEDED`,
+`ig_probe.is_stale()`, `reference_study.due()`). 비용이 드는 것(ig_doctor.main()이 끝에 하는
+지표별 실제 호출 6건)은 부르지 않는다 — 자주 돌려도 안전해야 "한곳에서 보기"가 실제로
+습관이 된다.
+
+```
+python3 control_center.py            # 보고서 출력
+python3 control_center.py --notify    # 같은 보고서를 텔레그램으로 한 통
+```
+
+**새 독립 감시·진단 스크립트를 만들면 여기에도 엮는다.** 안 그러면 그게 아무도 기억 못 하는
+여섯 번째 이름이 된다 — `check_rules.py`가 `control_center.py`의 `SECTIONS`/import 가
+실제 존재하는지(이름만이 아니라 import해서 호출까지)를 검사해 이 규칙을 강제한다.
+
+### J-2. 정적 검증이 깨지면 운영 알림과 같은 방으로 간다
+
+`checks.yml`(푸시마다 도는 verify.sh)이 실패하면 **그 자리에서** watch.py가 쓰는 같은
+텔레그램 채널로 핑한다(`notify.send`, `if: failure()`). 쿨다운이 없다 — CI가 과거에
+거의 항상 성공했으므로(이 저장소의 다른 1건-신뢰 판단과 같은 근거) 실패 1건이 곧 신호다.
+이게 §J가 닫는 유일한 실제 구멍이다: 그 전까지는 빨간 CI를 볼 방법이 GitHub 화면을
+직접 여는 것 하나뿐이었다.

@@ -622,6 +622,23 @@ def checks():
     yield "I-2 the external heartbeat is wired, and optional by default", (
         "HEALTHCHECK_URL" in watch_wf and "secrets.HEALTHCHECK_URL != ''" in watch_wf)
 
+    # J-1/J-2: "감독을 한곳에서" (RULES.md J) means control_center.py actually calls the thing it
+    # claims to summarize, not just that the five files it names still happen to exist on disk —
+    # the exact gap I-1's own comment warns about one section up. Checking for the MODULE name
+    # (e.g. "import ig_doctor") would pass even if the one call that matters were deleted around
+    # it, so this asserts the specific call each section is built on.
+    cc = (HERE / "control_center.py").read_text()
+    yield "J-1 control_center folds in watch.py's own findings (ops + cron, already unified)", (
+        "watch.findings(" in cc)
+    yield "J-1 control_center asks GitHub for the push-CI verdict checks.yml itself cannot alert on", (
+        "cron_health._gh(" in cc and "checks.yml" in cc)
+    yield "J-1 control_center reuses ig_doctor's own scope check, not a second one", (
+        "ig_doctor.describe(" in cc and "ig_doctor.NEEDED" in cc)
+    yield "J-1 control_center reports probe staleness and reference-study due-ness", (
+        "ig_probe.is_stale(" in cc and "reference_study.due(" in cc)
+    yield "J-2 a checks.yml failure pings the same channel watch.py alerts through", (
+        "if: failure()" in checks_wf and "notify_ci_failure.py" in checks_wf)
+
 
 def main():
     failed = []
