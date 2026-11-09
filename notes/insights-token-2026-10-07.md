@@ -192,3 +192,48 @@ Ilkarice (1470245361666904)   설정 → 앱 : 추가된 앱 없음
   **Instagram 앱 ID/시크릿**(페이스북 것과 다름) → §3 경로 B 를 그대로 진행.
 - **안 보인다** → 앱이 다른 계정 소유입니다. 그 계정으로 로그인하거나, 그 계정에서
   이 프로필을 앱 관리자로 초대해야 합니다.
+
+## 7. 2026-11-10 — 끝났다. 그리고 `ig_doctor.py`가 멀쩍이 자기 검증 방식을 잘못 짚고 있었다
+
+§6.4의 경로 B를 끝까지 밟았다 — `ycbc0501`이 developers.facebook.com에 개발자로 등록돼
+있었고(`bible` 앱 소유, App ID `4641985569369895`), Instagram 제품이 이미 붙어 있었다.
+필수 권한 3종 + `instagram_business_manage_insights` 추가, @saintseoul_studio를 테스터로
+초대·수락, OAuth 승인(활성 계정이 @saintseoul_studio인지 **0절에 따라 먼저 확인** 후 진행),
+코드 교환까지 끝내 **60일 `IG_INSIGHTS_TOKEN`을 발급받았다**. `ig_login.py --code`가 교환
+시점에 그대로 찍어준 승인 권한:
+```
+granted: ['instagram_business_basic', 'instagram_business_manage_insights']
+```
+
+**그런데 `ig_doctor.py`가 이 토큰을 ❌로 판정했다.** 원인 둘, 전부 확인:
+
+1. `describe()`가 모든 토큰의 `debug_token`을 **발행 토큰과 같은 앱**(`META_APP_ID`,
+   Facebook Login 쪽, `4641985569369895`)으로 쳤다. 그런데 `IG_INSIGHTS_TOKEN`은 **다른
+   앱**(`IG_APP_ID`, Instagram Login 쪽, `1353571450202408`)에서 발급됐다 — 앱이 안 맞으니
+   `debug_token`이 거부했다(`(#2) Service temporarily unavailable`, 권한과 무관한 에러).
+   `IG_APP_ID`/`IG_APP_SECRET`로 바꿔 쳐보니 에러 코드가 `(#190)`으로 바뀌었을 뿐 여전히
+   거부됐다 — **①로는 안 끝났다.**
+2. **더 근본적으로, Instagram Login 토큰은 `debug_token`으로 아예 볼 수 없다.** 양쪽
+   엔드포인트(`graph.facebook.com/debug_token`, `graph.instagram.com/debug_token`)를 둘 다
+   실제로 쳐봤고(올바른 앱 자격증명으로), 전자는 `(#190)`, 후자는 `(#10) Application does
+   not have permission`을 돌려줬다 — **이 저장소가 두 달째 "권한 없음"으로 오독했던 바로
+   그 에러 코드가, 이번엔 토큰 종류 자체의 한계였다.** `access_token/info`·
+   `me/permissions`·`me?fields=permissions`도 전부 쳐봤고 전부 "그런 필드 없음"으로 막혔다.
+   **Instagram Login(2024년 이후 신규 모델) 토큰에는 scope를 조회하는 공개된 창구가
+   없다** — 유일한 증거는 교환 시점에 한 번 찍히는 `granted:` 출력뿐이다.
+
+**고친 것:** `ig_doctor.py`가 이제 `debug_token`이 막히면(=`debug_token_unreachable`),
+**실제 지표 호출(`reach`·`views`·`shares`·`reels_skip_rate`·`ig_reels_avg_watch_time`)이
+전부 성공하는지**를 판정 근거로 쓴다. 추측이 아니라 "안 보이는 창구 대신 보이는 결과로
+판정한다"는 이 파일 자신의 원칙 그대로다. 수정 후 실제로 돌려 확인:
+```
+✅ 인사이트 권한이 있는 토큰: ['IG_INSIGHTS_TOKEN (읽기용)']
+   (debug_token 은 이 토큰 종류를 볼 수 없어서 못 썼습니다 — 판정은 아래
+    '실제 호출'이 전부 성공한 것으로 내렸습니다. 추측이 아니라 실측입니다.)
+```
+`reach=167`·`views=184`·`shares=0`·`reels_skip_rate=83.8`·`ig_reels_avg_watch_time=2356`
+전부 실측. `gh secret set IG_INSIGHTS_TOKEN` 완료, `meta_secrets.txt`(gitignore됨)에도
+로컬 검증용으로 저장. `insights.py`는 이미 `graph.instagram.com` + `me` 조합을 알고 있어서
+(§ CLAUDE.md 2026-10-07 심야 로그) **코드 변경 없이 바로 자동 수집을 시작한다** — 다음
+`insights.yml` 실행(03:20 KST)부터 `reach`·`saved`·`reels_skip_rate` 등이 수동 입력 없이
+채워진다. `verify.sh` 29개 테스트 전부 통과 확인 후 커밋.

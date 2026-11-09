@@ -692,6 +692,32 @@ watch.py 3연속 경보에 맡긴다.
 `check_rules.py` I-2 수정(역테스트: 옛 깨진 형태로 되돌리면 실패 확인), `verify.sh` 전체 통과,
 실제 GitHub에서 디스패치·텔레그램 수신까지 확인 후 커밋·푸시(`3d2c392`).
 
+## 2026-11-10 — **인사이트 토큰 발급 끝났다.** `ig_doctor.py`가 자기 검증 방식을 잘못 짚고 있던 것도 고쳤다
+
+10-07부터 세 세션째 "사람만 할 수 있는 1회 작업"으로 남아있던 `IG_INSIGHTS_TOKEN` 발급을
+이번에 끝까지 밟았다 — `ycbc0501` 개발자 등록 → Instagram 제품의 `bible-IG` 앱에 인사이트
+권한 추가 → @saintseoul_studio 테스터 수락 → **0절 확인(활성 계정이 @saintseoul_studio인지
+먼저 확인)** 후 OAuth 승인 → 코드 교환 → 60일 토큰. 경위는
+[notes/insights-token-2026-10-07.md](notes/insights-token-2026-10-07.md) §7.
+
+그런데 받은 토큰을 `ig_doctor.py`로 확인하니 ❌가 나왔다 — **토큰은 정상인데 진단 스크립트가
+잘못 짚고 있었다.** 원인 둘: ① `debug_token`을 발행 토큰과 같은 앱(`META_APP_ID`)으로 쳤는데
+`IG_INSIGHTS_TOKEN`은 **다른 앱**(`IG_APP_ID`, Instagram Login 쪽)에서 발급돼 앱이 안 맞아
+거부됐다. ② 맞는 앱으로 바꿔 쳐도 여전히 거부됐다 — **Instagram Login 토큰은 `debug_token`
+계열 엔드포인트 어디로도 scope를 조회할 수 없다**(두 엔드포인트·여러 필드로 직접 확인). 이
+저장소가 두 달째 "권한 없음"으로 오독했던 그 `(#10)` 에러가, 이번엔 **토큰 종류 자체의
+한계**였다. 유일한 증거는 교환 시점에 한 번 찍히는 `granted:` 출력뿐.
+
+**고친 것:** `ig_doctor.py`가 `debug_token`이 막히면 실제 지표 호출(`reach`·`views`·
+`shares`·`reels_skip_rate`·`ig_reels_avg_watch_time`) 성공 여부로 판정한다 — 추측 대신 보이는
+결과로 판정한다는 이 파일 자신의 원칙 그대로. 수정 후 실측 확인: `reach=167`·`views=184`·
+`shares=0`·`reels_skip_rate=83.8`·`ig_reels_avg_watch_time=2356` 전부 성공.
+`gh secret set IG_INSIGHTS_TOKEN` 완료. `insights.py`는 이미 이 토큰 종류(`graph.instagram.com`
++ `me`)를 알고 있어서 **코드 변경 없이** 다음 `insights.yml` 실행(03:20 KST)부터 `reach`·
+`saved`·`reels_skip_rate` 등을 자동 수집한다. `verify.sh` 29개 테스트 전부 통과 확인 후 커밋.
+
+**남은 것:** 다음 `insights.yml` 실행 후 실제로 `reach`/`saved`가 채워졌는지 한 번 더 확인.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually
