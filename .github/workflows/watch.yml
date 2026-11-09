@@ -68,5 +68,10 @@ jobs:
       # healthchecks.io) that the ACCOUNT OWNER sets up once outside GitHub — see
       # notes/cron-health-2026-11-09.md. Unset by default, so skipping it breaks nothing.
       - name: Heartbeat — proves something outside GitHub noticed this run happened
-        if: ${{ secrets.HEALTHCHECK_URL != '' }}
-        run: curl -fsS -m 10 --retry 3 "${{ secrets.HEALTHCHECK_URL }}" >/dev/null || true
+        # `secrets` cannot be read directly inside an `if:` expression (GitHub Actions rejects
+        # it at parse time — "Unrecognized named-value: 'secrets'"). Route it through `env:`
+        # first, which both the `if:` and the `run:` step can read from.
+        if: ${{ env.HEALTHCHECK_URL != '' }}
+        env:
+          HEALTHCHECK_URL: ${{ secrets.HEALTHCHECK_URL }}
+        run: curl -fsS -m 10 --retry 3 "$HEALTHCHECK_URL" >/dev/null || true

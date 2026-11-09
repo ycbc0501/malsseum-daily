@@ -630,8 +630,13 @@ def checks():
         "cron_health.findings()" in watch)
     yield "I-1 watch.yml grants the read-only Actions permission cron_health needs", (
         "actions: read" in watch_wf and "GITHUB_TOKEN" in watch_wf)
+    # `secrets` cannot appear directly inside a step `if:` — GitHub Actions rejects it at parse
+    # time ("Unrecognized named-value: 'secrets'"), which on 2026-11-09 silently invalidated the
+    # ENTIRE watch.yml file (every push AND every schedule tick) until routed through `env:`
+    # first. This check pins the fixed shape so a revert to the old, parse-breaking form is
+    # caught here instead of by watch.py going dark.
     yield "I-2 the external heartbeat is wired, and optional by default", (
-        "HEALTHCHECK_URL" in watch_wf and "secrets.HEALTHCHECK_URL != ''" in watch_wf)
+        "secrets.HEALTHCHECK_URL" in watch_wf and "env.HEALTHCHECK_URL != ''" in watch_wf)
 
     # J-1/J-2: "감독을 한곳에서" (RULES.md J) means control_center.py actually calls the thing it
     # claims to summarize, not just that the five files it names still happen to exist on disk —
