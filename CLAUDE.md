@@ -611,6 +611,52 @@ GitHub API로 `checks.yml` 최신 실행 결과(이전엔 알림 경로가 전�
 "평소엔 조용히" 철학과 충돌하지 않게, 별도 주기적 알림은 추가하지 않았다. 필요해지면
 `--notify`를 watch.yml 같은 크론에 얹는 건 나중 결정.
 
+## 2026-11-09 밤 2 — 원석님이 "실패 메일이 끝없이 온다"고 물어서 **CI가 19일째 빨간불이었던 걸 찾았다**
+
+`control_center.py`를 막 만든 지 한 시간도 안 돼서, 바로 그게 고치려던 종류의 사고가 하나 더
+있었다. `gh run list --workflow=checks.yml`로 전수 확인: **2026-10-20부터 11-09까지 19일,
+커밋 15개 내내 `checks.yml`이 단 한 번도 통과하지 못했다.** `checks.yml`에 실패 알림(J-2)이
+오늘 밤에야 붙었으니 그 전엔 GitHub Actions 화면에만 남았고, 그 사이 세션들의 "verify.sh
+통과 확인"은 전부 **로컬 macOS 기준**이었다 — CI(Ubuntu)에서는 계속 떨어지고 있었다.
+
+**원인을 끝까지 쫓았다.** `verify.sh`의 `step()`이 실패 로그를 `grep -E "FAIL|Error|assert" |
+head -8`로 잘라내서, CI 화면에는 정작 숫자가 안 보였다. 버리는 `debug/test-tracking-ci`
+브랜치를 만들어 실제 ubuntu-latest 러너에서 직접 측정해 보니:
+```
+Pillow 13.0.0, FreeType 2.14.3 (CI)  —  나눔명조 한글 20,927자 전수가 정확히 41.8125px
+RULES.md F-4-A가 적은 값                —  42.00px (2026-10-19, 로컬 macOS에서 한 번 측정)
+차이 -0.1875px = -12/64px — 노이즈가 아니라 힌팅 방식 차이로 생기는 깨끗한 고정 오프셋
+```
+`test_tracking.py`가 이 **macOS 전용 값을 하드코딩**해 놓고 모든 플랫폼에 그걸로 단언하고
+있었다 — 그 규칙이 적힌 **그 커밋부터** CI에서 떨어졌다(최초 실행부터 바로 실패).
+
+**다행히 게시물은 한 번도 잘못 나간 적이 없다.** `generate.text_w`/`draw_text`는 42.0을
+참조한 적이 없고 늘 `font.getlength()`로 그 자리에서 측정한다 — 깨진 건 테스트와
+RULES.md의 **적어놓은 숫자**뿐이었다. 이 파일 자신의 docstring이 이미 "COL_W는 generate.py에
+물어본다, 다시 적지 않는다"는 원칙을 세워뒀는데, 바로 그 옆 클래스가 그 원칙을 어겼다.
+
+**고친 것:** `test_tracking.WidthIsComputableNotJustMeasurable`이 HANGUL/SPACE를
+`setUpClass`에서 **그 플랫폼의 실제 렌더러로** 측정한다(하드코딩 제거) — 어느 플랫폼에서
+돌든 "재는 쪽과 그리는 쪽이 같은 숫자를 읽는다"는 이 파일의 실제 목적을 검증한다.
+`check_rules.py`에 재발 방지 검사 추가(하드코딩 복귀를 정규식으로 잡음, 역테스트로 실제
+옛 형태를 잡는지 확인). RULES.md F-4-A에 정정 각주 — 42.00/710/734/21~22자는 macOS
+측정값이고 운영 서버 실측(41.81px)과 다르다고 명시, 방향은 안전(더 좁게 그려져 여유가
+늘어남)하다고 적었다. 수정 커밋을 메인에 푸시한 뒤 **실제 CI가 2026-10-15 이후 처음으로
+성공**하는 것까지 직접 지켜봤다(`42598198827`).
+
+**스크린샷에 같이 있던 네 번째 종류의 메일**(`.github/workflows/watch.yml - main: No jobs
+were run`)은 별개다 — 코드 결함이 아니라 GitHub 자체의 동작이다: schedule/workflow_dispatch
+전용 워크플로 파일을 수정해 푸시하면, 그 커밋이 `push` 트리거와 안 맞아 "실행된 잡 없음"이라는
+알림이 뜬다. watch.yml을 고친 11-09 저녁 커밋(`53b58b4`)이 바로 그 경우였다. 고칠 코드가 없다.
+
+**원석님께 남은 선택:** 이제 CI 실패는 Telegram으로도 온다(J-2) — GitHub 메일(각 워크플로
+실행마다 "구독 중"으로 따라오는 알림)과 중복이다. GitHub 계정 설정 → Notifications →
+Actions에서 끄시면 텔레그램 채널 하나로 합쳐진다(코드가 아니라 원석님 개인 GitHub 설정이라
+제가 대신 못 바꾼다).
+
+`RULES.md` F-4-A 정정, `check_rules.py` 1개 신규(역테스트 확인), `test_tracking.py` 수정,
+`verify.sh` 전체 통과, 실제 CI green 확인 후 커밋·푸시(`067f44c`).
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually
