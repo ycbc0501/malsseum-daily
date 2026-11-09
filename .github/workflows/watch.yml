@@ -26,6 +26,9 @@ concurrency:
 
 permissions:
   contents: write
+  # Read-only, for cron_health.py (RULES.md I-1) to ask GitHub's own API which OTHER scheduled
+  # workflows actually fired recently. Nothing here can write to Actions.
+  actions: read
 
 jobs:
   watch:
@@ -46,6 +49,9 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
+          # cron_health.py — GITHUB_REPOSITORY is provided automatically by the runner;
+          # GITHUB_TOKEN is not unless a step asks for it explicitly, so it is passed here.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python watch.py ${{ inputs.test && '--test' || '' }}
 
       - name: Remember what was already reported
@@ -53,3 +59,14 @@ jobs:
         # `git pull --rebase || true; git push` is what lost the 08-26 ledger.
         run: >-
           bash save_ledger.sh 'watch alert state' watch.json
+
+      # RULES.md I-2: every check above, including cron_health.py, only runs if GitHub Actions
+      # is scheduling THIS workflow. If GitHub stops running every scheduled workflow in this
+      # repo at once — not a syntax error in one file, the whole scheduler — nothing inside the
+      # repo can say so, because the thing that would say so is itself a scheduled workflow.
+      # This ping is the external half: HEALTHCHECK_URL is a free dead-man's-switch (e.g.
+      # healthchecks.io) that the ACCOUNT OWNER sets up once outside GitHub — see
+      # notes/cron-health-2026-11-09.md. Unset by default, so skipping it breaks nothing.
+      - name: Heartbeat — proves something outside GitHub noticed this run happened
+        if: ${{ secrets.HEALTHCHECK_URL != '' }}
+        run: curl -fsS -m 10 --retry 3 "${{ secrets.HEALTHCHECK_URL }}" >/dev/null || true

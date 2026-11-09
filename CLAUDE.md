@@ -512,6 +512,56 @@ Interactions API 호출로 교체(엔드포인트·요청 구조가 Veo/Higgsfie
 범위 밖 — 원석님 불만은 구체적으로 **영상/모션** 비용이었고, `HF_API_KEY`/`HF_API_SECRET`는
 그쪽 때문에 당분간 계속 필요하다. Higgsfield 계정 자체를 완전히 끊을지는 별도 결정.
 
+## 2026-11-09 — "크론 꺼지는거 보는거까지" 감시 인프라 — 만들자마자 살아 있는 사고를 하나 잡았다
+
+원석님 지시: *"모든걸 감시 감독 검수 qa 하는 인프라를만들어 크론 꺼지는거 보는거까지."*
+GitHub Actions의 실제 실행 기록을 전수로 당겨보는 데 30분이 안 걸렸고, **지금 당장 살아
+있는, 아무도 모르는 실패를 하나 찾았다** — 자세한 경위·수치는
+`notes/cron-health-2026-11-09.md`, 새 규칙은 `RULES.md` **I절**.
+
+**찾은 것:** `weekly-carousel.yml`의 가장 최근 스케줄 실행(2026-11-08)이 슬라이드는 만들고
+**발행만 조용히 실패**해 있었다 — `urllib.error.HTTPError: HTTP Error 400`. 아무 데도 알림이
+안 갔다. 원인은 `post_instagram._post()`가 `_get()`과 달리 **HTTPError의 응답 본문을 한
+번도 풀어본 적이 없었다는 것**(RULES.md H0, `_get`만 2026-10-07에 고쳐지고 `_post`는 한 달
+넘게 같은 구멍이었다) — Meta가 보낸 실제 이유가 그대로 버려졌다. **고쳤다** — `_open()`
+하나로 합쳐서 `_get`·`_post` 둘 다 같은 길을 쓴다.
+
+**새로 만든 것 — `cron_health.py`.** 다른 모든 감시는 **결과**(게시됐는지, 좋아요가
+괜찮은지)를 보는데, 이건 **그 결과를 만드는 크론 자체**가 살아 있는지를 GitHub의 실행
+기록에 직접 물어서 본다. 한계값은 **cron 식이 아니라 실측**에서 나왔다 —
+`comment-reply.yml`이 "10분마다"로 설정돼 있지만 86일·1000건 실측 중앙값은 48분, 최악
+12.3시간이었다(GitHub이 분당 미만 크론을 심하게 지연시키는 게 확인됨). 설정값을 그대로
+한계로 썼으면 매일 오탐이 났을 것이다. `watch.py`(하루 6회)가 이걸 호출하고, 사람이 할 일은
+**아직 하나 남았다** — GitHub 전체가 죽는 경우(이 감시도 같이 죽는 유일한 사각지대)를 잡을
+외부 데드맨 스위치(healthchecks.io, 무료) 가입. 절차는 그 노트 §3.
+
+**다섯 개의 독립 코드 검수 에이전트(`code-review` 스킬, high)를 돌렸고, 그중 세 개가 같은
+심각한 버그를 서로 다른 각도에서 잡았다:** `evaluate()`가 워크플로 파일의
+`created_at`/`updated_at`을 **무조건** 기준선에 포함시키고 있어서, 죽은 크론을 그냥 둔 채
+**그 워크플로 파일을 아무 이유로든 수정만 해도** `updated_at`이 갱신되며 정지 시계가
+조용히 0으로 리셋됐다 — 하필 "가장 중요하다"고 라벨 붙인 `refresh-token.yml`에서 가장
+위험한 모양으로. `last_run`이 있으면 **항상 그것만** 기준으로 쓰도록 고쳤고,
+`test_cron_health.py`에 역테스트로 고정했다. 그 외에 고친 것: ① `ok is None`("판정
+불가")이 매번 조용히 버려지던 것 → 전부 `None`이면(=GITHUB_TOKEN 권한이 깨진 것 같은
+전체 장애) 그 자체로 즉시 1건 알리게 함. ② `watch.py`가 `findings()`를 실행당 두 번
+불러 GitHub API를 두 배로 때리고, 그 사이 일시적 API 흔들림이 생기면 쿨다운이 조기에
+풀릴 수 있던 것 → 프로세스당 1회로 캐싱. ③ `WATCHLIST`가 손으로 적은 고정 목록이라
+"워크플로 #6을 깜빡하면" 아무도 모르는 구조였던 것 → `check_rules.py`가 이제
+`.github/workflows/*.yml`을 직접 스캔해서 `schedule:` 있는 워크플로 전부가 WATCHLIST에
+있거나 `DELIBERATELY_UNWATCHED`에 이유와 함께 적혀 있는지 강제한다(`daily-post.yml`은
+watch.py의 기존 슬롯-누락 감시가 더 나은 오라클이라 제외, `watch.yml`은 자기 자신이라
+제외 — RULES.md I-2). ④ `check_rules.py`의 H0 검사가 `_get`/`_post`라는 **이름**만 보던
+것 → 파일 전체에서 `urlopen(` 호출이 `_open` 안에만 있는지 세어서 미래의 `_delete()` 같은
+새 함수도 커버. 나머지 몇 개(공급자 간 HTTP-에러-해석 로직이 4벌로 흩어져 있는 것 등)는
+위험 대비 이득이 낮아 이번엔 손대지 않고 적어만 둔다.
+
+`RULES.md` I-1·I-2, `check_rules.py` 11개(+ H0 보강 1개), `test_cron_health.py` 29개(역테스트
+다수), `verify.sh` 전체 통과 확인 후 커밋.
+
+**남은 것 — 지난주 캐러셀을 다시 올릴지는 콘텐츠 판단이라 손대지 않았다.** 요일이 지났고
+RULES.md C의 중복/타이밍 규칙에 걸릴 수 있어 원석님 확인 필요. 그리고 위 ③의
+HEALTHCHECK_URL 가입이 유일하게 남은 사람 몫이다.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually

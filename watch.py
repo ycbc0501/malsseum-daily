@@ -171,6 +171,28 @@ def _reply_divergence(prev):
             f"comment-reply 워크플로를 멈추고 comments.json 의 pending_replies 를 확인하세요")
 
 
+_cron_health_cache = None       # see _cron_health_findings() below
+
+
+def _cron_health_findings():
+    """cron_health.findings() makes live GitHub API calls, and main() calls findings() TWICE
+    per process (once to send, once to work out which episodes are still live — see below).
+    Without caching that is two full API sweeps instead of one, and worse than just waste: if a
+    transient hiccup makes the two calls disagree, the second call's "live" set silently drops a
+    key the first call just alerted on, clearing its cooldown a run early and letting the SAME
+    episode re-alert before COOLDOWN_DAYS has passed. One real call per process, cached, makes
+    both calls agree with each other by construction."""
+    global _cron_health_cache
+    if _cron_health_cache is None:
+        try:
+            import cron_health
+            _cron_health_cache = cron_health.findings()
+        except Exception as e:
+            print(f"cron_health: could not run ({e}) — continuing without it, not crashing watch.py")
+            _cron_health_cache = []
+    return _cron_health_cache
+
+
 def findings(prev=None):
     """[(key, message)] — key identifies the episode so it is not re-sent every day.
 
@@ -179,6 +201,12 @@ def findings(prev=None):
     advanced inside would be counted twice."""
     now = datetime.datetime.now(KST)
     found = []
+
+    # Is the INFRASTRUCTURE itself still alive — not "did a post do well" but "is the cron that
+    # was supposed to fire still firing". RULES.md I-1: a scheduled workflow can die with nothing
+    # downstream ever complaining (comment-reply.yml, insights.yml, refresh-token.yml), and the
+    # weekly carousel already did exactly that on 2026-11-08 with no alert at all.
+    found += _cron_health_findings()
 
     dup = _reply_divergence(prev)
     if dup:

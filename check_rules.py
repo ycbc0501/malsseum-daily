@@ -346,7 +346,30 @@ def checks():
         reflection.MAX_CHARS <= 60 and reflection._clean("오늘도 힘내세요.") is None
         and reflection._clean("이 말씀을 붙들고 오늘을 삽시다.") is None)
     ig = (HERE / "post_instagram.py").read_text()
-    yield "H0 API errors carry the API's reason", "detail.get('message')" in ig
+    # This used to just grep the whole file for "detail.get('message')" — true because _get had
+    # it, blind to the fact _post never did. _post's missing unwrap is exactly how 2026-11-08's
+    # weekly-carousel publish failure logged nothing but "HTTP Error 400: Bad Request" with
+    # Meta's real reason thrown away. So: both _get and _post must route through the ONE place
+    # that unwraps an HTTPError body (_open), and neither may call urlopen directly — otherwise a
+    # third call site could reintroduce the same gap with the grep still passing.
+    import post_instagram as pi
+    open_src = inspect.getsource(pi._open)
+    get_src = inspect.getsource(pi._get)
+    post_src = inspect.getsource(pi._post)
+    yield "H0 the one error-unwrap implementation reads the API's reason", (
+        "detail.get('message')" in open_src)
+    yield "H0 _get routes through it, not a raw urlopen", (
+        "_open(" in get_src and "urlopen" not in get_src)
+    # Checking _get and _post BY NAME is exactly what let _post go a month without this fix —
+    # the old check passed with _post completely unguarded because it never looked at _post at
+    # all. This closes the gap the comment above actually claims to close: count every call to
+    # urlopen( in the WHOLE file and require all of them to live inside _open's own source, so a
+    # future _delete()/_patch() written the old way (raw urlopen, no unwrap) fails this check
+    # even though it has a name this file has never heard of.
+    yield "H0 urlopen() is called nowhere in this file except inside _open", (
+        ig.count("urlopen(") == open_src.count("urlopen(") > 0)
+    yield "H0 _post routes through it too, not a raw urlopen", (
+        "_open(" in post_src and "urlopen" not in post_src)
     yield "H0b transient publish failures retry", (
         "MediaProcessingError" in ig and "with_retry" in ig)
     # Motion must be measured a second apart, not frame to frame — see RULES.md E2.
@@ -559,6 +582,45 @@ def checks():
     }
     yield "H0-6 kiwipiepy is pinned everywhere it is installed", all(kiwi_pins.values())
     yield "H0-6 every pin is the same version", len(set(kiwi_pins.values())) == 1
+
+    # I-1/I-2: the cron-health watchdog (RULES.md I) — a rule that only checks "does the file
+    # exist" would miss the exact failure mode this was built for: someone trims WATCHLIST down,
+    # or watch.py stops calling it, and every check above still passes while the watchdog goes
+    # blind. So this asserts the WIRING, not just the file's existence.
+    import cron_health
+    watch_wf = (HERE / ".github/workflows/watch.yml").read_text()
+
+    def _wf_text(filename):
+        # A missing/renamed file must FAIL this one check, not crash the whole checks()
+        # generator and hide every rule after it — the exact "loud failure, not a dead script"
+        # lesson RULES.md H0-2 already states for CANNOT VERIFY.
+        try:
+            return (HERE / f".github/workflows/{filename}").read_text()
+        except FileNotFoundError:
+            return None
+
+    # Every workflow with ITS OWN schedule: trigger must be accounted for — either watched, or
+    # named in DELIBERATELY_UNWATCHED with a reason. Enumerated from disk, not retyped as a
+    # second literal list here, so workflow #6 (or #8) cannot be forgotten the way weekly-carousel
+    # fell through every check that existed before this file without anyone noticing for weeks.
+    all_scheduled_wf = {
+        p.name for p in (HERE / ".github/workflows").glob("*.yml")
+        if "schedule:" in p.read_text()}
+    watched = {e["file"] for e in cron_health.WATCHLIST}
+    unwatched = set(cron_health.DELIBERATELY_UNWATCHED)
+    yield "I-1 every scheduled workflow is either watched or deliberately excluded with a reason", (
+        all_scheduled_wf <= watched | unwatched)
+    yield "I-1 the deliberately-excluded list is not stale — those workflows still have a schedule", (
+        unwatched <= all_scheduled_wf)
+    yield "I-1 every watched workflow actually has a schedule trigger", all(
+        (txt := _wf_text(e["file"])) is not None and "schedule:" in txt
+        for e in cron_health.WATCHLIST)
+    yield "I-1 watch.py actually calls cron_health, not just imports it", (
+        "cron_health.findings()" in watch)
+    yield "I-1 watch.yml grants the read-only Actions permission cron_health needs", (
+        "actions: read" in watch_wf and "GITHUB_TOKEN" in watch_wf)
+    yield "I-2 the external heartbeat is wired, and optional by default", (
+        "HEALTHCHECK_URL" in watch_wf and "secrets.HEALTHCHECK_URL != ''" in watch_wf)
 
 
 def main():

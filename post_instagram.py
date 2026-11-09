@@ -30,32 +30,48 @@ class MediaProcessingError(RuntimeError):
     passed every gate, and died here with no second attempt."""
 
 
-def _get(url):
-    """GET, and on failure raise with the API's OWN explanation attached.
+def _open(req_or_url):
+    """Open the request and return parsed JSON, or raise with the API's OWN explanation
+    attached — shared by _get and _post so there is exactly one implementation of "what do we do
+    with a Graph API error", not two that can silently drift apart.
 
     urllib raises "HTTP Error 400: Bad Request" and drops the response body, which is where Meta
     puts the actual reason — the wrong field, an expired token, a rate limit. Every guard in this
     repo catches that exception and degrades quietly, so for weeks the logs said only
-    "slot check failed (HTTP Error 400)" and there was nothing to act on. The body is the message."""
+    "slot check failed (HTTP Error 400)" and there was nothing to act on. The body is the message.
+
+    This used to live only in _get (2026-10-07). _post never got the same fix, which is exactly
+    how weekly-carousel.yml's 2026-11-08 scheduled run died: the slides built fine, the publish
+    call got a 400 back from Meta, and the log holds nothing but "HTTP Error 400: Bad Request" —
+    the real reason is gone. Nobody noticed because nothing was watching that workflow's own run
+    status either (see cron_health.py, RULES.md I-1) — two gaps that hid the same failure."""
     try:
-        with urllib.request.urlopen(url, timeout=60) as r:
+        with urllib.request.urlopen(req_or_url, timeout=60) as r:
             return json.load(r)
     except urllib.error.HTTPError as e:
         try:
             detail = json.loads(e.read().decode())["error"]
+            # Meta's error body is USUALLY {"error": {"message": ..., ...}} but not guaranteed to
+            # be — AttributeError/TypeError here (e.g. a bare string under "error") used to
+            # escape both this except and the one below uncaught, now reachable from every _post
+            # call site (publish, publish_carousel, comment, DM) since _post never routed through
+            # here at all before this file's 2026-11-09 fix.
             raise RuntimeError(
                 f"HTTP {e.code}: {detail.get('message')} "
                 f"(type={detail.get('type')}, code={detail.get('code')}, "
                 f"subcode={detail.get('error_subcode')})") from None
-        except (ValueError, KeyError):
+        except (ValueError, KeyError, AttributeError, TypeError):
             raise
+
+
+def _get(url):
+    return _open(url)
 
 
 def _post(url, params):
     data = urllib.parse.urlencode(params).encode()
     req = urllib.request.Request(url, data=data, method="POST")
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return json.load(r)
+    return _open(req)
 
 
 def publish(image_url, caption, ig_user_id=None, token=None):
