@@ -657,6 +657,41 @@ Actions에서 끄시면 텔레그램 채널 하나로 합쳐진다(코드가 아
 `RULES.md` F-4-A 정정, `check_rules.py` 1개 신규(역테스트 확인), `test_tracking.py` 수정,
 `verify.sh` 전체 통과, 실제 CI green 확인 후 커밋·푸시(`067f44c`).
 
+## 2026-11-09 밤 3 — 끝없는 실패 메일의 진짜 원인: `watch.py` 자신(알림 시스템)이 꺼져 있었다
+
+19일짜리 CI 적신호를 고친 지 몇 시간 뒤, 원석님이 또 "실패 메일이 끝없이 온다"는 스크린샷을
+보냈다. 타임스탬프를 맞춰보니 두 다발이 섞여 있었다 — ①~17:40 KST까지의 「Checks: All jobs
+have failed」는 **이미 고친 그 19일 적신호의 꼬리**(F-4-A 수정이 10:04 UTC에야 머지됐다)였고,
+②~17:40 KST **이후**의 「watch.yml workflow run」 실패는 **그날 밤 처음 보는 새 사고**였다.
+
+`gh run list --workflow=watch.yml`로 전수 확인하니 **그날 08:40 UTC(`53b58b4`, "feat(I): cron
+liveness watchdog") 커밋 이후 모든 push가** watch.yml에 대해 **0개 잡(job)짜리 실패 런**을
+만들고 있었다 — 그 전 커밋들은 전혀 안 그랬다. `gh workflow run watch.yml -f test=true`로
+직접 디스패치해서 원인을 확정했다: `422 Unrecognized named-value: 'secrets'`. 그 커밋이 새로
+넣은 **Heartbeat 스텝의 `if: ${{ secrets.HEALTHCHECK_URL != '' }}`** — `secrets` 컨텍스트는
+`if:` 조건식 안에서 직접 못 읽는다는 GitHub Actions 고유 제약을 어겼다. 이게 **파일 전체의
+파싱을 깨뜨려서**, push뿐 아니라 **그날의 크론(스케줄) 실행도 똑같이 깨졌을 것**이라는 뜻이다 —
+즉 "뭔가 조용히 죽으면 알려야 할" 바로 그 감시 시스템이, 만들어진 지 몇 시간 만에 스스로 조용히
+죽어 있었다.
+
+**고친 법:** `secrets.HEALTHCHECK_URL`을 `env:`로 한 번 거쳐서 `if: ${{ env.HEALTHCHECK_URL
+!= '' }}`로 읽게 바꿨다(공식 우회 패턴). `check_rules.py`의 I-2 검사가 하필 **깨진 그 문자열
+그대로**(`"secrets.HEALTHCHECK_URL != ''"`)를 찾고 있어서 이 버그를 전혀 잡지 못했었다 —
+고친 모양(`env.HEALTHCHECK_URL != ''`)을 고정하도록 같이 수정, 옛 형태로 되돌리면 다시 잡힌다.
+**로컬 통과만 믿지 않고 실제로 검증했다:** 수정 커밋(`3d2c392`) 푸시 후 ① 같은 커밋에 대해
+더 이상 push 실패 런이 생기지 않음, ② `workflow_dispatch --test`가 `422` 없이 성공, ③ 그 실행
+로그에 `telegram: sent` · `test alert sent`가 실제로 찍힌 것까지 확인했다.
+
+**곁다리로 본 것 — 새 문제 아님:** 같은 시각 `pages-build-deployment`(GitHub Pages, `/docs`
+246MB 미리보기 사이트, 레포 고유 기능) 런 하나가 "Timeout reached, aborting!"로 실패했다 —
+앞뒤 모든 런(초 단위 수십 건)은 전부 성공이라 **일회성 인프라 지연**으로 판단, 코드 변경 없음.
+`control_center.py`가 "최근 3건 연속 움직임 없이 나갔다"고 한 건은 이미 있는 경보 경로가
+작동한 것(11-09 낮 Higgsfield→Gemini Omni 전환 직후 구간과 겹침) — 별도 조치 없이 기존
+watch.py 3연속 경보에 맡긴다.
+
+`check_rules.py` I-2 수정(역테스트: 옛 깨진 형태로 되돌리면 실패 확인), `verify.sh` 전체 통과,
+실제 GitHub에서 디스패치·텔레그램 수신까지 확인 후 커밋·푸시(`3d2c392`).
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually
