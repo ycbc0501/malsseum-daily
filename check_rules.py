@@ -147,8 +147,19 @@ def checks():
         and 'tag.split("-")[0]' in gen)
     yield "F4-6 the 것이나 mis-tag is corrected at source", (
         'tag == "JC" and form == "이나"' in gen)
+    tracking_test = (HERE / "test_tracking.py").read_text()
     yield "F4-A the per-line character capacity is pinned by a test", (
-        "WidthIsComputableNotJustMeasurable" in (HERE / "test_tracking.py").read_text())
+        "WidthIsComputableNotJustMeasurable" in tracking_test)
+    # 2026-11-09: this test hardcoded HANGUL = 42.0 — a value measured once on a developer's
+    # macOS machine. CI (Ubuntu, FreeType 2.14.3) renders the same font 0.1875px narrower, so
+    # the hardcoded test failed on every single CI run from the day it was written (2026-10-19)
+    # until this was found, 19 days of red builds nobody looked at because checks.yml had no
+    # notify path yet (see J-2). The constant must be measured live, like every other number in
+    # this file already is (`generate.verse_col_w`, never retyped) — not pinned to one platform's
+    # font renderer and asserted true for all of them.
+    yield "F4-A the Hangul width constant is measured live, not re-hardcoded per platform", (
+        "cls.HANGUL = font.getlength(" in tracking_test
+        and re.search(r"HANGUL\s*=\s*[\d.]+", tracking_test) is None)
     yield "F4-7 a clause-boundary break is free", (
         "max(0, 3 - boundary(b))" in gen)
     yield "F4-8 one line needs one clause, not just a short verse", (

@@ -86,11 +86,29 @@ class EveryVerseAtFullSize(unittest.TestCase):
 class WidthIsComputableNotJustMeasurable(unittest.TestCase):
     """RULES.md F-4-A — 한 줄에 몇 글자가 들어가는지 정확히 안다.
 
-    나눔명조에서 한글은 전부 42.00px 고정이라 폭이 계산된다. 이 식이 렌더러와 어긋나면
-    RULES.md에 적힌 「21~22자」가 거짓말이 되므로, 숫자가 아니라 이 테스트가 먼저 깨진다."""
+    나눔명조에서 한글은 전부 고정폭이라 폭이 계산된다. 이 식이 렌더러와 어긋나면
+    RULES.md에 적힌 「21~22자」가 거짓말이 되므로, 숫자가 아니라 이 테스트가 먼저 깨진다.
 
-    HANGUL = 42.0
-    SPACE = 12.0
+    2026-11-09: 그 고정폭 숫자(42.00px)를 **하드코딩한 것 자체가 결함**이었다 — 로컬
+    macOS에서 잰 값을 상수로 박아 뒀는데, CI(Ubuntu, Pillow 13.0.0 + FreeType 2.14.3)는
+    같은 글꼴·같은 크기에서 41.8125px를 낸다(차이는 노이즈가 아니라 힌팅 방식 차이로 생기는
+    고정 오프셋 -0.1875px = -12/64px, 20,927자 전수가 플랫폼마다 **한 값으로 똑같이** 쏠린다).
+    이 레포는 `daily_post.py`도 `ubuntu-latest`에서 돈다 — 즉 **운영 서버의 실제 렌더링
+    값은 처음부터 41.8125px였지 42.00이 아니었다.** 다행히 실제 조판 코드
+    (`generate.text_w`/`draw_text`)는 이 42.0을 참조한 적이 없고 항상 `font.getlength()`로
+    그때그때 측정하므로, 게시된 릴·카드는 한 번도 잘못 조판되지 않았다 — 깨진 건 테스트와
+    RULES.md의 **문서화된 숫자**뿐이었다. 그런데 이 테스트가 자기 플랫폼이 아닌 값과
+    비교했기 때문에, 2026-10-19 이 규칙이 적힌 순간부터 **CI에서 단 한 번도 통과한 적이
+    없었다**(최초 실행부터 바로 실패, 19일간 조용히 빨간불). 고쳐서 상수를 하드코딩하지
+    않고 이 파일의 다른 모든 값(COL_W 등)과 같은 원칙으로 **그 자리에서 측정**한다 —
+    "재는 쪽과 그리는 쪽이 같은 숫자를 읽는다"는 이 파일의 목적을 어느 플랫폼에서든
+    실제로 검증하려면 그래야 한다."""
+
+    @classmethod
+    def setUpClass(cls):
+        font = generate.load_font(generate.SERIF, 44)
+        cls.HANGUL = font.getlength("가")
+        cls.SPACE = font.getlength(" ")
 
     def _predict(self, s, font):
         raw = 0.0
