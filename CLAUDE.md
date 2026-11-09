@@ -446,6 +446,72 @@ Interactions API 호출로 교체(엔드포인트·요청 구조가 Veo/Higgsfie
 같은 경고를 그대로 달아야 함) ④ `RULES.md` E-0/E-0b, `test_veo_budget.py`, `check_rules.py` 재확인.
 **원석님이 "바꿔"라고 하면 다음 세션이 이 순서대로 하면 된다** — 지금은 보고만 하고 멈췄다.
 
+## 2026-11-09 밤 — 바꿨다: `fetch_motion.py`가 Higgsfield에서 Gemini Omni로 넘어갔다, 실전 검증까지
+
+원석님 지시: "바꿔 당장 힉스는 결제도 안하고 있어 ... 코드도 신중하게짜 qa, 엔드투엔드테스트,
+결과물 검수, 코드 검수하는 에이전트 따로 만들어." 바로 위 §(11-09 아침)가 "옵션 2가 생각보다
+쉽다"는 발견이었던 것을 실제 전환까지 끝냈다. 코드를 쓰기 전에 **문서부터 의심했다** — 웹 검색
+결과 3곳(Google 공식 문서 포함)이 서로 다른 요청 스키마를 보여줬고, 그중 한 곳은 `duration`을
+`"10s"` 같은 문자열 필드로 설명했는데(다른 공급자/제품 문서와 섞여 있었을 가능성), 실제 계정에
+라이브로 쳐보지 않고는 어느 쪽도 믿지 않기로 했다.
+
+**실제로 9번 과금해서 확인했다** (7회 원시 프로토콜 탐색 + `animate()` 실전 2세그먼트 체인 1회):
+- **동기 호출**이다 — Veo·Higgsfield처럼 제출 후 폴링하는 게 아니라, HTTP 응답 자체에
+  `status:"completed"`와 완성된 클립이 바로 담겨 있다. 코드가 훨씬 단순해졌다.
+- 매번 8.0~8.04초/720x1280, `response_format.aspect_ratio`로 화면비 **직접 지정 가능**
+  (Wan 2.7엔 없던 필드).
+- 클립마다 AAC 오디오가 자동으로 붙고 끌 방법이 없어 ffmpeg `-an`으로 **제거**(Lyria 음악과
+  겹치면 묵음이 아니라 제거해야 이음매 클릭음을 막는다).
+- 전용 negative-prompt 필드가 없어 금지 목록을 프롬프트 본문에 "피할 것"으로 접어 넣었다
+  (정지 이미지의 Gemini 호출이 이미 그렇게 하고 있던 방식 그대로 — 공급자가 같아지니 패턴도
+  하나로 합쳐졌다).
+- **`urllib.request`가 ~4.5MB 응답을 3번 중 1번 중간에 끊었다**(`IncompleteRead`, 끝에서 약
+  20KB 모자라게). `requests` 라이브러리는 3/3 성공. 생성과 과금은 어느 쪽이든 끝난 뒤였고
+  클라이언트 쪽 다운로드만 달랐다 — 그래서 `fetch_motion.py`는 `requests`를 쓰고,
+  `import fetch_motion`만으로는 무거워지지 않도록 함수 안에서 지연 임포트했다
+  (`check_rules.py`가 정확히 이 이유로 `import fetch_motion`만 한다).
+
+**전체 파이프라인 실전 실행까지 했다** — `daily_post.py --now --emit`(원격 origin/main으로
+원장 동기화 후, 끝나고 정확히 그 상태로 복원, 발행 직전에서 멈춤). 결과: 에베소서 6:23,
+이미지 게이트 통과, 모션 2세그먼트 시도(오프닝 2회 재시도 후 "가장 덜 나쁜 것" 채택 — 책
+책장에 "글씨로 보일 수 있는 자국"이 있다고 비전 게이트가 매번 거부, **이건 기존 LAW 검사가
+제대로 작동한 것이지 새 공급자의 결함이 아니다**), 연결 세그먼트는 검사 탈락으로 1세그먼트만
+출고, `veo_calls=3`·`veo_seconds=24.0`·`segments=1`로 `_meta.json`에 정확히 기록됨. 최종 릴
+프레임을 직접 열어 확인 — 사람 없음, 글씨 없음, 텍스트 가독성 정상, 오디오는 Lyria 음악만
+남아 있음(모델 자체 오디오 제거 확인). 드라이런이 쓴 `state.json`/`metrics.json`은 전부
+원래 상태로 복원했다 — 실제 운영 원장은 건드리지 않았다.
+
+**비용 재계산, 숫자로.** `metrics.VEO_WON_PER_SECOND`를 실측 2건(각 46,336 토큰/8.04초 ≈
+초당 5,762토큰 ≈ $0.069)과 공식 $0.07/s 단가가 거의 일치해 $0.07/s로 갱신(₩1,333/\$ 기준
+≈ ₩93.31 — 아직 견적, 청구서 아님). `test_veo_budget.py`가 자동으로 이 상수를 다시 읽어
+재계산: 최악의 경우 월 ₩134,366 — Veo 예산 ₩200,000의 67%, 전과 같은 여유. `verify.sh`
+전체(테스트 25개 + 규칙 감사) 통과 확인.
+
+**코드 검수.** `code-review` 스킬(high)로 별도 패스를 돌려 `fetch_motion.py`·`metrics.py`·
+`RULES.md`·`.github/workflows/daily-post.yml` diff를 검토시켰고, 실제로 결함 3개를 잡았다
+(전부 `_strip_audio` 한 함수에 몰려 있었다):
+1. `base64.b64decode()`가 잘린/깨진 응답에서 실패하면 `<dest>.raw.mp4` 임시 파일이
+   `try/finally` 범위 **밖**에서 만들어져 디스크에 남는다(게시마다 최대 3회 호출되는 경로라
+   드문 일이 아니라 매일 벌어질 수 있는 누수).
+2. `subprocess.run(..., capture_output=True)`가 ffmpeg의 stderr를 **버려서** 실패해도
+   "non-zero exit status"만 남고 원인이 안 보인다 — 바로 이 저장소가 "15개 릴이 조용히
+   나간" 사고에서 배운 "조용한 실패가 비싸다"는 교훈과 같은 모양.
+3. **더 근본적으로, `_strip_audio` 자체가 불필요했다** — `make_video.chain_clips()`는
+   `-map "[v]" -an`로, `build_reel_native()`는 `-map "[v]" -map "2:a"`(2번 입력 = Lyria
+   음악)로 **이미 명시적 스트림 선택**을 하고 있어서, `fetch_motion.py`가 내보내는 클립에
+   모델 자체 오디오가 있든 없든 최종 릴에는 Lyria만 남는다. 직접 확인: 오디오가 있는
+   원본 응답을 그대로 `build_reel_native()`에 넣어봤더니 출력엔 193kbps AAC 스트림
+   **하나만** 남았고 그게 Lyria 트랙이었다(모델 쪽 원본과 비트레이트가 다름).
+
+세 결함 모두 `_strip_audio` 함수와 중간 임시 파일을 **통째로 제거**하는 것으로 한 번에
+해결됐다 — 디코딩한 바이트를 바로 `dest`에 쓴다. ffmpeg 서브프로세스 1회·임시 파일 1개가
+클립마다 사라졌고, `import subprocess`/`import make_video`도 더 쓸 데가 없어 제거했다.
+수정 후 `verify.sh` 전체 재확인, 통과.
+
+**남은 것.** `fetch_image.py`의 Higgsfield Soul 폴백(정지 이미지, 드물게만 쓰임)은 이번
+범위 밖 — 원석님 불만은 구체적으로 **영상/모션** 비용이었고, `HF_API_KEY`/`HF_API_SECRET`는
+그쪽 때문에 당분간 계속 필요하다. Higgsfield 계정 자체를 완전히 끊을지는 별도 결정.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually

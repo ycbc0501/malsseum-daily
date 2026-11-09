@@ -5,30 +5,65 @@ Animate a still image into a short cinematic clip.
 Was Google Veo (predictLongRunning on generativelanguage.googleapis.com). On 2026-10-23 Google
 pulled the model out from under us without warning: every call started returning
 "models/veo-3.1-fast-generate-preview is no longer available", and NOT A SINGLE model exposed by
-this API key still supports predictLongRunning (checked by listing all 60 models on 2026-10-31 —
-zero have any video-generation method; Google's suggested replacement, gemini-omni-1.1-flash, only
-supports generateContent and cannot make video at all). The error was never loud: daily_post.py's
-existing except-and-fall-back-to-a-zoom-still swallowed it cleanly, so 15 reels in a row shipped as
-motionless stills with nobody told (STRATEGY.md §18).
+this API key still supported predictLongRunning (checked by listing all 60 models on 2026-10-31).
+The error was never loud: daily_post.py's existing except-and-fall-back-to-a-zoom-still swallowed
+it cleanly, so 15 reels in a row shipped as motionless stills with nobody told (STRATEGY.md §18).
 
-Now Higgsfield — the SAME account already used for the still backgrounds (fetch_image.py),
-same HF_API_KEY/HF_API_SECRET, no new credential. Their Wan 2.7 image-to-video model
-(api.higgsfield.ai/wan/v2.7/image-to-video) takes the still, a motion prompt and a negative
-prompt, and returns an mp4 — verified for real on 2026-10-31 with output/_bg.png: 8.03s,
-720x1280 (the input's own 9:16 kept automatically — there is no aspect-ratio field to set), camera
-locked, composition unchanged frame 0 → 4 → 7. $0.05/s pay-as-you-go, no subscription — about half
-of Veo's ₩138/s (metrics.VEO_WON_PER_SECOND; update that constant once a real invoice replaces the
-quoted rate).
+Patched 2026-10-31 onto Higgsfield — the SAME account already used for the still backgrounds
+(fetch_image.py). That was only ever meant as a stopgap ("already have the credentials") taken
+days after fetch_image.py's OWN default had just moved to Gemini for stills precisely because
+Higgsfield was being retired as a cost/trust concern (double billing, over-spec for what a still
+background needs). Nobody recognised reusing it for motion as un-reversing that decision — it
+read as "reuse an existing credential", not "un-retire a vendor" — until the account's credits
+ran out on 2026-11-08 (`not_enough_credits`) and the account owner asked why Higgsfield was still
+being paid for at all (CLAUDE.md 2026-11-08/09).
+
+Replaced 2026-11-09 with Gemini Omni 1.2 Flash (GA 2026-11-05) via the Interactions API — a
+DIFFERENT door from generateContent, which is the one the 2026-10-31 "Omni can't make video"
+finding actually knocked on (generateContent genuinely never serves video; this model only takes
+requests through POST .../v1beta/interactions). Verified live against the real account before
+being wired in here — 9 billed image-to-video generations total: 7 raw-protocol probes (to pin
+down the request/response shape and test two HTTP clients) plus 2 through this file's actual
+animate(), chained end to end exactly as daily_post.py would (opening segment, then a real
+continuation generated from the opening's own last frame via make_video.last_frame(), then
+make_video.chain_clips() joining the two) — the 15.6s joined clip held one locked composition
+start to end, measured (make_video.structure_drift = 9.33, limit 20) and eyeballed frame-by-frame
+at the seam. What that testing found:
+  - synchronous: the HTTP response itself carries status:"completed" and the finished clip —
+    there is no job id to poll, unlike Veo's and Higgsfield's long-running-operation shape.
+  - 8.0-8.04s / 720x1280 every time, with aspect_ratio="9:16" accepted explicitly in
+    response_format (so, unlike Wan 2.7, this provider DOES have a real aspect control).
+  - ships an AAC audio track on every clip with no field to suppress it. NOT stripped here —
+    make_video.chain_clips() (`-map "[v]" -an`) and make_video.build_reel_native()
+    (`-map "[v]" -map "2:a"`, where input 2 is this pipeline's own Lyria music, RULES.md E-6)
+    both select video-only from this file's output by explicit stream index, so the model's own
+    audio is already discarded downstream however many segments ship. An early strip here was
+    tried and removed in code review (2026-11-09) as redundant work with its own failure surface
+    (an extra ffmpeg subprocess + temp file per clip for a guarantee two call sites already gave).
+  - no dedicated negative-prompt field exists on this endpoint (same absence fetch_image.py's
+    plain Gemini stills already work around) — what must not appear is folded into the one text
+    prompt as "avoid", not sent as a separate parameter.
+  - plain urllib.request.urlopen() dropped the connection mid-transfer on 1 of 3 tries
+    (http.client.IncompleteRead, ~20KB short of a ~4.5MB body) — the `requests` library completed
+    3/3. The clip generates and bills either way; only the client-side download differs. So this
+    file uses `requests`, imported lazily inside animate() the same way `higgsfield_client` used
+    to be, to keep `import fetch_motion` cheap for callers that only read its constants
+    (check_rules.py does exactly that).
+
+SAME GEMINI_API_KEY already used for the stills (fetch_image.py) — no new credential, no new
+account, no new secret to register.
 
     python3 fetch_motion.py still.png out.mp4
 """
 
+import base64
 import sys
-import time
 
-import fetch_image as hf   # reuse _credentials() — same Higgsfield account as the stills
+import content_law
+import fetch_image as gm   # reuse _gemini_key() -- same Gemini account as the stills
 
-APPLICATION = "wan/v2.7/image-to-video"
+MODEL = "gemini-omni-1.2-flash"
+API_URL = "https://generativelanguage.googleapis.com/v1beta/interactions"
 
 # Locked camera + BARELY-THERE motion, so the composition (and the clear center band the verse
 # sits on) never shifts AND the scene never looks frantic. Fast video models tend to over-animate,
@@ -63,9 +98,11 @@ CONTINUE = ("This is a DIRECT CONTINUATION of one single continuous shot, resumi
             "colour grade, and nothing enters or leaves the frame. A viewer must not be able to tell "
             "where the previous footage ended and this begins. ")
 
-# Speed and camera only. What may not APPEAR lives in content_law.NEG_TERMS and is appended at
-# send time — naming it in both places is how this string ended up listing "text", "people",
-# "watermark" and "logo" twice each.
+# Speed and camera only. What may not APPEAR lives in content_law.NEG_TERMS. Neither Higgsfield's
+# negative_prompt field nor a Gemini Omni equivalent exists any more on this provider — there is no
+# dedicated field at all — so both of these are folded straight into the one text prompt in
+# animate() below, under "AVOID ENTIRELY". Naming the same thing in both strings is how this list
+# ended up listing "text", "people", "watermark" and "logo" twice each; kept apart on purpose.
 NEG = ("timelapse, sped up, fast-forward, accelerated motion, fast movement, "
        "fast-moving clouds, racing clouds, moving clouds, "
        "rushing water, crashing waves, flowing water, strong current, rolling waves, churning, "
@@ -82,55 +119,55 @@ CALLS = [0]
 SECONDS_PER_CALL = 8.0
 
 
-def animate(still_png, dest, aspect="9:16", prompt=MOTION, timeout_s=420, poll_s=5):
-    """Submit `still_png` for image-to-video, poll the request, download the mp4 to `dest`.
+def animate(still_png, dest, aspect="9:16", prompt=MOTION, timeout_s=180):
+    """Submit `still_png` for image-to-video, save the mp4 to `dest`.
     Raises on error/timeout so callers can fall back to a zoom still.
 
-    `aspect` is accepted for call-site compatibility but unused: Wan 2.7 has no aspect-ratio
-    parameter and simply keeps the input image's own ratio, which is already 9:16 (generate.REEL)
-    for every still this pipeline makes."""
+    Synchronous: the Interactions API returns the finished clip in the HTTP response itself
+    (confirmed live 2026-11-09 — `status` is already "completed" when the request returns, no
+    job id to poll), unlike the submit-then-poll shape Higgsfield and Veo both used. Measured
+    latency for one 8s/720p clip was 37-44s across 7 live calls, so 180s leaves ample margin
+    without reviving the old unbounded-poll risk this file used to guard against explicitly.
+
+    `aspect` is a REAL parameter here (response_format.aspect_ratio) — unlike the Higgsfield
+    Wan 2.7 call this replaced, which had no aspect-ratio field of its own and simply inherited
+    whatever the input image already was.
+    """
     CALLS[0] += 1
-    import content_law
-    import higgsfield_client as h
-    from PIL import Image
+    import requests   # lazy — see module docstring: keeps `import fetch_motion` dependency-light
 
-    client = h.SyncClient(api_key=hf._credentials())
-    img = Image.open(still_png)
-    img_url = client.upload_image(img, format="png")
+    with open(still_png, "rb") as f:
+        img_b64 = base64.b64encode(f.read()).decode()
 
-    args = {
-        "image_url": img_url,
-        "prompt": content_law.for_video(prompt),
-        "negative_prompt": NEG + ", " + content_law.NEG_TERMS,
-        "duration": int(SECONDS_PER_CALL),
-        "resolution": "720p",
+    text = (content_law.for_video(prompt) + "\n\nAVOID ENTIRELY, at any point in the clip: "
+            + NEG + ", " + content_law.NEG_TERMS + ".")
+    body = {
+        "model": MODEL,
+        "input": [
+            {"type": "image", "data": img_b64, "mime_type": "image/png"},
+            {"type": "text", "text": text},
+        ],
+        "response_format": {"type": "video", "resolution": "720p", "aspect_ratio": aspect},
     }
-    ctrl = client.submit(APPLICATION, args)
+    resp = requests.post(f"{API_URL}?key={gm._gemini_key()}", json=body, timeout=timeout_s)
+    if resp.status_code != 200:
+        raise RuntimeError(f"gemini-omni: HTTP {resp.status_code} ({resp.text[:500]})")
+    data = resp.json()
 
-    # client.submit()/.get() poll forever with no ceiling (confirmed in higgsfield_client's
-    # poll_request_status: `while True`) — the same unbounded-hang shape the old Google poll loop
-    # was written to avoid, so this keeps that same explicit timeout rather than trusting the SDK.
-    waited = 0
-    status = ctrl.status()
-    while not isinstance(status, h.DONE_STATUSES):
-        if waited >= timeout_s:
-            raise RuntimeError(f"higgsfield: timed out after {timeout_s}s")
-        time.sleep(poll_s)
-        waited += poll_s
-        status = ctrl.status()
+    status = data.get("status")
+    if status != "completed":
+        raise RuntimeError(f"gemini-omni: status={status} ({data.get('error') or data})")
 
-    if isinstance(status, h.NSFW):
-        raise RuntimeError("higgsfield: flagged NSFW")
-    if isinstance(status, (h.Failed, h.Cancelled)):
-        raise RuntimeError(f"higgsfield: request {type(status).__name__.lower()}")
+    video_b64 = None
+    for step in data.get("steps", []):
+        for part in step.get("content", []):
+            if part.get("type") == "video":
+                video_b64 = part.get("data")
+    if not video_b64:
+        raise RuntimeError(f"gemini-omni: no video in response (id={data.get('id')})")
 
-    result = ctrl.get()
-    video = result.get("video") or {}
-    url = video.get("url")
-    if not url:
-        raise RuntimeError(f"higgsfield: no video in response ({result})")
-    import urllib.request
-    urllib.request.urlretrieve(url, dest)
+    with open(dest, "wb") as f:
+        f.write(base64.b64decode(video_b64))
     return dest
 
 

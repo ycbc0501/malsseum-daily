@@ -68,7 +68,11 @@ jobs:
           python-version: "3.12"
 
       - name: Install deps
-        run: pip install pillow higgsfield-client "kiwipiepy==0.24.1" imageio-ffmpeg
+        # higgsfield-client stays: fetch_image.py's Soul fallback for stills still uses it.
+        # requests added 2026-11-09: fetch_motion.py now calls Gemini Omni's Interactions API
+        # through it (plain urllib dropped 1/3 large-response downloads mid-transfer — see
+        # fetch_motion.py's module docstring).
+        run: pip install pillow higgsfield-client requests "kiwipiepy==0.24.1" imageio-ffmpeg
 
       - name: Wait for target time (05:00 or 19:00 KST ±10), build the Reel (Nano Banana Pro + music)
         id: build

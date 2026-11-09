@@ -103,12 +103,19 @@ def published_kst(entry):
 
 # Google Veo died 2026-10-23 (model pulled from the API with no warning — every call 404'd and
 # fell back to a motionless still for 15 posts straight before anyone noticed, STRATEGY.md §18).
-# Replaced 2026-10-31 with Higgsfield's Wan 2.7 image-to-video (same account as the stills,
-# fetch_motion.py) at its quoted pay-as-you-go rate: $0.05/s, no subscription discount assumed, at
-# ~₩1,333/$ (2026-10-30 mid-market). This is a QUOTED list rate, not an invoiced one yet — the old
-# ₩193,659/1,400s constant below WAS an actual September invoice; this isn't, so recalibrate once
-# a real Higgsfield bill arrives.
-VEO_WON_PER_SECOND = 0.05 * 1333
+# Patched 2026-10-31 onto Higgsfield's Wan 2.7 as a stopgap, which ran out of prepaid credit on
+# 2026-11-08 — the account was never meant to keep carrying this bill (fetch_motion.py's module
+# docstring has the full history). Replaced 2026-11-09 with Gemini Omni 1.2 Flash (GA 2026-11-05)
+# via the Interactions API, on the SAME GEMINI_API_KEY already billed for the stills. 720p video
+# is priced at $12/million output tokens; of the 7 live generation calls made while building this
+# (2026-11-09), only 2 had their raw JSON kept to read usage from (the rest were quick retry-logic
+# probes that only checked the download succeeded) — both read usage.total_output_tokens=46336 for
+# an 8.04s clip, i.e. 5,762 tokens/s ≈ $0.069/s. That lines up with the $0.07/s list price Google
+# publishes for this tier, so $0.07/s is what's used below rather than the 2-sample measurement.
+# At ~₩1,333/$ (2026-10-30 mid-market) that is ≈₩93.31. This is a LIST rate, not an invoiced one
+# yet — the ₩138.33 constant two providers ago WAS an actual September invoice; this isn't, so
+# recalibrate once a real Gemini Omni bill arrives.
+VEO_WON_PER_SECOND = 0.07 * 1333
 
 
 def spend(days=30):
