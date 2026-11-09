@@ -8880,6 +8880,35 @@
   "ref": "시편 16:8",
   "theme": "평안"
  },
+ "18211787989370988": {
+  "clip_novelty": 3.83,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-11-10",
+  "duration": 7.7,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 5,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 2.138,
+  "motion_attempts": 2,
+  "motion_sky": 2.846,
+  "published": "2026-11-10T08:46:37+09:00",
+  "ref": "누가복음 12:29",
+  "scene": "tea_cup",
+  "segments": 1,
+  "text_contrast": 5.11,
+  "text_spread": 16.7,
+  "theme": "평안",
+  "veo_attempts": [
+   2,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18218361637330422": {
   "insights": {
    "comments": 1,
