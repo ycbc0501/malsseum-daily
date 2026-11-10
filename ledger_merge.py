@@ -63,7 +63,26 @@ import os
 import sys
 
 # state.json keys where OURS always replaces THEIRS wholesale — see the docstring above.
-OURS_REPLACES_KEYS = {"scene_i", "used_scene_cats"}
+# `errors` is here as well as in OURS_OMITS_DELETES below, and it needs both: present → replace
+# (a union would carry this morning's fixed rejection alongside tonight's real one), absent →
+# delete. "This run's outcome" is not something two runs can share.
+OURS_REPLACES_KEYS = {"scene_i", "used_scene_cats", "errors"}
+
+# Keys whose ABSENCE from ours is itself the write. OURS_REPLACES_KEYS cannot express this:
+# that set is applied while walking `ours.items()`, so a key `ours` does not have is never
+# visited and `theirs`'s copy survives untouched.
+#
+# `errors` in account.json is the case. Its writer (insights.account()) is explicit that values
+# accumulate across runs but errors do NOT — "they describe this run's outcome" — and removes
+# the key when a run has none. The merge then handed it straight back, so a rejection fixed at
+# lunchtime stayed in the ledger next to that evening's working metrics, reading as though both
+# were true at once. Exactly what the writer's own comment says must not happen. Seen live
+# 2026-11-10: `views|follower_type` was dropped from the request and the run printed
+# "0 rejected", while the committed ledger still carried its error.
+#
+# Only safe for a key whose parent dict `ours` genuinely rewrote this run. `errors` qualifies:
+# account() rebuilds the whole day entry before saving.
+OURS_OMITS_DELETES = {"errors"}
 
 
 def merge(ours, theirs):
@@ -74,6 +93,9 @@ def merge(ours, theirs):
                 out[k] = v
             else:
                 out[k] = merge(v, theirs[k]) if k in theirs else v
+        for k in OURS_OMITS_DELETES:
+            if k in out and k not in ours:
+                del out[k]
         return out
     if isinstance(ours, list) and isinstance(theirs, list):
         out = list(theirs)

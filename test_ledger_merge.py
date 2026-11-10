@@ -136,5 +136,45 @@ class StateJsonFullMergeShape(unittest.TestCase):
         self.assertEqual(set(merged["used_photos"]), {"p.jpg"})
 
 
+class ThisRunsErrorsAreNotImmortal(unittest.TestCase):
+    """`errors` in account.json states what THIS run hit. The merge used to make it permanent.
+
+    insights.account() accumulates values across runs on purpose and deliberately does NOT
+    accumulate errors — it removes the key when a run has none. But merge() starts from
+    `dict(theirs)` and only walks `ours.items()`, so a key ours dropped was never visited and
+    the remote copy survived. Live on 2026-11-10 the run printed "0 rejected" while the
+    committed ledger still carried the rejection it had just stopped making.
+    """
+
+    def test_dropping_errors_removes_them(self):
+        ours = {"2026-11-10": {"insights": {"reach": 713}}}
+        theirs = {"2026-11-10": {"insights": {"reach": 700},
+                                 "errors": {"views|follower_type": "HTTP 400"}}}
+        self.assertNotIn("errors", ledger_merge.merge(ours, theirs)["2026-11-10"])
+
+    def test_a_current_error_replaces_rather_than_unions(self):
+        # A union would report this morning's fixed rejection next to tonight's real one.
+        ours = {"d": {"errors": {"new": "real"}}}
+        theirs = {"d": {"errors": {"old": "fixed at lunch"}}}
+        self.assertEqual(ledger_merge.merge(ours, theirs)["d"]["errors"], {"new": "real"})
+
+    def test_a_day_ours_never_saw_is_left_alone(self):
+        # Deletion applies only where ours rewrote the parent dict. A stale local file must not
+        # erase another day's record.
+        ours = {"2026-11-09": {"a": 1}}
+        theirs = {"2026-11-08": {"errors": {"y": "z"}}}
+        self.assertEqual(ledger_merge.merge(ours, theirs)["2026-11-08"],
+                         {"errors": {"y": "z"}})
+
+    def test_the_counters_this_file_protects_still_union(self):
+        # Reverse guard: OURS_OMITS_DELETES must not leak into the no-repeat ledgers, whose
+        # whole job is that a key present remotely is never dropped (08-26/08-29 duplicates).
+        ours = {"used_verses": ["a"], "post_i": 3}
+        theirs = {"used_verses": ["b"], "post_i": 9}
+        got = ledger_merge.merge(ours, theirs)
+        self.assertEqual(sorted(got["used_verses"]), ["a", "b"])
+        self.assertEqual(got["post_i"], 9)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

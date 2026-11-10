@@ -1105,6 +1105,32 @@ segments 1은 7.68초다 — 길이와 교란돼 있어 "모션이 체류에 해
 처음 쓴 형태는 `.index()`가 예외로 죽어 **FAIL이 아니라 아무것도 출력하지 않았다**. 검사가
 예외로 죽으면 우연히 PASS로 읽힌다. 줄 단위 위치 비교로 고쳤다). `verify.sh` 전체 통과.
 
+## 2026-11-10 밤 3 — 바로 위 ⑥을 고치고 다시 돌렸더니, "0 rejected"인데 원장엔 거부가 그대로 남았다
+
+위 ⑥(`views|follower_type` → `follow_type`)을 고친 뒤 실행이 실제로 `0 rejected`를 찍었는데,
+그날 커밋된 `account.json`에는 **고친 그 거부가 그대로** 남아 있었다. 원인은 `ledger_merge.py`
+자체 — D-3(11-08)가 세운 `OURS_REPLACES_KEYS`는 `ours.items()`를 **도는 동안만** 적용된다.
+그래서 `ours`에 **없는** 키는 아예 방문되지 않고 `theirs`(원격)의 사본이 그대로 살아남는다 —
+"뺐다"를 표현할 방법이 없었다.
+
+`account.json`의 `errors`가 정확히 이 모양이다. 작성자(`insights.account()`)는 **값은 누적,
+에러는 누적 안 함**이라고 이미 명시해두고(에러는 "이번 실행의 결과") 에러가 없는 실행이면 그
+키를 지운다. 그런데 `ledger_merge.merge()`는 `dict(theirs)`에서 시작해 `ours`가 가진 키만
+덮어쓰므로, 로컬이 `errors`를 지운 그 실행에서도 원격 사본이 그대로 돌아왔다 — 점심에 고친
+거부가 저녁의 정상 지표 옆에 남아 **둘 다 참인 것처럼** 읽혔다. 작성자 자신의 주석이 "이러면
+안 된다"고 적어둔 바로 그 상태다.
+
+**고친 것:** `OURS_OMITS_DELETES = {"errors"}` 신설 — `ours`가 그 부모 딕셔너리를 이번 실행에
+다시 썼는데 그 키가 없으면 지운다. `errors`는 `OURS_REPLACES_KEYS`에도 그대로 둔다(둘 다
+필요하다 — 있으면 **대체**해야 하고, 합집합이면 아침에 고친 거부가 저녁의 진짜 거부 옆에
+남는다). 삭제는 **`ours`가 그 날짜를 실제로 다시 쓴 경우에만** 적용되므로, 오래된 로컬 사본이
+`ours`가 모르는 다른 날짜의 기록을 지우는 일은 없다(역테스트로 고정).
+
+`RULES.md` D-3b, `check_rules.py`에 D-3b 검사 2개(`errors`가 두 집합 모두에 있는지, `merge()`가
+실제로 그 집합을 쓰는지), `test_ledger_merge.py`의 `ThisRunsErrorsAreNotImmortal` 4개(이 사고
+재현 2개 + D-3가 지키는 `post_i`/`used_verses` 등은 여전히 max/합집합임을 보이는 역테스트).
+`verify.sh`(테스트 30개 + 규칙 감사) 전체 재확인 후 커밋.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually

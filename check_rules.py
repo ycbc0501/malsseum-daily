@@ -295,6 +295,16 @@ def checks():
     yield "D-3 watch.py has a frozen-ledger detector wired into findings()", (
         "def scene_fingerprint" in wt and '"scene-frozen"' in wt
         and "_scene_watch" in wt)
+    # D-3b (2026-11-10): OURS_REPLACES_KEYS only fires while walking ours.items(), so a key OURS
+    # dropped (rather than changed) was never visited and theirs's stale copy survived forever —
+    # account.json's `errors`, which insights.account() deliberately removes once a run has none,
+    # kept a lunchtime-fixed rejection alive next to the same day's working metrics. `errors` needs
+    # BOTH sets: present -> replace (not union, or a fixed error reappears beside a real one),
+    # absent -> delete.
+    yield "D-3b errors is both ours-wins and delete-when-absent", (
+        "errors" in _lm.OURS_REPLACES_KEYS and "errors" in _lm.OURS_OMITS_DELETES)
+    yield "D-3b merge() actually applies OURS_OMITS_DELETES, not just defines it", (
+        "OURS_OMITS_DELETES" in inspect.getsource(_lm.merge))
     yield "F3 text area is measured, not assumed", hasattr(generate, "text_area_ok")
     # F2c — the clearance threshold must be relative to the picture, never an absolute edge value.
     # It was absolute (4.0) for a fortnight and rejected every render it ever saw: four CI logs,
