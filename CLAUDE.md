@@ -1219,6 +1219,27 @@ study.yml의 **주석**("… see save_ledger.sh.")에서 "state.json"을 잘못 
 `RULES.md` K-1·K-2·K-3, `check_rules.py` 8개(K-1/K-2 6개 + H0-6 확장), `test_qa_gate.py` 11개,
 `verify.sh` 전체 재확인 후 커밋.
 
+## 2026-11-10 — 이름을 정했다: **"검수 에이전트"** = `qa_gate.py --run` + code-review 스킬, 한 세트
+
+원석님: "다된건가. 이 모든겅 quality assurance 하능곳을 검수에이전트라고하자." `qa_gate.py`
+작업(바로 위 K)은 끝나 있다 — 로컬 `git status` clean, `474bd48`이 origin/main과 정확히
+일치, 실제 CI(Ubuntu)도 green까지 그 자리에서 확인했다(이번 세션에서 다시 확인). "다됐다"는
+맞다.
+
+이름 요청은 별개로 처리했다 — 지금까지 이 작업은 매번 다르게 불렸다("qa, 엔드투엔드테스트,
+결과물 검수, 코드 검수하는 에이전트 따로 만들어"(11-09), "다섯 개의 독립 코드 검수
+에이전트"(11-09)). `RULES.md` **K-4**를 신설해 못박았다: **"검수 에이전트"는
+①`qa_gate.py --run`(결과물이 실제로 맞는지, K-1·K-2)과 ②`code-review` 스킬(high, diff가
+아니라 바뀐 파일 전체 — 코드 자체에 결함이 있는지)을 **같이** 돌리는 것을 가리키고, 둘 중
+하나만 돌리면 "검수 에이전트를 돌렸다"고 부르지 않는다. 근거: 11-09(fetch_motion.py 전환)와
+11-10(qa_gate.py 자체) 둘 다 이 두 패스를 **같이** 돌렸을 때만 실제 버그를 잡았다 — 결과물
+검수만으로는 코드 안의 결함(임시파일 누수, 삼켜진 에러)을 못 보고, 코드 검수만으로는
+"실제로 돌렸을 때 결과물이 맞는지"를 안 본다.
+
+`control_center.py`(J, "지금 상태가 괜찮은가", 상시·공짜)와는 다른 질문이라고 K-4에 같이
+적었다 — 검수 에이전트는 "이번에 바꾼 것이 실제로 맞는가"(변경마다, 비용 있음)를 묻는다.
+문서 변경만이라 `check_rules.py`·`verify.sh` 재확인 후 커밋.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually
