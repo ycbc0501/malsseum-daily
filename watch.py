@@ -39,7 +39,15 @@ MIN_RECENT, MIN_BASELINE = 5, 8
 DROP_RATIO = 0.5         # recent median at or below half the baseline
 DEAD_LIKES, DEAD_RUN = 1, 4      # 4 posts in a row at 1 like or fewer
 SLOTS = (5, 19)          # KST hours the account posts at
-GRACE_H = 2              # late by more than this and something is wrong, not just slow
+# 2026-11-10: was 2h, picked without data, back when daily-post.yml chained 5 crons/slot.
+# Measured instead: 100 of this repo's own hourly cron firings (median 37min, p90 55min late
+# vs. their own schedule:) show GitHub's firing delay alone is routinely 30-55min on this repo,
+# before any build time. The single-cron redesign (RULES.md C2) removed the chain, so GRACE_H no
+# longer needs to cover that chain's own claim-logic bugs (which, not GitHub lateness, produced
+# the 150-230min delays seen 11-02..11-10) -- just real GitHub lateness + the ~10min build. 1h
+# covers the measured p90 (55min) plus build with little margin to spare; recalibrate once the
+# single-cron design has a week of its own data.
+GRACE_H = 1              # late by more than this and something is wrong, not just slow
 COOLDOWN_DAYS = 5        # one alert per episode, not one per day
 # Motion can disappear without anything failing. Google withdrew the Veo model on 2026-10-23
 # and every call 404'd straight into the still-image fallback; 15 reels went out motionless

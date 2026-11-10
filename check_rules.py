@@ -604,7 +604,7 @@ def checks():
         '"drop"' in watch and '"dead"' in watch and 'f"missed-' in watch
         and "COOLDOWN_DAYS" in watch)
     yield "G1 missed slots are judged per slot, within GRACE_H", (
-        "SLOTS = (5, 19)" in watch and "GRACE_H = 2" in watch)
+        "SLOTS = (5, 19)" in watch and "GRACE_H = 1" in watch)
     yield "G1 missed slots ask Instagram, not the ledger", "published_times" in watch and (
         "post_instagram" in watch)
     yield "G1 the watcher runs often enough to be timely", len(
