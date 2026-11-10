@@ -190,9 +190,14 @@ def checks():
     yield "B1 verses are verbatim (generated, not hand-written)", (HERE / "build_verses.py").exists()
     yield "B3 pool lasts a year at 2/day", len(verses) / 2 > 330
     yield "C2 reel queue", "concurrency:" in daily
-    yield "C2b a late run needs evidence, not a schedule argument", (
-        'slot_state' in daily_post_src and '"unknown"' in daily_post_src
-        and "LATE_LIMIT_MIN" in daily_post_src)
+    # 2026-11-10: the 5-cron-per-slot chain (wait/jitter/claim-window) was removed — one cron per
+    # slot now, post the moment it fires. Guard against the chain quietly growing back: exactly
+    # one `cron:` line per slot, and no leftover wait/jitter machinery in daily_post.py.
+    yield "C2b exactly one cron per slot, no chain", daily.count("- cron:") == 2
+    yield "C2b no in-job wait/jitter left to drift out of sync", (
+        "wait_until_target" not in daily_post_src
+        and "CLAIM_WINDOW_MIN" not in daily_post_src
+        and "time.sleep" not in daily_post_src)
     yield "C2 carousel queue", "concurrency:" in carousel_wf
     yield "C3 slot re-checked just before publishing", "Re-check the slot right before" in daily
     yield "C4 Instagram is the source of truth", hasattr(daily_post, "published_refs")

@@ -1,48 +1,38 @@
 name: Daily 말씀 Reel
 
-# Two posts a day: 05:00 KST and 19:00 KST (±10 min).
+# Two posts a day: 05:00 KST and 19:00 KST. ONE cron per slot — it fires, and daily_post.py
+# posts right then, whatever time that actually is. (RULES.md C2, simplified 2026-11-10.)
 #
-# 2026-08-28: GitHub's scheduler drifted from ~30 min late to 4-5 HOURS late. The old design was
-# a single cron fired 2h early plus a wait inside the job, so once the drift passed 2h the target
-# had already gone by and the post went out whenever the runner started — 19:00 KST landed at
-# 21:30, 22:35, 10:28. Reach fell from ~350 views to ~50 and stayed there.
-#
-# So each slot now has a CHAIN of hourly crons across a 5-hour lead window. daily_post.py exits in
-# seconds if it is more than MAX_WAIT_MIN from the target (a later, closer cron takes the slot) and
-# posts otherwise, and slot_already_filled() asks Instagram whether this half of the day is already
-# posted so the chain can never double-post.
-#   morning → target 05:00 KST = 20:00 UTC, crons 15:00-19:00 UTC
-#   evening → target 19:00 KST = 10:00 UTC, crons 05:00-09:00 UTC
+# History: 2026-08-28 GitHub's scheduler drifted up to 4-5 hours late, and the design at the
+# time (one cron fired 2h early + an in-job sleep to the exact target) meant a big delay sent
+# the post out at a near-random hour — 19:00 KST landed at 21:30, 22:35, 10:28, reach fell from
+# ~350 views to ~50 and stayed there. The fix tried then was a CHAIN of 10 hourly crons (5 per
+# slot) racing to claim the slot inside a sliding window, which absorbed the drift but was
+# itself a source of bugs for two months straight: two runs claiming the same window at once
+# and double-posting (2026-09-06), "late" vs "on-time" claims disagreeing about their own
+# deadline so NOBODY claimed (2026-09-13/14), a carousel on another workflow being miscounted
+# as filling the slot. None of that bookkeeping changes WHEN GitHub actually runs the job — only
+# how the chain argues about it. So it is gone: one cron per slot, post the moment it fires. A
+# post landing late because GitHub ran late is normal now, not an error to route around.
+# slot_already_filled() (daily_post.py) still guards against posting the same half-day twice.
+#   morning → target 05:00 KST = 20:00 UTC, cron "0 20 * * *"
+#   evening → target 19:00 KST = 10:00 UTC, cron "0 10 * * *"
 on:
   schedule:
-    - cron: "0 15 * * *"
-    - cron: "0 16 * * *"
-    - cron: "0 17 * * *"
-    - cron: "0 18 * * *"
-    - cron: "0 19 * * *"
-    - cron: "0 5 * * *"
-    - cron: "0 6 * * *"
-    - cron: "0 7 * * *"
-    - cron: "0 8 * * *"
-    - cron: "0 9 * * *"
+    - cron: "0 20 * * *"
+    - cron: "0 10 * * *"
   workflow_dispatch:
     inputs:
       force:
-        description: "Publish immediately, ignoring the slot window (use to fill a missed post)"
+        description: "Publish immediately, ignoring the duplicate-slot check (use to fill a missed post)"
         type: boolean
         default: false
 
-# ONE run per slot, serialised by GitHub itself. On 2026-09-06 the 08:00 cron fired 69 minutes
-# late and the 09:00 cron fired 52 minutes late, so BOTH landed inside the 60-minute claim window,
-# both slept to 19:00 KST, both asked Instagram whether the slot was taken at the same instant,
-# both got "no", and 데살로니가후서 2:17 went out twice five minutes apart. The claim-window proof
-# assumed every cron is delayed by the same amount; GitHub delays each one differently, so no
-# scheduling rule can make the claim unique. A queue can.
-#
-# cancel-in-progress: false — the waiting run must not kill the one that is already posting. It
-# starts after that run finishes, finds the target long past, and stands down on its own.
+# Cheap insurance against an overlapping manual dispatch, not a scheduling mechanism — with one
+# cron per slot there is no chain left to serialise. cancel-in-progress: false — never kill a
+# run that might already be mid-publish.
 concurrency:
-  group: daily-post-${{ contains(fromJSON('["0 5 * * *","0 6 * * *","0 7 * * *","0 8 * * *","0 9 * * *"]'), github.event.schedule) && '19' || '5' }}
+  group: daily-post-${{ contains(fromJSON('["0 10 * * *"]'), github.event.schedule) && '19' || '5' }}
   cancel-in-progress: false
 
 permissions:
@@ -52,14 +42,11 @@ permissions:
 jobs:
   post:
     runs-on: ubuntu-latest
-    # TIMING BUDGET — do not shrink below (max wait + max build) or posts die mid-render.
-    #   max wait  = cron fires on time (2h early) + jitter +10 min      = 130 min
-    #   max build = image + gates/regens, Veo + retry, Lyria, ffmpeg,
-    #               release upload, IG publish                          ~ 50 min
-    # 2026-07-26: was 60, which was *less than the wait alone* — a late-firing scheduler
-    # (03:57 KST instead of 03:00) left only 7 min of build budget and the morning post was
-    # killed mid-ffmpeg. Silent miss, twice (07-24, 07-26). Keep this >= 180.
-    timeout-minutes: 180
+    # TIMING BUDGET — there is no more in-job wait (2026-11-10), so this only has to cover the
+    # build itself: image + gates/regens, Veo + retry, Lyria, ffmpeg, release upload, IG publish.
+    # Measured build time is ~50 min; this leaves real headroom for a slow day's retries without
+    # reintroducing the old "sized to the happy path, dies mid-render on a bad one" failure.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -74,7 +61,7 @@ jobs:
         # fetch_motion.py's module docstring).
         run: pip install pillow higgsfield-client requests "kiwipiepy==0.24.1" imageio-ffmpeg
 
-      - name: Wait for target time (05:00 or 19:00 KST ±10), build the Reel (Nano Banana Pro + music)
+      - name: Build the Reel (Nano Banana Pro + music) and post
         id: build
         env:
           # published_refs() and slot_already_filled() run in THIS step and both talk to Instagram.
@@ -92,18 +79,17 @@ jobs:
           # generated by us, and tapping a flagged post names NO other creator — so the match is
           # not the video. The caption was the one place this account owned no text at all.
           CAPTION_REFLECTION: "1"
-          # A manual run defaults to the 05:00 slot and would normally stand down because that
-          # time has passed. `force` skips the wait and the slot check so a missed post can be
-          # filled by hand — 2026-09-09's evening reel was lost and there was no way to publish it.
+          # A manual run defaults to the 05:00 slot. `force` skips the duplicate-slot check so a
+          # missed post can be filled by hand — 2026-09-09's evening reel was lost and there was
+          # no way to publish it.
           FORCE: ${{ inputs.force && '--now' || '' }}
-          CATCHUP: "${{ (github.event.schedule == '0 19 * * *' || github.event.schedule == '0 9 * * *') && '--catchup' || '' }}"
-          TARGET_HOUR: ${{ contains(fromJSON('["0 5 * * *","0 6 * * *","0 7 * * *","0 8 * * *","0 9 * * *"]'), github.event.schedule) && '19' || '5' }}
+          TARGET_HOUR: ${{ contains(fromJSON('["0 10 * * *"]'), github.event.schedule) && '19' || '5' }}
         run: |
-          python daily_post.py --emit --jitter 600 --hour "$TARGET_HOUR" $CATCHUP $FORCE
+          python daily_post.py --emit --hour "$TARGET_HOUR" $FORCE
           # No _skip file means a reel was built and the publish steps should run.
           if [ -f output/_skip ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "this cron is not the one that posts this slot — exiting cleanly"
+            echo "this slot was already posted (duplicate guard) — exiting cleanly"
           fi
 
       - name: Host media on a GitHub Release (keeps git history lean)
@@ -121,20 +107,20 @@ jobs:
             | while read -r a; do gh release delete-asset media "$a" -y || true; done
           echo "FILE=$FILE" >> "$GITHUB_ENV"
 
-      # Last line of defence. The queue should make this unreachable, but a duplicate post is the
-      # single most expensive thing this pipeline can ship, so the slot is re-checked after the
-      # build — seconds before publishing rather than minutes.
+      # Last line of defence. The build-time check above should make this unreachable, but a
+      # duplicate post is the single most expensive thing this pipeline can ship, so the slot is
+      # re-checked after the build — seconds before publishing rather than minutes.
       - name: Re-check the slot right before publishing
         id: recheck
         if: steps.build.outputs.skip != 'true'
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
-          TARGET_HOUR: ${{ contains(fromJSON('["0 5 * * *","0 6 * * *","0 7 * * *","0 8 * * *","0 9 * * *"]'), github.event.schedule) && '19' || '5' }}
+          TARGET_HOUR: ${{ contains(fromJSON('["0 10 * * *"]'), github.event.schedule) && '19' || '5' }}
         run: |
           # exit 1 = slot taken (skip), exit 0 = free, anything else = the check itself broke.
-          # A broken check must not silently swallow the post — the queue is the real guard, so
-          # fall open and publish, loudly.
+          # A broken check must not silently swallow the post — this single check is the real
+          # guard now (no more chain/queue behind it), so fall open and publish, loudly.
           set +e
           python -c "import sys, daily_post; sys.exit(1 if daily_post.slot_already_filled(int('$TARGET_HOUR')) else 0)"
           rc=$?
@@ -143,7 +129,7 @@ jobs:
             echo "another run filled this slot while we were building — not publishing"
             echo "taken=true" >> "$GITHUB_OUTPUT"
           elif [ "$rc" -ne 0 ]; then
-            echo "::warning::slot re-check failed (exit $rc) — publishing anyway, the queue still guards this"
+            echo "::warning::slot re-check failed (exit $rc) — publishing anyway rather than risk a silent miss"
           else
             echo "slot still free"
           fi
@@ -201,7 +187,7 @@ jobs:
           # watch.py asks Instagram whether the slot is actually empty before it says anything.
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
-          TARGET_HOUR: ${{ contains(fromJSON('["0 5 * * *","0 6 * * *","0 7 * * *","0 8 * * *","0 9 * * *"]'), github.event.schedule) && '19' || '5' }}
+          TARGET_HOUR: ${{ contains(fromJSON('["0 10 * * *"]'), github.event.schedule) && '19' || '5' }}
         run: |
           gh issue create \
             --title "missed post — ${TARGET_HOUR}:00 KST (run ${GITHUB_RUN_ID})" \
@@ -209,12 +195,12 @@ jobs:
 
           Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
 
-          If the job hit the 180-min timeout, check the timing budget comment in
-          \`.github/workflows/daily-post.yml\` — wait + build must fit inside it." \
+          If the job hit the timeout, check the timing budget comment in
+          \`.github/workflows/daily-post.yml\` — the build must fit inside it." \
             || echo "could not open issue"
-          # NOT notify.py directly. A failing run knows nothing about the slot, and a chain
-          # retries — on 09-19 that sent five ❌ for a slot that was filled at 19:18. watch.py
-          # asks Instagram first, alerts at most once per slot, and closes the loop later.
+          # NOT notify.py directly — a failing run knows nothing about the slot (there is no
+          # chain to retry it now; this is the only run for this slot today). watch.py asks
+          # Instagram first and alerts at most once per slot.
           TARGET_HOUR="${TARGET_HOUR}" python watch.py --post-failed \
             "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
             || true

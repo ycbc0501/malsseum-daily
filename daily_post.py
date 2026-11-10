@@ -2,8 +2,9 @@
 """
 Daily 말씀 Reel — the hands-off orchestrator.
 
-Each day: waits for 05:00 KST ±10 min, picks the next verse + a unique hymn, generates an
-AI background, animates it with Veo into ~30s of real motion (four chained ~8s continuations,
+One cron per slot (05:00 / 19:00 KST, RULES.md C2) fires this and it posts right away — no
+waiting for an exact minute. It picks the next verse + a unique hymn, generates an AI
+background, animates it with Veo into ~30s of real motion (four chained ~8s continuations,
 played forward at native speed — never looped or reversed), overlays the verse (always
 centered), mixes the hymn in softly, and publishes a Reel (shown in the profile grid via
 share_to_feed) plus a Story.
@@ -12,14 +13,13 @@ Fallbacks keep it alive: no clip → still 4:5 card + music; no music → plain 
 
     python3 daily_post.py --now --dry-run
     python3 daily_post.py --emit
-    python3 daily_post.py --jitter 600
+    python3 daily_post.py --emit --hour 19
 """
 
 import argparse
 import glob
 import json
 import os
-import random
 import re
 import shutil
 import time
@@ -88,81 +88,16 @@ HYMN_S = 30.0
 CHAIN_DEADLINE_S = 28 * 60
 
 
-# The claim window, in minutes before the target. It is exactly the cron spacing on purpose:
-# with hourly crons, one and only one run in the chain can ever land inside (0, 60], so two runs
-# can never claim the same slot concurrently and double-post. A run that arrives after the target
-# claims nothing on the schedule alone; a late run may still fill the slot, but only against
-# positive evidence from Instagram that it is empty (see wait_until_target).
-CLAIM_WINDOW_MIN = 60
-
-# How late a run may still fill an empty slot. Past this it is no longer that slot's post — a
-# 05:00 reel going out at 14:00 is worse than none, and the other slot is closer anyway.
-LATE_LIMIT_MIN = 6 * 60
-
-
-def wait_until_target(jitter_s, hour=5):
-    """Sleep until the target hour. Returns False if this run is too early to claim the slot.
-
-    2026-08-28: GitHub's scheduler went from ~30 min late to 4-5 HOURS late. The old design was
-    one cron fired 2h early plus a wait, so a 4h delay meant the target had already passed and
-    the post went out at whatever hour the runner happened to start — 19:00 KST posts landed at
-    21:30, 22:35, even 10:28. Reach fell from ~350 views to ~50 and did not recover.
-
-    The fix is a CHAIN of hourly crons across the lead window. Each run asks how far it is from
-    the target: too early and it exits in seconds so a later, closer cron takes the slot; near or
-    past the target it posts. That absorbs several hours of scheduler drift at the cost of a few
-    seconds per skipped run, instead of one run idling for hours against the job timeout."""
-    now = datetime.now(KST)
-    # WHO CLAIMS is decided on the exact slot time, never on the jittered one. Jitter used to move
-    # the target and the claim window moved with it, so the runs disagreed about their own
-    # deadline: on 2026-09-13 the 03:51 run measured itself against 04:58 ("67 min early, leaving
-    # it to a later cron") and the 04:59 run against 04:55 ("4 min past, an earlier cron owns
-    # this"). Nobody claimed and the morning post never happened. With hourly crons and an exact
-    # slot, the delays are exactly 60, 120, 180... apart, so the (0, CLAIM_WINDOW_MIN] window holds
-    # one run and only one — the property the chain is built on.
-    slot = now.replace(hour=hour, minute=0, second=0, microsecond=0)
-    delay = (slot - now).total_seconds()
-    if delay > CLAIM_WINDOW_MIN * 60:
-        print(f"{delay/60:.0f} min before {slot:%H:%M} KST — too early, leaving the slot to a later cron")
-        return False
-    if delay <= 0:
-        late = -delay / 60
-        if late > LATE_LIMIT_MIN:
-            print(f"{late/60:.1f}h past {slot:%H:%M} KST — too late to be this slot's post, standing down")
-            return False
-        # Whether an earlier cron "owns" this slot is not something the schedule can be trusted to
-        # answer. GitHub fires the evening chain one to four hours late and drops most of it: over
-        # the last week only 2-4 of the 5 evening crons ran at all, and on the days when none
-        # landed inside the claim window nobody posted (09-13, 09-14). So ask the account instead.
-        # An empty slot is an empty slot no matter which cron is asking; "unknown" is not evidence,
-        # and a late run has nothing but evidence, so it stands down. The concurrency queue and the
-        # pre-publish re-check stop two runs from racing into the same empty slot.
-        state = slot_state(hour)
-        if state == "filled":
-            print(f"{late:.0f} min past {slot:%H:%M} KST and the slot is already posted → standing down")
-            return False
-        if state == "unknown":
-            print(f"{late:.0f} min past {slot:%H:%M} KST and cannot confirm the slot is empty "
-                  f"→ standing down rather than risk a duplicate")
-            return False
-        print(f"{late:.0f} min past {slot:%H:%M} KST and the slot is still empty → filling it")
-        return True
-    # Jitter applies only to WHEN we post, so the feed is not stamped at exactly 05:00:00 daily.
-    # It cannot move the claim, so it cannot open a gap between two runs.
-    target = slot + timedelta(seconds=random.randint(-jitter_s, jitter_s))
-    wait = max(0.0, (target - datetime.now(KST)).total_seconds())
-    print(f"sleeping {int(wait)}s → posting at {target:%Y-%m-%d %H:%M:%S} KST")
-    time.sleep(wait)
-    return True
-
-
 def slot_state(hour):
     """"filled" | "empty" | "unknown" — what Instagram says about this half of the day (KST).
 
-    The three answers matter separately. An ON-TIME run may publish on "unknown", because the
-    schedule already says the slot is its own and refusing would miss a post over a flaky API call.
-    A LATE run may not: it has no schedule claim, only the evidence, so without evidence it stands
-    down. Morning owns 00:00-11:59 KST, evening 12:00-23:59."""
+    2026-11-10: this used to feed a wait/claim-window dance across a 5-hour chain of hourly
+    crons, built because GitHub's scheduler used to drift up to 4-5 hours (2026-08-28). That
+    chain is gone — RULES.md C2 now runs ONE cron per slot and posts the moment it fires,
+    whenever that is. The only thing left to ask Instagram is the plain duplicate question:
+    is this half of the day already posted? "unknown" (the API hiccuped) is treated the same
+    as "empty" — there is no other cron to defer to, so refusing to post over a flaky read
+    would just mean no post at all. Morning owns 00:00-11:59 KST, evening 12:00-23:59."""
     try:
         import post_instagram
         today = datetime.now(KST).date()
@@ -457,22 +392,22 @@ def pick_music(state):
 
 def main():
     ap = argparse.ArgumentParser()
+    # --now skips the duplicate-slot check below — for filling a missed post by hand.
     ap.add_argument("--now", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--emit", action="store_true")
-    ap.add_argument("--jitter", type=int, default=600)
     ap.add_argument("--hour", type=int, default=5)   # 5 = morning, 19 = evening (KST)
-    # --catchup is accepted and ignored: the chain no longer needs a designated latecomer, because
-    # a late run now asks the account whether the slot is empty instead of inferring it.
-    ap.add_argument("--catchup", action="store_true", help=argparse.SUPPRESS)
     args = ap.parse_args()
 
-    if not args.now:
-        if not wait_until_target(args.jitter, args.hour) or slot_already_filled(args.hour):
-            # Nothing to publish. The workflow reads this file and skips the remaining steps.
-            os.makedirs(generate.OUT_DIR, exist_ok=True)
-            open(os.path.join(generate.OUT_DIR, "_skip"), "w").close()
-            return
+    # 2026-11-10 (RULES.md C2): one cron per slot, fire and post. There used to be a wait/jitter
+    # dance across a 5-hour chain of hourly crons to absorb GitHub's scheduler drift — that is
+    # gone. Whatever time this run actually starts at IS the post time now. The only thing left
+    # to check is the plain duplicate question: did this half of the day already get a reel?
+    if not args.now and slot_already_filled(args.hour):
+        # Nothing to publish. The workflow reads this file and skips the remaining steps.
+        os.makedirs(generate.OUT_DIR, exist_ok=True)
+        open(os.path.join(generate.OUT_DIR, "_skip"), "w").close()
+        return
 
     with open(os.path.join(generate.HERE, "verses.json"), encoding="utf-8") as f:
         data = json.load(f)

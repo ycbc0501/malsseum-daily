@@ -27,12 +27,18 @@ a spectacular photograph competes with the verse and wins. Reference: **@dailyma
 > there. Where the two disagree, RULES.md wins and this file is the one that is out of date.
 
 ## 1. Cadence — twice a day, forever
-- **Two posts daily: 05:00 and 19:00 KST** (±10 min jitter). GitHub Actions cron (`.github/workflows/daily-post.yml`), which fires early and then `daily_post.py` waits for the exact target time.
+- **Two posts daily: 05:00 and 19:00 KST.** GitHub Actions cron (`.github/workflows/daily-post.yml`),
+  **one cron per slot** — it fires and `daily_post.py` posts right then, whatever time that
+  actually is (RULES.md C2, simplified 2026-11-10).
 - Never more, never fewer. Both posts follow every rule below.
-- **Timing budget:** the cron fires ~2h early (GitHub's scheduler runs 1–2h late), so the job spends
-  **up to 130 min sleeping** before it starts working. `timeout-minutes` must therefore cover
-  **wait + build (~50 min) — i.e. stay ≥ 180.** Sizing it to the build alone silently kills posts
-  mid-render on days the scheduler fires late (this ate the 07-24 and 07-26 morning posts).
+- **2026-11-10 — the old wait/jitter design is gone.** It used to fire ~2h early and sleep inside
+  the job to hit the exact minute (`timeout-minutes` had to cover wait + build, ≥180). When
+  GitHub's scheduler drifted up to 4-5 hours (2026-08-28), that design was replaced with a CHAIN
+  of 5 hourly crons per slot racing to "claim" the slot — which fixed the drift but spent two
+  months generating its own bugs (duplicate posts when two runs claimed the same window at once,
+  2026-09-06; a day with no post at all when nobody's claim window lined up, 2026-09-13/14).
+  None of that bookkeeping changed *when* GitHub actually ran the job, so it was removed: one
+  cron, post when it fires. `timeout-minutes` now only has to cover the build itself (~50 min).
 - **A missed post is never silent:** any failed/cancelled run opens a GitHub issue.
 
 ## 2. Themes — at least 20, always rotating, never overlapping
@@ -295,10 +301,10 @@ guarantee, so the render is **measured and regenerated** like every other genera
   line; `|| true` then hid it, left the repo mid-rebase and the push died — **after the post had
   already gone out.** `ledger_merge.py` resolves them semantically (dict union, list union,
   counters take max) and the step retries 5× with `if: always()`.
-- **One slot, one post.** Hourly crons across a 5-hour lead window; a run claims the slot only
-  inside `(0, CLAIM_WINDOW_MIN]` minutes before target, which with hourly spacing is provably
-  exactly one run. `--catchup` on the last cron posts late only when the whole chain fired late
-  (`CATCHUP_AFTER_MIN`). `slot_already_filled()` asks Instagram as the final backstop.
+- **One slot, one post.** One cron per slot now (2026-11-10 — see rule 1 above for why the old
+  5-cron claim-window chain was removed). `slot_already_filled()` asks Instagram whether this
+  half of the day already has a reel, checked once before the build and once again right before
+  publishing — the only duplicate guard left, and it needs no timing logic at all.
 - **Why this is a content rule and not an ops detail:** on 2026-08-26 the ledger was lost, 잠언
   18:10 went out again on 08-28 and 잠언 27:17 twice on 08-29. Reach fell from ~350 views to ~50
   and did not recover, because Meta demotes repeated/unoriginal content at the ACCOUNT level, not
