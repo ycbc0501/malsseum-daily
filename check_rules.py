@@ -501,6 +501,18 @@ def checks():
     # G-2.1f: a bare total (no breakdown yet) under reach|follow_type crashed the closing print
     # with AttributeError, aborting the script before solo_fields()/followers()/report() ran —
     # dropping that day's follower-curve point even though account.json had already been saved.
+    # G-2.1k Meta returns BOTH `value` and `breakdowns`; reading `value` first threw every
+    # breakdown away, so reach|follow_type recorded a flat total identical to plain reach while
+    # the same response carried NON_FOLLOWER 669 / FOLLOWER 40.
+    # Positions, not presence: the old form is quoted in the comment that explains it, and a
+    # check that raises instead of failing is a check that reports PASS by accident.
+    _acct = inspect.getsource(_i.account)
+    _bd = [i for i, l in enumerate(_acct.splitlines())
+           if l.strip() == 'if tv.get("breakdowns"):']
+    _val = [i for i, l in enumerate(_acct.splitlines())
+            if l.strip() == 'elif "value" in tv:']
+    yield "G2.1k a breakdown is not discarded in favour of the flat total", (
+        len(_bd) == 1 and len(_val) == 1 and _bd[0] < _val[0])
     yield "G2.1f account()'s follow-type print does not assume a dict", (
         "isinstance(r, dict)" in inspect.getsource(_i.account))
     # G-2.1g: without `if: always()`, a crash anywhere in the main step (same run, same bug)

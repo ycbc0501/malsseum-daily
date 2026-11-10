@@ -1057,6 +1057,54 @@ token"이라고 쓰면서 **세 줄 위에서 "29 reach from the API"** 라고 �
 되돌리면, 자산 정리를 이름순으로 되돌리면 각각 잡힌다(백업은 `cmp`로 성공 확인 후 변조 —
 11-09에 백업이 조용히 실패한 적이 있다). `verify.sh`(테스트 30개 + 규칙 감사) 전체 통과.
 
+## 2026-11-10 밤 2 — 돌려보니 두 개가 더 나왔다. 그리고 §15의 "85.2%"는 상위 2/30이었다
+
+위 ①~④를 고치고 `insights.yml`을 실제로 디스패치했다(success, `42778814046`). 숫자가 들어왔다:
+```
+reels_skip_rate          1건 → 30건      ig_reels_avg_watch_time   1건 → 30건
+copyright_check_information  "0 post(s) updated" → 2 updated (원장 71건 보유)
+계정 프로필 필드           4개 → 9개        backfill filled           2 → 30
+"insights tier … rejected" / "account fields rejected" 두 줄 모두 사라짐
+```
+
+**⑤ 비팔로워 도달이 받아놓고 버려지고 있었다.** 로그가 `reach by follow type: 713 (no
+breakdown — single total)`이라 응답을 직접 떠봤더니 **쪼개져서 오고 있었다** —
+`NON_FOLLOWER 669 / FOLLOWER 40`. 원인은 `account()`의 분기 순서:
+```python
+if "value" in tv:   got[key] = tv["value"]      # Meta는 value와 breakdowns를 함께 준다
+elif tv.get("breakdowns"): …                    # 그래서 이 elif는 한 번도 안 돌았다
+```
+원장에는 `reach|follow_type = 713`, 즉 **평범한 `reach`와 똑같은 숫자**가 들어가 있었다.
+**§14와 §15가 둘 다 "도달÷팔로워 수" 비율로 추론했던 그 한 가지 차원**을 API가 내주고 있었는데
+한 줄 뒤에서 버린 것이다. 쪼갠 값을 쓰고 총합은 `_total`로 옆에 남긴다.
+
+**⑥ `views|follower_type`은 영원히 답하지 않는다 — API가 직접 알려줬다.** 레퍼런스 표가
+`views`엔 `follower_type`, `reach`엔 `follow_type`이라 적혀 있어 양쪽을 다 쳐보고 있었는데,
+거부 메시지가 **허용 값을 열거한다**(`must be one of: country, city, age, gender, follow_type,
+media_product_type, contact_button_type`). `follower_type`은 거기 없다. 매일 죽은 호출 1회 +
+상시 `1 rejected` 한 줄이었고, **진짜 문제를 보고하는 줄이 읽히지 않게 되는 방식**이 그거다.
+`follow_type`으로 교체하고 라이브로 확인했다 — `views|follow_type`은 답한다
+(NON_FOLLOWER 788 / FOLLOWER 315 / UNKNOWN 1).
+
+**그리고 §15의 1순위 근거가 과장이었다 — 방향은 유지, 숫자는 교체.** 건너뛰기 비율이 n=1에서
+n=30이 됐다:
+```
+reels_skip_rate  n=30  중앙값 78.0%  범위 67.0~87.8%  평균 77.8%
+§15가 "또래보다 높음=나쁨"의 근거로 쓴 85.2%(10-06, 손입력)는 분포의 상위 2/30 — 이상치다
+평균 조회 시간    n=30  중앙값 2.83s  (§15의 "2초"도 그 한 건의 값)
+segments별 중앙값  0→76.8%(n=14)  1→77.5%(n=12)  2→80.8%(n=4)  — 범위 중첩, 판정 불가
+```
+**"85.2%가 상수인지 이 한 건인지"는 §15가 직접 남긴 질문이었고, 이제 답이 있다: 한 건이었다.**
+건너뛰기가 높다는 방향 자체는 유지된다(78%도 낮지 않다). 다만 **API는 또래 비교를 주지 않으므로
+"또래보다 나쁨"은 여전히 화면에서만 읽을 수 있다** — 1순위 판정의 근거는 그 라벨이었고 그
+라벨은 n=1짜리 게시물에서 온 것이다. 재확인 전까지 1순위는 **보류**로 둔다.
+⚠️ segments 0(=모션 없는 정지+줌)이 중앙값이 가장 낮게 나오지만 그 14건은 전부 길이 27~30초이고
+segments 1은 7.68초다 — 길이와 교란돼 있어 "모션이 체류에 해롭다"는 주장은 성립하지 않는다.
+
+`RULES.md` G-2 8~11·C4i, `check_rules.py` G2.1k 추가(역테스트: 분기 순서를 되돌리면 잡힘 —
+처음 쓴 형태는 `.index()`가 예외로 죽어 **FAIL이 아니라 아무것도 출력하지 않았다**. 검사가
+예외로 죽으면 우연히 PASS로 읽힌다. 줄 단위 위치 비교로 고쳤다). `verify.sh` 전체 통과.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually

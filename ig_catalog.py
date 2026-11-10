@@ -185,10 +185,17 @@ ACCOUNT_METRICS = {
                               "breakdowns": ("follow_type", "media_product_type"),
                               "note": "unique accounts reached; estimated. follow_type = the non-follower answer"},
     "views":                 {"period": "day", "metric_type": "total_value",
-                              # The reference's own tables disagree here: the account-insights
-                              # table lists `follower_type` for views and `follow_type` for
-                              # reach. Both are tried and whichever answers is recorded.
-                              "breakdowns": ("follower_type", "media_product_type"),
+                              # The reference's own tables disagreed here — `follower_type` for
+                              # views, `follow_type` for reach — so both were tried and whichever
+                              # answered was recorded. 2026-11-10: the API settled it by
+                              # ENUMERATING the legal values in its own rejection ("breakdown[0]
+                              # must be one of: country, city, age, gender, follow_type,
+                              # media_product_type, contact_button_type"). `follower_type` is not
+                              # among them and never will answer, so asking is one dead call a
+                              # day plus a standing "1 rejected" on the daily line — which is how
+                              # a line that reports real problems stops being read. `follow_type`
+                              # is kept: it answers (reach|follow_type = 713 the same day).
+                              "breakdowns": ("follow_type", "media_product_type"),
                               "note": "plays/displays across reels, posts, stories; in development"},
     "accounts_engaged":      {"period": "day", "metric_type": "total_value", "breakdowns": (),
                               "note": "accounts that interacted; estimated"},

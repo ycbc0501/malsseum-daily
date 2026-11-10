@@ -428,9 +428,16 @@ def account(base=None, uid=None, token=None):
             continue
         rows = res.get("data") or []
         tv = (rows[0].get("total_value") if rows else None) or {}
-        if "value" in tv:
-            got[key] = tv["value"]
-        elif tv.get("breakdowns"):
+        # ORDER MATTERS. Meta returns BOTH `value` and `breakdowns` on a breakdown request, and
+        # this used to read `if "value" in tv: ... elif tv.get("breakdowns"):` — so the elif
+        # never ran and every breakdown was thrown away at the door. The ledger recorded
+        # `reach|follow_type = 713`, a flat total identical to plain `reach`, and the log said
+        # "no breakdown — single total". The response that same minute carried
+        # NON_FOLLOWER 669 / FOLLOWER 40. That split is the single dimension §14 and §15 both
+        # INFERRED from a ratio of reach to follower count while the API was handing it over —
+        # collected, then discarded one line later. The breakdown wins when there is one; the
+        # total is kept beside it so nothing is lost either way.
+        if tv.get("breakdowns"):
             # breakdowns → {"NON_FOLLOWER": 123, ...}. Flattened on the way in: a nested
             # dimension_keys/results shape is unreadable at a glance and every reader of this
             # ledger would have to re-flatten it, differently each time.
@@ -439,7 +446,11 @@ def account(base=None, uid=None, token=None):
                 for r in b.get("results") or []:
                     name = "/".join(str(x) for x in (r.get("dimension_values") or []))
                     flat[name or "?"] = r.get("value")
+            if "value" in tv:
+                flat["_total"] = tv["value"]
             got[key] = flat
+        elif "value" in tv:
+            got[key] = tv["value"]
         else:
             got[key] = res.get("data") or None
         ok += 1
