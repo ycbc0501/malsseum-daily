@@ -442,9 +442,6 @@
   }
  },
  "2026-11-10": {
-  "errors": {
-   "views|follower_type": "HTTP 400: breakdown[0] must be one of the following values: country, city, age, gender, follow_type, media_product_type, contact_button_type (type=IGApiExceptio"
-  },
   "insights": {
    "accounts_engaged": 60,
    "comments": 13,
@@ -641,9 +638,9 @@
    },
    "likes": 94,
    "likes|media_product_type": {
-    "REEL": 44,
+    "REEL": 48,
     "STORY": 8,
-    "_total": 52
+    "_total": 56
    },
    "profile_links_taps": 0,
    "profile_links_taps|contact_button_type": {
@@ -652,13 +649,13 @@
    "reach": 713,
    "reach|follow_type": {
     "FOLLOWER": 35,
-    "NON_FOLLOWER": 326,
-    "_total": 360
+    "NON_FOLLOWER": 328,
+    "_total": 362
    },
    "reach|media_product_type": {
-    "REEL": 353,
+    "REEL": 356,
     "STORY": 15,
-    "_total": 360
+    "_total": 362
    },
    "replies": 0,
    "reposts": 0,
@@ -674,20 +671,20 @@
    },
    "total_interactions": 139,
    "total_interactions|media_product_type": {
-    "REEL": 75,
+    "REEL": 79,
     "STORY": 8,
-    "_total": 83
+    "_total": 87
    },
    "views": 1104,
    "views|follow_type": {
-    "FOLLOWER": 198,
-    "NON_FOLLOWER": 380,
-    "_total": 578
+    "FOLLOWER": 203,
+    "NON_FOLLOWER": 384,
+    "_total": 587
    },
    "views|media_product_type": {
-    "REEL": 542,
+    "REEL": 551,
     "STORY": 36,
-    "_total": 578
+    "_total": 587
    }
   },
   "profile": {
