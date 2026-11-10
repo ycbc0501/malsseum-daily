@@ -1240,6 +1240,36 @@ study.yml의 **주석**("… see save_ledger.sh.")에서 "state.json"을 잘못 
 적었다 — 검수 에이전트는 "이번에 바꾼 것이 실제로 맞는가"(변경마다, 비용 있음)를 묻는다.
 문서 변경만이라 `check_rules.py`·`verify.sh` 재확인 후 커밋.
 
+## 2026-11-10 — 바로 위 2단계 정의에 원석님이 세 번째를 추가: "diff도 보고, **전체 구조도**
+이게 가장 효과적인가 봐야해"
+
+바로 위 로그를 쓴 지 얼마 안 돼 원석님이 짚었다: "검수에이전트는 코드 고티면 코드 diff도
+콜해서 보고, 전체 구조도 이게 가장 효과적인가 봐야해 이게 개중요 특히 계속 덕지덕지 붙히니까
+코드가 엉망돼서 큰틀에서 구조 짜는게 필요." 맞는 지적이다 — K-4가 처음 정의한 두 단계(결과물
+검수·diff 코드 검수)는 둘 다 **"이번 변경이 옳은가"**만 묻는다. "patch가 쌓인 모양이 지금도
+최선의 구조인가"는 다른 질문이고, 이 레포 자신이 그 증거를 여러 번 남겼다 — 캐러셀 가운데
+정렬 버그, 일요일 릴 밀어냄, 11-10 하루 동안 `insights.py`에서 찾은 일곱 겹 버그 전부
+"당장의 문제만 보고 기존 함수 위에 patch를 얹은" 결과였다.
+
+**`RULES.md` K-4를 3단계로 개정했다:** ①구조 검수(신설 — diff가 아니라 전체 파일/모듈을
+놓고 "patch-on-patch로 구조가 무너지지 않았는가"를 명시적으로 묻는다, `code-review` 스킬에
+diff 대신 파일 경로를 target으로 주거나 별도 Agent에게 직접 질문) ②diff 코드 검수(기존 그대로)
+③결과물 검수(`qa_gate.py --run`, 기존 K-1·K-2). 셋 중 하나라도 빠지면 "검수 에이전트를
+돌렸다"고 부르지 않는다.
+
+**③도 "모든 부분들 작은거까지 전부다 예외없이 다확인"에 맞게 같이 고쳤다.** `qa_gate.py --run`의
+결과 요약이 예전엔 `_meta.json`에서 11개 필드만 골라 보여줬다 — `daily_post.py`가 새 필드를
+써도(지금도 `date`·`format`·`duration`·`text_contrast`·`text_spread`·`motion_sky`·
+`motion_attempts`·`veo_attempts`·`clip_novelty`·`cta_in_caption` 10개가 한 번도 안 보였다)
+여기서 조용히 빠질 수 있었다. `for k, v in meta.items()`로 바꿔 **전부** 찍는다. `check_rules.py`
+K-4에 역테스트(옛 하드코딩 튜플이 돌아오면 잡힘) 추가. `verify.sh`(테스트 30개 + 규칙 감사)
+재확인 후 커밋.
+
+①(구조 검수)·②(diff 검수)는 "실제로 그 질문을 던졌는가"라서 **코드로는 검증할 수 없다** —
+0절과 같은 종류의 강제, 읽히는 자리에 적혀 있는 것이 곧 강제다. 다음에 파이프라인 코드를
+고치고 "검수 에이전트 돌렸다"고 보고할 때 구조 검수를 건너뛰면 그건 거짓 보고라고 K-4에
+명시해뒀다.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually

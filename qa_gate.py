@@ -265,10 +265,13 @@ def main():
 
     print(f"\n--- pipeline result: {'OK' if ok else 'FAILED — see log above/at ' + str(log_path)} ---")
     if meta:
-        for k in ("ref", "segments", "veo_calls", "veo_seconds", "gate_passed", "gate_ran",
-                   "gate_skipped", "image_model", "scene", "clip_spoiled", "motion"):
-            if k in meta:
-                print(f"  {k}: {meta[k]}")
+        # EVERY key _meta.json wrote this run, not a hand-picked subset. RULES.md K-4
+        # (2026-11-10, "모든 부분들 작은거까지 전부다 예외없이 다확인") — a curated list of
+        # "the fields that matter" quietly stops covering a field the day daily_post.py grows
+        # a new one and nobody remembers to add it here too. Printing meta.items() in full
+        # cannot go stale that way; the cost is a longer printout, not a silent blind spot.
+        for k, v in meta.items():
+            print(f"  {k}: {v}")
     if found:
         print(f"\nartifacts to actually LOOK AT: {dest_dir}")
         for f in found:

@@ -796,6 +796,16 @@ def checks():
         '"--now", "--emit"' in qa_src)
     yield "K-2 a run with no produced artifact is reported as a failure, not a pass", (
         "ok = False" in qa_src and "NO ARTIFACTS FOUND" in qa_src)
+    # K-4 (2026-11-10 개정, "모든 부분들 작은거까지 전부다 예외없이 다확인"): the --run summary
+    # used to print a hand-picked tuple of _meta.json keys, so a field daily_post.py started
+    # writing later (or stopped writing) could drift out of what qa_gate.py showed without
+    # anyone noticing — the exact "curated list quietly goes stale" shape this repo keeps
+    # tripping on (WATCHLIST, LEDGERS, ACCOUNT_FIELDS). Checking for the absence of the old
+    # literal tuple, not just the presence of the new loop, so a partial revert (someone adds
+    # the tuple back next to the new loop "just to be safe") is still caught.
+    yield "K-4 qa_gate --run prints EVERY _meta.json field, not a hand-picked subset", (
+        "for k, v in meta.items():" in qa_src
+        and 'for k in ("ref", "segments"' not in qa_src)
 
 
 def main():
