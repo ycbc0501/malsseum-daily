@@ -51,20 +51,47 @@ def api():
     # work?" had to be done with a different code path than the one that runs. That asymmetry
     # is how today's four wrong claims survived: the thing being verified was never the thing
     # running. The file is gitignored; nothing is printed from it.
-    def _s(key):
-        val = os.environ.get(key)
-        if val:
-            return val
-        try:
-            import ig_doctor
-            return ig_doctor.secrets().get(key)
-        except Exception:
-            return None
-
-    tok = _s("IG_INSIGHTS_TOKEN")
+    tok = _secret("IG_INSIGHTS_TOKEN")
     if tok:
         return "https://graph.instagram.com/v21.0", "me", tok
-    return post_instagram.GRAPH, _s("IG_USER_ID"), _s("IG_ACCESS_TOKEN")
+    return post_instagram.GRAPH, _secret("IG_USER_ID"), _secret("IG_ACCESS_TOKEN")
+
+
+def _secret(key):
+    """Environment first (that is what CI sets), then meta_secrets.txt."""
+    val = os.environ.get(key)
+    if val:
+        return val
+    try:
+        import ig_doctor
+        return ig_doctor.secrets().get(key)
+    except Exception:
+        return None
+
+
+def fields_api():
+    """(base_url, account_path, token) — the door for PLAIN FIELDS, which is not api()'s door.
+
+    The two tokens are complementary, not one replacing the other. `api()` prefers
+    IG_INSIGHTS_TOKEN because only it carries the insights scope. But an Instagram-Login token
+    reads a NARROWER field set: `copyright_check_information`, `boost_eligibility_info` and
+    `has_profile_pic` are all answered by the Facebook-Login system-user token on
+    graph.facebook.com and all three come back as "Tried accessing nonexisting field"
+    (HTTP 400, code 100) on graph.instagram.com — verified live 2026-11-10 against this
+    account, both doors, same media.
+
+    That matters most for `copyright_check_information`: it is the originality answer §7.1
+    argued from account-status screenshots for weeks, and the day IG_INSIGHTS_TOKEN started
+    winning in api() it went from 7 recorded to "0 post(s) updated" with the reason printed
+    as a per-post warning that reads like a transient API wobble. Reading a field through the
+    token that cannot see it is not a permissions problem to escalate; it is the wrong door.
+
+    Falls back to api() when no Facebook-Login credentials are present, so a machine holding
+    only the read token still collects what it can instead of nothing."""
+    uid, tok = _secret("IG_USER_ID"), _secret("IG_ACCESS_TOKEN")
+    if uid and tok:
+        return post_instagram.GRAPH, uid, tok
+    return api()
 
 
 def _themes():
@@ -155,8 +182,17 @@ def backfill(limit=90):
         # The scoped metrics (reach, saved, reels_skip_rate, watch time) cost a call each, so
         # only chase them where they are still missing and still moving. `reach` is the one the
         # plain fields cannot substitute for: views counts plays, reach counts people.
+        #
+        # The gate used to be `"reach" not in got` alone. One answered metric then closed the
+        # door on all the others: tier 0 was 400'ing on `reposts` (see ig_catalog.py), the loop
+        # fell through to `core`, `core` carries reach but not `reels_skip_rate`, and because
+        # reach had arrived the post was never asked again. Result: `reels_skip_rate` and
+        # `ig_reels_avg_watch_time` sat at 1 row out of 275 — and that row was typed in by hand
+        # off the app. Ask while ANY metric we actually act on is still missing; they all ride
+        # in one request, so a post that answers fully costs exactly the one call it did before.
         young = _is_young(entry.get("published"))
-        if young and "reach" not in got and not skip_insights:
+        want = _wanted(m.get("media_product_type") or entry.get("kind"))
+        if young and not want.issubset(got) and not skip_insights:
             try:
                 # `base` matters: an IG_INSIGHTS_TOKEN is only valid against
                 # graph.instagram.com. api() has always known that and insights() never got
@@ -256,6 +292,20 @@ def _listing(base, uid, token, limit):
             tuple(f for f in full if f not in core))
 
 
+def _wanted(product_type):
+    """Scoped metrics whose absence is worth another call, for this media's own product type.
+
+    Deliberately NOT the whole bundle: a bundle-safe name the endpoint happens never to answer
+    (it has a documented "in development" tier) would hold the gate open and spend one call per
+    young post per run, forever, to re-learn the same silence. These are the columns the
+    strategy notes actually read — distribution, retention and the two engagement rates — so a
+    post missing one of them is a post we cannot judge."""
+    core = {"reach", "views", "shares", "saved"}
+    reels = {"reels_skip_rate", "ig_reels_avg_watch_time"}
+    safe = set(ig_catalog.media_metrics(product_type or ig_catalog.REELS, bundle_only=True))
+    return (core | reels) & safe
+
+
 def _extras():
     """Fragile metrics still worth asking for alone — minus whatever a probe already ruled out.
 
@@ -282,7 +332,7 @@ def solo_fields(limit=8, base=None, uid=None, token=None):
     screenshots of the account-status screen, answered per post by the API. It cannot ride in
     the listing (see `_listing`), so it is fetched for the newest few posts only."""
     if base is None:
-        base, uid, token = api()
+        base, uid, token = fields_api()      # a FIELD, not a metric — see fields_api()
     data, touched = metrics.load(), 0
     recent = sorted((e for e in data.items() if e[1].get("published")),
                     key=lambda kv: kv[1]["published"], reverse=True)[:int(limit)]
@@ -334,17 +384,23 @@ def account(base=None, uid=None, token=None):
         book = {}
     day = book.setdefault(today, {})
 
+    # The profile is FIELDS, so it reads through the fields door even though the metrics below
+    # read through api()'s. `has_profile_pic` is answered only by the Facebook-Login token; on
+    # graph.instagram.com the whole request 400s on that one name and the retry below drops
+    # follows_count, name, biography, website and is_published with it. One wrong door cost
+    # eight fields a day, reported as "rejected — retrying core only".
+    f_base, f_uid, f_token = fields_api()
     fields = ",".join(ig_catalog.account_fields())
     try:
-        prof = post_instagram._get(f"{base}/{uid}?fields={fields}&access_token={token}")
+        prof = post_instagram._get(f"{f_base}/{f_uid}?fields={fields}&access_token={f_token}")
         day["profile"] = {k: v for k, v in prof.items()
                           if k != "profile_picture_url" and v is not None}
     except Exception as e:
         print(f"  account fields rejected ({str(e)[:120]}) — retrying core only")
         try:
             prof = post_instagram._get(
-                f"{base}/{uid}?fields={','.join(ig_catalog.account_fields(extra=False))}"
-                f"&access_token={token}")
+                f"{f_base}/{f_uid}?fields={','.join(ig_catalog.account_fields(extra=False))}"
+                f"&access_token={f_token}")
             day["profile"] = {k: v for k, v in prof.items() if v is not None}
         except Exception as e2:
             day["profile_error"] = str(e2)[:160]

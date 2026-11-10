@@ -63,8 +63,6 @@ MEDIA_METRICS = {
                                       "note": "plays/displays on Instagram; in development"},
     "total_interactions":            {"media": (FEED, REELS, STORY), "bundle": True,
                                       "note": "likes+saves+comments+shares minus undos; in development"},
-    "reposts":                       {"media": (FEED, REELS, STORY), "bundle": True,
-                                      "note": "reposts minus deleted reposts"},
     "reels_skip_rate":               {"media": (REELS,), "bundle": True,
                                       "note": "share of views skipped in the first 3s; estimated, in development"},
     "ig_reels_avg_watch_time":       {"media": (REELS,), "bundle": True,
@@ -84,6 +82,19 @@ MEDIA_METRICS = {
     "link_clicks":                   {"media": (STORY,), "bundle": True, "note": ""},
 
     # --- not bundle-safe: documented to throw, or restricted to one API flavour ---------------
+    # `reposts` is listed for FEED/REELS/STORY in the reference and still REJECTED by the live
+    # endpoint: asked alone, 2026-11-10, it answers "Instagram Insights Media API endpoint does
+    # not support the metrics: reposts" (HTTP 400, code 100). It sat in the bundle from
+    # 2026-10-07, which blanked tier 0 on EVERY call for a month — the loop then fell through to
+    # `core`, and `core` does not ask for `reels_skip_rate` or `ig_reels_avg_watch_time`. So the
+    # one metric §15 named the account's #1 problem was never recorded once, not because nobody
+    # requested it (2026-10-07 fixed that) but because a neighbour in its bundle 400'd. The
+    # reference documenting a metric is not evidence the endpoint serves it; that is what
+    # ig_probe.py is for. Kept here (not deleted) so it is still asked ALONE, where a rejection
+    # costs one call and cannot take anything else down with it.
+    "reposts":                       {"media": (FEED, REELS, STORY), "bundle": False,
+                                      "note": "reposts minus deleted reposts; REJECTED live "
+                                              "2026-11-10 — documented but not served"},
     "crossposted_views":             {"media": (REELS,), "bundle": False,
                                       "note": "IG+FB aggregate; THROWS if the media was not shared to Facebook"},
     "facebook_views":                {"media": (FEED, REELS, STORY), "bundle": False,
@@ -138,10 +149,28 @@ def tiers(product_type=REELS):
     full = media_metrics(product_type, bundle_only=True)
     core = tuple(m for m in full if m in ("reach", "likes", "comments", "shares", "saved",
                                           "total_interactions", "views"))
-    return [full, core,
-            tuple(m for m in core if m != "views"),
-            ("reach", "likes", "comments"),
-            ("reach",)]
+    # Tier 1 keeps the retention pair. The ladder used to drop straight from `full` to `core`,
+    # and `core` is engagement only — so the single most consequential thing a rejected tier 0
+    # could cost was `reels_skip_rate`, the number §15 named the account's #1 problem. That is
+    # not hypothetical: `reposts` sat in tier 0 and 400'd every call from 2026-10-07 to
+    # 2026-11-10, the loop landed on `core` every time, and the metric was recorded zero times
+    # in 275 posts while the code "asked for it". A fallback that silently drops the metric you
+    # are falling back for is worse than no fallback: it still returns numbers, so nothing
+    # anywhere reports a problem. Rejections now cost the retention pair only at tier 2.
+    retention = tuple(m for m in full if m in ("reels_skip_rate", "ig_reels_avg_watch_time"))
+    ladder = [full, core + retention, core,
+              tuple(m for m in core if m != "views"),
+              ("reach", "likes", "comments"),
+              ("reach",)]
+    # Deduplicated: FEED has no retention metrics, so tier 1 and tier 2 would be the same
+    # request and a rejection would be retried verbatim — one wasted call against a rate limit
+    # the account has already been bitten by.
+    seen, out = set(), []
+    for tier in ladder:
+        if tier and tier not in seen:
+            seen.add(tier)
+            out.append(tier)
+    return out
 
 
 # ---------------------------------------------------------------------------------------------
@@ -296,7 +325,18 @@ DUAL_SOURCE = tuple(dict.fromkeys(m for _f, m in FIELD_AS_METRIC_ORDER))
 ACCOUNT_FIELDS_CORE = ("id", "username", "followers_count", "media_count")
 
 ACCOUNT_FIELDS_EXTRA = ("follows_count", "name", "biography", "website", "profile_picture_url",
-                        "has_profile_pic", "is_published", "shopping_product_tag_eligibility")
+                        "has_profile_pic", "is_published")
+
+# Documented, and answered by NEITHER door on this account. A field bundle is all-or-nothing
+# exactly like a metric bundle, so one of these in the request blanks the other eleven — which
+# is what `account fields rejected (…) — retrying core only` meant every single day: the retry
+# drops to four fields and `follows_count`, `name`, `biography`, `website`, `has_profile_pic`
+# and `is_published` were never recorded at all. Probed one at a time, 2026-11-10:
+#   shopping_product_tag_eligibility  Facebook login → (#10) Application does not have
+#                                     permission; Instagram login → nonexisting field
+# Kept here rather than deleted so the next reader sees it was checked, not forgotten. If a
+# Commerce permission is ever granted, move it back up and let ig_probe.py confirm it.
+ACCOUNT_FIELDS_UNAVAILABLE = ("shopping_product_tag_eligibility",)
 
 
 def media_fields(extra=True, solo=False):

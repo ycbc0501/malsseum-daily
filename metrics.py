@@ -467,10 +467,16 @@ def report():
         # Not `exact == 0`: once ONE post carries real reach, a test for zero goes quiet while
         # the other fourteen posts keep using views as the denominator unannounced. The note
         # has to survive the good news.
+        # The sentence here used to end "The API has never returned `reach` on this token;
+        # where reach is present a human read 「조회한 사람」 off the app" — written when that
+        # was true, and left standing after IG_INSIGHTS_TOKEN started answering on 2026-11-10.
+        # It then contradicted the line printed three lines above it ("29 reach from the API"),
+        # in a report whose whole job is to say where each number came from. The provenance is
+        # already counted; print the count instead of a claim that can go stale.
         print(f"NOTE: {len(scored) - exact} of {len(scored)} rows below use VIEWS as the "
               "denominator, not reach — views count plays, reach counts people, so those rates "
-              "are conservative. The API has never returned `reach` on this token; where reach "
-              "is present a human read 「조회한 사람」 off the app (RULES.md G-2).\n")
+              f"are conservative. Of the {exact} exact rows, {exact - byhand} came from the API "
+              f"and {byhand} were read off 릴스 인사이트 by hand (RULES.md G-2).\n")
 
     def group(key, label):
         buckets = {}

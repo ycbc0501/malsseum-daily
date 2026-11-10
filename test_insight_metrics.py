@@ -48,17 +48,35 @@ MUST_ASK = {"reach", "views", "shares", "saved", "likes", "comments", "total_int
             "reels_skip_rate", "reposts", "ig_reels_avg_watch_time"}
 
 
+# Asked ALONE rather than in a bundle, because the live endpoint rejects it even though the
+# reference lists it for REELS (probed 2026-11-10 — see ig_catalog.py). Asking for it is still
+# asking; asking for it in company is what cost us two other metrics for a month.
+ASK_ALONE = {"reposts"}
+
+
 def run():
-    asked = {m for tier in post_instagram.INSIGHT_TIERS for m in tier}
+    bundled = {m for tier in post_instagram.INSIGHT_TIERS for m in tier}
+    asked = bundled | set(post_instagram.INSIGHT_SINGLES)
 
     check("every requested metric is a real reference metric",
           asked <= REFERENCE_REELS or print(f"    not in reference: {sorted(asked - REFERENCE_REELS)}"))
+    # The metric that is documented but NOT served must stay out of every bundle. A bundle is
+    # all-or-nothing, so one such name in tier 0 silently costs whatever else shares the tier.
+    check(f"the live-rejected metrics are never bundled ({sorted(ASK_ALONE)})",
+          not (ASK_ALONE & bundled))
     missing = sorted(MUST_ASK - asked)
     check(f"every metric the strategy relies on is requested{'' if not missing else f' (missing {missing})'}",
           not missing)
     # These two specifically: they are the 건너뛰기 비율 and 리포스트 off the app screen.
     check("reels_skip_rate is asked for (= 건너뛰기 비율)", "reels_skip_rate" in asked)
-    check("reposts is asked for (= 🔁)", "reposts" in asked)
+    check("reposts is asked for (= 🔁), alone", "reposts" in set(post_instagram.INSIGHT_SINGLES))
+
+    # The actual defect of 2026-10-07..11-10: tier 0 carried a name the endpoint rejects, so
+    # every call fell through to the next tier — and the next tier was engagement only. The
+    # retention pair has to survive a tier-0 rejection or the fallback defeats its own purpose.
+    retention = {"reels_skip_rate", "ig_reels_avg_watch_time"}
+    check("the retention pair survives a tier-0 rejection",
+          retention <= set(post_instagram.INSIGHT_TIERS[1]))
 
     # A bundle is all-or-nothing, so the salvage path has to carry them too — otherwise one
     # unsupported name in a tier silently costs us the metric on every fallback.

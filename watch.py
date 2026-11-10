@@ -40,13 +40,19 @@ DROP_RATIO = 0.5         # recent median at or below half the baseline
 DEAD_LIKES, DEAD_RUN = 1, 4      # 4 posts in a row at 1 like or fewer
 SLOTS = (5, 19)          # KST hours the account posts at
 # 2026-11-10: was 2h, picked without data, back when daily-post.yml chained 5 crons/slot.
-# Measured instead: 100 of this repo's own hourly cron firings (median 37min, p90 55min late
-# vs. their own schedule:) show GitHub's firing delay alone is routinely 30-55min on this repo,
-# before any build time. The single-cron redesign (RULES.md C2) removed the chain, so GRACE_H no
-# longer needs to cover that chain's own claim-logic bugs (which, not GitHub lateness, produced
-# the 150-230min delays seen 11-02..11-10) -- just real GitHub lateness + the ~10min build. 1h
-# covers the measured p90 (55min) plus build with little margin to spare; recalibrate once the
-# single-cron design has a week of its own data.
+# That afternoon's "100 hourly firings, median 37min/p90 55min late" measurement is WRONG -- it
+# only counted runs that landed inside their intended hour at all. Re-run that same night across
+# the full 300-run history: only 28% (85/300) landed in the intended hour; the other 72% fired in
+# some other hour entirely, scattered across 9am-11pm UTC with no bound captured by that method.
+# Cross-checked with comment-reply.yml's "*/10 * * * *" cron: it should fire 144x/day and instead
+# fires 3-8x/day (28-day median gap 260min, worst 625min, every run completed fine -- they just
+# aren't created on schedule). This matches live GitHub Actions community reports of scheduled
+# triggers being delayed hours or dropped entirely since ~2026-08-26 (orgs/community discussions
+# #206019, #210888, #210625) -- it reads as a platform-side reliability problem, not something
+# this repo's cron syntax can fix. The single-cron redesign (RULES.md C2) removed the chain's own
+# claim-logic bugs (which, not GitHub lateness, produced the 150-230min delays seen 11-02..11-10),
+# but has zero real delay data of its own, and the 1h here rests on the now-retracted 55min figure.
+# Treat GRACE_H=1h as an unvalidated placeholder until the single-cron design has a week of data.
 GRACE_H = 1              # late by more than this and something is wrong, not just slow
 COOLDOWN_DAYS = 5        # one alert per episode, not one per day
 # Motion can disappear without anything failing. Google withdrew the Veo model on 2026-10-23

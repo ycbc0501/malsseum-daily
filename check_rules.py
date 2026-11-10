@@ -132,6 +132,15 @@ def checks():
         wt.count("timedelta(hours=12)") == 1)
     yield "C4f the watcher counts only reels too", (
         'media_product_type") != "REELS"' in wt)
+    # C4i — Instagram FETCHES our media by URL, so the 30-asset retention must keep the
+    # NEWEST uploads, not the lexicographically largest NAMES. `carousel-*` sorts below every
+    # `post-*`, so a name sort put seconds-old carousel slides in the delete set every time.
+    # Comment lines are stripped first: the retired expression is quoted in the comment that
+    # explains why it was retired, and twice now a check has tripped over its own explanation.
+    _daily_code = "\n".join(l for l in daily.splitlines() if not l.strip().startswith("#"))
+    yield "C4i the release prune keeps the newest by upload time, not by name", (
+        "sort_by(.createdAt)" in _daily_code
+        and "'.assets[].name' | sort" not in _daily_code)
     gen = (HERE / "generate.py").read_text()
     # F-2b: one type size, and the two numbers that make it possible. The 35px fallback stays
     # in the code as a net, but every verse we ship must clear the bar at full size.
@@ -500,10 +509,36 @@ def checks():
     _insights_wf = (HERE / ".github/workflows/insights.yml").read_text()
     yield "G2.1g insights.yml saves the ledgers even if an earlier step crashed", (
         re.search(r"Save the ledgers\s*\n\s*if:\s*always\(\)", _insights_wf) is not None)
-    # The two metrics that were hand-entered while the API had names for them.
+    # The two metrics that were hand-entered while the API had names for them. `reposts` is
+    # asked ALONE now: the live endpoint rejects it (2026-11-10) though the reference lists it,
+    # and in tier 0 it blanked `reels_skip_rate` on every call for a month.
+    _bundled = {m for t in _p.INSIGHT_TIERS for m in t}
     yield "G2.1a reels_skip_rate and reposts are actually requested", (
-        {"reels_skip_rate", "reposts"} <= {m for t in _p.INSIGHT_TIERS for m in t}
-        and {"reels_skip_rate", "reposts"} <= set(_p.INSIGHT_SINGLES))
+        "reels_skip_rate" in _bundled
+        and {"reels_skip_rate", "reposts"} <= set(_p.INSIGHT_SINGLES)
+        and "reposts" not in _bundled)
+    # G-2.1h The fallback must not drop the metric it is falling back for. Tier 0 carrying one
+    # rejected name sent every call to the next tier, and that tier was engagement only — so
+    # reels_skip_rate read 1 row out of 275 while the code "asked for it" in tier 0.
+    yield "G2.1h the retention pair survives a tier-0 rejection", (
+        {"reels_skip_rate", "ig_reels_avg_watch_time"} <= set(_p.INSIGHT_TIERS[1]))
+    # G-2.1i Plain FIELDS read through the Facebook-login door, not api()'s. Verified live
+    # 2026-11-10: copyright_check_information / has_profile_pic / is_published answer only there.
+    yield "G2.1i field reads use fields_api(), not api()", (
+        "def fields_api" in inspect.getsource(_i)
+        and "fields_api()" in inspect.getsource(_i.solo_fields)
+        and "fields_api()" in inspect.getsource(_i.account))
+    # G-2.1j The scoped-insights gate must not close on `reach` alone — one answered metric
+    # used to stop the post ever being asked again, which is how the retention pair stayed
+    # empty even after the bundle was fixed.
+    # Read the GATE LINE, not the whole function: the old expression is quoted in the comment
+    # that explains why it was wrong, and a substring search over the source cannot tell the
+    # explanation from the code.
+    _gate = [l for l in inspect.getsource(_i.backfill).splitlines()
+             if l.strip().startswith("if young and")]
+    yield "G2.1j the scoped gate asks while any acted-on metric is missing", (
+        len(_gate) == 1 and "issubset(got)" in _gate[0] and "not in got" not in _gate[0]
+        and "def _wanted" in inspect.getsource(_i))
     yield "G2.6 the hand-entry marker follows the stored name", (
         "_stored(_f)" in inspect.getsource(_m.refresh)
         and "_stored(k)" in inspect.getsource(_m.note))

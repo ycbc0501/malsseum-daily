@@ -102,8 +102,17 @@ jobs:
           cp "$REL" "$FILE"
           gh release view media >/dev/null 2>&1 || gh release create media --title media --notes "hosted media"
           gh release upload media "$FILE" --clobber
-          # keep only the 30 newest assets
-          gh release view media --json assets -q '.assets[].name' | sort | head -n -30 \
+          # Keep only the 30 newest assets, newest by UPLOAD TIME. This used to be
+          # `... '.assets[].name' | sort | head -n -30`, i.e. newest by NAME -- and the names
+          # are not one series: reels are `post-<run id>.mp4` and the weekly carousel uploads
+          # `carousel-<date>-<n>.png`. Lexicographically every `carousel-` sorts BELOW every
+          # `post-`, so once 30 reels existed the carousel's slides were always in the delete
+          # set, no matter that they were seconds old. Any daily-post run landing between the
+          # carousel's upload and Instagram's fetch of those URLs would pull the images out
+          # from under it -- and GitHub fires these crons hours off schedule (RULES.md I-1),
+          # so "those two steps are minutes apart" is not something this repo can rely on.
+          gh release view media --json assets \
+            -q '.assets|sort_by(.createdAt)|.[].name' | head -n -30 \
             | while read -r a; do gh release delete-asset media "$a" -y || true; done
           echo "FILE=$FILE" >> "$GITHUB_ENV"
 
