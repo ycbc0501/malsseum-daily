@@ -408,7 +408,15 @@ def account(base=None, uid=None, token=None):
     print(f"account: {ok} metric(s) recorded, {bad} rejected for {today}{note}")
     if got.get("reach|follow_type"):
         r = got["reach|follow_type"]
-        print(f"  reach by follow type: " + " ".join(f"{k}={v}" for k, v in sorted(r.items())))
+        # Expected shape is the breakdown dict flattened above ({"NON_FOLLOWER": n, ...}), but
+        # the API returns a bare total instead whenever it has nothing to break down (e.g. no
+        # non-follower reach yet) — a scalar here means "nothing to split", not "malformed". A
+        # bare `r.items()` crashed on exactly that shape on 2026-11-10, exiting before
+        # solo_fields()/followers()/report() ran and silently dropping that day's follower point.
+        if isinstance(r, dict):
+            print(f"  reach by follow type: " + " ".join(f"{k}={v}" for k, v in sorted(r.items())))
+        else:
+            print(f"  reach by follow type: {r} (no breakdown — single total)")
     return book
 
 
@@ -448,7 +456,7 @@ if __name__ == "__main__":
     # a run started from meta_secrets.txt would otherwise see no token, print "prune skipped"
     # and keep a deleted post's verse out of rotation for a year.
     _base, _uid, _tok = api()
-    metrics.prune_deleted(token=_tok, ig_user_id=_uid)
+    metrics.prune_deleted(token=_tok, ig_user_id=_uid, base=_base)
     backfill()
     # The two collections the catalog says are available and this repo never made. `account()`
     # is the dimension that answers "is the account working?"; `solo_fields()` picks up the

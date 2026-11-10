@@ -219,7 +219,7 @@ def release_verses(refs, still_used):
     return free
 
 
-def prune_deleted(token=None, limit=50, ig_user_id=None):
+def prune_deleted(token=None, limit=50, ig_user_id=None, base=None):
     """Drop entries for posts Instagram no longer has. Returns the refs removed.
 
     ledger_merge is a union — by design, so two bots writing at once never lose each other's
@@ -237,8 +237,11 @@ def prune_deleted(token=None, limit=50, ig_user_id=None):
         # The account id has to be passed too, not just the token. A caller holding both from
         # a secrets file still ended up asking for `/None/media`, and the resulting 400 printed
         # as "prune skipped" — which reads like "nothing to prune" and left a hand-deleted
-        # post holding its verse out of rotation.
-        live = post_instagram.recent_media(limit=limit, token=token, ig_user_id=ig_user_id)
+        # post holding its verse out of rotation. `base` has to travel with them as a set: an
+        # IG_INSIGHTS_TOKEN only answers on graph.instagram.com, and the same 400-reads-as-
+        # "nothing to prune" trap applies if it is asked through graph.facebook.com instead.
+        live = post_instagram.recent_media(limit=limit, token=token, ig_user_id=ig_user_id,
+                                           base=base)
     except Exception as e:
         print(f"prune skipped ({e}) — not removing anything on a failed lookup")
         return []

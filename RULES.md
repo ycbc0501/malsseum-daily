@@ -777,6 +777,30 @@ used_scene_cats 꼬리  같은 기간 동일 commit 전수 → 마지막 10개 �
 1-d. **읽기 토큰은 `graph.instagram.com`에만 유효합니다.** `post_instagram.insights()`에
    `base`를 넘기지 않으면 OAuth 오류 → `{}` → 로그에는 "insights unavailable" 로 찍혀
    **권한이 없을 때와 구분되지 않습니다.** 승인하고도 헛수고가 됩니다.
+1-e. **같은 함정이 한 겹 더 아래, `recent_media()`에도 있었습니다**(2026-11-10,
+   `IG_INSIGHTS_TOKEN`이 처음 `insights.api()`의 선택을 이긴 바로 그날 실제로 터짐).
+   `post_instagram.recent_media()`가 `graph.facebook.com`을 **하드코딩**하고 있어서,
+   `metrics.prune_deleted()`가 `IG_INSIGHTS_TOKEN`(graph.instagram.com 전용)으로 그 함수를
+   부르면 **"cannot parse access token"(code 190)** 을 받습니다 — 토큰이 망가진 것처럼
+   읽히지만 실제로는 **엉뚱한 호스트**였습니다. 그 에러는 `prune_deleted`의 `except`에 걸려
+   "prune skipped"로만 찍히고, 이건 "지울 게 없다"와 글자 모양이 같습니다 — 삭제된 게시물이
+   구절을 1년 동안 묶어두는 바로 그 사고(C4c/C4d/C4e)가 다른 경로로 재발할 뻔했습니다.
+   **`recent_media()`는 이제 `base`를 받고, `prune_deleted()`와 `insights.py`의 호출이
+   그걸 끝까지 들고 갑니다.** API를 쓰는 모든 새 함수는 하드코딩된 호스트가 아니라 **그
+   토큰이 유효한 호스트로** 물어야 합니다 — 토큰 종류가 늘어날 때마다 이 교훈이 한 단계
+   더 아래 숨어 있다가 다시 터집니다.
+1-f. **계정 차원 응답이 매번 같은 모양이라고 가정하지 마십시오.** `reach|follow_type`은
+   보통 쪼갠 딕셔너리(`{"NON_FOLLOWER": n, ...}`)로 오지만, 쪼갤 게 없을 때는 **맨 숫자**를
+   그냥 돌려줍니다. `insights.account()`의 마지막 출력 줄이 그 모양을 안 가정했다가
+   `AttributeError`로 **스크립트 전체를 중단시켜** `solo_fields()`·`followers()`·
+   `metrics.report()`가 그날 실행되지 않았습니다(`account.json` 자체는 그 전에 이미
+   저장되어 있었습니다 — 데이터 손실은 아니고 그 뒤 세 단계의 누락입니다). API 응답의
+   모양은 **매번 확인**하고, 숫자 하나가 와도 죽지 않게 짭니다.
+1-g. **`insights.yml`의 "Save the ledgers"는 `if: always()`로 돕니다**(daily-post.yml의
+   "Save no-repeat ledger"와 같은 이유). 1-e·1-f의 두 결함이 겹쳐 실제로 터진 그 실행에서,
+   `insights.py`가 중간에 크래시하자 이 단계가 **통째로 건너뛰어져** 이미 디스크에 쓴
+   `backfill()`/`account()` 결과가 커밋되지 않고 러너와 함께 사라졌습니다. 앞 단계가
+   무엇으로 실패하든 **이번 실행이 이미 만든 진행분은 저장**해야 합니다.
 2. **공유(`shares`)가 가장 중요한 한 칸입니다.** 인스타그램이 공개적으로 밝힌 릴 랭킹 신호는
    `sends per reach`입니다. 좋아요는 대리 지표입니다.
 3. **손으로 읽은 숫자는 `metrics.py observe`로 원장에 넣습니다.** 각 필드에 `<필드>_manual`이

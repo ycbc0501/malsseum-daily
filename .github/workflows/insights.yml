@@ -59,7 +59,15 @@ jobs:
           TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
         run: python watch.py
 
+      # `if: always()` — same idiom as daily-post.yml's "Save no-repeat ledger". insights.py
+      # writes account.json/metrics.json mid-run (backfill(), account()) and can still crash
+      # afterward on an unrelated print bug; without `always()` that crash skips this step and
+      # the whole run's progress is discarded when the runner is torn down, invisible because
+      # nothing on disk ever had a chance to be wrong. Confirmed live: the 2026-11-10 03:20 KST
+      # run backfilled 30 posts and wrote account.json, then crashed in an unguarded print —
+      # and because this step lacked `always()`, none of that reached git.
       - name: Save the ledgers
+        if: always()
         # One implementation for every ledger — see save_ledger.sh. The old
         # `git pull --rebase || true; git push` is what lost the 08-26 ledger.
         run: >-

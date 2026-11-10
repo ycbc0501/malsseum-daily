@@ -213,17 +213,27 @@ def username(ig_user_id=None, token=None):
     return _get(f"{GRAPH}/{ig_user_id}?fields=username&access_token={token}").get("username")
 
 
-def recent_media(limit=8, ig_user_id=None, token=None):
+def recent_media(limit=8, ig_user_id=None, token=None, base=None):
     """The account's most recent media: [{id, timestamp, media_product_type, permalink, caption}].
 
     Read straight from the API rather than from a local ledger so the comment poller and the
     insights collector both work on posts published before any bookkeeping existed — the caption
-    carries the verse reference, which is how an old post is matched back to its theme."""
+    carries the verse reference, which is how an old post is matched back to its theme.
+
+    `base` defaults to the Facebook-domain GRAPH, which is right for every caller that also
+    defaults `ig_user_id`/`token` (they resolve to the numeric account id + IG_ACCESS_TOKEN).
+    A caller that passes an explicit token from `insights.api()` — IG_INSIGHTS_TOKEN, account
+    path "me" — MUST pass the matching base too: that token is only valid on
+    graph.instagram.com, and graph.facebook.com rejects it with a generic "cannot parse access
+    token" (code 190) that reads exactly like a malformed token rather than a wrong domain.
+    That mismatch is what silently skipped every prune since IG_INSIGHTS_TOKEN started winning
+    insights.api()'s token choice (2026-11-10)."""
     ig_user_id = ig_user_id or os.environ.get("IG_USER_ID")
     token = token or os.environ.get("IG_ACCESS_TOKEN")
+    base = base or GRAPH
     # like_count/comments_count are plain media FIELDS, not insights — they need only
     # instagram_basic, so they keep working when instagram_manage_insights is missing.
-    got = _get(f"{GRAPH}/{ig_user_id}/media"
+    got = _get(f"{base}/{ig_user_id}/media"
                f"?fields=id,timestamp,media_product_type,permalink,caption,"
                f"like_count,comments_count"
                f"&limit={int(limit)}&access_token={token}")

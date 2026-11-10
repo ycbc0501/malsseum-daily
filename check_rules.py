@@ -471,6 +471,30 @@ def checks():
     import insights as _i
     yield "G2.1d insights.py hands the base down", (
         "base=base" in inspect.getsource(_i.backfill))
+    # G-2.1e: the same host-mismatch trap as G-2.1d, one layer down. recent_media() hardcoded
+    # graph.facebook.com regardless of the base insights.api() resolved, so an IG_INSIGHTS_TOKEN
+    # call through prune_deleted() got a generic "cannot parse access token" (code 190) that
+    # read exactly like a malformed token rather than a wrong host — and the except-and-log in
+    # prune_deleted swallowed it into "prune skipped", indistinguishable from nothing to prune.
+    # Found live 2026-11-10 (run 42736744636) the day IG_INSIGHTS_TOKEN first won api()'s choice.
+    yield "G2.1e recent_media() accepts a base, not just a hardcoded host", (
+        "base" in inspect.signature(_p.recent_media).parameters)
+    yield "G2.1e prune_deleted() accepts and forwards base to recent_media", (
+        "base" in inspect.signature(_m.prune_deleted).parameters
+        and "base=base" in inspect.getsource(_m.prune_deleted))
+    yield "G2.1e insights.py's __main__ passes its resolved base into prune_deleted", (
+        "prune_deleted(token=_tok, ig_user_id=_uid, base=_base)" in (HERE / "insights.py").read_text())
+    # G-2.1f: a bare total (no breakdown yet) under reach|follow_type crashed the closing print
+    # with AttributeError, aborting the script before solo_fields()/followers()/report() ran —
+    # dropping that day's follower-curve point even though account.json had already been saved.
+    yield "G2.1f account()'s follow-type print does not assume a dict", (
+        "isinstance(r, dict)" in inspect.getsource(_i.account))
+    # G-2.1g: without `if: always()`, a crash anywhere in the main step (same run, same bug)
+    # skips "Save the ledgers" entirely — the backfill/account writes already made to disk never
+    # reach git. Same idiom daily-post.yml already uses for "Save no-repeat ledger".
+    _insights_wf = (HERE / ".github/workflows/insights.yml").read_text()
+    yield "G2.1g insights.yml saves the ledgers even if an earlier step crashed", (
+        re.search(r"Save the ledgers\s*\n\s*if:\s*always\(\)", _insights_wf) is not None)
     # The two metrics that were hand-entered while the API had names for them.
     yield "G2.1a reels_skip_rate and reposts are actually requested", (
         {"reels_skip_rate", "reposts"} <= {m for t in _p.INSIGHT_TIERS for m in t}

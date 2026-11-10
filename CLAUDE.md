@@ -718,6 +718,47 @@ watch.py 3연속 경보에 맡긴다.
 
 **남은 것:** 다음 `insights.yml` 실행 후 실제로 `reach`/`saved`가 채워졌는지 한 번 더 확인.
 
+## 2026-11-10 — 그 "한 번 더 확인"이 진짜 사고를 두 개 더 찾았다: 토큰은 멀쩡했고, 그 다음 두 겹이 깨져 있었다
+
+원석님이 "확인해"라고만 보내서, 바로 위에 적힌 "남은 것"을 실제로 밟았다. 어제(11-09) 끝낸
+`IG_INSIGHTS_TOKEN`을 `ig_doctor.py`로 다시 쳐보니 **멀쩍이 성공**이었다(`reach=163`·
+`views=188`·`shares=4`·`reels_skip_rate=85.5` 전부 ✅) — 토큰 자체는 전혀 문제가 아니었다.
+문제는 그 토큰이 **처음으로 이겨서 쓰이기 시작한 순간** 드러난, 한 번도 실행된 적 없던
+두 코드 경로였다. `gh run list --workflow=insights.yml`로 전수 확인하니 오늘 03:34 KST
+스케줄 실행이 **실패**했다(`42736744636`) — 로그를 끝까지 읽어 원인 둘을 확정했다.
+
+**① `recent_media()`가 `graph.facebook.com`을 하드코딩하고 있었다.** `insights.api()`는
+`IG_INSIGHTS_TOKEN`이 있으면 이제 그걸 쓰고, 그 토큰은 `graph.instagram.com` + 계정 경로
+`"me"`에서만 유효하다(G-2 1-d가 이미 적어둔 규칙). 그런데 `metrics.prune_deleted()`가
+그 토큰·경로를 들고 `post_instagram.recent_media()`를 불렀을 때, 이 함수는 `base`를
+받지 않고 **무조건 `graph.facebook.com`에** 물었다 — 그 호스트에서 Instagram-Login
+토큰은 `(190) Cannot parse access token`으로 거부된다. 이 에러는 `prune_deleted`의
+`except`에 걸려 **"prune skipped"로만 찍히고 끝났다** — 이건 "지울 게 없다"와 글자
+모양이 같아서, 삭제된 게시물이 구절을 1년 동안 묶어두는 바로 그 사고(RULES.md
+C4c/C4d/C4e, 10-07에 한 번 고쳤던 것)가 **다른 입구로 재발할 뻔했다.**
+
+**② `account()`의 마지막 출력 줄이 응답 모양을 하나만 가정했다.** `reach|follow_type`은
+보통 쪼갠 딕셔너리로 오는데, 오늘 응답은 **쪼갤 게 없어 맨 숫자**를 돌려줬다. `r.items()`가
+`AttributeError`로 죽으면서 **스크립트 전체가 중단**됐다 — `account.json`은 그 직전에
+이미 저장됐지만, 뒤에 와야 할 `solo_fields()`·`followers()`·`metrics.report()`는 그날
+한 번도 안 돌았다(오늘자 팔로워 곡선 한 점이 비었다).
+
+**③ 그리고 ①·②가 겹쳐서 세 번째 손실을 만들었다.** `insights.yml`의 "Save the ledgers"
+단계에 daily-post.yml의 "Save no-repeat ledger"가 쓰는 `if: always()`가 없었다 —
+그래서 ②가 크래시하자 이미 디스크에 쓴 `backfill()`/`account()` 결과가 **커밋 한 번
+못 하고 러너와 함께 사라질 뻔했다.** 지금은 다음 실행이 같은 날을 다시 쓰므로 실손실은
+없었지만, 패턴은 08-26 원장 유실과 같다 — 앞 단계가 무엇으로 실패하든 이번 실행이
+이미 만든 진행분은 저장해야 한다.
+
+**고친 것:** `post_instagram.recent_media()`가 `base` 인자를 받고(기본값은 기존과 동일하게
+`graph.facebook.com`), `metrics.prune_deleted()`와 `insights.py __main__`이 그걸 끝까지
+들고 간다. `account()`의 출력 줄은 `isinstance(r, dict)`로 먼저 확인한다.
+`insights.yml`의 "Save the ledgers"에 `if: always()`를 붙였다. 새 테스트
+`test_insights_domain.py`(recent_media의 기본/명시 호스트, 스칼라 응답이 안 죽는다는 것
+— 실제로 라이브 응답과 같은 모양으로 재현해 확인)와 `test_prune.py`에 `base`가 끝까지
+전달되는지 보는 역테스트 추가. `check_rules.py` G2.1e·G2.1f·G2.1g 6개 신설.
+`verify.sh` 전체 재확인.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually

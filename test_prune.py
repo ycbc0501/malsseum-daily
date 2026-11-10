@@ -167,6 +167,24 @@ def run():
         with mock.patch.object(metrics, "FILE", keepsafe):
             check("…and load() still returns every row", len(metrics.load()) == 3)
 
+    # 2026-11-10: insights.api() now prefers IG_INSIGHTS_TOKEN, which only answers on
+    # graph.instagram.com with account path "me" — never graph.facebook.com. prune_deleted's
+    # `base` has to reach post_instagram.recent_media unchanged, or that call silently asks the
+    # wrong domain, gets a generic "cannot parse access token" (code 190), and "prune skipped"
+    # reads exactly like "nothing to prune" while a deleted post keeps its verse out of rotation.
+    basecheck = tmpjson(ledger)
+    seen_base = {}
+
+    def _capture_base(limit=50, ig_user_id=None, token=None, base=None):
+        seen_base["base"] = base
+        return live
+    with mock.patch.object(metrics, "FILE", basecheck), mock.patch.object(metrics, "DELETED", arch), \
+         mock.patch.object(metrics, "STATE", tmpjson({"used_verses": []})), \
+         mock.patch("post_instagram.recent_media", side_effect=_capture_base):
+        metrics.prune_deleted(token="tok", ig_user_id="me", base="https://graph.instagram.com/v21.0")
+        check("prune_deleted threads `base` through to recent_media, not just token/ig_user_id",
+              seen_base.get("base") == "https://graph.instagram.com/v21.0")
+
     print("\n" + ("all good" if not fails else f"{len(fails)} FAILED"))
     return 1 if fails else 0
 
