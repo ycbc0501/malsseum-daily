@@ -655,9 +655,14 @@
    "views|media_product_type": 1104
   },
   "profile": {
+   "biography": "일상이 되는 성경",
    "followers_count": 227,
-   "id": "29110921648557379",
+   "follows_count": 187,
+   "has_profile_pic": true,
+   "id": "17841416389585321",
+   "is_published": true,
    "media_count": 260,
+   "name": "saint seoul",
    "username": "saintseoul_studio"
   }
  }
