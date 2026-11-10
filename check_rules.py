@@ -672,8 +672,15 @@ def checks():
         "watch.findings(" in cc)
     yield "J-1 control_center asks GitHub for the push-CI verdict checks.yml itself cannot alert on", (
         "cron_health._gh(" in cc and "checks.yml" in cc)
-    yield "J-1 control_center reuses ig_doctor's own scope check, not a second one", (
-        "ig_doctor.describe(" in cc and "ig_doctor.NEEDED" in cc)
+    # 2026-11-10: this used to check for "ig_doctor.describe(" + "ig_doctor.NEEDED" directly —
+    # control_center re-reading those two on its own, with no live-probe fallback, is exactly
+    # what made it report the real, working IG_INSIGHTS_TOKEN as dead on every single run
+    # (debug_token cannot read an Instagram-Login token at all; ig_doctor.verdict()'s probe
+    # fallback is the only thing that proves it works). The fix is calling verdict() instead of
+    # describe()/NEEDED a second time — assert THAT, or a regression back to the old shape would
+    # pass this check while silently reintroducing the bug it exists to catch.
+    yield "J-1 control_center asks ig_doctor's shared verdict(), not a second describe()/NEEDED reading", (
+        "ig_doctor.verdict(" in cc and "ig_doctor.describe(" not in cc)
     yield "J-1 control_center reports probe staleness and reference-study due-ness", (
         "ig_probe.is_stale(" in cc and "reference_study.due(" in cc)
     yield "J-2 a checks.yml failure pings the same channel watch.py alerts through", (

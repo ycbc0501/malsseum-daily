@@ -759,6 +759,52 @@ C4c/C4d/C4e, 10-07에 한 번 고쳤던 것)가 **다른 입구로 재발할 뻔
 전달되는지 보는 역테스트 추가. `check_rules.py` G2.1e·G2.1f·G2.1g 6개 신설.
 `verify.sh` 전체 재확인.
 
+## 2026-11-10 — "보내고 끝내지 말고 끝까지 확인해": 오늘 발행 확인 + 멈춰 있던 `(190)` 조사를 끝까지 밟음
+
+원석님 지시: "앞으로 이거 나한테 보내고 끝이 아니라 문제 확인하고 다시 업로드할수있게 다시
+검수해. 오늘거 그래서 올라갓는지까지 확인해." 직전 세션이 "`IG_INSIGHTS_TOKEN`이 `(190)
+Error validating application`으로 안 먹는다 — 제가 확인하겠습니다"라고만 쓰고 멈춘 채
+세션이 끝났다. 이번에 둘 다 실제로 끝까지 했다.
+
+**① 오늘 발행 — 실제로 확인.** GitHub Actions 로그에서 모닝 슬롯이 220분 지연 후 실제로
+올라간 것을 찾았고(`media id → 18211787989370988`), 그 미디어를 Graph API로 직접 쳐서
+**지금도 살아 있는 것**까지 확인했다 — `https://www.instagram.com/reel/DfiitTkisKP/`,
+`timestamp 2026-11-09T23:45:53Z`(=08:45:53 KST). "워크플로가 success"와 "실제로 인스타에
+떠 있다"는 이 레포가 위클리 캐러셀 사고(11-09)에서 이미 다르다고 배운 것이라 코드 성공만
+보고 끝내지 않았다.
+
+**② `(190)` 에러 — 조사해보니 문제가 아니었다. 그런데 그 질문을 쫓다가 진짜 버그를 찾았다.**
+`ig_doctor.py`를 다시 돌려보니 토큰은 멀쩍이 정상이었다(`reach=167·views=189·shares=4·
+reels_skip_rate=84.9%` 전부 ✅) — `(190)`은 이미 11-09 밤에 적어둔 그 구조적 한계
+(`debug_token`이 Instagram Login 토큰을 원천적으로 못 읽음) 그대로였고, `ig_doctor.main()`은
+이미 실제 호출로 우회해 올바르게 ✅를 낸다. 그런데 **`control_center.py`는 아니었다.**
+`token_section()`이 `ig_doctor.describe()`/`NEEDED`를 **따로 다시** 읽고 있었고, 거기엔 그
+우회 로직이 없어서 **매번 "인사이트 권한 없음"을 오보**하고 있었다 — 토큰이 완전히
+정상인데도, 영원히. `control_center.py`를 "한곳에서 보라"고 만든 바로 다음 날(11-09)부터
+이미 거짓 경보 하나가 들어 있었던 셈이다.
+
+**고친 것:** `ig_doctor.py`의 `main()` 안에 있던 "`debug_token` 실패 시 실제 지표 호출로
+판정" 로직을 `verdict()` 함수로 뽑아냈다 — 입력은 평범한 환경변수 이름
+(`IG_ACCESS_TOKEN`/`IG_INSIGHTS_TOKEN`), 출력은 `ok_tokens`/`errors`/`probe_lines`.
+`main()`과 `control_center.token_section()` 둘 다 이제 **이 하나만** 부른다. 비용은 원래
+취지대로 유지됨 — 실제 지표 호출은 `debug_token`이 그 토큰을 못 읽을 때만 돈다(지금처럼
+`IG_INSIGHTS_TOKEN`이 Instagram Login일 때뿐이고, Facebook Login 토큰은 여전히 호출 1번).
+
+`RULES.md` J-1 갱신, `check_rules.py`의 기존 검사("`ig_doctor.describe(` + `NEEDED`가
+`control_center.py`에 있는지")를 **반대로** 뒤집었다(`verdict(`은 있고 `describe(`은 없어야
+통과) — 옛 검사 그대로 두면 이 고침 자체가 "재사용 아님"으로 잡혔을 것이다. 되돌림 검증:
+옛 패턴 문자열로 새 조건을 수동 평가해 실제로 거짓임을 확인. `test_control_center.py`에
+역테스트 2개 추가 — ①`debug_token` 실패 + 실제 호출 성공 → `ok True`(이 버그의 재현),
+②`debug_token` 실패 + 실제 호출도 실패 → `ok False`(가짜 성공 방지). `verify.sh` 전체
+(테스트 29개 + 규칙 검사) 재확인 후 커밋.
+
+**덤으로 — `control_center.py`가 오늘 새로 잡은 진짜 경보 둘은 둘 다 이미 알던 사고의
+꼬리였다.** 지표 백필의 "최근 스케줄 실행 실패"는 G-2.1e/f/g 고침(오늘 오전) **이전**
+실행이고 다음 스케줄(내일 03:20 KST)이 지나면 자동으로 풀린다. 주간 캐러셀의 "최근 스케줄
+실행 실패"는 11-09에 고친 H0 버그(그 캐러셀이 바로 그 사고의 증거)이고, 지난 주 캐러셀을
+다시 올릴지는 이미 11-09 로그에 "콘텐츠 판단, 원석님 확인 필요"로 적어둔 채 남아 있다 —
+새로 만든 결정이 아니라 기존 결정을 다시 확인한 것이다.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually

@@ -92,28 +92,23 @@ def ci_section():
 
 # ----------------------------------------------------------------------------------------- token
 def token_section():
-    """A cheap read of what our tokens are ALLOWED to do — one debug_token call, no metric
-    probing. Reuses ig_doctor.py's own secrets()/describe()/NEEDED rather than a second reading
-    of meta_secrets.txt or a second definition of what scopes insights needs."""
+    """What our tokens are allowed to do. Reuses ig_doctor.verdict() rather than re-reading
+    describe()/NEEDED on its own — that second reading is exactly what broke this section:
+    IG_INSIGHTS_TOKEN is an Instagram-Login token, debug_token structurally cannot read it
+    (confirmed 2026-11-10 with every app id/secret combination — see ig_doctor.py's module
+    docstring), so a describe()-only check reports it dead on EVERY run forever, correctly
+    debug_token-wise and incorrectly in every way that matters. verdict() already carries the
+    live-probe fallback that makes this call right; this just asks it instead of asking twice."""
     import ig_doctor
     s = ig_doctor.secrets()
     app_id, app_secret = s.get("META_APP_ID"), s.get("META_APP_SECRET")
     if not (app_id and app_secret):
         return {"ok": None, "detail": "META_APP_ID/META_APP_SECRET 없음 — 조회 불가", "ok_tokens": []}
-    ok_tokens = []
-    errors = []
-    for label, token in (("IG_ACCESS_TOKEN", s.get("IG_ACCESS_TOKEN")),
-                          ("IG_INSIGHTS_TOKEN", s.get("IG_INSIGHTS_TOKEN"))):
-        if not token:
-            continue
-        info, err = ig_doctor.describe(token, app_id, app_secret)
-        if err:
-            errors.append(f"{label}: {err.get('message')}")
-            continue
-        scopes = set(info.get("scopes") or [])
-        if any(all(n in scopes for n in need) for need in ig_doctor.NEEDED.values()):
-            ok_tokens.append(label)
-    return {"ok": bool(ok_tokens), "detail": "; ".join(errors) or None, "ok_tokens": ok_tokens}
+    v = ig_doctor.verdict(s)
+    errors = [f"{key}: {err.get('message')}" for key, err in v["errors"].items()
+              if key not in v["ok_tokens"]]
+    return {"ok": bool(v["ok_tokens"]), "detail": "; ".join(errors) or None,
+            "ok_tokens": v["ok_tokens"]}
 
 
 # ------------------------------------------------------------------------------------ freshness

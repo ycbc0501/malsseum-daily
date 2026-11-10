@@ -997,10 +997,22 @@ GitHub Actions 화면에만 남았다 — 운영 알림 채널(watch.py → 텔�
 ### J-1. `control_center.py` 가 전부를 한 번에 보여준다
 
 다섯 개를 다시 만들지 않고 **각자에게 이미 있는 함수를 그대로 불러** 한 보고서로 합친다
-(`watch.findings()`, `cron_health._gh()`, `ig_doctor.secrets()/describe()/NEEDED`,
-`ig_probe.is_stale()`, `reference_study.due()`). 비용이 드는 것(ig_doctor.main()이 끝에 하는
-지표별 실제 호출 6건)은 부르지 않는다 — 자주 돌려도 안전해야 "한곳에서 보기"가 실제로
-습관이 된다.
+(`watch.findings()`, `cron_health._gh()`, `ig_doctor.secrets()/verdict()`,
+`ig_probe.is_stale()`, `reference_study.due()`).
+
+**2026-11-10: `ig_doctor.describe()`/`NEEDED`를 직접 다시 읽는 건 "비용 없이 재사용"이
+아니라 두 번째 구현이었다.** `IG_INSIGHTS_TOKEN`은 Instagram Login 토큰이라
+`debug_token`으로 **영원히** 못 읽는다(§G-2 1-d — 어떤 앱 id/secret 조합으로도 확인됨).
+`describe()`만 보는 쪽은 이걸 항상 "토큰 없음"으로 오판한다 — 매번, 영원히, 토큰이
+멀쩡해도. `ig_doctor.verdict()`가 그 구조적 한계를 알고 있는 **유일한 구현**이다
+(`debug_token`이 안 되면 실제 지표 호출로 넘어간다, §G-2 참고) — `control_center.py`는
+이제 `describe()`/`NEEDED`를 직접 두 번 읽지 않고 `verdict()` 하나만 부른다.
+`check_rules.py`가 `control_center.py`에 `ig_doctor.describe(` 호출이 **없고**
+`ig_doctor.verdict(`이 있는지를 검사해 이 구분이 되돌아가면 잡는다.
+
+비용이 드는 쪽(`ig_doctor.verdict()`의 실제 지표 호출)은 `debug_token`이 그 토큰을 읽을
+수 없을 때만 돈다 — 그 외에는 여전히 호출 하나로 끝나서, 자주 돌려도 안전해야 "한곳에서
+보기"가 실제로 습관이 된다는 원래 취지가 유지된다.
 
 ```
 python3 control_center.py            # 보고서 출력

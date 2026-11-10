@@ -153,6 +153,44 @@ try:
 finally:
     undo1(); undo2()
 
+# 2026-11-10 regression: IG_INSIGHTS_TOKEN is an Instagram-Login token. debug_token cannot read
+# that token type at all (confirmed live with every app id/secret combination — see
+# ig_doctor.py's module docstring) — it always errors, on a perfectly working token. Before
+# token_section() called ig_doctor.verdict() (which carries the live-probe fallback), it had no
+# way to tell "debug_token structurally can't see this" apart from "this token is dead", and
+# reported a fully working token as missing on every single run. This is that bug's test.
+undo1 = restoring(ig_doctor, "secrets", lambda: {
+    "META_APP_ID": "a", "META_APP_SECRET": "b", "IG_INSIGHTS_TOKEN": "ins"})
+undo2 = restoring(ig_doctor, "describe", lambda token, app_id, app_secret: (
+    None, {"code": 190, "message": "Error validating application."}))
+undo3 = restoring(ig_doctor, "_get", lambda url: (
+    {"data": [{"id": "123"}]} if "/media?" in url else {"data": [{"value": 1}]}))
+undo4 = restoring(ig_doctor, "probe", lambda media_id, token, base, metric: (True, None, "ok"))
+try:
+    r = cc.token_section()
+    check("token_section: debug_token can't read an Instagram-Login token, but the live "
+          "probe proves it works -> ok True, not a false 'dead'",
+          r["ok"] is True and r["ok_tokens"] == ["IG_INSIGHTS_TOKEN"])
+finally:
+    undo1(); undo2(); undo3(); undo4()
+
+# Reverse of the above: debug_token is ALSO unreachable but the live probe genuinely fails too
+# (the scope really is missing) — must not claim success just because a probe was attempted.
+undo1 = restoring(ig_doctor, "secrets", lambda: {
+    "META_APP_ID": "a", "META_APP_SECRET": "b", "IG_INSIGHTS_TOKEN": "ins"})
+undo2 = restoring(ig_doctor, "describe", lambda token, app_id, app_secret: (
+    None, {"code": 190, "message": "Error validating application."}))
+undo3 = restoring(ig_doctor, "_get", lambda url: (
+    {"data": [{"id": "123"}]} if "/media?" in url else {"__error__": {"code": 10}}))
+undo4 = restoring(ig_doctor, "probe", lambda media_id, token, base, metric: (False, 10, "no permission"))
+try:
+    r = cc.token_section()
+    check("token_section: debug_token unreachable AND the live probe also genuinely fails "
+          "-> ok False, no false positive",
+          r["ok"] is False and r["ok_tokens"] == [])
+finally:
+    undo1(); undo2(); undo3(); undo4()
+
 # -------------------------------------------------------------------------------- freshness_section
 undo1 = restoring(ig_probe, "is_stale", lambda: (True, "40 days since 2026-10-01"))
 undo2 = restoring(reference_study, "load_ledger", lambda: {"next_due": "2026-11-18"})

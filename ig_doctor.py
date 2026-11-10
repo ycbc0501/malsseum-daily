@@ -120,11 +120,90 @@ def probe(media_id, token, base, metric):
     return True, None, json.dumps(r.get("data"), ensure_ascii=False)[:90]
 
 
-def main():
-    s = secrets()
+DISPLAY = {"IG_ACCESS_TOKEN": "IG_ACCESS_TOKEN (발행용)", "IG_INSIGHTS_TOKEN": "IG_INSIGHTS_TOKEN (읽기용)"}
+EXPECT_OK = ("reach", "views", "shares", "reels_skip_rate", "ig_reels_avg_watch_time")
+
+
+def verdict(s=None):
+    """The one place that decides whether a token clears the insights bar — debug_token where it
+    can answer, a live metric probe where it structurally cannot (Instagram-Login tokens; see the
+    comment this used to carry inline in main()). Returns plain env-var-name keys
+    ("IG_ACCESS_TOKEN"/"IG_INSIGHTS_TOKEN"), not the Korean display labels, so a caller like
+    control_center.py doesn't have to know main()'s print formatting to ask "is this token ok".
+
+    2026-11-10: before this existed, control_center.token_section() re-read describe()/NEEDED on
+    its own and had no fallback probe — so it reported the IG_INSIGHTS_TOKEN as dead every single
+    run, forever, even though main()'s own fallback probe (right below) already proves it works.
+    Two readings of the same question had drifted; this is the one implementation both now share.
+    """
+    s = s or secrets()
     app_id, app_secret = s.get("META_APP_ID"), s.get("META_APP_SECRET")
     ig_app_id, ig_app_secret = s.get("IG_APP_ID"), s.get("IG_APP_SECRET")
     pub, ins, ig = s.get("IG_ACCESS_TOKEN"), s.get("IG_INSIGHTS_TOKEN"), s.get("IG_USER_ID")
+    creds = {
+        "IG_ACCESS_TOKEN": (app_id, app_secret),
+        "IG_INSIGHTS_TOKEN": (ig_app_id or app_id, ig_app_secret or app_secret),
+    }
+    info_by_key, errors, debug_token_unreachable = {}, {}, set()
+    for key, token in (("IG_ACCESS_TOKEN", pub), ("IG_INSIGHTS_TOKEN", ins)):
+        if not token:
+            continue
+        a_id, a_secret = creds[key]
+        info, err = describe(token, a_id, a_secret)
+        if err:
+            errors[key] = err
+            debug_token_unreachable.add(key)
+        else:
+            info_by_key[key] = info
+
+    ok_tokens = [key for key, info in info_by_key.items() if any(
+        all(n in (info.get("scopes") or []) for n in need) for need in NEEDED.values())]
+
+    # Only probe when debug_token actually failed to answer for the token we'd use to read —
+    # that is the one case where the probe result changes the verdict, and the only case where
+    # this repo has ever needed it. A Facebook-Login token that debug_token can already read
+    # never reaches this branch, so the common case stays as cheap as it always was.
+    probe_key = "IG_INSIGHTS_TOKEN" if ins else "IG_ACCESS_TOKEN"
+    probe_lines = []
+    if probe_key in debug_token_unreachable:
+        token = ins or pub
+        base = "https://graph.instagram.com/v21.0" if ins else "https://graph.facebook.com/v21.0"
+        acct = "me" if ins else ig
+        if token and acct:
+            m = _get(f"{base}/{acct}/media?fields=id,media_product_type&limit=1"
+                     f"&access_token={urllib.parse.quote(token)}")
+            if "__error__" in m:
+                e = m["__error__"]
+                probe_lines.append(f"   목록 조회 실패 ({e.get('code')}) {e.get('message')}")
+            else:
+                mid = (m.get("data") or [{}])[0].get("id")
+                probe_lines.append(f"   대상 미디어 {mid}")
+                succeeded = set()
+                for metric in EXPECT_OK + ("reposts",):
+                    ok, code, msg = probe(mid, token, base, metric)
+                    if ok:
+                        probe_lines.append(f"     {metric:28} ✅ {msg}")
+                        succeeded.add(metric)
+                    elif code == 10:
+                        probe_lines.append(f"     {metric:28} 권한 없음 (#10) — 지표 이름 문제가 아닙니다")
+                    else:
+                        probe_lines.append(f"     {metric:28} ({code}) {msg}")
+                if all(m in succeeded for m in EXPECT_OK) and probe_key not in ok_tokens:
+                    ok_tokens.append(probe_key)
+
+    return {
+        "ok_tokens": ok_tokens,
+        "debug_token_unreachable": debug_token_unreachable,
+        "info_by_key": info_by_key,
+        "errors": errors,
+        "probe_lines": probe_lines,
+        "probe_key": probe_key,
+    }
+
+
+def main():
+    s = secrets()
+    app_id, app_secret = s.get("META_APP_ID"), s.get("META_APP_SECRET")
     if not (app_id and app_secret):
         raise SystemExit("META_APP_ID / META_APP_SECRET not found "
                          "(meta_secrets.txt or environment)")
@@ -139,27 +218,28 @@ def main():
     # answers with an unrelated-looking error (seen here as "(#2) Service temporarily
     # unavailable", which is not a permission problem at all). Debugging the wrong token with
     # the wrong app's credentials is how this file nearly reported a working token as dead.
-    per_token_creds = {
-        "IG_ACCESS_TOKEN (발행용)": (app_id, app_secret),
-        "IG_INSIGHTS_TOKEN (읽기용)": (ig_app_id or app_id, ig_app_secret or app_secret),
-    }
+    #
+    # For Instagram-Login tokens (ig_login.py) debug_token is not just wrong-app, it refuses the
+    # token type outright — (#2) "Service temporarily unavailable" or (#190)/(#10) depending on
+    # which app's credentials are used, tried on 2026-11-10 with every combination. That is a
+    # product limitation of this token type, not a missing scope: the exchange response from
+    # ig_login.py already printed the granted scopes once, at mint time, and that is the only
+    # place Meta will ever say them for this door. verdict() below judges that case by whether
+    # its actual metric calls succeed, not by whether debug_token can see it.
+    v = verdict(s)
 
-    verdict = {}
-    debug_token_unreachable = set()
-    for label, token in (("IG_ACCESS_TOKEN (발행용)", pub), ("IG_INSIGHTS_TOKEN (읽기용)", ins)):
-        print(f"\n## {label}")
+    for key in ("IG_ACCESS_TOKEN", "IG_INSIGHTS_TOKEN"):
+        print(f"\n## {DISPLAY[key]}")
+        token = s.get(key)
         if not token:
-            print("   없음" + ("   ← 이것이 있으면 인사이트가 자동화됩니다" if "INSIGHTS" in label
+            print("   없음" + ("   ← 이것이 있으면 인사이트가 자동화됩니다" if key == "IG_INSIGHTS_TOKEN"
                                else ""))
-            verdict[label] = None
             continue
-        a_id, a_secret = per_token_creds[label]
-        info, err = describe(token, a_id, a_secret)
-        if err:
+        if key in v["errors"]:
+            err = v["errors"][key]
             print(f"   읽을 수 없음: ({err.get('code')}) {err.get('message')}")
-            verdict[label] = None
-            debug_token_unreachable.add(label)
             continue
+        info = v["info_by_key"][key]
         scopes = set(info.get("scopes") or [])
         exp = info.get("expires_at")
         print(f"   종류 {info.get('type')}   앱 {info.get('application')}   "
@@ -169,60 +249,12 @@ def main():
             missing = [n for n in need if n not in scopes]
             mark = "✅ 충족" if not missing else f"❌ 빠짐: {missing}"
             print(f"     {door:34} {mark}")
-        verdict[label] = scopes
 
-    # A live probe, only when we have something to probe with. Run BEFORE the 판정 below because
-    # for Instagram-Login tokens (ig_login.py) this probe is the ONLY working proof: debug_token
-    # (both graph.facebook.com and graph.instagram.com variants, tried on 2026-11-10 with every
-    # combination of app id/secret) refuses every Instagram-Login token outright — (#2) "Service
-    # temporarily unavailable" or (#190)/(#10) depending on which app's credentials are used. That
-    # is a product limitation of this token type, not a missing scope: the exchange response from
-    # ig_login.py already printed the granted scopes once, at mint time, and that is the only
-    # place Meta will ever say them for this door. So scope for an Instagram-Login token is judged
-    # here by whether its actual metric calls succeed, not by whether debug_token can see it.
-    EXPECT_OK = ("reach", "views", "shares", "reels_skip_rate", "ig_reels_avg_watch_time")
-    probe_ok_labels = set()
-    token = ins or pub
-    base = ("https://graph.instagram.com/v21.0" if ins
-            else "https://graph.facebook.com/v21.0")
-    acct = "me" if ins else ig
-    probe_label = "IG_INSIGHTS_TOKEN (읽기용)" if ins else "IG_ACCESS_TOKEN (발행용)"
-    probe_lines = []
-    if token and acct:
-        m = _get(f"{base}/{acct}/media?fields=id,media_product_type&limit=1"
-                 f"&access_token={urllib.parse.quote(token)}")
-        if "__error__" in m:
-            e = m["__error__"]
-            probe_lines.append(f"   목록 조회 실패 ({e.get('code')}) {e.get('message')}")
-        else:
-            mid = (m.get("data") or [{}])[0].get("id")
-            probe_lines.append(f"   대상 미디어 {mid}")
-            succeeded = set()
-            for metric in EXPECT_OK + ("reposts",):
-                ok, code, msg = probe(mid, token, base, metric)
-                if ok:
-                    probe_lines.append(f"     {metric:28} ✅ {msg}")
-                    succeeded.add(metric)
-                elif code == 10:
-                    probe_lines.append(f"     {metric:28} 권한 없음 (#10) — 지표 이름 문제가 아닙니다")
-                else:
-                    probe_lines.append(f"     {metric:28} ({code}) {msg}")
-            if all(m in succeeded for m in EXPECT_OK):
-                probe_ok_labels.add(probe_label)
-
-    # Does any token we hold actually clear the insights bar? debug_token scopes settle it when
-    # reachable; when debug_token could not even be asked (Instagram-Login tokens, see above),
-    # the live probe above is the fallback authority.
-    ok_tokens = [k for k, v in verdict.items() if v and any(
-        all(n in v for n in need) for need in NEEDED.values())]
-    for label in probe_ok_labels:
-        if label in debug_token_unreachable and label not in ok_tokens:
-            ok_tokens.append(label)
-
+    ok_tokens = [DISPLAY[k] for k in v["ok_tokens"]]
     print(f"\n{'=' * 78}\n## 판정\n{'=' * 78}")
     if ok_tokens:
         print(f"✅ 인사이트 권한이 있는 토큰: {ok_tokens}")
-        if any(l in debug_token_unreachable for l in ok_tokens):
+        if any(k in v["debug_token_unreachable"] for k in v["ok_tokens"]):
             print("   (debug_token 은 이 토큰 종류를 볼 수 없어서 못 썼습니다 — 판정은 아래")
             print("    '실제 호출'이 전부 성공한 것으로 내렸습니다. 추측이 아니라 실측입니다.)")
         print("   → insights.py 가 매일 자동으로 다음을 기록합니다:")
@@ -238,9 +270,11 @@ def main():
     for a in APP_ONLY:
         print(f"     · {a}")
 
-    if probe_lines:
+    if v["probe_lines"]:
+        ins = s.get("IG_INSIGHTS_TOKEN")
+        base = "https://graph.instagram.com/v21.0" if ins else "https://graph.facebook.com/v21.0"
         print(f"\n{'=' * 78}\n## 실제 호출 ({base})\n{'=' * 78}")
-        for line in probe_lines:
+        for line in v["probe_lines"]:
             print(line)
         print("\n   주의: 권한이 없을 때 Meta 는 존재하지 않는 지표 이름에도 (#10) 을 돌려줍니다.")
         print("   그러므로 위 결과로 '이 지표가 있다/없다'를 판단할 수 없습니다. 근거는 공식")
