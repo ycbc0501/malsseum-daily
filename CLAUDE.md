@@ -873,6 +873,43 @@ p90 55분.** 빌드 10분을 더하면 아무 버그 없이 "정상"으로 돌�
 기본값으로 넣고 보고한다. `watch.py` GRACE_H 1, `check_rules.py`의 리터럴 검사 갱신,
 `RULES.md` 슬롯 누락 조항에 근거 수치 추가. `verify.sh`(테스트 29개 + 규칙 감사) 전체 통과.
 
+## 2026-11-10 — "하얀 방이 벽인 이미지가 계속 나온다": `room`과 `still_life`가 같은 "벽" 프롬프트를 공유하면서도 다른 버킷이었다 (RULES.md D-4)
+
+원석님이 레퍼런스 스터디(D-2)를 직접 하다가 그리드를 보고 짚었다: "레퍼런스를 스터디하는데도
+하얀 방이 벽인 이미지가 이렇게 계속 나오는건가.. 오늘 또 들어갔어. 프롬프트에 이게 엄청 많이
+들어간게 분명해." 추측으로 답하지 않고 `git log`로 `state.json` 커밋 70개를 전수 복원해 실제
+발행 카테고리 시퀀스를 재구성했다.
+
+**짚은 게 정확했다 — 그리고 두 가지가 겹쳐 있었다.** ① D-3(11-08)가 고친 회전 멈춤 버그는
+이전에 적은 것보다 더 심했다 — `mist_mountain`이 **10-20~11-07, 33건 연속** 고정돼 있었다
+(요약이 아니라 전수 확인은 이번이 처음). 11-08 수정 이후로는 실제로 매번 다른 카테고리가
+나온다. ② 그런데 회전이 다시 돌아도 "벽"은 반복될 수 있었다 — `INTERIOR_CATS`(28개 카테고리)
+전부가 동일한 `INDOOR_TOP` 프롬프트를 받는다("a tall expanse of the room's own wall ...
+evenly lit and either pale and bright or deep in shadow"). 그런데 `SCENE_STRUCTURE`는 이
+28개를 `room`(5개: bedroom·lamp_room·window_light·desk·cathedral)과 `still_life`(23개:
+tea_cup·candle·flowers_vase 등)로 **나눠서** 등록해뒀다 — D-1(11-04)이 고친 건 "바다 아홉
+개가 다 바다로 보이는" 문제였는데, "방"과 "정물"이 같은 벽 프롬프트를 공유한다는 건 그때도
+지금도 등록된 적이 없었다. `pick_scene`의 `avoid_structure`는 이 딕셔너리만 보므로 `tea_cup`
+바로 다음에 `bedroom`을 고르는 게 전혀 막히지 않았다. 오늘 아침(08:46 KST, 누가복음 12:29)
+실제로 `tea_cup`이 나왔고, 직전 스크린샷 그리드에는 `lamp_room`·`window_light`도 같이 있었다
+— 전부 "평평한 벽 앞의 사물/가구"로 똑같이 읽힌다.
+
+**고친 것:** `fetch_image.SCENE_STRUCTURE`에서 `INTERIOR_CATS` 28개 전부를 단일 `room`
+버킷으로 합쳤다(`room` 버킷 == `INTERIOR_CATS`, 테스트로 고정). `still_life` 버킷은
+`INTERIOR_CATS`에 없는 두 카테고리(`curtain`·`sparrow` — 벽이 아니라 열린 창/맨가지,
+`OUTDOOR_TOP`을 받음)만 남는다. 다른 6개 버킷과 `INTERIOR_CATS` 정의 자체는 안 건드렸다.
+`test_scene_structure.py`에 역테스트 2개 추가 — 옛 5+23 분리를 재현해 200회 중 인접 반복이
+실제로 생김을 먼저 확인한 뒤, 고쳐진 단일 버킷에서는 200회 중 0회임을 고정. `check_rules.py`의
+D-1 커버리지 검사는 버킷 이름을 합쳤을 뿐 키 집합은 그대로라 변경 없이 통과. `verify.sh`
+전체(테스트 30개 + 규칙 감사) 통과 확인 후 커밋.
+
+**영상이 "딱봐도 AI"라는 지적은 이번 범위 밖이다.** `fetch_motion.py`(Gemini Omni, 11-09
+전환)의 모션 프롬프트는 이미 "locked camera, barely-there motion"과 morphing/warping/
+flickering 금지어를 포함하고 있어서, 맹목적으로 프롬프트를 더 건드리는 건 근거 없는 추측이
+된다. 로컬에 최근 생성물이 남아있지 않아(파이프라인이 CI 전용) 직접 눈으로 확인도 못 했다 —
+구체적으로 어느 릴의 어느 구간이 부자연스러웠는지 알려주시면 그 한 건을 프레임 단위로 뜯어서
+원인을 짚겠다.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually

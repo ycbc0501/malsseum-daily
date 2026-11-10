@@ -328,6 +328,39 @@ used_scene_cats 꼬리  같은 기간 동일 commit 전수 → 마지막 10개 �
   합집합이 그대로임을 보이는 역테스트) · `test_slot_media.py`의 `SceneRotationFreezeIsAnnounced` ·
   `check_rules.py`.
 
+### D-4. `room`과 `still_life`가 서로 다른 버킷이라 "벽" 자체가 반복됐다 (2026-11-10)
+
+계정 주인이 레퍼런스 스터디(D-2)를 직접 하다가 또 짚었다: "하얀 방이 벽인 이미지가 이렇게 계속
+나오는건가 ... 프롬프트에 이게 엄청 많이 들어간게 분명해." 직접 `git log`로 2026-09-28~11-09
+발행 70건의 실제 카테고리를 전수 복원해 확인하니 두 가지가 겹쳐 있었다.
+
+- **D-3가 고친 회전 멈춤은 설명한 것보다 더 길었다.** `mist_mountain`이 **2026-10-20~11-07,
+  33건 연속** 고정돼 있었다(이전 로그의 "4주"는 요약이었지, 전수 확인은 이번이 처음이다).
+  D-3의 11-08 수정 이후로는 실제로 매번 다른 카테고리가 나온다 — 그 부분은 고쳐진 것이 맞다.
+- **그런데 회전이 다시 도는데도 "벽"은 또 반복될 수 있었다 — D-1의 버킷 분리 자체가 불완전
+  했다.** `INTERIOR_CATS`(28개)는 전부 같은 `INDOOR_TOP` 프롬프트를 받는다 — *"a tall expanse
+  of the room's own wall ... evenly lit and either pale and bright or deep in shadow"*. 그런데
+  `SCENE_STRUCTURE`는 이 28개를 `room`(5개: bedroom·lamp_room·window_light·desk·cathedral)과
+  `still_life`(23개: tea_cup·candle·flowers_vase 등)로 **나눠서** 등록해뒀다. `pick_scene`의
+  `avoid_structure`는 정확히 이 딕셔너리만 보므로, `tea_cup`(still_life) 바로 다음에
+  `bedroom`(room)을 고르는 건 **전혀 막히지 않았다** — 카테고리도 다르고 버킷도 달라서
+  "원장이 보기엔" 완전히 새 장면인데, 둘 다 "평평한 벽 앞의 사물/가구"로 **똑같이 보인다.**
+  D-1이 고친 것은 "바다 아홉 개가 다 바다로 보인다"였는데, "방"과 "정물"이 같은 벽 프롬프트를
+  공유한다는 건 그때도 지금도 등록되지 않은 채였다.
+- **고친 것**: `SCENE_STRUCTURE`에서 `INTERIOR_CATS` 28개 전부를 단일 `room` 버킷으로 합쳤다
+  (`room` 버킷 == `INTERIOR_CATS`, 역테스트로 고정). `still_life` 버킷은 `INTERIOR_CATS`에
+  **없는** 두 카테고리(`curtain`·`sparrow` — 벽이 아니라 열린 창/맨가지 배경, `OUTDOOR_TOP`을
+  받는다)만 남는다. 다른 6개 버킷(water·sky_mountain·field·forest·landmark)과 `INTERIOR_CATS`
+  자체는 손대지 않았다.
+- 강제: `test_scene_structure.py`에 역테스트 2개 추가 — ① 옛 분리(5+23 두 버킷)를 그대로
+  재현해 200회 중 인접 반복이 실제로 생김을 먼저 확인, ② 고쳐진 단일 `room` 버킷에서는 200회
+  중 단 한 번도 안 생김. `check_rules.py`의 D-1 커버리지 검사(모든 `SCENE_GROUPS` 키가
+  `SCENE_STRUCTURE`에 있는지)는 그대로 통과 — 버킷 이름을 합쳤을 뿐 키 집합은 안 바뀌었다.
+- **영상 품질("영상도 딱봐도 ai야")은 이 커밋 범위 밖이다** — `fetch_motion.py`(Gemini Omni,
+  2026-11-09 전환)의 모션 프롬프트/움직임 강도 쪽 문제로, 사진 카테고리 쏠림과는 다른 원인이다.
+  구체적인 결함(어느 프레임이 부자연스러운지)을 짚으려면 실제로 "AI 같다"고 느낀 릴을 알려주는
+  것이 필요하다 — 다음 세션/원석님 확인 과제로 남긴다.
+
 ## E. 영상·음악
 
 0. **모션 생성은 초마다 과금합니다 — 쓰든 버리든.** 이 모듈은 `fetch_veo.py`였다가

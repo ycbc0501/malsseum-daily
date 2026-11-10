@@ -95,6 +95,65 @@ check("pick_scene relaxes rather than hanging when everything looks 'recent'",
       isinstance(i, int) and cat in hf.SCENE_CATS)
 
 
+# ---------------------------------------------------------------------------------------------
+# 2026-11-10: `room` and `still_life` used to be SEPARATE buckets even though 23 of 25
+# `still_life` categories are also in INTERIOR_CATS and get the identical INDOOR_TOP "wall"
+# composition as the 5 `room` categories. avoid_structure could therefore hand back bedroom
+# right after tea_cup — different category, different bucket, same "object against a plain
+# wall" picture — exactly what the account owner flagged after studying references: "하얀 방이
+# 벽인 이미지가 이렇게 계속 나오는건가". Every INTERIOR_CATS category must now share ONE bucket.
+# ---------------------------------------------------------------------------------------------
+check("every INTERIOR_CATS category is in the SAME structural bucket ('room') as the others — "
+      "this is the actual fix, not just a renumbering",
+      {hf.SCENE_STRUCTURE[c] for c in hf.INTERIOR_CATS} == {"room"})
+check("the merged 'room' bucket is EXACTLY INTERIOR_CATS — no interior category left outside it, "
+      "no outdoor category pulled in",
+      {c for c, s in hf.SCENE_STRUCTURE.items() if s == "room"} == hf.INTERIOR_CATS)
+
+
+def walk_with_structure(structure_map, avoid_structure=4, n=60):
+    """Like walk() above, but lets a reverse-test substitute the OLD (pre-fix) bucket map."""
+    scene_i, cats, interior_adjacent = 0, [], 0
+    prev_was_interior = False
+    for _ in range(n):
+        scene_i, cat = hf.pick_scene(scene_i, cats, avoid_structure=avoid_structure)
+        is_interior = cat in hf.INTERIOR_CATS
+        if is_interior and prev_was_interior:
+            interior_adjacent += 1
+        prev_was_interior = is_interior
+        cats.append(cat)
+        del cats[:-4]
+        scene_i += 1
+    return interior_adjacent
+
+
+# Reverse-test: pick_scene's avoid_structure logic is unchanged — it only ever looks at
+# SCENE_STRUCTURE. So to prove the OLD split (room vs still_life as separate buckets) really
+# could seat two interior scenes back-to-back, simulate it by temporarily splitting the merged
+# bucket back apart (first 5 INTERIOR_CATS alphabetically → "room", the rest → "still_life_old"),
+# the same shape the dict had before this fix.
+_old_interior_split = sorted(hf.INTERIOR_CATS)
+_OLD_STRUCTURE = dict(hf.SCENE_STRUCTURE)
+for _n, _c in enumerate(_old_interior_split):
+    _OLD_STRUCTURE[_c] = "room" if _n < 5 else "still_life_old"
+
+_real_structure = hf.SCENE_STRUCTURE
+hf.SCENE_STRUCTURE = _OLD_STRUCTURE
+try:
+    old_interior_adjacent = walk_with_structure(_OLD_STRUCTURE, n=200)
+finally:
+    hf.SCENE_STRUCTURE = _real_structure
+
+check("reverse-test: splitting INTERIOR_CATS into two buckets (the pre-fix shape) lets two "
+      "interior scenes land back-to-back at least once in 200 picks — proves the next check is "
+      "exercising a real fix, not a pool that never clusters",
+      old_interior_adjacent > 0)
+
+new_interior_adjacent = walk_with_structure(hf.SCENE_STRUCTURE, n=200)
+check("fixed SCENE_STRUCTURE: two INTERIOR_CATS scenes never land back-to-back in 200 picks",
+      new_interior_adjacent == 0)
+
+
 if __name__ == "__main__":
     print(f"\n{len(FAIL)} failing" if FAIL else "\nall ok")
     sys.exit(1 if FAIL else 0)

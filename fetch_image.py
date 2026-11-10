@@ -458,10 +458,34 @@ SCENES, SCENE_CATS = _weave()
 # Every SCENE_GROUPS key must appear here exactly once — test_scene_structure.py and check_rules.py
 # both enforce completeness, so adding a scene family without registering its bucket fails loudly
 # instead of quietly reintroducing the same clustering.
+#
+# 2026-11-10: `room` (5 cats) and `still_life` used to be SEPARATE buckets even though 23 of the
+# 25 `still_life` categories are also in INTERIOR_CATS and get the exact same INDOOR_TOP prompt —
+# "a tall expanse of the room's own wall ... evenly lit and either pale and bright or deep in
+# shadow". pick_scene's avoid_structure check treated "room" and "still_life" as unrelated, so it
+# would freely pick e.g. bedroom (room) right after tea_cup (still_life) — two different category
+# keys, two different structure buckets, but the SAME "object against a plain wall" picture. The
+# account owner flagged this directly after studying references: "하얀 방이 벽인 이미지가 이렇게
+# 계속 나오는건가 ... 프롬프트에 이게 엄청 많이 들어간게 분명해" — correct; INDOOR_TOP's wall
+# language is shared by all 28 INTERIOR_CATS categories, not just the 5 historically named "room".
+# Fix: every INTERIOR_CATS category now shares the single `room` bucket, so avoid_structure treats
+# ALL of them as the same look. `still_life` now holds only `curtain`/`sparrow` — the two
+# still_life-labelled categories that are NOT in INTERIOR_CATS (no wall, get OUTDOOR_TOP).
 SCENE_STRUCTURE = {
-    # room — an indoor establishing shot: furniture/architecture frames the whole picture.
+    # room — ANY interior shot, establishing or close-up: every INTERIOR_CATS category gets the
+    # same INDOOR_TOP "wall" composition, so they must all repel each other, not just the 5
+    # original wide-room categories.
     "bedroom": "room", "lamp_room": "room", "window_light": "room", "desk": "room",
     "cathedral": "room",
+    "flowers_vase": "room", "tea_cup": "room",
+    "bread_table": "room", "morning_table": "room", "folded_laundry": "room",
+    "doorway": "room", "candle_still": "room", "coat_hook": "room",
+    "key_bowl": "room", "small_dish": "room",
+    "cat_window": "room", "hanging_lamp": "room", "potted_plant": "room",
+    "wool_blanket": "room", "bowl_of_fruit": "room", "washed_dishes": "room",
+    "sewing": "room", "shoes_by_door": "room", "umbrella_stand": "room",
+    "linen_cloth": "room", "water_glass": "room", "basket": "room",
+    "candle": "room",
 
     # water — a body of water (sea/lake/river/harbor/falls) is the dominant subject.
     "sea": "water", "reflection_lake": "water", "river": "water", "harbor": "water",
@@ -487,16 +511,10 @@ SCENE_STRUCTURE = {
     "rainy_street": "landmark", "canal_town": "landmark", "chapel": "landmark",
     "archway": "landmark", "alley": "landmark", "well": "landmark",
 
-    # still_life — one close small object/furnishing fills the frame (2026-09-06 expansion).
-    "flowers_vase": "still_life", "curtain": "still_life", "tea_cup": "still_life",
-    "bread_table": "still_life", "morning_table": "still_life", "folded_laundry": "still_life",
-    "doorway": "still_life", "candle_still": "still_life", "coat_hook": "still_life",
-    "key_bowl": "still_life", "small_dish": "still_life", "sparrow": "still_life",
-    "cat_window": "still_life", "hanging_lamp": "still_life", "potted_plant": "still_life",
-    "wool_blanket": "still_life", "bowl_of_fruit": "still_life", "washed_dishes": "still_life",
-    "sewing": "still_life", "shoes_by_door": "still_life", "umbrella_stand": "still_life",
-    "linen_cloth": "still_life", "water_glass": "still_life", "basket": "still_life",
-    "candle": "still_life",
+    # still_life — a close OUTDOOR object, no wall behind it (OUTDOOR_TOP, open sky above).
+    # Everything that reads as "object in front of a wall" lives in `room` above instead, even
+    # though some of these entries were added in the 2026-09-06 "still_life" expansion.
+    "curtain": "still_life", "sparrow": "still_life",
 }
 
 # VARIATION — so even the SAME theme looks substantially different each time it recurs. LIGHT sets a
