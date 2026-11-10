@@ -448,7 +448,10 @@
   "insights": {
    "accounts_engaged": 60,
    "comments": 13,
-   "comments|media_product_type": 13,
+   "comments|media_product_type": {
+    "REEL": 5,
+    "_total": 5
+   },
    "engaged_audience_demographics": [
     {
      "description": "The demographic characteristics of the engaged audience, including countries, cities and gender distribution.",
@@ -637,22 +640,55 @@
     "NON_FOLLOWER": 0
    },
    "likes": 94,
-   "likes|media_product_type": 94,
+   "likes|media_product_type": {
+    "REEL": 44,
+    "STORY": 8,
+    "_total": 52
+   },
    "profile_links_taps": 0,
-   "profile_links_taps|contact_button_type": 0,
+   "profile_links_taps|contact_button_type": {
+    "_total": 0
+   },
    "reach": 713,
-   "reach|follow_type": 713,
-   "reach|media_product_type": 713,
+   "reach|follow_type": {
+    "FOLLOWER": 35,
+    "NON_FOLLOWER": 326,
+    "_total": 360
+   },
+   "reach|media_product_type": {
+    "REEL": 353,
+    "STORY": 15,
+    "_total": 360
+   },
    "replies": 0,
-   "reposts": -2,
+   "reposts": 0,
    "saves": 18,
-   "saves|media_product_type": 18,
+   "saves|media_product_type": {
+    "REEL": 10,
+    "_total": 10
+   },
    "shares": 8,
-   "shares|media_product_type": 8,
+   "shares|media_product_type": {
+    "REEL": 8,
+    "_total": 8
+   },
    "total_interactions": 139,
-   "total_interactions|media_product_type": 139,
+   "total_interactions|media_product_type": {
+    "REEL": 75,
+    "STORY": 8,
+    "_total": 83
+   },
    "views": 1104,
-   "views|media_product_type": 1104
+   "views|follow_type": {
+    "FOLLOWER": 198,
+    "NON_FOLLOWER": 380,
+    "_total": 578
+   },
+   "views|media_product_type": {
+    "REEL": 542,
+    "STORY": 36,
+    "_total": 578
+   }
   },
   "profile": {
    "biography": "일상이 되는 성경",
