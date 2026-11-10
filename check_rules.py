@@ -28,6 +28,8 @@ def checks():
     carousel = (HERE / "carousel_post.py").read_text()
     checks_wf = (HERE / ".github/workflows/checks.yml").read_text()
     verify_sh = (HERE / "verify.sh").read_text()
+    import qa_gate
+    qa_src = (HERE / "qa_gate.py").read_text()
     scenes = [s for items in hf.SCENE_GROUPS.values() for s in items]
     verses = json.load(open(HERE / "verses.json"))["verses"]
 
@@ -675,7 +677,10 @@ def checks():
         name: m.group(1) if (m := re.search(r"kiwipiepy==([0-9][0-9.]*)", text)) else None
         for name, text in (
             ("daily-post.yml", daily), ("checks.yml", checks_wf),
-            ("weekly-carousel.yml", carousel_wf), ("verify.sh", verify_sh))
+            ("weekly-carousel.yml", carousel_wf), ("verify.sh", verify_sh),
+            # qa_gate.py's _py_prefix() copies verify.sh's uv-fallback resolution verbatim (no
+            # shared module to import it from) — it carries the same pin and must drift with it.
+            ("qa_gate.py", qa_src))
     }
     yield "H0-6 kiwipiepy is pinned everywhere it is installed", all(kiwi_pins.values())
     yield "H0-6 every pin is the same version", len(set(kiwi_pins.values())) == 1
@@ -747,6 +752,50 @@ def checks():
         "ig_probe.is_stale(" in cc and "reference_study.due(" in cc)
     yield "J-2 a checks.yml failure pings the same channel watch.py alerts through", (
         "if: failure()" in checks_wf and "notify_ci_failure.py" in checks_wf)
+
+    # K-1/K-2: "diff만 보면 안되고 전체 구조도 봐야하고, 전체 돌려도봐야하고, 결과물도
+    # 뽑아봐야하고" (2026-11-10) → qa_gate.py. verify.sh never once runs daily_post.py end to
+    # end, so a bug that only shows up when the real pipeline runs (carousel centering, the
+    # Sunday reel eaten by the carousel) can sit behind a fully green verify.sh indefinitely.
+    yield "K-1 qa_gate.py exists and imports clean", bool(qa_gate.LEDGERS)
+    yield "K-1 the backup AND the restore are each verified byte-for-byte, not assumed", (
+        qa_src.count("filecmp.cmp(") >= 2)
+    yield "K-1 an unverified backup or restore raises instead of continuing", (
+        "raise GateError" in qa_src and qa_src.count("raise GateError") >= 2)
+    # Every ledger any workflow ever hands to save_ledger.sh must be in qa_gate.LEDGERS, so a new
+    # ledger added to a workflow does not silently go unbacked-up the next time someone runs
+    # qa_gate.py --run — the exact "forgot to register it anywhere" failure mode I-1 already
+    # fixed once for WATCHLIST. verses.json is the one deliberate exception: daily_post.py only
+    # reads it, never writes it (build_verses.py owns it), so a pipeline dry run cannot touch it.
+    # Walked by INDENTATION, not "any following indented line" — an earlier version matched any
+    # subsequently-indented line after the trigger, which (checked against this repo's own
+    # workflows) swallowed an unrelated later step whole AND picked up "state.json" out of a
+    # prose comment ("same shape as state.json") in reference-study.yml, because that comment's
+    # own line happens to also contain the substring "save_ledger.sh" ("— see save_ledger.sh.").
+    # Fix: only a line that is NOT a comment can trigger a block, and comment lines inside a
+    # triggered block are excluded before token extraction either way.
+    wf_ledger_tokens = set()
+    for wf in (HERE / ".github/workflows").glob("*.yml"):
+        lines = wf.read_text().splitlines()
+        for i, line in enumerate(lines):
+            if "save_ledger.sh" not in line or line.lstrip().startswith("#"):
+                continue
+            indent = len(line) - len(line.lstrip(" \t"))
+            block = [line]
+            for nxt in lines[i + 1:]:
+                if not nxt.strip() or len(nxt) - len(nxt.lstrip(" \t")) < indent:
+                    break
+                block.append(nxt)
+            text = "\n".join(l for l in block if not l.lstrip().startswith("#"))
+            for tok in re.findall(r"[\w./-]+\.json\b", text):
+                if "*" not in tok:
+                    wf_ledger_tokens.add(tok)
+    yield "K-1 qa_gate.LEDGERS covers every ledger any workflow saves (except verses.json)", (
+        wf_ledger_tokens - {"verses.json"} == set(qa_gate.LEDGERS))
+    yield "K-1 --run never publishes — it calls daily_post.py with --now AND --emit", (
+        '"--now", "--emit"' in qa_src)
+    yield "K-2 a run with no produced artifact is reported as a failure, not a pass", (
+        "ok = False" in qa_src and "NO ARTIFACTS FOUND" in qa_src)
 
 
 def main():

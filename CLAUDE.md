@@ -1172,6 +1172,53 @@ max·합집합임도 같이 고정 — D-3가 막으려던 중복 게시를 다�
 (03:20 KST)만 돌아 실제로 물릴 일이 거의 없고, **이미 쌓인 계정 이력의 의미를 바꾸는 변경**이라
 오늘은 손대지 않았다 — 고칠지는 별도 판단으로 남긴다.
 
+## 2026-11-10 밤 — "diff만 보면 안되고 전체 구조도 봐야하고, 전체 돌려도봐야하고, 결과물도
+뽑아봐야하고": `qa_gate.py` 신규 (RULES.md K)
+
+원석님 지시: "매번 에러 너뮤 많아서 뭔가 고치고 qa하는데 집중을 돔 해야할거같아 … 지금은
+규칙적으로 그게 안되는데 관장하는 부분이 있어야할거같아." `verify.sh`는 컴파일·교차참조·
+규칙 감사·단위 테스트만 돈다 — `daily_post.py`를 처음부터 끝까지 실제로 돌려본 적이 **단
+한 번도 없다.** 캐러셀 가운데 정렬 버그와 주간 캐러셀이 일요일 저녁 릴을 밀어낸 사고
+둘 다 verify.sh는 계속 녹색이었고, **실제로 나온 결과물을 본 사람**이 찾았다. 그 "본다"가
+매번 손으로 원장 백업→파이프라인 실행→눈으로 확인→원장 복원을 하는 것이었고, 그 손복원이
+한 번 조용히 실패한 적도 있었다(11-09, `/tmp` 쓰기가 샌드박스에 막힘).
+
+**`qa_gate.py` 신규** — 그 세 단계(백업·전체 실행·복원)를 한 명령으로 묶고, 백업과 복원을
+**매번 `filecmp.cmp(shallow=False)`로 바이트 단위 검증**한다. 검증에 실패하면(백업이든
+복원이든) 조용히 넘어가지 않고 즉시 멈춘다 — 11-09 근접사고가 다시는 조용히 지나가지
+못한다. `qa_gate.LEDGERS`는 **모든 워크플로가 `save_ledger.sh`에 넘기는 모든 원장**을
+담아야 하고(`verses.json`만 예외 — `daily_post.py`는 읽기만 함), `check_rules.py`가 실제
+워크플로 파일을 긁어 이 목록과 대조해 강제한다(I-1의 WATCHLIST와 같은 패턴).
+```
+python3 qa_gate.py          # verify.sh만 (무료, 1분)
+python3 qa_gate.py --run    # + 파이프라인 실제 실행 (실비용, 수 분) — 결과물을 output/qa_gate/<시각>/에 남김
+```
+`control_center.py`에는 **의도적으로 엮지 않았다**(RULES.md K-3) — `--run`은 실제 과금이
+있고 수 분이 걸려서, J-1의 "자주 돌려도 공짜"라는 전제와 반대 방향이기 때문이다.
+
+**실제로 `--run`을 돌려서 끝까지 확인했다.** 결과: 로마서 14:17, storm_sky 장면, 2세그먼트
+16초 Veo, `gate_passed: true`, `image_model: gemini-3-pro-image`. 원장 9개 전부 백업→복원
+검증 통과, **끝난 뒤 `git diff`가 완전히 깨끗했다**(흔적 없음). 실제로 만들어진 배경·오버레이·
+최종 릴을 합성해 원석님께 미리보기로 전송해 확인받았다.
+
+**code-review 스킬(high)로 새 코드 자체도 검수했다** — diff가 아니라 `qa_gate.py`·
+`check_rules.py`·`test_qa_gate.py`·`RULES.md` 전체를 대상으로. 실제 버그 5개를 잡았고 전부
+고쳤다: ①`run_verify()`가 "전체 출력을 보여준다"고 주장했지만 verify.sh의 `step()`이 이미
+8줄+3줄로 잘라낸 뒤였다 — FAIL난 단계를 직접 재실행해 **잘리지 않은** 출력을 추가로 보여주게
+고쳤다(같은 PY 해석 로직을 verify.sh에서 그대로 복사했고, `check_rules.py` H0-6에 그 복사본도
+등록해 버전 핀이 갈라지면 잡힌다). ②복원이 실패할 때 에러 메시지가 "git diff를 보라"고만
+하고 **검증된 백업이 어디 있는지**는 안 알려줬다 — 백업 디렉터리 경로를 메시지에 포함시켰다.
+③`check_rules.py`의 원장 완전성 검사가 "다음 들여쓰기 줄은 전부" 식 정규식이라 reference-
+study.yml의 **주석**("… see save_ledger.sh.")에서 "state.json"을 잘못 집어냈고 daily-post.yml의
+**다음 스텝 전체**를 삼켰다 — 들여쓰기 깊이로 블록을 자르고 주석 줄을 트리거·추출 양쪽에서
+제외하도록 다시 썼다(실제 워크플로 파일로 재확인). ④백업이 검증 실패로 멈출 때 만들어둔 임시
+디렉터리를 안 지웠다 — 실패 경로에서 `shutil.rmtree`하도록 고쳤다. ⑤`LEDGERS`에는 있지만
+실행 전에는 없던 파일(파이프라인이 새로 만든 것)은 복원 대상(`saved`)에 없어 그대로 남았다 —
+그런 파일은 복원 시 지우도록 고쳤다. 전부 `test_qa_gate.py` 역테스트로 고정(11개).
+
+`RULES.md` K-1·K-2·K-3, `check_rules.py` 8개(K-1/K-2 6개 + H0-6 확장), `test_qa_gate.py` 11개,
+`verify.sh` 전체 재확인 후 커밋.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually
