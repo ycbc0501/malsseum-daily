@@ -1131,6 +1131,47 @@ segments 1은 7.68초다 — 길이와 교란돼 있어 "모션이 체류에 해
 재현 2개 + D-3가 지키는 `post_i`/`used_verses` 등은 여전히 max/합집합임을 보이는 역테스트).
 `verify.sh`(테스트 30개 + 규칙 감사) 전체 재확인 후 커밋.
 
+## 2026-11-10 밤 3 — `0 rejected`인데 원장에는 에러가 남아 있었다: **키를 빼는 것도 쓰기다**
+
+고친 걸 또 돌려봤더니(`42779643523`, success) 비팔로워 도달이 실제로 들어왔다 —
+`reach|follow_type = {FOLLOWER 35, NON_FOLLOWER 326, _total 360}`, `views|follow_type =
+{FOLLOWER 198, NON_FOLLOWER 380, _total 578}`, `account: 33 metric(s) recorded, 0 rejected`.
+**그런데 커밋된 `account.json`에는 `views|follower_type` 에러가 그대로 있었다** — 요청에서
+빼버린, 더 이상 하지도 않는 호출의 에러가.
+
+**⑦ `ledger_merge.py`가 "지웠다"를 표현할 수 없었다.** D-3(11-08)가 세운
+`OURS_REPLACES_KEYS`는 `ours.items()`를 돌면서 적용된다 — **`ours`에 없는 키는 아예 방문되지
+않고**, `merge()`가 `dict(theirs)`에서 출발하므로 원격 사본이 그대로 살아남는다.
+`insights.account()`는 "값은 누적하지만 에러는 누적하지 않는다"고 주석에 명시하고 에러가 없으면
+키를 **지우는데**, 병합이 매번 돌려줬다. 점심에 고친 거부가 저녁의 정상 지표 옆에 남아 **둘이
+동시에 참인 것처럼** 읽혔다 — 그 주석이 "그러면 안 된다"고 적어둔 바로 그 상태다.
+`OURS_OMITS_DELETES = {"errors"}` 신설(부모를 다시 썼는데 그 키가 없으면 삭제) + `errors`를
+`OURS_REPLACES_KEYS`에도 추가(있으면 대체 — 합집합이면 아침에 고친 거부가 밤의 진짜 거부와
+나란히 남는다). **둘 다 필요하다.** `RULES.md` D-3b, `check_rules.py` 2개,
+`test_ledger_merge.py` +4(역테스트: 두 기제를 빼면 2개 실패 / `post_i`·`used_verses`가 여전히
+max·합집합임도 같이 고정 — D-3가 막으려던 중복 게시를 다시 열면 안 된다).
+
+**확인했지만 버그가 아니었던 것 — 주간 캐러셀에 원장 저장 단계가 없다.** 없어도 된다:
+`daily_post.published_refs()`가 **인스타그램에 직접 물어** 캐러셀까지 보고(피드 글이므로),
+`insights.py`가 FEED 미디어를 `metrics.json`에 백필한다(현재 FEED 11행). 이 저장소의 "로컬
+원장보다 인스타그램을 믿는다" 원칙이 이미 덮고 있는 경로다. 고치지 않았다.
+
+**11-08 캐러셀 재게시 건 — 하면 안 된다(이제 근거가 있다).** 그 캐러셀이 고른 구절 `시편 34:6`은
+**같은 날 저녁 릴로 이미 나갔다**(20:49 KST, `reel/Dferz-mk2le/`). 캐러셀이 17:47 KST에 먼저
+고르고 400으로 실패해 피드에 아무것도 안 남았고, 그래서 세 시간 뒤 릴이 같은 구절을 정상적으로
+집어간 것이다(가드가 제대로 돈 결과다). 지금 그 캐러셀을 올리면 **그 구절이 두 번** 나간다 —
+도달 제재를 받았던 바로 그 사유(C 중복 규칙). **다음 캐러셀(11-15 일요일 11:00 KST)이 새 구절을
+고르게 두는 것이 맞다.** 11-09 로그에 "원석님 확인 필요"로 남아 있던 항목은 이것으로 닫는다.
+⚠️ 11-08 그 400의 **이유 자체는 복구 불가** — H0가 응답 본문을 버렸다(11-09에 고쳤으므로
+다음부터는 보인다). 원인 미상으로 남기고 추측하지 않는다.
+
+**알려드릴 것 하나 — `account.json`의 하루 숫자는 "그날 본 최댓값"이다.** 오늘 디스패치를 세 번
+하다 발견했다: `reach`가 07:33에 713, 08:1x에 360이었는데 원장에는 713이 남는다 —
+`ledger_merge`의 "정수는 max()" 규칙이 **하루 창 추정값에도** 걸리기 때문이다. `reach`는
+재추정되며 내려갈 수 있으니 엄밀히는 "최종값"이 아니다. 평소 `insights.yml`은 하루 한 번
+(03:20 KST)만 돌아 실제로 물릴 일이 거의 없고, **이미 쌓인 계정 이력의 의미를 바꾸는 변경**이라
+오늘은 손대지 않았다 — 고칠지는 별도 판단으로 남긴다.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually
