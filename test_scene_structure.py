@@ -154,6 +154,106 @@ check("fixed SCENE_STRUCTURE: two INTERIOR_CATS scenes never land back-to-back i
       new_interior_adjacent == 0)
 
 
+# ---------------------------------------------------------------------------------------------
+# 2026-11-11 (D-5): fixing clustering (above) is not the same as fixing FREQUENCY. The account
+# owner flagged "또 흰 벽의 방" again after D-4 had already stopped interiors from running
+# back-to-back — the reference study (notes/reference-study/2026-11-04.md) shows interiors are
+# ~17% of the reference grid but were still 40% of OUR catalog share (56 of 140 scenes), because
+# _weave() only ever changed spacing, never share. Reverse-test first: prove a target of 0 (i.e.
+# "no dilution", the pre-fix shape) really does leave interiors at the raw ~40% catalog rate, so
+# the next check is exercising something real.
+# ---------------------------------------------------------------------------------------------
+def _interior_share(target):
+    old = hf.INDOOR_RATIO_TARGET
+    hf.INDOOR_RATIO_TARGET = target
+    try:
+        scenes, cats = hf._weave()
+    finally:
+        hf.INDOOR_RATIO_TARGET = old
+    return sum(1 for c in cats if c in hf.INTERIOR_CATS) / len(cats), scenes, cats
+
+
+# target=1.0 degenerates reps to 0 outdoor replays (the ratio math has nothing to dilute with),
+# which is the cleanest stand-in for "no dilution happened" without dividing by zero.
+_raw_share, _, _ = _interior_share(0.999999)
+check("reverse-test: with no dilution, interiors sit at their raw ~40% catalog share "
+      "(proves the dilution below is doing real work, not reporting a pool that was already fine)",
+      0.35 < _raw_share < 0.45)
+
+_target_share, _target_scenes, _ = _interior_share(hf.INDOOR_RATIO_TARGET)
+check(f"fixed _weave(): interiors settle near INDOOR_RATIO_TARGET ({hf.INDOOR_RATIO_TARGET}), "
+      "not the raw catalog share",
+      abs(_target_share - hf.INDOOR_RATIO_TARGET) < 0.05)
+check("the diluted run never repeats the identical scene text back-to-back (replaying the "
+      "outdoor pool must not seat the same scene next to itself)",
+      all(_target_scenes[i] != _target_scenes[i + 1] for i in range(len(_target_scenes) - 1)))
+
+
+# ---------------------------------------------------------------------------------------------
+# 2026-11-11 (D-5, code review): _weave()'s replay-seam safety must not depend on today's
+# SCENE_GROUPS happening to start and end on different categories — a future reordering could
+# make out_q's first and last categories MATCH, which would seat that category adjacent to
+# itself every time the outdoor pool wraps. Build a synthetic catalog that forces exactly that
+# shape (first round-robin pass starts AND ends on "catX") and confirm _weave()'s swap-repair
+# still produces zero adjacent same-category pairs, rather than trusting the ordering accident.
+# ---------------------------------------------------------------------------------------------
+_old_groups, _old_interior, _old_target = hf.SCENE_GROUPS, hf.INTERIOR_CATS, hf.INDOOR_RATIO_TARGET
+hf.SCENE_GROUPS = {
+    "catX": ["x1 scene", "x2 scene"],   # 2 items: round0 -> catX, round1 -> catX again
+    "catY": ["y1 scene"],
+    "catZ": ["z1 scene"],
+    "room1": ["r1 scene"],
+}
+hf.INTERIOR_CATS = {"room1"}
+hf.INDOOR_RATIO_TARGET = 0.10   # forces reps >= 2, so the replay seam is actually exercised
+try:
+    _syn_scenes, _syn_cats = hf._weave()
+finally:
+    hf.SCENE_GROUPS, hf.INTERIOR_CATS, hf.INDOOR_RATIO_TARGET = _old_groups, _old_interior, _old_target
+
+# Independent oracle (not pulled from _weave()'s own internals): the synthetic catalog's
+# round-robin is dict-order catX,catY,catZ for round 0 (all three have an item 0) and catX only
+# for round 1 (the only category with a second item) -> single pass = [catX,catY,catZ,catX].
+# Naively replaying that pass verbatim DOES seat catX next to itself at the seam (index 3 meets
+# index 4 of the doubled list) — confirming this synthetic setup genuinely exercises the bug
+# class, not a case that was already safe.
+_naive_single_pass = ["catX", "catY", "catZ", "catX"]
+_naive_doubled = _naive_single_pass * 2
+check("sanity: naively replaying the synthetic catalog's single pass collides at the seam "
+      "(proves the next check exercises a real repair, not an already-safe case)",
+      _naive_doubled[3] == _naive_doubled[4])
+check("_weave()'s swap-repair fixes an adjacent-category seam even when the catalog's own order "
+      "would have produced one",
+      all(_syn_cats[i] != _syn_cats[i + 1] for i in range(len(_syn_cats) - 1)))
+
+
+# ---------------------------------------------------------------------------------------------
+# 2026-11-11 (D-5): INDOOR_TOP used to leave the wall's tone ("pale and bright or deep in
+# shadow") as an open either/or, paired with LIGHT[:INDOOR_LIGHT_CUTOFF] being entirely
+# daylight-leaning — so the model had no actual reason to ever pick shadow, and never did.
+# WALL_TONE moves that decision into code. Reverse-test: with only one tone phrase, every
+# indoor render would ask for the same tone regardless of t (the pre-fix shape in effect).
+# ---------------------------------------------------------------------------------------------
+_old_tone = hf.WALL_TONE
+hf.WALL_TONE = _old_tone[:1]
+try:
+    _same_tone = {hf.scene_variation(t, indoors=True) for t in range(6)}
+finally:
+    hf.WALL_TONE = _old_tone
+check("reverse-test: a single WALL_TONE entry collapses every indoor render onto one tone "
+      "phrase regardless of t (proves the next check is exercising a real axis, not a no-op)",
+      len({s.rsplit(", ", 1)[-1] for s in _same_tone}) == 1)
+
+check("WALL_TONE has more than one option to actually choose between",
+      len(hf.WALL_TONE) >= 2)
+_varied_tones = {hf.scene_variation(t, indoors=True).rsplit(", ", 1)[-1]
+                 for t in range(len(hf.WALL_TONE) * 2)}
+check("fixed scene_variation(): indoor renders actually cycle through more than one wall tone",
+      len(_varied_tones) >= 2)
+check("INDOOR_TOP no longer poses the unresolved pale-or-shadow either/or itself",
+      "either" not in hf.INDOOR_TOP.lower())
+
+
 if __name__ == "__main__":
     print(f"\n{len(FAIL)} failing" if FAIL else "\nall ok")
     sys.exit(1 if FAIL else 0)

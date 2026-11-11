@@ -335,6 +335,23 @@ def checks():
         "errors" in _lm.OURS_REPLACES_KEYS and "errors" in _lm.OURS_OMITS_DELETES)
     yield "D-3b merge() actually applies OURS_OMITS_DELETES, not just defines it", (
         "OURS_OMITS_DELETES" in inspect.getsource(_lm.merge))
+    # D-5 (2026-11-11): "흰 벽의 방" repeating was BOTH a frequency problem (interiors stayed at
+    # their raw 40% catalog share even after D-1/D-3/D-4 fixed clustering) and a tone problem
+    # (INDOOR_TOP left "pale and bright or deep in shadow" as an open either/or with nothing
+    # ever pushing toward shadow). Both need to stay fixed, not just pass once.
+    yield "D-5 the indoor ratio target is a real cut, not a no-op", (
+        0.0 < hf.INDOOR_RATIO_TARGET < 0.30)
+    yield "D-5 _weave() actually dilutes toward the target, not just defines it", (
+        "INDOOR_RATIO_TARGET" in inspect.getsource(hf._weave))
+    yield "D-5 the woven run never repeats the identical scene text back-to-back", not [
+        i for i in range(len(hf.SCENES) - 1) if hf.SCENES[i] == hf.SCENES[i + 1]]
+    yield "D-5 INDOOR_TOP no longer poses an unresolved pale-or-shadow choice", (
+        "either" not in hf.INDOOR_TOP.lower())
+    yield "D-5 WALL_TONE is a real multi-way axis, not a single fixed phrase", (
+        len(hf.WALL_TONE) >= 2)
+    yield "D-5 scene_variation() actually uses WALL_TONE for interiors", (
+        "WALL_TONE" in inspect.getsource(hf.scene_variation)
+        and hf.scene_variation(0, indoors=True) != hf.scene_variation(1, indoors=True))
     yield "F3 text area is measured, not assumed", hasattr(generate, "text_area_ok")
     # F2c — the clearance threshold must be relative to the picture, never an absolute edge value.
     # It was absolute (4.0) for a fortnight and rejected every render it ever saw: four CI logs,
@@ -662,6 +679,13 @@ def checks():
     yield "E3 retries escalate the demand", (
         len(fetch_motion.CALMER) == 3 and "frozen photograph" in fetch_motion.CALMER[2].lower()
         and daily_src.count("fetch_motion.CALMER[attempt - 1]") == 2)
+    # E-3b (2026-11-11): "less motion" alone never told the model WHICH surface detail had to
+    # hold still, so grain/shadow on the still image got reinterpreted as floating sparkle/dust
+    # and sliding shadow — named directly after the account owner saw it in a published clip.
+    yield "E3b MOTION names the fixed-shadow/fixed-grain requirement, not just 'less motion'", (
+        "shadow" in fetch_motion.MOTION.lower() and "grain" in fetch_motion.MOTION.lower())
+    yield "E3b NEG bans the two defects actually reported, by name", (
+        "floating sparkle" in fetch_motion.NEG and "shifting shadows" in fetch_motion.NEG)
     yield "E8 shipped motion is recorded", '"motion": round(ov, 3)' in daily_src
     # A gate that silently stopped running must be a number, not a log line. Posts ship with
     # gate_ran / gate_skipped so "was this checked at all" is answerable afterwards.

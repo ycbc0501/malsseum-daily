@@ -1308,6 +1308,43 @@ watch.slot_is_filled(19)  False (02:28은 자정 이후라 저녁 창 밖) → "
 전수 확인 + 옛 공식과의 역테스트), `test_slot_media.py`·`test_fail_alert.py`에 실제 사고 재현
 테스트 추가. `verify.sh`(테스트 31개 + 규칙 감사) 전체 통과, 실제 CI green, 실제 발행까지 확인.
 
+## 2026-11-11 — "또 흰 벽의 방": 쏠림이 아니라 빈도·톤 문제였다. 영상도 가짜 그림자/반짝이 고침 (RULES.md D-5, E-3b)
+
+원석님: "또 흰 벽의 방........ 프롬프트 어딘가에 흰벽의 방같은 프롬프트가 너무 많이 들어가있어.
+레퍼런스스터디 안하니 했으면 이럴수가 없어. 배경 그림자 움직이는거나 갑자기 반짝이 떠다니는거나
+너무 가짜같은데." D-1/D-3/D-4가 고친 건 전부 **클러스터링**(연달아 나오는 것)이었지, **빈도**와
+**톤** 자체는 건드린 적이 없었다 — 이번에 둘 다 실측으로 확인됐다.
+
+- **빈도:** `notes/reference-study/2026-11-04.md`에 이미 적혀 있었다 — 레퍼런스 room+still_life
+  4/24(17%) vs 우리 로테이션 18/42(43%). `_weave()`는 간격만 고쳤지 **카탈로그 점유율(56/140=40%)
+  은 그대로**였다. `INDOOR_RATIO_TARGET=0.20` 추가, `_weave()`가 실외 라운드로빈을 통째로
+  반복(`reps`회) 재생해 실내 비중을 끌어내림 — 실측 56/308=18.2%.
+- **톤:** `INDOOR_TOP`이 "pale and bright or deep in shadow"를 모델에게 맡긴 열린 either/or였는데,
+  `scene_variation()`의 indoor `LIGHT` 문구가 전부 밝은 낮 계열이라 모델이 shadow를 고를 이유가
+  구조적으로 없었다. `WALL_TONE`(밝음/따뜻한 그림자/반반) 3항목을 코드가 직접 고르도록 신설.
+- **영상:** "그림자 움직임/반짝이 떠다님"은 정지 이미지 자체의 그림자 경계·필름 그레인을
+  영상 모델이 "움직여도 되는 질감"으로 오인한 것으로 추정 — `fetch_motion.MOTION`/`NEG`에
+  "모든 그림자·빛의 경계는 제자리에 고정, 그레인은 표면에 고정, 떠다니는 반짝이·먼지 금지"를
+  이름으로 직접 추가.
+- **검수 에이전트(K-4) 3단계 전부 실행**: code-review(high)가 구조+diff를 보고 실제 결함 4개를
+  잡았다 — ① 쓰이지 않는 `TONE`/`EMPTY_AREA`/`ANCHOR` 죽은 코드가 방금 고친 바로 그 모호한
+  either/or 문장을 그대로 들고 있어 나중에 다시 꼬일 위험 → **삭제**. ② `_weave()`의 복제 이음새가
+  "오늘 카탈로그 순서가 우연히 안전하다"는 가정에 기댐 → 이음새마다 실제로 카테고리가 겹치는지
+  확인해 겹치면 뒤쪽 항목과 교환하는 일반적 복구 로직으로 교체(합성 카탈로그로 역테스트).
+  ③ `WALL_TONE`의 `t%3`도 같은 류의 미래 위험이 있어 주석으로 명시. `qa_gate.py --run`으로 실제
+  파이프라인 1회 실행(이사야 32:17, haystack 들판 장면)까지 끝내 결과물(배경·오버레이·영상 프레임)을
+  직접 확인 — 영상 프레임 비교(0초/5초)로 그림자·구도가 고정돼 있음을 눈으로 확인, 떠다니는
+  반짝임 없음. `gate_passed: false`는 기존에 이미 알려진 클리어런스 게이트 통과율 이슈(이 변경과
+  무관, 과거 로그에 이미 기록됨).
+
+`RULES.md` D-5·E-3b, `check_rules.py` 8개, `test_scene_structure.py`에 역테스트 10개 추가(희석
+전/후 비율, 인접 중복 0건, 합성 카탈로그로 이음새 복구 검증, WALL_TONE 축 검증). `verify.sh`
+(테스트 30개 + 규칙 감사) 전체 통과, `qa_gate.py --run` 실제 실행 확인.
+
+**범위 밖으로 남긴 것:** 레퍼런스 스터디(D-2)가 찾은 신규 모티프 5개(불꽃놀이·주택 외관·피아노방·
+옥상 전망·달 뜬 하늘)는 여전히 카탈로그에 없음 — 추가하려면 `INTERIOR_CATS`/`SCENE_STRUCTURE`
+등록이 함께 필요해 별도 검토 대상으로 남긴다.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually

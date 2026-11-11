@@ -69,10 +69,24 @@ API_URL = "https://generativelanguage.googleapis.com/v1beta/interactions"
 # sits on) never shifts AND the scene never looks frantic. Fast video models tend to over-animate,
 # so the prompt pushes hard toward "a living photograph that only breathes" — the fast waves /
 # rushing traffic came from asking for too much motion, not from any speed bug downstream.
+# 2026-11-11: the account owner watched actual output and called two things out by name —
+# "배경 그림자 움직이는거나 갑자기 반짝이 떠다니는거" (background shadow moving, sparkle suddenly
+# floating around) — "너무 가짜같은데" (looks too fake). Neither was ever asked for; MOTION already
+# pushed toward near-stillness. The likely mechanism: the still image already carries its own light
+# and shadow pattern and film grain (fetch_image.QUALITY — "subtle grain", "a soft filmic quality"),
+# and an image-to-video model given only "breathe a little" with no instruction about what NOT to
+# animate will readily reinterpret that grain as floating dust/sparkle and that shadow edge as
+# something sliding across the wall, because both already look like texture waiting to move. Fixed
+# by naming the failure mode directly instead of only asking for less motion in general — "less"
+# doesn't tell the model WHICH surface details must hold still.
 MOTION = (
     "REAL-TIME at 1x speed, never a timelapse or sped up. The camera is locked — no pan, no zoom, "
     "no move — and the scene is almost still: only the smallest movement that eight real seconds "
-    "would actually contain, like a photograph breathing. Nothing enters, leaves, grows or changes."
+    "would actually contain, like a photograph breathing. Nothing enters, leaves, grows or changes. "
+    "Every shadow and patch of light stays exactly where it already is in the frame — nothing "
+    "slides, crawls, sweeps or drifts across any surface. Film grain and surface texture are fixed "
+    "to the surface they belong to, like grain on a photograph, never floating specks, dust or "
+    "sparkle drifting through the air."
 )
 
 # Prefixed to MOTION when animating the tail frame of an earlier segment, so the segments read as
@@ -109,7 +123,13 @@ NEG = ("timelapse, sped up, fast-forward, accelerated motion, fast movement, "
        "turbulence, busy traffic, energetic movement, "
        "camera pan, camera zoom, camera shake, hard cut, scene change, jump cut, "
        "morphing, warping, sudden changes, popping in, flickering, "
-       "elements appearing or disappearing, growing, strobing")
+       "elements appearing or disappearing, growing, strobing, "
+       # 2026-11-11 — named directly, see MOTION's comment: the two defects the account owner
+       # actually saw in a published clip, not a generic "less motion" that doesn't say which
+       # surface detail must hold still.
+       "floating dust, floating sparkle, drifting light motes, glinting specks in the air, "
+       "shifting shadows, moving shadow patterns, dappled light sliding across a surface, "
+       "grain or texture moving like floating particles")
 
 
 # Billed per generated second whether the take is used or not, and it is the dominant cost line.

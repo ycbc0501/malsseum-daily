@@ -410,12 +410,28 @@ INTERIOR_CATS = {
     "cathedral", "candle", "flowers_vase",
 }
 
-def _weave():
-    """Spread the indoor scenes evenly through the outdoor ones, whatever the counts.
+# 2026-11-11: the account owner looked at the live grid again — "또 흰 벽의 방........ 레퍼런스
+# 스터디 안하니 했으면 이럴수가 없어." The reference study already on disk
+# (notes/reference-study/2026-11-04.md) answers it directly: interior scenes (room + still_life)
+# were 4 of 24 reference tiles (17%) but 18 of 42 of OUR posted tail (43%) at the SAME measurement.
+# That is not a clustering problem (D-1/D-3 already fixed back-to-back repeats) — it is a raw
+# FREQUENCY problem. Every one of the 28 INTERIOR_CATS categories renders the identical INDOOR_TOP
+# "tall expanse of the room's own wall" prompt, so a ~40%-of-posts hit rate reads as "always the
+# white wall room" no matter which of the 28 categories actually fired. _weave() used to space
+# indoor scenes evenly WITHOUT changing their share of the rotation (40% catalog share in, 40%
+# realised rate out) — spacing them apart is not the same as making them rarer.
+INDOOR_RATIO_TARGET = 0.20
 
-    A fixed ratio does not work: with 90 outdoor and 60 indoor a 3:1 weave exhausts the outdoor
-    queue and leaves thirty rooms piled at the end. Placing each indoor scene at its proportional
-    position keeps them apart no matter how the pool changes.
+
+def _weave():
+    """Spread the indoor scenes evenly through the outdoor ones, AND hold their overall share
+    near INDOOR_RATIO_TARGET rather than their raw catalog share (56 of 140 scenes = 40%).
+
+    A fixed ratio across a SINGLE pass does not work: with 90 outdoor and 60 indoor a 3:1 weave
+    exhausts the outdoor queue and leaves thirty rooms piled at the end. So the outdoor round-robin
+    is instead REPLAYED enough whole passes to dilute indoor down near the target, and indoor scenes
+    are still placed at evenly-spaced proportional positions within that longer run — both problems
+    (clustering and frequency) are real and neither one's fix substitutes for the other.
     """
     rounds = {c: list(v) for c, v in SCENE_GROUPS.items()}
     out_q, in_q = [], []
@@ -423,6 +439,23 @@ def _weave():
         for cat, items in rounds.items():
             if _r < len(items):
                 (in_q if cat in INTERIOR_CATS else out_q).append((items[_r], cat))
+    if in_q and out_q:
+        # How many whole outdoor passes make indoor settle near the target share.
+        reps = max(1, round(len(in_q) * (1 - INDOOR_RATIO_TARGET) / INDOOR_RATIO_TARGET
+                             / len(out_q)))
+        out_q = out_q * reps
+        # Replaying the SAME list verbatim only avoids seating the same category (or the literal
+        # same scene) adjacent to itself AT THE SEAM between passes because out_q[0]'s category
+        # happens to differ from out_q[-1]'s in TODAY's SCENE_GROUPS order — an accident of the
+        # current catalog, not a guarantee a future reordering would keep. Rather than trust that,
+        # repair any adjacent same-category pair found anywhere in the materialised list (not
+        # just at seams) by swapping in the next later item whose category actually differs.
+        for _i in range(len(out_q) - 1):
+            if out_q[_i][1] == out_q[_i + 1][1]:
+                for _j in range(_i + 2, len(out_q)):
+                    if out_q[_j][1] != out_q[_i][1]:
+                        out_q[_i + 1], out_q[_j] = out_q[_j], out_q[_i + 1]
+                        break
     total = len(out_q) + len(in_q)
     # Fractional positions the indoor scenes should land on, evenly spaced across the whole run.
     slots = {round((i + 0.5) * total / len(in_q)) for i in range(len(in_q))} if in_q else set()
@@ -535,6 +568,26 @@ LIGHT = [
 # Indoors uses only LIGHT[:INDOOR_LIGHT_CUTOFF] — the daylight half. See scene_variation().
 INDOOR_LIGHT_CUTOFF = 5
 
+# 2026-11-11: INDOOR_TOP used to leave the wall's tone as an open "either pale and bright or deep
+# in shadow" for the image model to resolve on its own — paired with LIGHT[:INDOOR_LIGHT_CUTOFF]
+# being entirely daylight-leaning phrases (nothing darker than dusk), the model had no actual
+# reason to ever pick "deep in shadow", so it didn't: every interior rendered a bright wall, which
+# is the literal mechanism behind "또 흰 벽의 방........" repeating regardless of which of the 28
+# INTERIOR_CATS categories fired. Decided here instead, by code, same as LIGHT/VANTAGE — not left
+# as an unresolved "or" for the model to always answer the same way.
+# Picked via t % len(WALL_TONE) where t is the global post_i counter (code review, 2026-11-11):
+# a SPECIFIC scene recurs roughly every len(SCENES) posts, so if len(SCENES) ever became an exact
+# multiple of len(WALL_TONE) that scene would lock onto one tone forever — the same failure mode
+# this axis exists to kill, just relocated here from LIGHT (LIGHT's own comment reasons about the
+# identical risk for its 5-entry pool against an assumed 24-post cycle). Today len(SCENES)=308 and
+# 308 % 3 != 0, so this does cycle (verified by test_scene_structure.py against the live catalog);
+# re-check that test if INDOOR_RATIO_TARGET or the category counts change the total.
+WALL_TONE = [
+    "the wall pale and bright, catching the light directly",
+    "the wall holding soft, warm shadow — dim but never flat or grey, lit only by what spills in",
+    "the wall half in light and half in its own shadow, the two meeting gradually, not in a line",
+]
+
 VANTAGE = [
     "from a wide, distant vantage with deep open space",
     "from a low, grounded eye-level view",
@@ -558,17 +611,22 @@ VANTAGE = [
 
 
 def scene_variation(t, indoors=False):
-    """A rotating light + vantage phrase, so the same scene looks different each time it recurs.
+    """A rotating light + vantage (+ wall-tone, indoors) phrase, so the same scene looks
+    different each time it recurs.
 
-    Indoors the darkest entries are skipped. Dark is on brand — the account owner confirmed that
-    outright — but dark means EVENING outdoors and ABANDONED in an empty room, and a run of dim
-    bare walls is what they saw and called 우울한. Sunset and after-dark stay for scenes that have
-    a sky; a room gets the daylight half of the palette and reads as quiet rather than forsaken.
+    Indoors the darkest LIGHT entries are skipped. Dark is on brand — the account owner confirmed
+    that outright — but dark means EVENING outdoors and ABANDONED in an empty room, and a run of
+    dim bare walls is what they saw and called 우울한. Sunset and after-dark stay for scenes that
+    have a sky; a room gets the daylight half of the palette and reads as quiet rather than
+    forsaken. WALL_TONE is a separate axis from LIGHT on purpose (2026-11-11) — see its comment.
     """
     light_pool = LIGHT[:INDOOR_LIGHT_CUTOFF] if indoors else LIGHT
     light = light_pool[t % len(light_pool)]
     vi = (t // len(light_pool)) % len(VANTAGE)
-    return ", ".join([light, VANTAGE[vi]])
+    parts = [light, VANTAGE[vi]]
+    if indoors:
+        parts.append(WALL_TONE[t % len(WALL_TONE)])
+    return ", ".join(parts)
 
 def pick_scene(start, recent_cats, avoid=2, avoid_structure=4):
     """Choose the next scene index, skipping forward past any whose THEME appears in the last
@@ -598,34 +656,14 @@ def pick_scene(start, recent_cats, avoid=2, avoid_structure=4):
     i = start % n
     return i, SCENE_CATS[i]
 
-# What the empty upper half IS, per scene type — substituted into COMPOSE.
-EMPTY_AREA = {
-    False: "open sky",
-    True: "a tall expanse of the room's own wall",
-}
-# Only an outdoor frame has a horizon. Saying "one horizon only" to an interior contradicts the
-# same sentence's "there is NO horizon" — the interior prompt was carrying both.
-# What the open expanse must look like, in a photographer's terms. It has to be decisively light
-# or decisively dark for the verse to separate from it — but that is about the LIGHT, never about
-# flattening the surface, which is the distinction the old wording lost.
-TONE = {
-    False: "an overcast sky that reads as one soft luminous field, or a clear sky at dusk gone "
-           "deep and dark — bright or dark, never a middling grey, and always real sky with its "
-           "own cloud and gradation. ",
-    True: "the wall evenly lit and either pale and bright or deep in shadow — never a middling "
-          "grey — with its own plaster texture, marks and falloff. This is an interior: no sky, "
-          "no horizon, nothing outdoors above the room. ",
-}
-
-ANCHOR = {
-    # Named objects used to be listed here — furniture, flowers, rooftops — and they were sent with
-    # EVERY scene, so an open seascape was being told to put furniture along its bottom edge. Say
-    # where things go, never what things are; the scene sentence is the only place that decides.
-    False: "the horizon sits low and whatever the scene contains rests along the bottom edge",
-    True: "whatever the room contains rests along the bottom edge, with the bare wall of that same "
-          "room rising behind it",
-}
-
+# REMOVED 2026-11-11 (code review, D-5): EMPTY_AREA/TONE/ANCHOR were dead — grep across the whole
+# repo found no reader of any of the three, ever. TONE[True] still carried the exact unresolved
+# "either pale and bright or deep in shadow" wording that INDOOR_TOP was just rewritten to drop —
+# so the file was quietly keeping two contradictory statements of the same rule, one live
+# (INDOOR_TOP, fixed) and one dead but ready to mislead the next reader or get wired back in by
+# someone who mistakes it for the source of truth. Deleting it removes the contradiction outright
+# instead of just not reading it. The actual composition text lives only in OUTDOOR_TOP/INDOOR_TOP
+# below and COMPOSE above; the actual wall tone lives only in WALL_TONE.
 
 # No zones, and no template shared between a field and a kitchen. The old text described an upper
 # half that holds the verse and a lower part that holds the scene — which IS a two-zone
@@ -652,12 +690,18 @@ OUTDOOR_TOP = (
     "height, the way things in this scene actually end. Nothing in the frame may be sliced off by "
     "a straight horizontal line."
 )
+# The wall's tone (pale / shadowed / half-and-half) is decided by WALL_TONE in scene_variation(),
+# not here — this used to say "decisively pale or deep in shadow" as an open either/or with
+# nothing to actually push it toward shadow, and the model answered the same way every time
+# ("또 흰 벽의 방", 2026-11-11). Leaving the choice to a separate sentence this prompt does not
+# control would re-open the same gap, so this block states only what WALL_TONE cannot: never flat
+# or middling.
 INDOOR_TOP = (
     "COMPOSITION: photographed straight on from low down, so a tall expanse of the room's own wall "
     "rises above the subject and fills most of the frame. Whatever the room contains rests along "
-    "the bottom. The wall is evenly lit and decisively pale or deep in shadow — never a middling "
-    "grey — keeping its own plaster texture, marks and falloff. This is an interior: no sky, no "
-    "horizon, nothing outdoors above the room. Simple and unhurried, with a lot of quiet space."
+    "the bottom. The wall keeps its own plaster texture, marks and falloff — never flat, never an "
+    "even middling grey. This is an interior: no sky, no horizon, nothing outdoors above the room. "
+    "Simple and unhurried, with a lot of quiet space."
 )
 
 COMPOSE = {
