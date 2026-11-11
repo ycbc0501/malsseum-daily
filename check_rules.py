@@ -161,6 +161,17 @@ def checks():
     yield "C2d resolve_failures reads the day out of its own key, not the live clock", (
         "fromisoformat(" in rf_src and "slots.current_day(" not in rf_src
         and "datetime.now(KST)" not in rf_src)
+    # C2e (2026-11-11): a manual workflow_dispatch has no cron expression, so the three steps
+    # that read TARGET_HOUR used to hard-code '5' for every manual run — a 21:42 KST catch-up
+    # run meant to fill a delayed 19:00 slot checked the MORNING slot instead, found it already
+    # posted, and exited clean without ever touching the real gap. slots.owning_hour() must be
+    # the thing a manual run falls back to, and none of the three downstream steps may still
+    # carry their own copy of the old hard-coded/schedule-only expression.
+    yield "C2e a manual run derives its slot from the clock, not a hard-coded '5'", (
+        "slots.owning_hour()" in daily
+        and daily.count("contains(fromJSON('[\"0 10 * * *\"]'), github.event.schedule) && '19' || '5'") == 1)
+    yield "C2e the three downstream TARGET_HOUR reads all use the one computed value", (
+        daily.count("TARGET_HOUR: ${{ env.TARGET_HOUR }}") == 3)
     yield "C4f the watcher counts only reels too", (
         'media_product_type") != "REELS"' in wt)
     # C4i — Instagram FETCHES our media by URL, so the 30-asset retention must keep the

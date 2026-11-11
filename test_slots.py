@@ -113,5 +113,53 @@ class FilledChecksAnIterableOfTimestamps(unittest.TestCase):
         self.assertTrue(slots.filled(datetime.date(2026, 11, 10), 19, [post]))
 
 
+class OwningHourPicksTheSlotThatCoversNow(unittest.TestCase):
+    """The 2026-11-11 incident: a manual catch-up run fired at 21:42 KST to fill a delayed
+    19:00 slot, but the workflow hard-coded TARGET_HOUR=5 for every manual dispatch — so it
+    checked the MORNING slot (already filled), reported "already posted", and exited without
+    ever looking at the real gap. owning_hour() must answer 19 here, not 5."""
+
+    def test_reproduces_the_actual_incident(self):
+        now = _dt(2026, 11, 11, 21, 42)
+        self.assertEqual(slots.owning_hour(now), 19)
+
+    def test_just_after_morning_slot_start(self):
+        self.assertEqual(slots.owning_hour(_dt(2026, 11, 11, 5, 0)), 5)
+
+    def test_just_before_morning_slot_start(self):
+        self.assertEqual(slots.owning_hour(_dt(2026, 11, 11, 4, 59)), 19)
+
+    def test_just_after_evening_slot_start(self):
+        self.assertEqual(slots.owning_hour(_dt(2026, 11, 11, 19, 0)), 19)
+
+    def test_just_before_evening_slot_start(self):
+        self.assertEqual(slots.owning_hour(_dt(2026, 11, 11, 18, 59)), 5)
+
+    def test_past_midnight_still_belongs_to_the_evening_slot(self):
+        self.assertEqual(slots.owning_hour(_dt(2026, 11, 11, 2, 24)), 19)
+
+    def test_every_minute_of_a_week_resolves_to_exactly_one_hour(self):
+        """Reverse of the no-gap-no-overlap window test: owning_hour must never raise and must
+        always agree with slots.filled() for a single timestamp."""
+        minute = _dt(2026, 11, 1, 0, 0)
+        end = _dt(2026, 11, 8, 0, 0)
+        step = datetime.timedelta(minutes=37)
+        while minute < end:
+            hour = slots.owning_hour(minute)
+            self.assertIn(hour, slots.SLOTS)
+            self.assertTrue(slots.filled(slots.current_day(hour, minute), hour, [minute]))
+            minute += step
+
+    def test_defaults_to_the_real_clock_when_now_is_not_given(self):
+        self.assertIn(slots.owning_hour(), slots.SLOTS)
+
+    def test_reverse_hard_coded_five_would_have_failed_the_incident(self):
+        """역테스트 — 고치기 전 하드코딩(TARGET_HOUR=5)이었다면 이 사건에서 뭘 답했을지 그대로
+        계산해, owning_hour()가 그와 다르다는 것을 직접 확인."""
+        now = _dt(2026, 11, 11, 21, 42)
+        hard_coded = 5
+        self.assertNotEqual(slots.owning_hour(now), hard_coded)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -65,3 +65,20 @@ def filled(day, hour, times):
     about Instagram or media types, only the clock."""
     lo, hi = window(day, hour)
     return any(lo <= t.astimezone(KST) < hi for t in times)
+
+
+def owning_hour(now=None):
+    """Which slot (5 or 19) owns the clock right now.
+
+    2026-11-11 (RULES.md C2e): a manual `workflow_dispatch` run has no cron expression to read
+    a slot from, so daily-post.yml hard-coded TARGET_HOUR=5 for every manual run. A catch-up
+    run fired at 21:42 KST (to fill a delayed 19:00 slot) checked whether the *morning* slot was
+    filled, found it was, and exited claiming "already posted" without ever touching the real
+    gap. The windows already tile the full day with no overlap (see module docstring) — this
+    just asks them which one `now` falls in, instead of a caller guessing or hard-coding one."""
+    now = now.astimezone(KST) if now else datetime.datetime.now(KST)
+    for hour in SLOTS:
+        lo, hi = window(current_day(hour, now), hour)
+        if lo <= now < hi:
+            return hour
+    raise AssertionError("no slot window contains `now` — windows should tile the full day")
