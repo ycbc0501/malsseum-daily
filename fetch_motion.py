@@ -69,24 +69,35 @@ API_URL = "https://generativelanguage.googleapis.com/v1beta/interactions"
 # sits on) never shifts AND the scene never looks frantic. Fast video models tend to over-animate,
 # so the prompt pushes hard toward "a living photograph that only breathes" — the fast waves /
 # rushing traffic came from asking for too much motion, not from any speed bug downstream.
-# 2026-11-11: the account owner watched actual output and called two things out by name —
-# "배경 그림자 움직이는거나 갑자기 반짝이 떠다니는거" (background shadow moving, sparkle suddenly
-# floating around) — "너무 가짜같은데" (looks too fake). Neither was ever asked for; MOTION already
-# pushed toward near-stillness. The likely mechanism: the still image already carries its own light
-# and shadow pattern and film grain (fetch_image.QUALITY — "subtle grain", "a soft filmic quality"),
-# and an image-to-video model given only "breathe a little" with no instruction about what NOT to
-# animate will readily reinterpret that grain as floating dust/sparkle and that shadow edge as
-# something sliding across the wall, because both already look like texture waiting to move. Fixed
-# by naming the failure mode directly instead of only asking for less motion in general — "less"
-# doesn't tell the model WHICH surface details must hold still.
+#
+# 2026-11-11, first attempt (superseded below): the account owner watched actual output and
+# called two things out by name — "배경 그림자 움직이는거나 갑자기 반짝이 떠다니는거" (background
+# shadow moving, sparkle suddenly floating around) — "너무 가짜같은데" (looks too fake). The fix
+# tried then NAMED the two defects and added them to NEG as a ban list ("floating dust, floating
+# sparkle, ... shifting shadows, moving shadow patterns, ...") on top of a MOTION that still only
+# said "almost still" without saying what WAS allowed to move.
+#
+# 2026-11-11, same day, corrected: the account owner read that diff and pushed back directly —
+# "먼지금지 이런거 넣지 말자 프롬프트 너무 복잡해져. 그냥 '더 진짜처럼'을 구현할수 있는 프롬프트가
+# 뭔지 딥리서치해서 프롬프트고슈들이 뭐쓰는지 보고 그거써." Deep research into what working video
+# prompt engineers actually do (2026 guides on Veo/Sora/Kling prompting) converges on one point
+# that cuts directly against the first attempt: "describe what should happen rather than what
+# should be avoided — positive motion instructions work better than long negative lists." The
+# first attempt's real flaw was never its wording — it was its SHAPE: MOTION left "what is allowed
+# to move" completely unstated, so a long NEG list was doing the job a clear positive instruction
+# should have done from the start, growing without bound as each new failure mode got discovered
+# and named. Fixed structurally instead: MOTION now states, in one place, the SAME physically real
+# motion a nature-documentary tripod shot would actually have (water, cloud, mist, flame, leaves,
+# fabric, steam) — naming a concrete positive target gives the model nothing left to invent, so
+# grain and shadow no longer need their own ever-growing ban list (removed from NEG below).
 MOTION = (
-    "REAL-TIME at 1x speed, never a timelapse or sped up. The camera is locked — no pan, no zoom, "
-    "no move — and the scene is almost still: only the smallest movement that eight real seconds "
-    "would actually contain, like a photograph breathing. Nothing enters, leaves, grows or changes. "
-    "Every shadow and patch of light stays exactly where it already is in the frame — nothing "
-    "slides, crawls, sweeps or drifts across any surface. Film grain and surface texture are fixed "
-    "to the surface they belong to, like grain on a photograph, never floating specks, dust or "
-    "sparkle drifting through the air."
+    "A single locked-tripod shot, exactly like one static take from a nature documentary: real "
+    "time, 1x speed, never a timelapse, the camera never pans, zooms or moves at all. The ONLY "
+    "thing allowed to move is whatever this exact scene would genuinely move on its own across "
+    "eight real seconds — water rippling, a cloud or mist drifting, a flame flickering, a leaf or "
+    "fabric trembling in air, steam rising — and even that moves barely, like a photograph just "
+    "beginning to breathe. Every shadow, every patch of light and all film grain stay fixed to the "
+    "surface they are already on, exactly as they would in a real, unedited recording."
 )
 
 # Prefixed to MOTION when animating the tail frame of an earlier segment, so the segments read as
@@ -117,19 +128,27 @@ CONTINUE = ("This is a DIRECT CONTINUATION of one single continuous shot, resumi
 # dedicated field at all — so both of these are folded straight into the one text prompt in
 # animate() below, under "AVOID ENTIRELY". Naming the same thing in both strings is how this list
 # ended up listing "text", "people", "watermark" and "logo" twice each; kept apart on purpose.
+# 2026-11-11: no longer carries "floating dust / floating sparkle / shifting shadows / ..." — see
+# MOTION's comment. That ban list was a SYMPTOM list growing in step with whatever the account
+# owner had most recently spotted in a published clip; the fix that actually holds is MOTION
+# naming the one thing allowed to move, which leaves nothing else for the model to invent. Kept
+# below are only the structural failure modes positive phrasing can't cover on its own (speed,
+# camera, cuts, warping) — not an ever-growing catalogue of specific surface artifacts.
+#
+# Structural review (2026-11-11) caught a real bug in the first draft of this edit: "moving
+# clouds", "flowing water" and plain "flickering" were still banned here while MOTION's new
+# positive list explicitly ALLOWS "a cloud or mist drifting", "water rippling" and "a flame
+# flickering" — the exact COMPOSE/EVENTONE contradiction content_law.py's own docstring warns
+# about (one block permits what another forbids, and the model resolves it unpredictably). Fixed
+# by keeping only the EXCESS/violent form of each motion here (racing/fast clouds, crashing/
+# rushing water, strobing) — the gentle form MOTION now names is no longer also banned by name.
 NEG = ("timelapse, sped up, fast-forward, accelerated motion, fast movement, "
-       "fast-moving clouds, racing clouds, moving clouds, "
-       "rushing water, crashing waves, flowing water, strong current, rolling waves, churning, "
-       "turbulence, busy traffic, energetic movement, "
+       "fast-moving clouds, racing clouds, "
+       "rushing water, crashing waves, strong current, rolling waves, churning, turbulence, "
+       "busy traffic, energetic movement, "
        "camera pan, camera zoom, camera shake, hard cut, scene change, jump cut, "
-       "morphing, warping, sudden changes, popping in, flickering, "
-       "elements appearing or disappearing, growing, strobing, "
-       # 2026-11-11 — named directly, see MOTION's comment: the two defects the account owner
-       # actually saw in a published clip, not a generic "less motion" that doesn't say which
-       # surface detail must hold still.
-       "floating dust, floating sparkle, drifting light motes, glinting specks in the air, "
-       "shifting shadows, moving shadow patterns, dappled light sliding across a surface, "
-       "grain or texture moving like floating particles")
+       "morphing, warping, sudden changes, popping in, "
+       "elements appearing or disappearing, growing, strobing")
 
 
 # Billed per generated second whether the take is used or not, and it is the dominant cost line.

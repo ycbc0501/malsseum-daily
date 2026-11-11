@@ -26,6 +26,23 @@ jobs:
         with:
           python-version: "3.12"
 
+      # notes/reference-study/style_refs/ is gitignored on purpose (RULES.md D-6) — it holds
+      # another account's copyrighted photographs, used only as an internal look-and-feel input
+      # to our OWN generation (content_law.STYLE_REF_NOTE), never redistributed or published, and
+      # a public repo's git history/Releases are the wrong place for that regardless of intent.
+      # The Actions cache is scoped to this repo's own workflow runs (not a public download URL
+      # the way a Release asset or a committed file would be) and auto-expires after ~7 days
+      # unused, which is the right amount of persistence for a rotating handful of tiles. The key
+      # always includes the run id so this job's save() never collides with an existing entry
+      # (cache entries are immutable by key); restore-keys picks up the most recent prior save.
+      - name: Restore style-reference images
+        uses: actions/cache/restore@v4
+        with:
+          path: notes/reference-study/style_refs
+          key: style-refs-${{ github.run_id }}
+          restore-keys: |
+            style-refs-
+
       # Tries business_discovery first (our own token, no new credential). As of 2026-11-04 this
       # is confirmed BLOCKED — `(#10) Application does not have permission for this action` — so
       # in practice this step sends a Telegram reminder asking for grid screenshots instead, the
@@ -47,6 +64,16 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
         run: python reference_study.py --run
+
+      # if: always() — the API/reminder step above can fail or find nothing, but any tile this
+      # run DID manage to write (e.g. from a --manual pass earlier in the same job) must not be
+      # dropped on the floor just because something else afterward went wrong.
+      - name: Save style-reference images
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: notes/reference-study/style_refs
+          key: style-refs-${{ github.run_id }}
 
       - name: Save the ledger + report
         # One implementation for every ledger — see save_ledger.sh. reference_study.json is a

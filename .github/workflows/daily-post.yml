@@ -61,6 +61,19 @@ jobs:
         # fetch_motion.py's module docstring).
         run: pip install pillow higgsfield-client requests "kiwipiepy==0.24.1" imageio-ffmpeg
 
+      # notes/reference-study/style_refs/ (RULES.md D-6) is gitignored — reference-study.yml is
+      # the only WRITER, via the Actions cache (not git, not a Release: see that workflow's own
+      # comment on why — another account's copyrighted photos have no business in anything
+      # public-facing). This is a read-only restore: this job never writes the cache back, so a
+      # miss here just means fetch_image.py generates exactly as it always has (rule 0-3's shape).
+      - name: Restore style-reference images (read-only)
+        uses: actions/cache/restore@v4
+        with:
+          path: notes/reference-study/style_refs
+          key: style-refs-${{ github.run_id }}
+          restore-keys: |
+            style-refs-
+
       - name: Build the Reel (Nano Banana Pro + music) and post
         id: build
         env:

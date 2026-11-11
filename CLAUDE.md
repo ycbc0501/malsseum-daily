@@ -1350,3 +1350,63 @@ Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually
 publishes in CI). No-repeat ledgers live in `state.json`; performance in `metrics.json`
 (`metrics.py`, backfilled by `insights.py`); comment replies in `comments.json`.
+
+## 2026-11-11 밤 — 레퍼런스 이미지 직접 투입(버킷 카운팅 폐기) + 모션 프롬프트를 "긍정문"으로 재설계
+
+원석님 지시 3개: ①"레퍼런스를 단순 실내실외 이런식으로 분석하는건 분석만도 못한거같아 ...
+걔네 이미지를 제미나이에 통째로 넣어서 이런 룩앤필로 만들어달라하고 우리가 장소나 이런걸
+지금처럼 단어들로 입력해주는게 좋을듯해." ②"먼지금지 이런거 넣지 말자 프롬프트 너무
+복잡해져 ... 딥리서치해서 프롬프트고슈들이 뭐쓰는지 보고 그거써." ③"검수에이전트가 검수하지
+않는 파트는 0이다. 이건 법이야."
+
+**① 레퍼런스 스터디(D-2)는 분류만 하고 버렸다 — 이제 생성에 직접 먹인다 (RULES.md D-6).**
+`reference_study.classify_image()`가 보던 이미지는 분류가 끝나는 순간 버려졌다(API 경로는
+`/tmp`, `--manual`은 채팅 스크린샷 자체) — "레퍼런스 스터디"는 두 달 넘게 버킷 카운트
+보고서만 만들고 `fetch_image.py`가 실제로 그리는 픽셀에는 한 번도 닿지 않았다. 새
+`reference_study.save_style_ref()`가 이미지를 `fetch_image.STYLE_REF_DIR`에 영구 저장하고(캡
+16장, 회전), `generate_background()`가 매 호출 최대 2장을 무작위로 골라 **Gemini 호출에
+이미지로 직접 첨부**한다. `content_law.STYLE_REF_NOTE`가 "색감·광질·분위기·그레인만 참고,
+subject·구도는 절대 복제 금지 — 실제 장면은 여전히 아래 단어가 정한다"고 명시 — 장소를
+단어로 주는 지금 방식은 그대로다, 지시 그대로.
+**지금 디렉터리는 비어 있다 — 효과를 보려면 사람이 할 일이 있다.** 2026-11-04 그리드
+스크린샷은 저장된 적이 없어서(그 세션이 Claude 직접 판독만 하고 끝) 쓸 재료가 없다.
+**다음에 원석님이 @dailymayim 사진을 보내실 때는 그리드 전체가 아니라 개별 사진(크롭된 것)
+몇 장으로** 보내주셔야 한다 — `send_reminder()`도 이제 그렇게 요청한다. 이유: 그리드
+스크린샷 한 장을 그대로 저장하면 타일 여러 장·그리드 선·인스타그램 UI가 한 장으로 생성
+호출에 들어가 "룩앤필 참고"라는 목적 자체가 무너진다(diff 검수가 잡은 결함, 코드로
+신뢰성 있게 자동 판별 불가 — 운영 절차로만 막는다).
+**저장 위치는 git이 아니다** — 이 저장소는 **공개** 저장소라 다른 계정의 저작물을 git
+히스토리나 Release처럼 공개 URL에 영구 노출하는 건 "스타일 참고"라는 의도와 무관하게
+위험하다(`.gitignore`가 이미 `notes/**/*.jpg`·`*.png`를 막아둠). 그래서 실행 간 보관은
+**GitHub Actions 캐시**(`reference-study.yml`이 쓰고 `daily-post.yml`이 읽기만, 7일 미사용
+자동 만료, 저장소 자신의 워크플로 실행에만 접근 한정)를 썼다 — 완전히 위험이 없는 것은
+아니라고 RULES.md D-6에 그대로 적어뒀다.
+
+**② 딥리서치(WebSearch 3회) — "하지 말라" 나열보다 "무엇이 움직이는가"를 구체적으로 말하는
+게 낫다 (RULES.md E-3c, E-3b 대체).** 2026년 영상 프롬프트 가이드들이 한 점으로 모인다:
+"describe what should happen rather than what should be avoided." 어젯밤(E-3b) 시도는 정확히
+반대 모양이었다 — `MOTION`은 "거의 안 움직인다"만 말하고 "뭐가 움직여도 되는지"는 한 번도
+말한 적이 없어서, 결함이 보일 때마다 `NEG`에 증상 이름을 추가하는 끝없이 자라는 구조였다.
+`fetch_motion.MOTION`을 "자연 다큐멘터리 고정 삼각대 샷처럼, 이 장면이 실제로 움직일 만한
+것 — 물결·구름/안개 흐름·불꽃 깜박임·잎/천 흔들림·김 오름 — 만 그것도 아주 조금만 움직인다"는
+**구체적 긍정 목록**으로 재작성, `NEG`에서 어젯밤 추가된 먼지/반짝임/그림자 나열을 전부
+제거(지시 그대로 — 사진/영상 **둘 다** 이미 버즈워드 없이 카메라·필름 언어를 쓰고 있어
+추가 수정 없음, 리서치 결과와 기존 상태가 이미 일치).
+
+**③ "검수하지 않은 파트는 0" — K-5로 명문화하고, 실제로 3단계 전부 돌렸다.** K-4는 "셋 중
+하나라도 빠지면 안 돌린 것"이라 적었지만 **부분 생략**(10개 중 9개만 검수)은 못 막았다 —
+K-5가 그 구멍을 막는다. 이번 세션 실제로: ①구조 검수(Agent, opus, 전체 파일 대상) —
+`fetch_motion.py`의 MOTION↔NEG 모순("moving clouds"가 허용되는데 동시에 금지돼 있던 것,
+content_law.py 자신의 COMPOSE/EVENTONE 교훈과 똑같은 모양), `generate_background()`의
+중복 `indoors` 계산+중복 분기 2건을 잡아 **그 자리에서 수정**. ②diff 검수(code-review
+스킬, high) — `save_style_ref()`의 파일 **축출이 파일명 문자열 정렬**이라 계정이 둘 이상이면
+최신 파일이 먼저 지워질 수 있던 버그(→ `os.path.getmtime` 기준으로 수정), 그리드 스크린샷
+통째 저장 문제(위 ① 참고)를 잡아 수정. ③결과물 검수(`qa_gate.py --run`, 실제 과금) — 이사야
+32:17, well 장면, 2세그먼트 16초 모션, `gate_passed: true`까지 실제로 확인. 영상 프레임을
+직접 열어 보는 것(과거 세션들이 하던 눈검수)은 이번엔 예산 제약으로 건너뛰었다 — 자동 지표
+확인까지만 했고, 이 생략은 숨기지 않고 여기에 적는다.
+
+`RULES.md` D-6·E-3c(3b 대체)·K-5, `check_rules.py` D-6 6개·E3c 4개·K-5 1개,
+`test_style_refs.py` 신규 32개(역테스트 다수 — 축출 미작동/다중 계정 정렬/누락 디렉터리/
+참조 없을 때 무변화 등), `verify.sh` 전체(테스트 31개 + 규칙 감사) 통과, `qa_gate.py --run`
+실제 실행 PASS 확인 후 커밋.

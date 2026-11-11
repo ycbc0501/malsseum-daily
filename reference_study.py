@@ -35,6 +35,7 @@ import argparse
 import base64
 import json
 import os
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -55,6 +56,52 @@ REPORT_DIR = os.path.join(HERE, "notes", "reference-study")
 REFERENCE_ACCOUNTS = ["dailymayim"]
 
 STUDY_INTERVAL_DAYS = 14
+
+# 2026-11-11: until now, every reference photograph this file ever looked at — classify_image()'s
+# /tmp download in the API path, a chat screenshot handed to --manual — was thrown away the
+# moment classification finished. "레퍼런스 스터디" only ever produced a bucket-count report;
+# fetch_image.py never saw a single pixel of it. The account owner named this directly: "레퍼런스를
+# 단순 실내실외 이런식으로 분석하는건 분석만도 못한거같아 ... 걔네 이미지를 제미나이에 통째로
+# 넣어서 이런 룩앤필로 만들어달라하고." save_style_ref() is the fix — it is the ONLY writer of
+# fetch_image.STYLE_REF_DIR, so a tile saved here is what the next render actually sees.
+STYLE_REF_CAP = 16   # a rotating LOOK sample, not an archive — fetch_image attaches 1-2 per post
+
+
+def save_style_ref(src_path, accounts, dirpath=None):
+    """Persist one reference photograph into fetch_image.STYLE_REF_DIR. Evicts the oldest file
+    once the pool exceeds STYLE_REF_CAP. Never raises on its own account being stale — a failed
+    copy must not block the classification/report this is called alongside (rule 0-3's shape).
+
+    `src_path` must already be a SINGLE photograph, not a multi-tile grid screenshot (code
+    review, 2026-11-11) — fetch_image.py attaches whatever is saved here directly to a live
+    generation call, so a whole 3x8 grid (post borders, Instagram chrome, two dozen unrelated
+    photos at once) would steer that call toward grid-line artifacts instead of one clean
+    reference look. There is no reliable way to detect "is this a grid" from the file alone, so
+    this is a caller discipline point, not a code guard: crop to individual tiles BEFORE calling
+    this (same discipline send_reminder()'s message now asks for directly)."""
+    import shutil
+    dirpath = dirpath or hf.STYLE_REF_DIR
+    try:
+        os.makedirs(dirpath, exist_ok=True)
+        ext = os.path.splitext(src_path)[1].lower() or ".jpg"
+        acct = (accounts[0] if accounts else "ref").lstrip("@")
+        dest = os.path.join(dirpath, f"{acct}-{time.time_ns()}{ext}")
+        shutil.copyfile(src_path, dest)
+        # Oldest-first by ACTUAL file time, not by sorting the filename string. REFERENCE_ACCOUNTS
+        # is one entry today but its own comment says "extend this list" — the moment a second
+        # account's name sorts differently (e.g. "aaa_acct" before "zzz_acct"), a filename-string
+        # sort stops tracking real age at all: a just-saved "aaa_acct-<new>" would sort ahead of a
+        # month-old "zzz_acct-<old>" and get evicted FIRST (code review, 2026-11-11).
+        existing = sorted(
+            (os.path.join(dirpath, n) for n in os.listdir(dirpath)
+             if n.lower().endswith((".jpg", ".jpeg", ".png"))),
+            key=os.path.getmtime)
+        for old in existing[: max(0, len(existing) - STYLE_REF_CAP)]:
+            os.remove(old)
+        return dest
+    except OSError as e:
+        print(f"reference_study: could not save style reference ({e})")
+        return None
 
 
 def _today():
@@ -237,10 +284,13 @@ def _recent_cats():
 
 
 def send_reminder(reason=""):
+    # 2026-11-11: asks for individual photos now, not a grid screenshot — save_style_ref()'s
+    # docstring explains why (a whole grid gets attached to live generation verbatim since D-6).
     accounts = ", ".join("@" + a for a in REFERENCE_ACCOUNTS)
-    msg = (f"\U0001F4CE 레퍼런스 스터디 때입니다 — {accounts} 그리드 스크린샷을 보내주세요.\n"
+    ask = "그리드가 아니라 사진 몇 장을 각각 따로(크롭해서) 보내주세요"
+    msg = (f"\U0001F4CE 레퍼런스 스터디 때입니다 — {accounts} {ask}.\n"
            f"(자동 수집이 아직 막혀 있습니다: {reason[:200]})" if reason else
-           f"\U0001F4CE 레퍼런스 스터디 때입니다 — {accounts} 그리드 스크린샷을 보내주세요.")
+           f"\U0001F4CE 레퍼런스 스터디 때입니다 — {accounts} {ask}.")
     notify.send(msg)
 
 
@@ -265,6 +315,7 @@ def run_try_fetch():
             try:
                 urllib.request.urlretrieve(url, tmp)
                 all_buckets.append(classify_image(tmp)["bucket"])
+                save_style_ref(tmp, [h])
             except Exception as e:
                 print(f"reference_study: classify failed for one {h} image — {e}")
     if not ok_accounts:
@@ -289,6 +340,8 @@ def run_manual(dirpath, accounts):
         print(f"reference_study: no images found in {dirpath}")
         return 1
     buckets = [classify_image(p)["bucket"] for p in files]
+    for p in files:
+        save_style_ref(p, accounts)
     gap = gap_report(buckets, _recent_cats())
     path = write_report(accounts, "manual", gap)
     record_run(accounts, "manual", gap, path)

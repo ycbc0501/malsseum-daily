@@ -43,11 +43,31 @@ NEG_TERMS = (
 )
 
 
-def for_image(scene, variation, framing):
-    """The complete still prompt: what to photograph, how it is lit, how it is framed, and the law."""
+# 2026-11-11: when real reference photographs are available (fetch_image.STYLE_REF_DIR,
+# populated by reference_study.py), they are now attached to the image-generation call directly
+# instead of being reduced to a bucket count. The account owner's correction to that
+# categorise-then-discard approach: "걔네 이미지를 제미나이에 통째로 넣어서 이런 룩앤필로
+# 만들어달라하고 우리가 장소나 이런걸 지금처럼 단어들로 입력해주는게 좋을듯해." Real photographs
+# steer grain, light and colour grade far more directly than describing them in words ever could —
+# but the attached photos must not become the SUBJECT of the new picture: the scene is still named
+# in words (`scene`, below), and this note tells the model which job each input has.
+STYLE_REF_NOTE = (
+    "The attached reference photographs are a LOOK AND FEEL guide only — match their colour "
+    "grade, light quality, mood, grain and overall photographic character. Do NOT copy their "
+    "subject, composition or layout: the actual scene for THIS photograph is the one described "
+    "in words below."
+)
+
+
+def for_image(scene, variation, framing, style_ref=False):
+    """The complete still prompt: what to photograph, how it is lit, how it is framed, and the law.
+    `style_ref=True` only when reference photographs are actually attached alongside this text
+    (see STYLE_REF_NOTE) — default False so a caller with nothing to attach gets the exact prompt
+    this function always produced; style_ref never needs a special "no references" sentence."""
     look = variation.strip().rstrip(".")
+    note = f"\n\n{STYLE_REF_NOTE}" if style_ref else ""
     return (f"A genuine photograph, taken on a real camera in a real place: {scene}, {look}.\n\n"
-            f"{framing}\n\n{LAW}")
+            f"{framing}{note}\n\n{LAW}")
 
 
 def for_video(motion, extra=""):

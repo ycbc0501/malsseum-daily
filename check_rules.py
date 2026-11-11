@@ -352,6 +352,29 @@ def checks():
     yield "D-5 scene_variation() actually uses WALL_TONE for interiors", (
         "WALL_TONE" in inspect.getsource(hf.scene_variation)
         and hf.scene_variation(0, indoors=True) != hf.scene_variation(1, indoors=True))
+    # D-6 (2026-11-11): bucket-counting a reference account's grid was, in the account owner's own
+    # words, "분석만도 못한거같아" — every photo classify_image() ever looked at was thrown away
+    # the instant classification finished. Real photographs now get attached directly to the
+    # Gemini call as a look-and-feel guide (content_law.STYLE_REF_NOTE); the scene itself stays
+    # words, per "우리가 장소나 이런걸 지금처럼 단어들로 입력해주는게 좋을듯해". These checks
+    # assert the whole chain actually connects end to end, not just that the pieces exist.
+    import reference_study as _rs
+    yield "D-6 reference_study persists what it fetches, instead of discarding it", (
+        hasattr(_rs, "save_style_ref")
+        and "save_style_ref(" in inspect.getsource(_rs.run_manual)
+        and "save_style_ref(" in inspect.getsource(_rs.run_try_fetch))
+    yield "D-6 the saved pool is a bounded rotation, not an unbounded archive", (
+        _rs.STYLE_REF_CAP > 0 and "STYLE_REF_CAP" in inspect.getsource(_rs.save_style_ref))
+    yield "D-6 fetch_image reads from the SAME directory reference_study writes to", (
+        hf.STYLE_REF_DIR == os.path.join(_rs.HERE, "notes", "reference-study", "style_refs"))
+    yield "D-6 generate_background actually attaches style refs, not just defines them", (
+        "_pick_style_refs" in inspect.getsource(hf.generate_background)
+        and "style_refs=style_refs" in inspect.getsource(hf.generate_background))
+    yield "D-6 no reference images on disk means no behaviour change (rule 0-3's shape)", (
+        content_law.for_image("s", "v", "f") == content_law.for_image("s", "v", "f", style_ref=False)
+        and "STYLE_REF_NOTE" not in content_law.for_image("s", "v", "f"))
+    yield "D-6 a reference image, when attached, actually reaches the request body", (
+        len(hf._image_request_body("p", "3:4", [__file__])["contents"][0]["parts"]) == 2)
     yield "F3 text area is measured, not assumed", hasattr(generate, "text_area_ok")
     # F2c — the clearance threshold must be relative to the picture, never an absolute edge value.
     # It was absolute (4.0) for a fortnight and rejected every render it ever saw: four CI logs,
@@ -679,13 +702,31 @@ def checks():
     yield "E3 retries escalate the demand", (
         len(fetch_motion.CALMER) == 3 and "frozen photograph" in fetch_motion.CALMER[2].lower()
         and daily_src.count("fetch_motion.CALMER[attempt - 1]") == 2)
-    # E-3b (2026-11-11): "less motion" alone never told the model WHICH surface detail had to
-    # hold still, so grain/shadow on the still image got reinterpreted as floating sparkle/dust
-    # and sliding shadow — named directly after the account owner saw it in a published clip.
-    yield "E3b MOTION names the fixed-shadow/fixed-grain requirement, not just 'less motion'", (
+    # E-3c (2026-11-11, supersedes the same day's first E-3b attempt): deep-research into working
+    # video prompt practice converged on "describe what should happen, not just what to avoid" —
+    # positive motion instructions beat long negative lists. MOTION must still fix shadow/grain in
+    # place (that requirement didn't change)...
+    yield "E3c MOTION names the fixed-shadow/fixed-grain requirement, not just 'less motion'", (
         "shadow" in fetch_motion.MOTION.lower() and "grain" in fetch_motion.MOTION.lower())
-    yield "E3b NEG bans the two defects actually reported, by name", (
-        "floating sparkle" in fetch_motion.NEG and "shifting shadows" in fetch_motion.NEG)
+    # ...but must ALSO now name a concrete positive catalogue of what IS allowed to move, framed
+    # as a real documentary shot — a vague allowance is what let the model invent floating
+    # sparkle/shifting shadow as "safe" things to animate in the first place.
+    yield "E3c MOTION names concrete real motion instead of a vague allowance", (
+        sum(w in fetch_motion.MOTION.lower() for w in
+            ("rippling", "drifting", "flickering", "trembling", "steam")) >= 3
+        and "locked-tripod" in fetch_motion.MOTION.lower())
+    # ...and the ban-list approach that grew in E-3b's first attempt must actually be gone, not
+    # just unused — the account owner's objection was to the SHAPE (an ever-growing symptom
+    # list), not to any one phrase in it, so this checks the whole pattern is retired.
+    yield "E3c NEG dropped the ever-growing symptom list (fixed by positive phrasing instead)", (
+        "floating sparkle" not in fetch_motion.NEG and "shifting shadows" not in fetch_motion.NEG
+        and "floating dust" not in fetch_motion.NEG)
+    # Structural review (2026-11-11) caught MOTION and NEG contradicting each other in the first
+    # draft of this edit: MOTION allowed "a cloud or mist drifting" / "water rippling" / "a flame
+    # flickering" while NEG still banned "moving clouds" / "flowing water" / "flickering" by the
+    # SAME words — the exact COMPOSE/EVENTONE shape content_law.py's own docstring warns about.
+    yield "E3c MOTION's permitted motions are not ALSO banned verbatim in NEG", not (
+        {"moving clouds", "flowing water", "flickering"} & set(fetch_motion.NEG.split(", ")))
     yield "E8 shipped motion is recorded", '"motion": round(ov, 3)' in daily_src
     # A gate that silently stopped running must be a number, not a log line. Posts ship with
     # gate_ran / gate_skipped so "was this checked at all" is answerable afterwards.
@@ -858,6 +899,12 @@ def checks():
     yield "K-4 qa_gate --run prints EVERY _meta.json field, not a hand-picked subset", (
         "for k, v in meta.items():" in qa_src
         and 'for k in ("ref", "segments"' not in qa_src)
+    # K-5 (2026-11-11): "검수에이전트가 검수하지 않는 파트는 0이다. 이건 법이야" — partial
+    # coverage (9 of 10 changed files reviewed) must not read as "reviewed". Not codeable (same
+    # shape as K-4 ①/② and rule 0's account-switch guard): checked here only for PRESENCE in
+    # RULES.md, same pattern as the 0-1 check above for wonsukwaynelee.
+    yield "K-5 the zero-partial-credit law is written down where the next session will see it", (
+        "검수에이전트가 검수하지 않는 파트는 0이다" in rules_md)
 
 
 def main():

@@ -9,11 +9,21 @@ Credentials: env HF_API_KEY + HF_API_SECRET, or a local higgsfield_key.txt with 
 import base64
 import json
 import os
+import random
 import time
 import urllib.error
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+# 2026-11-11: real reference photographs, when present, are attached directly to the Gemini call
+# (content_law.STYLE_REF_NOTE explains their job to the model) instead of being reduced to a
+# bucket count — see that file's comment and RULES.md D-6 for the full reasoning. This directory
+# starts EMPTY in a fresh checkout; reference_study.py's run_manual()/run_try_fetch() are the only
+# writers. Empty means generation is exactly what it was before this change (rule 0-3's shape: no
+# material to attach is not an error, just the same text-only prompt as always).
+STYLE_REF_DIR = os.path.join(HERE, "notes", "reference-study", "style_refs")
+STYLE_REF_ATTACH_N = 2     # small on purpose — a LOOK nudge, not the scene itself (that stays words)
 
 
 class MissingCredential(RuntimeError):
@@ -756,7 +766,6 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
     # An interior has no sky and no horizon. Filling the same landscape wording for a bedroom is
     # what produced the room-with-a-sky-above composite, so the empty area and the anchor are
     # chosen by scene family, not assumed.
-    indoors = SCENE_CATS[index % len(SCENES)] in INTERIOR_CATS
     if tuple(placement) == ("center", "top"):
         compose = INDOOR_TOP if indoors else OUTDOOR_TOP
     # Built from content_law, which is the ONE place the prohibitions live. Four separate blocks
@@ -764,10 +773,16 @@ def generate_background(dest, index=0, placement=("center", "middle"), full_scen
     # even tone across the upper half while EVENTONE forbade any hard seam, and the model resolved
     # that by painting a panel onto the photograph (RULES.md A).
     import content_law
-    prompt = content_law.for_image(scene, f"{variation}. {QUALITY}", compose)
 
     if model == "gemini":
-        return _gemini(prompt, dest, aspect=aspect)
+        # Only this path can take image inputs alongside text (RULES.md D-6); Higgsfield/Soul
+        # below never see style_refs, so there is nothing to thread through for them.
+        style_refs = _pick_style_refs()
+        prompt = content_law.for_image(scene, f"{variation}. {QUALITY}", compose,
+                                       style_ref=bool(style_refs))
+        return _gemini(prompt, dest, aspect=aspect, style_refs=style_refs)
+
+    prompt = content_law.for_image(scene, f"{variation}. {QUALITY}", compose)
 
     import higgsfield_client as h
     client = h.SyncClient(api_key=_credentials())
@@ -1131,9 +1146,45 @@ def _gemini_key():
     return key
 
 
-def _gemini_once(model, prompt, dest, aspect):
-    body = {"contents": [{"parts": [{"text": prompt}]}],
+def _style_refs():
+    """Paths of saved reference photographs, if any (RULES.md D-6). Never raises — a missing or
+    unreadable directory means "none available" rather than a failure (rule 0-3's shape: a gate
+    that cannot run must not be able to stop a post)."""
+    try:
+        names = sorted(n for n in os.listdir(STYLE_REF_DIR)
+                       if n.lower().endswith((".jpg", ".jpeg", ".png")))
+        return [os.path.join(STYLE_REF_DIR, n) for n in names]
+    except OSError:
+        return []
+
+
+def _pick_style_refs(n=STYLE_REF_ATTACH_N):
+    """Up to `n` reference photographs, chosen at random so the same one or two are not glued to
+    every post — every tile in the pool should eventually get a turn."""
+    refs = _style_refs()
+    return random.sample(refs, min(n, len(refs)))
+
+
+def _image_request_body(prompt, aspect, style_refs=None):
+    """Pure: assemble the Gemini generateContent body — any reference images first, the text
+    prompt last. Split out of _gemini_once so what we actually SEND can be asserted in a test
+    without a network call (test_style_refs.py)."""
+    parts = []
+    for ref in style_refs or []:
+        try:
+            with open(ref, "rb") as f:
+                ref_b64 = base64.b64encode(f.read()).decode()
+        except OSError:
+            continue   # a reference that vanished mid-run must not block generation (rule 0-3)
+        mime = "image/png" if ref.lower().endswith(".png") else "image/jpeg"
+        parts.append({"inlineData": {"mimeType": mime, "data": ref_b64}})
+    parts.append({"text": prompt})
+    return {"contents": [{"parts": parts}],
             "generationConfig": {"imageConfig": {"aspectRatio": aspect, "imageSize": "2K"}}}
+
+
+def _gemini_once(model, prompt, dest, aspect, style_refs=None):
+    body = _image_request_body(prompt, aspect, style_refs)
     url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
            f"{model}:generateContent?key={_gemini_key()}")
     req = urllib.request.Request(url, data=json.dumps(body).encode(),
@@ -1148,14 +1199,16 @@ def _gemini_once(model, prompt, dest, aspect):
     raise RuntimeError(f"{model}: no image in response")
 
 
-def _gemini(prompt, dest, aspect="3:4"):
+def _gemini(prompt, dest, aspect="3:4", style_refs=None):
     """Nano Banana Pro (Gemini 3 Pro Image) → save image to dest.
 
-    Retries the pro model through transient overload, then falls back once."""
+    Retries the pro model through transient overload, then falls back once. `style_refs`
+    (RULES.md D-6) carries through to both the pro model and the fallback — a reference that
+    steers the primary render should steer the fallback the same way."""
     last = None
     for attempt in range(GEMINI_TRIES):
         try:
-            return _gemini_once(GEMINI_MODEL, prompt, dest, aspect)
+            return _gemini_once(GEMINI_MODEL, prompt, dest, aspect, style_refs)
         except urllib.error.HTTPError as e:
             if e.code not in (429, 500, 502, 503, 504):
                 raise
@@ -1164,7 +1217,7 @@ def _gemini(prompt, dest, aspect="3:4"):
             time.sleep(min(60, 8 * 2 ** attempt))
     print(f"   {GEMINI_MODEL} 계속 불가 → {GEMINI_FALLBACK} 로 대체", flush=True)
     try:
-        return _gemini_once(GEMINI_FALLBACK, prompt, dest, aspect)
+        return _gemini_once(GEMINI_FALLBACK, prompt, dest, aspect, style_refs)
     except urllib.error.HTTPError:
         raise last
 
