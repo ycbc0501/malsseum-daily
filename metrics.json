@@ -10613,5 +10613,34 @@
   "theme": "사랑",
   "veo_calls": 6,
   "veo_seconds": 48.0
+ },
+ "18644961748015684": {
+  "clip_novelty": 2.64,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-11-11",
+  "duration": 15.37,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 9,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 2.185,
+  "motion_attempts": 1,
+  "motion_sky": 2.346,
+  "published": "2026-11-11T14:18:59+09:00",
+  "ref": "로마서 15:33",
+  "scene": "key_bowl",
+  "segments": 2,
+  "text_contrast": 5.43,
+  "text_spread": 15.7,
+  "theme": "평안",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
  }
 }
