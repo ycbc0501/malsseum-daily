@@ -83,23 +83,37 @@ spectacular. If a render is impressive, it is wrong.
   guides, Midjourney's own photography-prompt documentation, Nano Banana/Gemini image guides,
   lighting-prompt cheat sheets) converge on three concrete levers `QUALITY` was missing, none of
   them vague adjectives:
-  1. **Name a real camera/lens/aperture**, not "a normal prime lens" — e.g. "Sony A7R V, 85mm
-     f/1.4" reads as photographic; an unnamed generic lens does not constrain the render the same
-     way.
+  1. **Name a real camera/lens/aperture**, not "a normal prime lens" — e.g. "a 35mm or 50mm prime
+     lens at a wide aperture" reads as photographic; an unnamed generic lens does not constrain
+     the render the same way.
   2. **State light DIRECTION**, not just time-of-day — "window light from upper left" produces a
      real, believable shadow; "soft lighting" alone is repeatedly called out across sources as
-     producing flat, directionless, AI-looking light.
+     producing flat, directionless, AI-looking light. **Drafted, then caught and reverted the
+     same day — it never reached `fetch_image.QUALITY` in production.** Two independent structure
+     reviews (code-review skill + a separate Agent pass) both caught that the drafted clause
+     ("through a window, low on a horizon, from one side") directly
+     contradicted `OUTDOOR_TOP`'s own overcast branch ("sky reading as one soft luminous field",
+     no decisive direction) and named objects ("window", "horizon") that only the scene sentence
+     may name (A2e) — the exact COMPOSE/EVENTONE shape of self-contradiction that shipped broken
+     renders in 09-14/09-17. Light direction/decisiveness stays `OUTDOOR_TOP`'s/`WALL_TONE`'s job;
+     `QUALITY` does not re-litigate it (`check_rules.py` A5 guard against this re-creeping back).
   3. **Name the specific imperfection**, not an adjective — "35mm film grain", "a faint natural
      vignette", "slight chromatic aberration" steer the model the way "vintage" or "imperfect"
      alone cannot (sources note models interpret vague adjectives inconsistently).
-  `fetch_image.QUALITY` was rewritten to add all three (direction, named lens/aperture, named
-  film grain + vignette) without touching the banned-word list `check_rules.py`'s A7 check and
-  the LAW gate both read ("gloomy"/"ominous"/"bleak", "dim is fine", the LIGHT pool's after-dark
-  entries) — see `test_photoreal_quality.py`. The *video*-motion research from the same day
-  (RULES.md E-3c, "describe what moves, not what to avoid") was independently re-verified against
-  two more 2026 Veo/Sora/Kling prompting guides in this pass and holds unchanged — that one really
-  was deep-researched the first time; the still-image prompt simply never got the same pass until
+  `fetch_image.QUALITY` was rewritten to add levers 1 and 3 (named lens/aperture, named film
+  grain + vignette) without touching the banned-word list `check_rules.py`'s A7 check and the LAW
+  gate both read ("gloomy"/"ominous"/"bleak", "dim is fine", the LIGHT pool's after-dark entries)
+  — see `test_photoreal_quality.py`. The *video*-motion research from the same day (RULES.md
+  E-3c, "describe what moves, not what to avoid") was independently re-verified against two more
+  2026 Veo/Sora/Kling prompting guides in this pass and holds unchanged — that one really was
+  deep-researched the first time; the still-image prompt simply never got the same pass until
   now.
+  **2026-11-11 — RULES.md A-6: future prompt edits need this same four-step discipline every
+  time, not once.** ≥3 independent searches that converge → check for contradictions with the
+  rest of the prompt via a structure review (lever 2 above is the proof this step catches real
+  mistakes) → write the sources and search count here, in CONTENT_RULE.md, not just the
+  conclusion in RULES.md → verify with `qa_gate.py --run` on the actual rendered output. Skipping
+  any step makes it a "막추가" (blind addition), which A-6 says gets reverted on sight.
 
 ## 4. Physics must be real — nothing impossible
 - ONE horizon; sky above, ground/water below. **No** stacked/doubled scenes, **no** two water surfaces, **no** vertical mirror (upside-down land hanging from the top), **no** framed-inset/collage/photo-in-photo.

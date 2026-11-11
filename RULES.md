@@ -74,14 +74,45 @@
 `fetch_image.QUALITY`는 "a normal prime lens" 같은 **막연한 말**만 쓰고 있었다 — 4번 법("찍은
 것처럼 보여야 한다")은 선언돼 있었지만 그 선언을 실제로 사진처럼 만드는 구체적 수단은 한 번도
 딥리서치된 적이 없었다. 독립된 6회 검색(포토리얼리즘 프롬프트 가이드·Midjourney/Nano Banana
-공식 가이드·조명 프롬프트 자료)이 공통으로 요구하는 세 가지를 반영했다 — ① 실재하는
-카메라·렌즈·조리개 이름("35mm or 50mm prime lens at a wide aperture") ② 빛의 **방향**("through
-a window, low on a horizon, from one side" — 시간대만으로는 그림자가 안 생겨 평평해진다)
-③ 추상어 대신 구체적 결함 이름("fine grain and gentle tonal rolloff of real 35mm film", "a
-faint natural vignette"). `check_rules.py` A7이 읽는 금지어("gloomy"·"ominous"·"bleak",
+공식 가이드·조명 프롬프트 자료)이 공통으로 요구하는 세 가지를 찾았고, **그중 두 가지만
+반영했다** — ① 실재하는 카메라·렌즈·조리개 이름("35mm or 50mm prime lens at a wide aperture")
+② 추상어 대신 구체적 결함 이름("fine grain and gentle tonal rolloff of real 35mm film", "a
+faint natural vignette"). **세 번째 — 빛의 방향("through a window, low on a horizon, from one
+side")은 초안만 쓰고 같은 날 되돌렸다**: 두 번의 독립 구조 검수가 `OUTDOOR_TOP`의 흐린 하늘
+분기와 정면 모순되고 A2e가 금지하는 고유명사("window"·"horizon")를 끌어들인다고 잡아,
+`fetch_image.QUALITY`에는 한 번도 들어간 적이 없다. 빛의 방향은 그대로 `OUTDOOR_TOP`/
+`WALL_TONE`의 일로 남는다. `check_rules.py` A7이 읽는 금지어("gloomy"·"ominous"·"bleak",
 "dim is fine")와 LIGHT 풀의 after-dark 항목은 그대로 둬 충돌 없음(`test_photoreal_quality.py`).
 **영상 쪽(E-3c, "하지 말라" 대신 "무엇이 움직이는가")은 이번 재검증에서도 그대로 유지** — 그
 연구는 처음부터 제대로 됐었다. 근거·출처: CONTENT_RULE.md §3b.
+
+**A-6. 프롬프트 문구는 딥리서치 근거 없이 추가하지 않습니다 — 막추가 금지** (2026-11-11).
+원석님 지시: "앞으로 프롬프트는 이 딥리서치 포토리얼리즘 지식에 근거해서 검수하고 추가할수
+있게해 막추가 금지." A-5가 고친 건 **결과**(QUALITY에 렌즈·필름 결함을 구체적으로 적음)였는데,
+그 결과를 만든 **과정**(독립 검색 6회, 결과가 한 점으로 모이는지 확인, 라이브 호출로 실측
+대조)이 없으면 다음엔 또 "자간 -2.0"처럼 적어놓고 실제로 반영 안 된 문구나, 서로 모순되는
+문구(09-14/09-17 COMPOSE/EVENTONE, 11-11 light-direction vs OUTDOOR_TOP — A-5가 바로 이 날
+또 만들 뻔했다가 구조 검수가 잡았다)가 반복된다. 앞으로 `content_law.py`·`fetch_image.QUALITY`·
+`fetch_image.LIGHT`·`fetch_motion.MOTION`·`fetch_motion.NEG` 등 프롬프트 문구를 고치거나
+추가할 때는 아래 네 단계를 전부 거친다 — 하나라도 빠지면 "막추가"로 취급하고 되돌린다.
+
+1. **근거를 먼저 찾는다.** "이게 더 나을 것 같다"가 아니라, 실제 포토리얼리즘/비디오리얼리즘
+   프롬프트 엔지니어링 자료를 **최소 3회 독립 검색**(WebSearch)한다. 결과가 한 점으로 모이는지
+   확인하고, 안 모이면(출처마다 다른 스키마를 말하면) 더 찾는다 — 11-09 밤 `fetch_motion.py`가
+   "세 곳이 서로 다른 요청 스키마를 보여줬다"며 실제 계정에 라이브로 쳐서 확정한 것이 기준이다.
+2. **기존 문구와 충돌하는지 구조 검수로 확인한다.** 새 문구가 다른 프롬프트 조각(OUTDOOR_TOP·
+   WALL_TONE·content_law.LAW 등)과 모순되지 않는지 K-4 ①구조 검수를 반드시 거친다 — A-5가
+   시도했다가 되돌린 "빛의 방향" 문구가 바로 이 단계에서 잡혔다(OUTDOOR_TOP의 overcast 분기와
+   정면 모순, A2e가 금지하는 고유명사 "window"·"horizon" 사용).
+3. **CONTENT_RULE.md에 출처·날짜·검색 횟수를 적는다.** RULES.md에는 결론만, CONTENT_RULE.md에는
+   "왜"와 "몇 번 찾았는지"를 남긴다 — 다음에 누가 "이거 진짜 딥리서치한거 맞아?"라고 물으면
+   거기서 답이 나와야 한다(11-11 밤 2가 바로 그 질문으로 A-5 자체를 찾아냈다).
+4. **`qa_gate.py --run`으로 실제 결과물을 눈으로 확인한다(K-4 ③).** 문구만 고치고 결과물을
+   안 보면 "반영됐다"는 주장일 뿐이다.
+
+**강제:** 코드로 검증할 수 없는 종류다(이 저장소에 "리서치를 했는지" 검사하는 코드는 없고 있을
+수도 없다) — 0절·K-4·K-5와 같은 종류, **읽히는 자리에 적혀 있는 것이 곧 강제.** 다음에 프롬프트
+문구를 고치고 "반영했다"고 보고할 때 위 네 단계 중 하나라도 건너뛰었으면 그건 거짓 보고다.
 
 **영상은 모든 프레임에 적용됩니다.** 중간에 들어오거나 자라나거나 드러나는 것도 포함입니다 —
 정지 이미지가 게이트를 다 통과한 뒤 Veo가 사람을 걸어 들여보낸 게 실제로 있었습니다.

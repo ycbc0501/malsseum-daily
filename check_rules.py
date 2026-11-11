@@ -32,6 +32,7 @@ def checks():
     qa_src = (HERE / "qa_gate.py").read_text()
     scenes = [s for items in hf.SCENE_GROUPS.values() for s in items]
     verses = json.load(open(HERE / "verses.json"))["verses"]
+    content_rule_md = (HERE / "CONTENT_RULE.md").read_text()
 
     # The four laws exist once, in content_law.LAW, and BOTH prompts must carry them. Asserting it
     # here is the point: the video prompt went months without any of them.
@@ -922,6 +923,23 @@ def checks():
     # RULES.md, same pattern as the 0-1 check above for wonsukwaynelee.
     yield "K-5 the zero-partial-credit law is written down where the next session will see it", (
         "검수에이전트가 검수하지 않는 파트는 0이다" in rules_md)
+    # A-6 (2026-11-11): "앞으로 프롬프트는 이 딥리서치 포토리얼리즘 지식에 근거해서 검수하고
+    # 추가할수 있게해 막추가 금지" — the four-step discipline (search >=3x, structure-review for
+    # contradictions, cite in CONTENT_RULE.md, verify with qa_gate --run) is not codeable any more
+    # than K-4/K-5 are (no code here can tell whether a future session actually searched). Checked
+    # only for presence, same pattern as the K-5 check above.
+    yield "A-6 the no-blind-prompt-additions law is written down where the next session will see it", (
+        "막추가 금지" in rules_md and "최소 3회 독립 검색" in rules_md)
+    # A-6 follow-up: CONTENT_RULE.md §3b itself drifted from the code the day it was written — it
+    # described light-direction as reflected/shipped when it had actually been drafted and caught
+    # in review the same day (RULES.md A-5). This is exactly the "written down but not enforced"
+    # failure mode this file exists to catch, one level up (a doc describing a doc). Only the
+    # doc-accuracy half is checked here: whether hf.QUALITY actually contains the reverted phrase
+    # is already covered by the A5 check above (duplicating it here would let the two silently
+    # diverge if that banned-phrase tuple is ever extended without updating both).
+    yield "A-6 CONTENT_RULE.md records that light-direction was drafted THEN caught in review, not shipped", (
+        "never reached" in content_rule_md and "in production" in content_rule_md
+        and "Shipped, then reverted" not in content_rule_md)
 
 
 def main():
