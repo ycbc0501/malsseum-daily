@@ -32,6 +32,7 @@ import post_instagram
 import fetch_image
 import fetch_videos
 import make_video
+import slots
 
 KST = timezone(timedelta(hours=9))
 MUSIC_DIR = os.path.join(generate.HERE, "music")
@@ -88,32 +89,43 @@ HYMN_S = 30.0
 CHAIN_DEADLINE_S = 28 * 60
 
 
-def slot_state(hour):
-    """"filled" | "empty" | "unknown" — what Instagram says about this half of the day (KST).
+def slot_state(hour, now=None):
+    """"filled" | "empty" | "unknown" — what Instagram says about this slot (05:00/19:00 KST).
 
     2026-11-10: this used to feed a wait/claim-window dance across a 5-hour chain of hourly
     crons, built because GitHub's scheduler used to drift up to 4-5 hours (2026-08-28). That
     chain is gone — RULES.md C2 now runs ONE cron per slot and posts the moment it fires,
     whenever that is. The only thing left to ask Instagram is the plain duplicate question:
-    is this half of the day already posted? "unknown" (the API hiccuped) is treated the same
-    as "empty" — there is no other cron to defer to, so refusing to post over a flaky read
-    would just mean no post at all. Morning owns 00:00-11:59 KST, evening 12:00-23:59."""
+    is this slot already posted? "unknown" (the API hiccuped) is treated the same as "empty" —
+    there is no other cron to defer to, so refusing to post over a flaky read would just mean
+    no post at all.
+
+    2026-11-11 (RULES.md C2d): the window a slot owns is NOT "00:00-11:59 / 12:00-23:59 KST" —
+    that split gave a 19:00 post delayed past midnight to the NEXT day's 05:00 slot, which
+    answered "filled" and skipped the real morning build while nobody noticed. See slots.py.
+
+    `now` defaults to the real clock; a test passes a fixed value so the result does not depend
+    on what time of day the test happens to run (slots.current_day() looks at the clock)."""
     try:
         import post_instagram
-        today = datetime.now(KST).date()
-        want_pm = hour >= 12
+        # Not simply datetime.now(KST).date() — a cron that fires very late can run with a
+        # wall-clock date already past midnight, which is NOT the day this run's slot belongs
+        # to. slots.current_day() finds the slot whose own nominal start time is the most
+        # recent one at or before now.
+        day = slots.current_day(hour, now)
         for m in post_instagram.recent_media(limit=8):
             # REELS only — the weekly carousel is a FEED post and does not fill a daily slot.
             # It posted at 17:58 KST on 2026-11-01 (its Sunday cron drifted ~7h), this function
             # answered "filled", and the evening reel stood down. Every Sunday since the carousel
             # began: 10-18, 10-25, 11-01 all have a carousel and no evening reel. Nothing failed,
-            # so nothing alerted — watch.py read the same half-day and agreed.
+            # so nothing alerted — watch.py read the same window and agreed.
             if m.get("media_product_type") != "REELS":
                 continue
             ts = m.get("timestamp") or ""
             when = datetime.strptime(ts[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc).astimezone(KST)
-            if when.date() == today and (when.hour >= 12) == want_pm:
-                print(f"{'evening' if want_pm else 'morning'} slot already posted at {when:%H:%M} KST "
+            lo, hi = slots.window(day, hour)
+            if lo <= when < hi:
+                print(f"{'evening' if hour == 19 else 'morning'} slot already posted at {when:%H:%M} KST "
                       f"({m.get('permalink')})")
                 return "filled"
         return "empty"
@@ -122,9 +134,9 @@ def slot_state(hour):
         return "unknown"
 
 
-def slot_already_filled(hour):
+def slot_already_filled(hour, now=None):
     """Kept for the workflow's pre-publish re-check, which only cares about "definitely taken"."""
-    return slot_state(hour) == "filled"
+    return slot_state(hour, now) == "filled"
 
 
 # The worst novelty score any clip in this run reached, so metrics.json accumulates the number

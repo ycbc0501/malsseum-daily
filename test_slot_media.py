@@ -48,8 +48,13 @@ class CarouselDoesNotFillTheDailySlot(unittest.TestCase):
                             "캐러셀 하나로 저녁 릴 슬롯이 찼다고 판단했다")
 
     def test_daily_post_still_sees_a_real_reel(self):
-        rows = [_media(self.today, "REELS")]
-        self.assertEqual(self._with(rows, lambda: self.daily_post.slot_state(19)), "filled")
+        # 20:30, not 17:58 — RULES.md C2d narrowed the evening window to [19:00, next 05:00),
+        # so a REEL has to actually be IN that window to count. `now` is pinned (not the real
+        # wall clock) so the result does not depend on what time of day this test happens to run.
+        evening_reel = self.today.replace(hour=20, minute=30)
+        rows = [_media(evening_reel, "REELS")]
+        now = self.today.replace(hour=21, minute=0)
+        self.assertEqual(self._with(rows, lambda: self.daily_post.slot_state(19, now=now)), "filled")
 
     def test_watch_does_not_count_a_carousel(self):
         rows = [_media(self.today, "FEED")]
@@ -57,16 +62,41 @@ class CarouselDoesNotFillTheDailySlot(unittest.TestCase):
         self.assertFalse(filled, "감시자가 캐러셀을 저녁 릴로 셌다 — 그래서 조용했다")
 
     def test_watch_counts_a_real_reel(self):
-        rows = [_media(self.today, "REELS")]
+        evening_reel = self.today.replace(hour=20, minute=30)
+        rows = [_media(evening_reel, "REELS")]
         self.assertTrue(self._with(rows, lambda: self.watch.slot_is_filled(19)))
 
     def test_the_sunday_shape_exactly(self):
         """11-01에 실제로 있었던 것: 아침 릴 + 저녁 캐러셀. 저녁은 비어 있어야 한다."""
         morning = self.today.replace(hour=5, minute=11)
         rows = [_media(self.today, "FEED"), _media(morning, "REELS")]
-        self.assertEqual(self._with(rows, lambda: self.daily_post.slot_state(5)), "filled")
-        self.assertNotEqual(self._with(rows, lambda: self.daily_post.slot_state(19)), "filled")
+        now = self.today.replace(hour=10, minute=0)   # pinned — see test above
+        self.assertEqual(self._with(rows, lambda: self.daily_post.slot_state(5, now=now)), "filled")
+        self.assertNotEqual(self._with(rows, lambda: self.daily_post.slot_state(19, now=now)), "filled")
         self.assertFalse(self._with(rows, lambda: self.watch.slot_is_filled(19)))
+
+    def test_a_delayed_evening_post_does_not_steal_tomorrows_morning_slot(self):
+        """RULES.md C2d — the actual 2026-11-11 incident. The 19:00 KST slot was delayed 7h23m
+        by GitHub and posted at 02:28 KST the NEXT day. The old midnight/noon split counted that
+        as "today's morning slot already filled" and the real 05:00 build was skipped — silently,
+        with no alert, because the code believed the day was done."""
+        late_evening_reel = self.today.replace(hour=2, minute=28)   # crossed midnight
+        rows = [_media(late_evening_reel, "REELS")]
+        # The morning cron for the SAME calendar day as the late post, checking hours later.
+        morning_check_now = self.today.replace(hour=9, minute=30)
+        state = self._with(rows, lambda: self.daily_post.slot_state(5, now=morning_check_now))
+        self.assertNotEqual(state, "filled",
+                            "지난밤 늦게 올라간 저녁 릴이 오늘 아침 슬롯을 채운 것으로 오판했다")
+
+    def test_a_delayed_evening_post_is_still_recognised_as_filling_its_own_slot(self):
+        """같은 사고의 반쪽 — watch.py는 반대로 "아직 안 올라왔다"고 거짓 경보를 보냈다
+        (04:08 KST, 그 글이 02:28에 이미 올라간 지 36분 뒤). 저녁 슬롯은 자정을 넘겨도
+        여전히 "자신의" 슬롯을 채운 것으로 인식되어야 한다."""
+        yesterday = self.today - datetime.timedelta(days=1)
+        late_evening_reel = self.today.replace(hour=2, minute=28)   # crossed into today
+        evening_slot = yesterday.replace(hour=19, minute=0)
+        filled = self.watch.slot_is_filled(19, now=evening_slot, times=[late_evening_reel])
+        self.assertTrue(filled, "자정을 넘겨 올라간 저녁 릴을 그 저녁 슬롯이 못 알아봤다 — 거짓 '안 올라왔다' 경보")
 
 
 class MotionLossIsAnnounced(unittest.TestCase):

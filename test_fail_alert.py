@@ -59,27 +59,32 @@ def scene(published, state, fn):
 TODAY = datetime.datetime.now(KST).date()
 EVENING = [datetime.datetime.combine(TODAY, datetime.time(19, 18), tzinfo=KST)]
 KEY = f"{watch.FAILED_PREFIX}{TODAY}-19"
+# Pinned, not the real wall clock (RULES.md C2d: post_failed() now derives its day from
+# slots.current_day(hour, now), which looks at whether `now` is at or after the slot's own
+# nominal start). 20:00 is safely after BOTH 05:00 and 19:00 today, so every call below lands
+# on TODAY regardless of what time of day this test actually runs.
+NOW = datetime.datetime.combine(TODAY, datetime.time(20, 0), tzinfo=KST)
 
 print("failure alerts")
 
 # The exact 09-19 case: the run failed, but the slot had already been filled at 19:18.
-after = scene(EVENING, {}, lambda: watch.post_failed(19, "run/1"))
+after = scene(EVENING, {}, lambda: watch.post_failed(19, "run/1", now=NOW))
 check("no alert when the slot is already filled", SENT == [])
 check("and nothing is recorded", after == {})
 
 # A genuinely empty slot must still alert — a guard that silences everything is not a fix.
-after = scene([], {}, lambda: watch.post_failed(19, "run/1"))
+after = scene([], {}, lambda: watch.post_failed(19, "run/1", now=NOW))
 check("an empty slot does alert", len(SENT) == 1)
 check("the alert carries the run link", bool(SENT) and "run/1" in SENT[0])
 check("and the slot is recorded so it cannot repeat", KEY in after)
 
 # The chain retries. Five failing runs must not mean five messages.
 state = {KEY: TODAY.isoformat()}
-scene([], state, lambda: watch.post_failed(19, "run/2"))
+scene([], state, lambda: watch.post_failed(19, "run/2", now=NOW))
 check("a second failure for the same slot is silent", SENT == [])
 
 # Morning and evening are different slots and must not mask each other.
-after = scene(EVENING, {}, lambda: watch.post_failed(5, "run/3"))
+after = scene(EVENING, {}, lambda: watch.post_failed(5, "run/3", now=NOW))
 check("an evening post does not silence a morning failure", len(SENT) == 1)
 
 # Closing the loop: the slot filled later, so the open failure resolves exactly once.
@@ -98,6 +103,21 @@ try:
     check("an unfilled slot stays open", watch.resolve_failures(dict(state)) == [])
 finally:
     watch.published_times = real_pub
+
+# The 2026-11-11 incident, inside resolve_failures specifically: a 19:00 failure recorded
+# YESTERDAY resolves once the actual post lands past midnight, TODAY at 02:28 — resolve_failures
+# must read the day out of the key, not re-derive it from whatever "today" happens to be when
+# it is called (RULES.md C2d).
+YESTERDAY = TODAY - datetime.timedelta(days=1)
+yday_key = f"{watch.FAILED_PREFIX}{YESTERDAY}-19"
+late_post = [datetime.datetime.combine(TODAY, datetime.time(2, 28), tzinfo=KST)]
+real_pub, watch.published_times = watch.published_times, lambda: late_post
+try:
+    resolved = watch.resolve_failures({yday_key: YESTERDAY.isoformat()})
+finally:
+    watch.published_times = real_pub
+check("a 19:00 failure resolves even if the real post landed after midnight",
+      len(resolved) == 1 and resolved[0][0] == yday_key)
 
 # The episode sweep in main() must not eat an open failure before it can ever resolve.
 state = {KEY: TODAY.isoformat(), "drop": "2026-09-01", "_reply_counters": {}}

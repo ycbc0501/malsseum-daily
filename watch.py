@@ -22,6 +22,8 @@ import os
 import sys
 import statistics
 
+import slots
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 STATE = os.path.join(HERE, "watch.json")
 KST = datetime.timezone(datetime.timedelta(hours=9))
@@ -340,18 +342,20 @@ def scene_fingerprint():
 
 
 def slot_is_filled(hour, now=None, times=None):
-    """Did the half-day this slot owns already get a REEL? Asked of Instagram (RULES C4·C4f).
+    """Did the slot for `hour` (05 or 19) already get a REEL? Asked of Instagram (RULES C4·C4f).
+
+    The window itself lives in slots.py, not here — see that module's docstring for why a plain
+    midnight/noon half-day split gave a delayed evening post's content to the wrong slot on
+    2026-11-11 (RULES.md C2d).
 
     `times` lets a caller that already fetched the list reuse it — findings() asks about four
-    slots and must not make four API calls. It used to inline this same half-day arithmetic
+    slots and must not make four API calls. It used to inline this same window arithmetic
     instead, which is how one question came to have three implementations."""
     now = now or datetime.datetime.now(KST)
-    lo = datetime.datetime.combine(now.date(), datetime.time(0 if hour < 12 else 12), tzinfo=KST)
-    hi = lo + datetime.timedelta(hours=12)
-    return any(lo <= w < hi for w in (published_times() if times is None else times))
+    return slots.filled(now.date(), hour, published_times() if times is None else times)
 
 
-def post_failed(hour, link):
+def post_failed(hour, link, now=None):
     """A posting run failed → alert only if the SLOT is actually empty, and only once.
 
     The old alert fired from the workflow on every failed run, knowing nothing about the slot.
@@ -362,11 +366,18 @@ def post_failed(hour, link):
         chain are normal, and alerting on each one teaches the reader to distrust the channel
       · nothing ever closed the loop, so ❌ was the last word even when the post went out
 
-    So: ask Instagram, alert at most once per slot, and let main() send the resolution."""
+    So: ask Instagram, alert at most once per slot, and let main() send the resolution.
+
+    `day` is slots.current_day(hour), not raw wall-clock today (RULES.md C2d) — this is called
+    from INSIDE the same run that just failed, so if that run itself fired past midnight (the
+    19:00 slot delayed 7h23m, same as the 2026-11-11 incident), raw `today` would record the
+    failure under tomorrow's date and then never find it filled. `now` defaults to the real
+    clock; a test pins it so the result does not depend on what time of day the test runs."""
     state = _load(STATE, {})
-    today = datetime.datetime.now(KST).date()
-    key = f"{FAILED_PREFIX}{today}-{hour}"
-    if slot_is_filled(hour):
+    day = slots.current_day(hour, now)
+    key = f"{FAILED_PREFIX}{day}-{hour}"
+    slot = datetime.datetime.combine(day, datetime.time(hour), tzinfo=KST)
+    if slot_is_filled(hour, now=slot):
         print(f"{hour:02d}:00 slot is already filled — a failed retry is not worth a message")
         return 0
     if state.get(key):
@@ -375,23 +386,31 @@ def post_failed(hour, link):
     import notify
     if notify.send(f"❌ {hour:02d}:00 KST 게시 실패 — {link}\n"
                    f"슬롯은 아직 비어 있습니다. 채워지면 이 방으로 알려드립니다."):
-        state[key] = today.isoformat()
+        state[key] = day.isoformat()
         with open(STATE, "w", encoding="utf-8") as f:
             json.dump(state, f, ensure_ascii=False)
     return 0
 
 
 def resolve_failures(state):
-    """Close every open failure whose slot has since been filled → [(key, message)]."""
+    """Close every open failure whose slot has since been filled → [(key, message)].
+
+    The day is parsed straight out of the key post_failed() wrote (RULES.md C2d) — never
+    re-derived from today's wall clock, which is a different question ("what day is it right
+    now") from the one that matters ("which day's slot was this failure about"). Re-deriving it
+    was exactly the bug: a failure recorded for the 19:00 slot that drifted past midnight, then
+    checked the NEXT day's calendar window and never found itself filled."""
     out = []
     for key in [k for k in state if k.startswith(FAILED_PREFIX)]:
         try:
-            day, hour = key[len(FAILED_PREFIX):].rsplit("-", 1)
-            hour = int(hour)
+            day_str, hour_str = key[len(FAILED_PREFIX):].rsplit("-", 1)
+            day = datetime.date.fromisoformat(day_str)
+            hour = int(hour_str)
         except ValueError:
             out.append((key, None))              # unparseable — drop it rather than keep it forever
             continue
-        if slot_is_filled(hour):
+        slot = datetime.datetime.combine(day, datetime.time(hour), tzinfo=KST)
+        if slot_is_filled(hour, now=slot):
             out.append((key, f"✅ {hour:02d}:00 KST 게시가 올라왔습니다 — 앞선 실패는 해결됐습니다"))
     return out
 

@@ -130,8 +130,36 @@ def checks():
         "def unchecked_run" in wt and '_tail_run("gate_passed", False)' in wt)
     yield "C4g motion loss alerts before a week of stills", (
         "MOTION_DEAD_RUN" in wt and "def still_run" in wt)
-    yield "C4f the half-day test has one implementation per path", (
-        wt.count("timedelta(hours=12)") == 1)
+    # C2d (2026-11-11): the slot window itself (05:00-19:00 / 19:00-next 05:00, NOT midnight/
+    # noon) lives in ONE module, slots.py — a plain midnight/noon split gave a delayed 19:00
+    # post's content to the next day's 05:00 slot check, which caused a real miss (silent) and
+    # a false alarm (sent 04:08 KST for a post that had already gone out). Neither daily_post.py
+    # nor watch.py may re-derive the window inline — that is exactly how the bug had two
+    # separately-wrong implementations before.
+    slots_src = (HERE / "slots.py").read_text()
+    yield "C2d the slot window has exactly one implementation (slots.py)", (
+        "def window(" in slots_src and "def filled(" in slots_src and "def current_day(" in slots_src
+        and "timedelta(hours=12)" not in dp and "timedelta(hours=12)" not in wt
+        and "hour < 12" not in dp and "hour < 12" not in wt
+        and "hour >= 12" not in dp and "hour >= 12" not in wt)
+    yield "C2d daily_post and watch both call into slots.py, not their own arithmetic", (
+        "import slots" in dp and "slots." in dp and "import slots" in wt and "slots." in wt)
+    # code-review (2026-11-11) caught post_failed/resolve_failures still calling slot_is_filled()
+    # with no `now` — reintroducing the exact cross-midnight mismatch this diff removed from
+    # slot_state()/slot_already_filled(). post_failed must derive its day from the clock via
+    # slots.current_day() (it fires live, inside the run that just failed); resolve_failures must
+    # NOT — it runs later and must read the day out of the key post_failed already wrote, not
+    # re-derive "today" from whatever moment it happens to be called.
+    import inspect
+    import watch
+    pf_src = inspect.getsource(watch.post_failed)
+    rf_src = inspect.getsource(watch.resolve_failures)
+    yield "C2d post_failed resolves its day from the clock via slots.current_day", (
+        "slots.current_day(" in pf_src and "now.date()" not in pf_src
+        and "datetime.now(KST).date()" not in pf_src)
+    yield "C2d resolve_failures reads the day out of its own key, not the live clock", (
+        "fromisoformat(" in rf_src and "slots.current_day(" not in rf_src
+        and "datetime.now(KST)" not in rf_src)
     yield "C4f the watcher counts only reels too", (
         'media_product_type") != "REELS"' in wt)
     # C4i — Instagram FETCHES our media by URL, so the 30-asset retention must keep the
