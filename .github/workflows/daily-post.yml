@@ -32,15 +32,21 @@ on:
 # cron per slot there is no chain left to serialise. cancel-in-progress: false — never kill a
 # run that might already be mid-publish.
 #
-# This group key is evaluated before any step runs, so it cannot call slots.owning_hour() (that
-# needs a checkout + a python interpreter, neither of which exist yet at this point) — a manual
-# dispatch's group key always falls back to '5' here regardless of the real target hour computed
-# later by "Determine target hour". That is fine: this grouping is only a cheap serialisation
-# hint for two manual dispatches racing each other, not the actual duplicate guard — the real
-# guard is the "Re-check the slot right before publishing" step (RULES.md C2c), which always
-# checks the correct, dynamically-computed slot regardless of which concurrency group it ran in.
+# ONE constant group for every trigger (RULES.md C2e, revised 2026-11-11) — not split by slot.
+# This key is evaluated before any step runs, so it cannot call slots.owning_hour() (that needs
+# a checkout + a python interpreter, neither of which exist yet at this point); a key derived
+# from github.event.schedule alone also can't tell a manual dispatch's real target hour. A
+# per-slot key ("daily-post-19" vs "daily-post-5") looked safe only because it assumed the two
+# slots can never race — but a delayed evening cron (measured worst case 7h23m, RULES.md I-1)
+# can still be mid-run when a human fires a catch-up workflow_dispatch, and a manual dispatch's
+# key could not be computed to match the slot it would end up targeting. Different groups do
+# not serialise, so both runs could pass the early duplicate check before either had published —
+# the 2026-09-06 double-post failure mode. One group for everything means ANY two daily-post
+# runs queue behind each other no matter what they each think their slot is; the real duplicate
+# guard is still the "Re-check the slot right before publishing" step (RULES.md C2c), this is
+# only insurance against two runs racing inside the same build window.
 concurrency:
-  group: daily-post-${{ contains(fromJSON('["0 10 * * *"]'), github.event.schedule) && '19' || '5' }}
+  group: daily-post
   cancel-in-progress: false
 
 permissions:
@@ -75,6 +81,13 @@ jobs:
       # instead (found it already posted, exited clean) and never touched the real gap.
       # slots.owning_hour() needs only stdlib datetime, so it can run before "Install deps"
       # finishes mattering — this step only depends on checkout + python, both already done.
+      #
+      # If slots.owning_hour() itself errors (bad checkout, stdlib import failure — should not
+      # happen, but "should not happen" is exactly what broke this step before), the `||`
+      # fallback still writes SOME value to TARGET_HOUR instead of leaving it unset. Every
+      # downstream step reads env.TARGET_HOUR unconditionally, including "Alert on a missed
+      # post", which runs ON failure — an empty TARGET_HOUR there would title the alert
+      # "missed post — :00 KST" and feed watch.py --post-failed an empty slot key.
       - name: Determine target hour
         run: |
           if [ "${{ github.event.schedule }}" = "0 10 * * *" ]; then
@@ -82,7 +95,11 @@ jobs:
           elif [ "${{ github.event.schedule }}" = "0 20 * * *" ]; then
             echo "TARGET_HOUR=5" >> "$GITHUB_ENV"
           else
-            echo "TARGET_HOUR=$(python3 -c 'import slots; print(slots.owning_hour())')" >> "$GITHUB_ENV"
+            hour=$(python3 -c 'import slots; print(slots.owning_hour())') || {
+              echo "::warning::slots.owning_hour() failed — falling back to hour 5, loudly"
+              hour=5
+            }
+            echo "TARGET_HOUR=$hour" >> "$GITHUB_ENV"
           fi
 
       # notes/reference-study/style_refs/ (RULES.md D-6) is gitignored — reference-study.yml is

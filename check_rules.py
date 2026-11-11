@@ -23,6 +23,10 @@ def checks():
     import content_law
     notext = content_law.LAW.lower()
     daily = (HERE / ".github/workflows/daily-post.yml").read_text()
+    # Comment-stripped once, reused by every daily-post.yml check below that must not be
+    # satisfiable by prose mentioning a pattern rather than the workflow actually doing it
+    # (check_rules.py has tripped over its own explanatory comments twice already — C4i, G2.1j).
+    daily_code = "\n".join(l for l in daily.splitlines() if not l.strip().startswith("#"))
     daily_post_src = (HERE / "daily_post.py").read_text()
     carousel_wf = (HERE / ".github/workflows/weekly-carousel.yml").read_text()
     carousel = (HERE / "carousel_post.py").read_text()
@@ -167,11 +171,23 @@ def checks():
     # posted, and exited clean without ever touching the real gap. slots.owning_hour() must be
     # the thing a manual run falls back to, and none of the three downstream steps may still
     # carry their own copy of the old hard-coded/schedule-only expression.
-    yield "C2e a manual run derives its slot from the clock, not a hard-coded '5'", (
-        "slots.owning_hour()" in daily
-        and daily.count("contains(fromJSON('[\"0 10 * * *\"]'), github.event.schedule) && '19' || '5'") == 1)
+    #
+    # Checked against daily_code (comments stripped), not daily — a bare substring check against
+    # the whole file is satisfiable by this very comment block quoting the pattern it retired,
+    # as the code-review that caught the original gap (2026-11-11) pointed out.
+    yield "C2e a manual run calls slots.owning_hour(), not a comment mentioning it", (
+        "python3 -c 'import slots; print(slots.owning_hour())'" in daily_code)
+    yield "C2e the old schedule-only hard-code is fully gone, not just down to one", (
+        daily_code.count("contains(fromJSON('[\"0 10 * * *\"]'), github.event.schedule) && '19' || '5'") == 0)
     yield "C2e the three downstream TARGET_HOUR reads all use the one computed value", (
         daily.count("TARGET_HOUR: ${{ env.TARGET_HOUR }}") == 3)
+    # code-review (2026-11-11) caught two sibling gaps in the same fix:
+    yield "C2e a failed owning_hour() call still leaves TARGET_HOUR set, loudly", (
+        "::warning::" in daily_code and "hour=5" in daily_code
+        and "python3 -c 'import slots; print(slots.owning_hour())') ||" in daily_code)
+    yield "C2e the concurrency group no longer repeats the retired per-slot expression", (
+        "group: daily-post" in daily_code
+        and "group: daily-post-${{" not in daily_code)
     yield "C4f the watcher counts only reels too", (
         'media_product_type") != "REELS"' in wt)
     # C4i — Instagram FETCHES our media by URL, so the 30-asset retention must keep the
@@ -179,10 +195,9 @@ def checks():
     # `post-*`, so a name sort put seconds-old carousel slides in the delete set every time.
     # Comment lines are stripped first: the retired expression is quoted in the comment that
     # explains why it was retired, and twice now a check has tripped over its own explanation.
-    _daily_code = "\n".join(l for l in daily.splitlines() if not l.strip().startswith("#"))
     yield "C4i the release prune keeps the newest by upload time, not by name", (
-        "sort_by(.createdAt)" in _daily_code
-        and "'.assets[].name' | sort" not in _daily_code)
+        "sort_by(.createdAt)" in daily_code
+        and "'.assets[].name' | sort" not in daily_code)
     gen = (HERE / "generate.py").read_text()
     # F-2b: one type size, and the two numbers that make it possible. The 35px fallback stays
     # in the code as a net, but every verse we ship must clear the bar at full size.
