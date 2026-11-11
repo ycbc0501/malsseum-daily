@@ -1270,6 +1270,44 @@ K-4에 역테스트(옛 하드코딩 튜플이 돌아오면 잡힘) 추가. `ver
 고치고 "검수 에이전트 돌렸다"고 보고할 때 구조 검수를 건너뛰면 그건 거짓 보고라고 K-4에
 명시해뒀다.
 
+## 2026-11-11 — 11/10 저녁 7시간 지연이 11/11 아침을 삼켰다: 슬롯 경계가 자정/정오였다 (RULES.md C2d)
+
+원석님 질문: "오늘 아침게 안올라온거야 ... 왜 알림이 안와 ... 19시 게시물이 알림이 새벽세시에
+와 ... 알림 오면 문제 직접 찾아서 고치랬자나." 세 질문 다 같은 원인 하나였다 — 실제 GitHub
+Actions 로그를 전수로 따라가 확정했다(추측 아님).
+
+```
+11-10 19:00 KST 슬롯  7h23m 지연 → 02:28 KST(11-11)에 실제 발행 (로마서 14:17)
+daily_post.slot_state(5)  "morning slot already posted at 02:28 KST" → 11-11 05:00 아침 스킵 (37초 런, 조용히)
+watch.slot_is_filled(19)  False (02:28은 자정 이후라 저녁 창 밖) → "19:00 안 올라왔습니다" 04:08 발송(거짓 경보,
+                          그 글이 이미 올라간 지 36분 뒤)
+```
+
+경계가 자정/정오(00:00-11:59 / 12:00-23:59 KST)였는데, 저녁 슬롯 쪽엔 **5시간**의 지연 여유만
+남는다 — I-1이 실측한 최악 지연(7시간23분)보다 짧다. 늦은 저녁 글이 자정을 넘기면 **다음날
+아침 슬롯으로 오분류**됐다. 한 버그가 실제 누락(아침)엔 침묵, 가짜 누락(저녁)엔 거짓 경보를
+둘 다 만들었다.
+
+**고친 것:** `slots.py` 신규 — 경계를 슬롯 **자신의 시각**으로 옮겼다. 05:00 슬롯은
+`[05:00, 19:00)`, 19:00 슬롯은 `[19:00, 다음날 05:00)`을 소유한다(지연 여유 5h → 10~14h).
+`daily_post.slot_state`·`watch.slot_is_filled`·`watch.post_failed`·`watch.resolve_failures`
+넷 다 이 경계를 **직접 계산하지 않고** `slots.py`만 부른다. **code-review(high)가 diff에서
+실제 버그를 잡았다** — `post_failed`/`resolve_failures`가 여전히 `slot_is_filled(hour)`를
+`now` 없이 불러 같은 자정 교차 오류를 한 층 아래서 재현하고 있었다. 커밋 전에 고치고
+회귀 테스트로 고정했다(`test_fail_alert.py`).
+
+**"문제 직접 찾아서 고쳐라"에 맞게 끝까지 했다:** 고친 코드를 커밋·푸시 → 실제 CI green 확인 →
+**오늘 빠진 05:00 아침 슬롯을 `gh workflow run daily-post.yml -f force=true`로 수동 발행**
+(media id `18644961748015684`, 로마서 15:33) → `control_center.py`로 경보가 사라졌는지 재확인.
+단 한 번 순서를 틀렸다 — 코드를 푸시하기 **전에** 먼저 수동 발행을 시도해서, 옛(버그 있는)
+코드가 또 "already posted"로 막아 빌드 비용(이미지+Veo 1회)을 허비했다. 푸시 후 재시도해서
+실제로 올라간 것까지 확인했다.
+
+`RULES.md` C2d, `check_rules.py` 8개(슬롯 경계가 `slots.py` 하나뿐인지 + `post_failed`/
+`resolve_failures`가 각각 시계/키에서 날짜를 읽는지 소스 검사), `test_slots.py` 13개(경계 타일링
+전수 확인 + 옛 공식과의 역테스트), `test_slot_media.py`·`test_fail_alert.py`에 실제 사고 재현
+테스트 추가. `verify.sh`(테스트 31개 + 규칙 감사) 전체 통과, 실제 CI green, 실제 발행까지 확인.
+
 Pipeline entry point: `daily_post.py` (orchestrator) → `fetch_image.py` (image + gates),
 `fetch_motion.py` (motion), `fetch_lyria.py` (music), `make_video.py` (reel), `generate.py` (text),
 `post_instagram.py` (publish — and it is the CLI, not `daily_post.py`, that actually
