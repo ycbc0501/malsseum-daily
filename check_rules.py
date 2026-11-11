@@ -224,6 +224,23 @@ def checks():
         and "dim is fine" in hf.QUALITY)
     yield "A7 dread is still banned", all(
         w in hf.QUALITY for w in ("gloomy", "ominous", "bleak"))
+    # A-5 (2026-11-11): the still-image prompt was checked against real photorealism-prompt
+    # research for the first time and found generic ("a normal prime lens", no named film). These
+    # asserts guard the fix from quietly reverting to vague adjectives — and the negative half
+    # guards against the exact stylised words the same research warns push a model AWAY from
+    # photorealism (CONTENT_RULE.md §3b 2026-11-11).
+    yield "A5 a real lens/focal length is named, not a generic one", (
+        "35mm or 50mm" in hf.QUALITY and "prime" in hf.QUALITY)
+    yield "A5 the imperfection is named, not just the word 'imperfect'", (
+        "35mm film" in hf.QUALITY and "vignette" in hf.QUALITY)
+    yield "A5 no stylising words that fight photorealism", not any(
+        w in hf.QUALITY.lower() for w in ("magical", "ethereal", "stunning", "dreamlike"))
+    # A light-DIRECTION clause was tried here and reverted the same day — two independent
+    # structure reviews found it duplicated/fought OUTDOOR_TOP's own decisive light either/or and
+    # named forbidden objects ("window", "horizon") that only the scene sentence may name (A2e).
+    # That job stays OUTDOOR_TOP's/WALL_TONE's; this guards the revert from quietly creeping back.
+    yield "A5 QUALITY does not re-litigate light direction (OUTDOOR_TOP/WALL_TONE's job)", not any(
+        w in hf.QUALITY for w in ("through a window", "on a horizon", "identifiable source"))
     yield "A  a rejected render retries on a different scene", "index + a - 1" in (
         HERE / "fetch_image.py").read_text()
     yield "B1 verses are verbatim (generated, not hand-written)", (HERE / "build_verses.py").exists()

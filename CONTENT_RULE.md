@@ -78,6 +78,28 @@ spectacular. If a render is impressive, it is wrong.
 - **Every rendered image must be HYPERREALISTIC — indistinguishable from a genuine photograph.** `QUALITY` enforces this in prose (one clean realism statement, NOT stacked hype-words like "8k ultra" which backfire on this model → baked text / game look). Absolutely no glossy CGI, 3D render, video-game frame, digital painting, or plasticky AI look.
 - **Realism is asked for in camera terms, not declared.** `QUALITY` names what a real lens actually does — natural depth of field with the far distance falling off, uneven organic detail (never a uniformly repeating grass carpet), restrained true-to-life colour, no HDR boost, no airbrushed smoothness, no edge glow. Declaring "hyperrealistic" is not enough on its own.
 - **Plain scenes are judged hardest.** An open field, a bare hillside or a plain sky has no complexity to hide the AI tells behind, so `_CHECK_PROMPT` clause 4 is explicitly *strictest* on simple scenes — a plain scene that looks even somewhat rendered is rejected. (Added 2026-08-05 after a simple field published looking obviously fake.)
+- **2026-11-11 — "camera terms" above were real but generic; checked against what working photorealism prompt-engineers actually publish, and it mostly wasn't.** The account owner asked directly: "실제사진처럼 이미지 만드는 최전방에 있는 인플루언서들이 쓰는 프롬프트가 그런식인거 맞아?
+  그게 딥리서치한거맞아?" Six independent web searches that day (general photorealism-prompt
+  guides, Midjourney's own photography-prompt documentation, Nano Banana/Gemini image guides,
+  lighting-prompt cheat sheets) converge on three concrete levers `QUALITY` was missing, none of
+  them vague adjectives:
+  1. **Name a real camera/lens/aperture**, not "a normal prime lens" — e.g. "Sony A7R V, 85mm
+     f/1.4" reads as photographic; an unnamed generic lens does not constrain the render the same
+     way.
+  2. **State light DIRECTION**, not just time-of-day — "window light from upper left" produces a
+     real, believable shadow; "soft lighting" alone is repeatedly called out across sources as
+     producing flat, directionless, AI-looking light.
+  3. **Name the specific imperfection**, not an adjective — "35mm film grain", "a faint natural
+     vignette", "slight chromatic aberration" steer the model the way "vintage" or "imperfect"
+     alone cannot (sources note models interpret vague adjectives inconsistently).
+  `fetch_image.QUALITY` was rewritten to add all three (direction, named lens/aperture, named
+  film grain + vignette) without touching the banned-word list `check_rules.py`'s A7 check and
+  the LAW gate both read ("gloomy"/"ominous"/"bleak", "dim is fine", the LIGHT pool's after-dark
+  entries) — see `test_photoreal_quality.py`. The *video*-motion research from the same day
+  (RULES.md E-3c, "describe what moves, not what to avoid") was independently re-verified against
+  two more 2026 Veo/Sora/Kling prompting guides in this pass and holds unchanged — that one really
+  was deep-researched the first time; the still-image prompt simply never got the same pass until
+  now.
 
 ## 4. Physics must be real — nothing impossible
 - ONE horizon; sky above, ground/water below. **No** stacked/doubled scenes, **no** two water surfaces, **no** vertical mirror (upside-down land hanging from the top), **no** framed-inset/collage/photo-in-photo.

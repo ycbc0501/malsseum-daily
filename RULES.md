@@ -70,6 +70,19 @@
    반들거리는 3D·CGI·디지털 페인팅·플라스틱 질감·부자연스러운 완벽한 대칭 금지. 사진 위에 얹은
    판·띠·배경 금지. **화면을 두 구역으로 가르는 직선 경계 금지.** 처음부터 끝까지 한 장의 사진.
 
+**5. "찍은 것처럼"을 추상어가 아니라 구체적인 촬영 용어로 요구합니다** (A-5, 2026-11-11).
+`fetch_image.QUALITY`는 "a normal prime lens" 같은 **막연한 말**만 쓰고 있었다 — 4번 법("찍은
+것처럼 보여야 한다")은 선언돼 있었지만 그 선언을 실제로 사진처럼 만드는 구체적 수단은 한 번도
+딥리서치된 적이 없었다. 독립된 6회 검색(포토리얼리즘 프롬프트 가이드·Midjourney/Nano Banana
+공식 가이드·조명 프롬프트 자료)이 공통으로 요구하는 세 가지를 반영했다 — ① 실재하는
+카메라·렌즈·조리개 이름("35mm or 50mm prime lens at a wide aperture") ② 빛의 **방향**("through
+a window, low on a horizon, from one side" — 시간대만으로는 그림자가 안 생겨 평평해진다)
+③ 추상어 대신 구체적 결함 이름("fine grain and gentle tonal rolloff of real 35mm film", "a
+faint natural vignette"). `check_rules.py` A7이 읽는 금지어("gloomy"·"ominous"·"bleak",
+"dim is fine")와 LIGHT 풀의 after-dark 항목은 그대로 둬 충돌 없음(`test_photoreal_quality.py`).
+**영상 쪽(E-3c, "하지 말라" 대신 "무엇이 움직이는가")은 이번 재검증에서도 그대로 유지** — 그
+연구는 처음부터 제대로 됐었다. 근거·출처: CONTENT_RULE.md §3b.
+
 **영상은 모든 프레임에 적용됩니다.** 중간에 들어오거나 자라나거나 드러나는 것도 포함입니다 —
 정지 이미지가 게이트를 다 통과한 뒤 Veo가 사람을 걸어 들여보낸 게 실제로 있었습니다.
 

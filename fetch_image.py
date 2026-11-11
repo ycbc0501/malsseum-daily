@@ -563,9 +563,13 @@ SCENE_STRUCTURE = {
 # VARIATION — so even the SAME theme looks substantially different each time it recurs. LIGHT sets a
 # colour/light palette (not a strict clock-time, so it never contradicts a scene, e.g. stars or a
 # candle), VANTAGE sets the camera angle/distance. Keyed on a MONOTONIC per-post counter, not the
-# scene index. LIGHT has 5 entries deliberately: a theme comes round every ~24 posts, and 5 does not
-# divide 24, so a theme's light palette cycles through all five across successive appearances (a 6th
-# palette would divide 24 and lock each theme to the same light every time).
+# scene index. LIGHT has grown to 7 entries (two outdoor-only after-dark ones were added later);
+# this comment used to say "5 entries deliberately" and claim a theme comes round every ~24 posts
+# so 5 not dividing 24 kept a palette from locking — that math was already stale (len(LIGHT) is 7,
+# not 5; caught by structure review, 2026-11-11, A-5). The real guard with that shape today is
+# INDOOR_LIGHT_CUTOFF=5 for the indoor subset below, not len(LIGHT) itself — and since
+# gcd(24, 5) == gcd(24, 7) == 1 either way, a theme's light still cycles through its full pool
+# before any alignment repeats.
 LIGHT = [
     "in clear early-morning light",
     "in soft, even daylight",
@@ -726,6 +730,25 @@ COMPOSE = {
         "COMPOSITION: the subject sits low and to the left; the right and centre of the frame open "
         "out quietly. Simple and restrained.",
 }
+# 2026-11-11, re-verified against real research (see RULES.md A-5 / CONTENT_RULE.md for the
+# sources): the original QUALITY below already avoided the obvious mistakes (no "vivid/glossy/
+# dramatic", no "magical/ethereal/stunning") but named its camera/lens only vaguely ("a normal
+# prime lens", no named focal length, no named film format) compared to what every photorealism-
+# prompt guide actually uses. Named the lens and film grain/vignette concretely below.
+#
+# A light-DIRECTION clause was tried here first and reverted — TWO independent structure reviews
+# (code-review skill + a second Agent pass, same day) caught that it duplicated and fought
+# machinery this file already has for exactly this job: OUTDOOR_TOP (686-688) already makes light
+# a decisive either/or ("overcast... one soft luminous field" OR "a clear sky at dusk gone deep
+# and dark") and WALL_TONE (below) already decides indoor light direction by code, specifically so
+# it is never left as an open either/or the model always resolves the same way (its own comment,
+# 2026-11-11 earlier today). QUALITY's first draft said light "never flat or shadowless", which
+# directly contradicts OUTDOOR_TOP's overcast branch — the exact COMPOSE/EVENTONE shape of
+# contradiction this repo was burned by before (09-14/09-17) — AND named forbidden objects
+# ("through a window", "low on a horizon") that rule A-2e reserves for the scene sentence alone,
+# so a window got asked for on scenes with none and a horizon on scenes OUTDOOR_TOP explicitly
+# says must never invent one. Lighting direction/decisiveness stays OUTDOOR_TOP's and WALL_TONE's
+# job; QUALITY only adds what neither of them already covers — the lens and film grain.
 QUALITY = (
     "The mood is QUIET and STILL, with a sense of hope and reverence — peaceful and true, never "
     "cute, kitschy or saccharine. Natural light belonging to THIS scene at whatever hour it is: "
@@ -733,11 +756,13 @@ QUALITY = (
     "gloomy, ominous, oppressive, bleak or sorrowful. Colour is MUTED and gentle, slightly "
     "desaturated, low in contrast, with a soft filmic quality and subtle grain — restrained, like a "
     "quiet film photograph, not vivid, glossy or dramatic. Understated and simple: "
-    "few elements, nothing showy. Shot on a full-frame camera with a normal prime "
-    "lens — natural depth of field with the far distance falling gently out of focus, believable "
-    "lens character, and the slight imperfection of a real photograph. Detail is UNEVEN and organic "
-    "the way nature actually is: grass and foliage vary in height, colour and density, never a "
-    "uniform repeating carpet, with no airbrushed smoothness and no halo around edges."
+    "few elements, nothing showy. Shot on a real full-frame camera with a 35mm or 50mm prime "
+    "lens — natural depth of field with the far distance falling gently out of focus, a faint "
+    "natural vignette at the very corners, the fine grain and gentle tonal rolloff of real 35mm "
+    "film, and the slight imperfection of a real photograph, never a digital render. Detail is "
+    "UNEVEN and organic the way nature actually is: grass and foliage vary in height, colour and "
+    "density, never a uniform repeating carpet, with no airbrushed smoothness and no halo around "
+    "edges."
 )
 
 
