@@ -4755,6 +4755,35 @@
   "text_spread": 5.5,
   "theme": "평안"
  },
+ "18098162258671851": {
+  "clip_novelty": 2.19,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-11-11",
+  "duration": 7.7,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 8,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 3.366,
+  "motion_attempts": 2,
+  "motion_sky": 0.354,
+  "published": "2026-11-11T22:30:53+09:00",
+  "ref": "이사야 32:17",
+  "scene": "clothesline",
+  "segments": 1,
+  "text_contrast": 5.63,
+  "text_spread": 7.9,
+  "theme": "평안",
+  "veo_attempts": [
+   2,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18098310146583096": {
   "insights": {
    "comments": 1,
