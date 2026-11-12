@@ -953,5 +953,260 @@
    "name": "saint seoul",
    "username": "saintseoul_studio"
   }
+ },
+ "2026-11-12": {
+  "insights": {
+   "accounts_engaged": 48,
+   "comments": 10,
+   "comments|media_product_type": {
+    "REEL": 10,
+    "_total": 10
+   },
+   "engaged_audience_demographics": [
+    {
+     "description": "The demographic characteristics of the engaged audience, including countries, cities and gender distribution.",
+     "id": "17841416389585321/insights/engaged_audience_demographics/lifetime",
+     "name": "engaged_audience_demographics",
+     "period": "lifetime",
+     "title": "Engaged audience demographics"
+    }
+   ],
+   "engaged_audience_demographics|age": {
+    "13-17": 33,
+    "18-24": 81,
+    "25-34": 135,
+    "35-44": 98,
+    "45-54": 50,
+    "55-64": 13,
+    "65+": 11
+   },
+   "engaged_audience_demographics|city": {
+    "Andong, Gyeongsangbuk-do": 3,
+    "Ansan, Gyeonggi-do": 8,
+    "Anseong, Gyeonggi-do": 2,
+    "Anyang, Gyeonggi-do": 4,
+    "Bucheon, Gyeonggi-do": 3,
+    "Busan, Busan": 18,
+    "Changwon, Gyeongsangnam-do": 3,
+    "Cheonan, Chungcheongnam-do": 4,
+    "Cheongju, Chungcheongbuk-do": 4,
+    "Cherwon, Gangwon-do": 2,
+    "Chuncheon, Gangwon-do": 3,
+    "Daegu, Daegu": 21,
+    "Daejeon, Daejeon": 18,
+    "Dangjin, Chungcheongnam-do": 2,
+    "Gimpo, Gyeonggi-do": 5,
+    "Gongju, Chungcheongnam-do": 4,
+    "Goyang, Gyeonggi-do": 7,
+    "Gunpo, Gyeonggi-do": 3,
+    "Gunsan, Jeollabuk-do": 4,
+    "Gwangju, Gwangju": 10,
+    "Gwangju, Gyeonggi-do": 4,
+    "Gwangmyeong, Gyeonggi-do": 2,
+    "Hanam, Gyeonggi-do": 3,
+    "Hwaseong, Gyeonggi-do": 7,
+    "Incheon, Incheon": 13,
+    "Jeju, Jeju-do": 4,
+    "Jeonju, Jeollabuk-do": 5,
+    "Muan, Jeollanam-do": 2,
+    "Namyangju, Gyeonggi-do": 8,
+    "Paju, Gyeonggi-do": 5,
+    "Pohang, Gyeongsangbuk-do": 8,
+    "Pyeongtaek, Gyeonggi-do": 2,
+    "Sejong, Chungcheongbuk-do": 3,
+    "Seongnam, Gyeonggi-do": 8,
+    "Seoul, Seoul": 95,
+    "Siheung, Gyeonggi-do": 3,
+    "Suncheon, Jeollanam-do": 3,
+    "Suwon, Gyeonggi-do": 9,
+    "Ulsan, Ulsan": 6,
+    "Wonju, Gangwon-do": 4,
+    "Yangpyeong, Gyeonggi-do": 3,
+    "Yangsan, Gyeongsangnam-do": 3,
+    "Yeoju, Gyeonggi-do": 3,
+    "Yeosu, Jeollanam-do": 3,
+    "Yongin, Gyeonggi-do": 4
+   },
+   "engaged_audience_demographics|country": {
+    "AR": 0,
+    "AU": 3,
+    "CA": 4,
+    "CN": 1,
+    "GT": 0,
+    "ID": 1,
+    "JP": 1,
+    "KR": 399,
+    "MY": 0,
+    "NL": 1,
+    "PL": 1,
+    "QA": 1,
+    "US": 9
+   },
+   "engaged_audience_demographics|gender": {
+    "F": 114,
+    "M": 143,
+    "U": 164
+   },
+   "follower_demographics": [
+    {
+     "description": "The demographic characteristics of followers, including countries, cities and gender distribution.",
+     "id": "17841416389585321/insights/follower_demographics/lifetime",
+     "name": "follower_demographics",
+     "period": "lifetime",
+     "title": "Follower demographics"
+    }
+   ],
+   "follower_demographics|age": {
+    "18-24": 15,
+    "25-34": 49,
+    "35-44": 67,
+    "45-54": 55,
+    "55-64": 30,
+    "65+": 13
+   },
+   "follower_demographics|city": {
+    "Ansan, Gyeonggi-do": 2,
+    "Anseong, Gyeonggi-do": 1,
+    "Asan, Chungcheongnam-do": 3,
+    "Busan, Busan": 12,
+    "Changwon, Gyeongsangnam-do": 4,
+    "Cheonan, Chungcheongnam-do": 4,
+    "Cheongju, Chungcheongbuk-do": 6,
+    "Cherwon, Gangwon-do": 1,
+    "Chilgok, Gyeongsangbuk-do": 3,
+    "Chuncheon, Gangwon-do": 1,
+    "Daegu, Daegu": 12,
+    "Daejeon, Daejeon": 8,
+    "Dongducheon, Gyeonggi-do": 2,
+    "Gimhae, Gyeongsangnam-do": 3,
+    "Gimpo, Gyeonggi-do": 3,
+    "Goyang, Gyeonggi-do": 8,
+    "Gumi, Gyeongsangbuk-do": 2,
+    "Gwangju, Gwangju": 7,
+    "Gwangju, Gyeonggi-do": 2,
+    "Gyeongsan, Gyeongsangbuk-do": 2,
+    "Haman, Gyeongsangnam-do": 2,
+    "Hanam, Gyeonggi-do": 2,
+    "Hong Kong, Hong Kong": 1,
+    "Hongseong, Chungcheongnam-do": 2,
+    "Hwasun, Jeollanam-do": 1,
+    "Iksan, Jeollabuk-do": 3,
+    "Incheon, Incheon": 17,
+    "Jeju, Jeju-do": 3,
+    "Jeonju, Jeollabuk-do": 6,
+    "Jinju, Gyeongsangnam-do": 3,
+    "Nanded, Maharashtra": 1,
+    "Paju, Gyeonggi-do": 2,
+    "Pocheon, Gyeonggi-do": 2,
+    "Pyeongtaek, Gyeonggi-do": 2,
+    "Samcheok, Gangwon-do": 1,
+    "Sejong, Chungcheongbuk-do": 2,
+    "Seongnam, Gyeonggi-do": 3,
+    "Seoul, Seoul": 44,
+    "Suncheon, Jeollanam-do": 1,
+    "Suwon, Gyeonggi-do": 2,
+    "Swift Current, Saskatchewan": 1,
+    "Ulsan, Ulsan": 2,
+    "Yangju, Gyeonggi-do": 2,
+    "Yangsan, Gyeongsangnam-do": 1,
+    "Yongin, Gyeonggi-do": 6
+   },
+   "follower_demographics|country": {
+    "AL": 1,
+    "AU": 1,
+    "CA": 4,
+    "DE": 1,
+    "GB": 1,
+    "HK": 1,
+    "IN": 2,
+    "KR": 213,
+    "PY": 1,
+    "TH": 1,
+    "TW": 1,
+    "US": 2
+   },
+   "follower_demographics|gender": {
+    "F": 87,
+    "M": 65,
+    "U": 77
+   },
+   "follows_and_unfollows": [
+    {
+     "description": "The number of accounts that followed you and the number of accounts that unfollowed you or left Instagram in the selected time period.",
+     "id": "17841416389585321/insights/follows_and_unfollows/day",
+     "name": "follows_and_unfollows",
+     "period": "day",
+     "title": "Follows and unfollows"
+    }
+   ],
+   "follows_and_unfollows|follow_type": {
+    "FOLLOWER": 2,
+    "NON_FOLLOWER": 0
+   },
+   "likes": 91,
+   "likes|media_product_type": {
+    "REEL": 76,
+    "STORY": 15,
+    "_total": 91
+   },
+   "profile_links_taps": 0,
+   "profile_links_taps|contact_button_type": {
+    "_total": 0
+   },
+   "reach": 559,
+   "reach|follow_type": {
+    "FOLLOWER": 48,
+    "NON_FOLLOWER": 509,
+    "_total": 559
+   },
+   "reach|media_product_type": {
+    "AD": 1,
+    "DEFAULT_DO_NOT_USE": 1,
+    "REEL": 555,
+    "STORY": 17,
+    "_total": 559
+   },
+   "replies": 0,
+   "reposts": 1,
+   "saves": 9,
+   "saves|media_product_type": {
+    "REEL": 9,
+    "_total": 9
+   },
+   "shares": 0,
+   "shares|media_product_type": {
+    "_total": 0
+   },
+   "total_interactions": 111,
+   "total_interactions|media_product_type": {
+    "REEL": 96,
+    "STORY": 15,
+    "_total": 111
+   },
+   "views": 850,
+   "views|follow_type": {
+    "FOLLOWER": 198,
+    "NON_FOLLOWER": 651,
+    "UNKNOWN": 1,
+    "_total": 850
+   },
+   "views|media_product_type": {
+    "DEFAULT_DO_NOT_USE": 1,
+    "REEL": 791,
+    "STORY": 58,
+    "_total": 850
+   }
+  },
+  "profile": {
+   "biography": "일상이 되는 성경",
+   "followers_count": 229,
+   "follows_count": 187,
+   "has_profile_pic": true,
+   "id": "17841416389585321",
+   "is_published": true,
+   "media_count": 263,
+   "name": "saint seoul",
+   "username": "saintseoul_studio"
+  }
  }
 }
