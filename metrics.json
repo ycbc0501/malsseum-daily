@@ -10799,5 +10799,34 @@
   ],
   "veo_calls": 2,
   "veo_seconds": 16.0
+ },
+ "18646560040034082": {
+  "clip_novelty": 1.16,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-11-13",
+  "duration": 7.7,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 9,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 0.968,
+  "motion_attempts": 2,
+  "motion_sky": 0.717,
+  "published": "2026-11-13T06:32:50+09:00",
+  "ref": "잠언 11:15",
+  "scene": "folded_laundry",
+  "segments": 1,
+  "text_contrast": 1.53,
+  "text_spread": 52.8,
+  "theme": "평안",
+  "veo_attempts": [
+   2,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
  }
 }
