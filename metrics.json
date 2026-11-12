@@ -722,6 +722,35 @@
   "veo_calls": 4,
   "veo_seconds": 32.0
  },
+ "17905181550374593": {
+  "clip_novelty": 2.26,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-11-12",
+  "duration": 15.37,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 22,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 1.576,
+  "motion_attempts": 1,
+  "motion_sky": 0.632,
+  "published": "2026-11-12T11:04:32+09:00",
+  "ref": "잠언 3:17",
+  "scene": "mist_mountain",
+  "segments": 2,
+  "text_contrast": 9.62,
+  "text_spread": 7.4,
+  "theme": "평안",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "17908530855454299": {
   "insights": {
    "comments": 1,
