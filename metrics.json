@@ -2830,6 +2830,35 @@
   "text_spread": 4.5,
   "theme": "은혜"
  },
+ "18025928714715287": {
+  "clip_novelty": 0.0,
+  "clip_spoiled": true,
+  "cta_in_caption": false,
+  "date": "2026-11-13",
+  "duration": 7.7,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 8,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 0.939,
+  "motion_attempts": 2,
+  "motion_sky": 0.401,
+  "published": "2026-11-13T02:55:10+09:00",
+  "ref": "잠언 3:24",
+  "scene": "wheat_field",
+  "segments": 1,
+  "text_contrast": 5.66,
+  "text_spread": 7.3,
+  "theme": "평안",
+  "veo_attempts": [
+   2,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18027178628845653": {
   "cta_in_caption": false,
   "date": "2026-08-17",
