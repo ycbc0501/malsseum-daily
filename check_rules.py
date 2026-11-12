@@ -797,7 +797,7 @@ def checks():
         and "not configured" in (HERE / "notify.py").read_text())
     watch = (HERE / "watch.py").read_text()
     yield "G1 watcher covers drop, dead and missed slots", (
-        '"drop"' in watch and '"dead"' in watch and 'f"missed-' in watch
+        '"drop"' in watch and '"dead"' in watch and 'f"{MISSED_PREFIX}' in watch
         and "COOLDOWN_DAYS" in watch)
     yield "G1 missed slots are judged per slot, within GRACE_H", (
         "SLOTS = (5, 19)" in watch and "GRACE_H = 1" in watch)
@@ -806,6 +806,81 @@ def checks():
     yield "G1 the watcher runs often enough to be timely", len(
         [l for l in (HERE / ".github/workflows/watch.yml").read_text().splitlines()
          if "cron:" in l]) >= 4
+
+    # G1 (2026-11-12): a missed slot used to only get reported — a human then had to read the
+    # alert and run the catch-up by hand, hours after the fact. watch.py now fires the catch-up
+    # itself via the SAME wake-up, instead of a new scheduled trigger (which would just compete
+    # with every other workflow for GitHub's own throttled scheduler — exactly what this fix is
+    # working around in the first place).
+    watch_yml = (HERE / ".github/workflows/watch.yml").read_text()
+    cron_health_src = (HERE / "cron_health.py").read_text()
+    yield "G1 watch.yml grants actions:write for the catch-up dispatch", (
+        "actions: write" in watch_yml and "actions: read" not in watch_yml)
+    yield "G1 a missed slot gets ONE automatic catch-up dispatch, not just a report", (
+        "def auto_retry_missed_slots" in watch and "dispatch_workflow" in watch
+        and "RETRIED_PREFIX" in watch)
+    yield "G1 the catch-up is attempted exactly once per slot (state-tracked, not retried forever)", (
+        "state.get(retry_key)" in watch and "continue" in watch)
+    # A structural review (2026-11-12) found the first version dispatched with NO hour at all,
+    # trusting daily-post.yml's current-wall-clock fallback — which fails the moment two slots
+    # are missed at once (both dispatches resolve to whichever slot owns the clock when they
+    # run, so at most one is ever really fixed, while both get marked retried regardless). The
+    # hour must be parsed out of the finding's own key and threaded all the way to the workflow
+    # input daily-post.yml actually reads.
+    daily_post_wf = (HERE / ".github/workflows/daily-post.yml").read_text()
+    yield "G1 the catch-up dispatch names the SPECIFIC hour it is retrying, not the current one", (
+        "int(hour_str)" in watch and "def dispatch(workflow_file, hour)" in watch)
+    yield "G1 daily-post.yml accepts an explicit hour input for the catch-up", (
+        "hour:" in daily_post_wf and "github.event.inputs.hour" in daily_post_wf)
+    yield "G1 an explicit hour input is validated (5 or 19), not trusted blindly", (
+        '"$hour" = "5"' in daily_post_wf and '"$hour" = "19"' in daily_post_wf)
+    # A failed attempt must still reach a human — a first version only printed to a CI log
+    # nobody reads, silently leaving a permissions problem (the exact actions:write 403 this
+    # feature depends on) unfixable forever.
+    yield "G1 a failed catch-up dispatch is told to a human, not just printed", (
+        "if not ok:" in watch and "notify.send" in watch)
+    # dispatch() must never let an exception escape auto_retry_missed_slots(): a bare network
+    # error used to propagate out of this call and crash watch.py's main() before it could save
+    # ANY of this run's alert bookkeeping — not just this one feature's.
+    yield "G1 a dispatch that raises is caught, not left to crash main()", (
+        "except Exception as e:" in watch and "dispatch raised" in watch)
+    # The cleanup loop that clears stale finding-keys must not also eat a RETRIED_PREFIX key
+    # before its own missed- finding stops being live — doing the opposite (the D-3/D-3b shape:
+    # "ours" vs "theirs" dropping a key that should have survived) would dispatch the SAME
+    # catch-up every single run forever. Pulled into its own resolve_retries() (2026-11-12,
+    # structural review) to mirror resolve_failures()'s existing pair for FAILED_PREFIX, rather
+    # than live on as an untestable inline special case in main()'s cleanup loop.
+    yield "G1 a retried- key survives as long as its missed- finding is still live", (
+        "def resolve_retries" in watch
+        and 'key.startswith(RETRIED_PREFIX)' in watch
+        and "MISSED_PREFIX + key[len(RETRIED_PREFIX):]) not in live" in watch)
+    yield "G1 main() calls resolve_retries, not an inline copy of its logic", (
+        "resolve_retries(state, live)" in watch)
+    # A structural review also found the two findings() calls main() used to make (once to send,
+    # once to compute `live`) could disagree, because published_times() — unlike
+    # _cron_health_findings() — makes a fresh, uncached Instagram call every time: a transient API
+    # flap between the two calls could silently drop a key the first call just dispatched for,
+    # deleting its retried- marker a run early and dispatching the same catch-up again.
+    yield "G1 `live` reuses the SAME findings() result main() already sent, not a second call", (
+        "live = {k for k, _ in found}" in watch and "live = {k for k, _ in findings(state)}" not in watch)
+    yield "G1 dispatch_workflow calls the REST API directly, no gh-CLI dependency on the runner", (
+        "def dispatch_workflow" in cron_health_src and "_gh_post" in cron_health_src
+        and "subprocess" not in cron_health_src)
+    # workflow_dispatch/repository_dispatch are the one documented exception to "GITHUB_TOKEN's
+    # own actions don't trigger new workflow runs" — if this guard string disappears, the next
+    # person to "simplify" this function could silently swap in `gh workflow run` (a CLI
+    # dependency this runner may not have) or drop the permissions comment that explains why
+    # `actions: write` is required at all.
+    yield "G1 dispatch_workflow documents why GITHUB_TOKEN is allowed to do this", (
+        "repository_dispatch" in cron_health_src and "anti-recursion" in cron_health_src)
+    # dispatch_workflow must never raise — the first version only caught the RuntimeError
+    # _gh_post raises for a clean HTTP error, so a plain network exception (URLError, timeout,
+    # DNS) still escaped. See the test above for a live repro of why this matters.
+    yield "G1 dispatch_workflow catches network failures too, not only HTTP ones", (
+        "except Exception as e:" in cron_health_src
+        and "_gh_post(" in cron_health_src.split("def dispatch_workflow")[1])
+    yield "G1 watch.yml saves its ledger even if a step earlier in the job failed", (
+        "watch.json" in watch_yml and "if: always()" in watch_yml)
 
     # H0-6: pip and uv picked DIFFERENT "latest" kiwipiepy on the same day (2026-10-31, 0.24.1 vs
     # 0.23.2) and disagreed on where 시편 68:19 breaks. Unpinned, "it passed in CI" and "it fails
@@ -856,8 +931,11 @@ def checks():
         for e in cron_health.WATCHLIST)
     yield "I-1 watch.py actually calls cron_health, not just imports it", (
         "cron_health.findings()" in watch)
-    yield "I-1 watch.yml grants the read-only Actions permission cron_health needs", (
-        "actions: read" in watch_wf and "GITHUB_TOKEN" in watch_wf)
+    # Was "actions: read" until 2026-11-12 (G-1): cron_health.py only ever GETs, but
+    # watch.auto_retry_missed_slots() now also POSTs a workflow_dispatch catch-up, which GitHub
+    # 403s without `write` — and `write` still covers every GET cron_health.py makes.
+    yield "I-1 watch.yml grants the Actions permission cron_health + the catch-up dispatch need", (
+        "actions: write" in watch_wf and "GITHUB_TOKEN" in watch_wf)
     # `secrets` cannot appear directly inside a step `if:` — GitHub Actions rejects it at parse
     # time ("Unrecognized named-value: 'secrets'"), which on 2026-11-09 silently invalidated the
     # ENTIRE watch.yml file (every push AND every schedule tick) until routed through `env:`

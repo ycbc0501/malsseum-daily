@@ -2,8 +2,12 @@ name: Watch for trouble
 
 # The engagement check rides the daily metrics backfill, but a MISSED POST has to be caught within
 # a couple of hours, not the next morning. These crons are spread across the day so at least one
-# lands soon after each slot's 2-hour deadline (07:00 and 21:00 KST) even with GitHub's scheduler
-# running hours late — which is exactly the failure this alert exists to report.
+# lands soon after each slot's 1-hour deadline (GRACE_H, 06:00 and 20:00 KST — see watch.py) even
+# with GitHub's own `schedule:` trigger running hours late. And since 2026-11-12 (RULES.md G-1)
+# that same wake-up does not just report a miss — it fires workflow_dispatch on daily-post.yml
+# itself, because `schedule:` is the slow path here (measured 270-453min late on daily-post.yml
+# even with one cron per slot) while workflow_dispatch starts in ~2 seconds. No new scheduled
+# trigger was added anywhere for this — it reuses the wake-ups below.
 on:
   schedule:
     - cron: "0 22 * * *"   # 07:00 KST — morning slot deadline
@@ -26,9 +30,13 @@ concurrency:
 
 permissions:
   contents: write
-  # Read-only, for cron_health.py (RULES.md I-1) to ask GitHub's own API which OTHER scheduled
-  # workflows actually fired recently. Nothing here can write to Actions.
-  actions: read
+  # `write`, not `read` (changed 2026-11-12) — cron_health.py (RULES.md I-1) only ever GETs
+  # GitHub's API to ask which OTHER scheduled workflows fired, but
+  # watch.auto_retry_missed_slots() now also POSTs a workflow_dispatch to catch up a missed
+  # daily-post.yml slot (RULES.md G-1), and GitHub 403s that POST without `actions: write` even
+  # though GITHUB_TOKEN is explicitly allowed to send workflow_dispatch (the one documented
+  # exception to "this token's own actions don't trigger new workflow runs").
+  actions: write
 
 jobs:
   watch:
@@ -57,6 +65,14 @@ jobs:
       - name: Remember what was already reported
         # One implementation for every ledger — see save_ledger.sh. The old
         # `git pull --rebase || true; git push` is what lost the 08-26 ledger.
+        # `if: always()` (added 2026-11-12) — watch.py now makes a real network POST
+        # (auto_retry_missed_slots' catch-up dispatch) partway through main(), and dispatch_
+        # workflow() is written to never raise, but this step existing without `always()` would
+        # mean ANY future exception anywhere in main() discards this whole run's bookkeeping
+        # (cooldowns, resolved failures, retried- markers) instead of just that one run's new
+        # findings — the same "whatever progress this run made still gets saved" principle
+        # daily-post.yml and insights.yml already follow.
+        if: always()
         run: >-
           bash save_ledger.sh 'watch alert state' watch.json
 

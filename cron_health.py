@@ -49,8 +49,11 @@ API = "https://api.github.com"
 WATCHLIST = [
     {
         "file": "comment-reply.yml",
-        "label": "댓글 답글 (10분 간격)",
-        # Measured 2026-11-09: 1000 runs / 86 days, median gap 48min, max observed 12.3h.
+        "label": "댓글 답글 (시간당, 2026-11-12 이전엔 10분 간격 선언)",
+        # Measured 2026-11-09 against the OLD "*/10 * * * *" declaration: 1000 runs / 86 days,
+        # median gap 48min, max observed 12.3h. The cron itself changed to hourly 2026-11-12
+        # (RULES.md G-1) because GitHub was throttling the sub-hourly declaration anyway — this
+        # ceiling is left unchanged since 24h was already far looser than even that worst case.
         "max_gap_h": 24,
     },
     {
@@ -115,6 +118,61 @@ def _gh(path, token):
     except urllib.error.HTTPError as e:
         body = e.read().decode(errors="replace")
         raise RuntimeError(f"GET {path} failed: HTTP {e.code} {body}") from None
+
+
+def _gh_post(path, token, body):
+    """POST the GitHub API — same H0 lesson as _gh(): keep the error body, don't drop it."""
+    req = urllib.request.Request(f"{API}{path}", data=json.dumps(body).encode(), method="POST",
+                                  headers={
+                                      "Authorization": f"Bearer {token}",
+                                      "Accept": "application/vnd.github+json",
+                                      "X-GitHub-Api-Version": "2022-11-28",
+                                      "Content-Type": "application/json",
+                                  })
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return r.status
+    except urllib.error.HTTPError as e:
+        body_text = e.read().decode(errors="replace")
+        raise RuntimeError(f"POST {path} failed: HTTP {e.code} {body_text}") from None
+
+
+def dispatch_workflow(workflow_file, repo=None, token=None, ref="main", inputs=None):
+    """Fire `workflow_dispatch` on `workflow_file` via the REST API → (ok, detail). Never raises.
+
+    Why the API and not `gh workflow run`: this has no dependency on the gh CLI existing on
+    whatever runner calls it. Why GITHUB_TOKEN works here at all when it can't trigger most
+    other events: GitHub's own docs carve out `workflow_dispatch` and `repository_dispatch` as
+    the two exceptions to "actions taken by GITHUB_TOKEN don't trigger new workflow runs" (the
+    anti-recursion guard) — confirmed 2026-11-12 specifically because this function exists to
+    let watch.yml's own GITHUB_TOKEN fire a daily-post.yml catch-up. It still needs the calling
+    job's `permissions:` to grant `actions: write`, or GitHub answers 403.
+
+    `inputs` is sent only if given (an empty dict is a valid GitHub payload, but omitting the key
+    entirely when the caller passed nothing keeps the request identical to before `inputs`
+    existed). watch.py uses this to pass {"hour": "5"/"19"} — see its auto_retry_missed_slots()
+    docstring for why dispatching with no hour at all was a real bug (it let daily-post.yml's own
+    wall-clock fallback silently retry the WRONG slot).
+
+    Catches Exception broadly, not just the RuntimeError _gh_post raises for an HTTP error — a
+    structural review (2026-11-12) found that a plain network failure (URLError, timeout, DNS)
+    is not a RuntimeError and used to propagate straight out of this function, through
+    watch.auto_retry_missed_slots(), and crash watch.py's main() before it could save ANY of this
+    run's state — one flaky POST silently disabling the whole alert pipeline's bookkeeping, not
+    just this one feature. A caller that truly needs to tell network/API failures apart from
+    "not configured" still can, from the detail string; nothing here invents a fake success."""
+    repo = repo or os.environ.get("GITHUB_REPOSITORY")
+    token = token or os.environ.get("GITHUB_TOKEN")
+    if not repo or not token:
+        return False, "GITHUB_REPOSITORY / GITHUB_TOKEN not set"
+    body = {"ref": ref}
+    if inputs:
+        body["inputs"] = inputs
+    try:
+        _gh_post(f"/repos/{repo}/actions/workflows/{workflow_file}/dispatches", token, body)
+        return True, "dispatched"
+    except Exception as e:                            # noqa: BLE001 — see docstring
+        return False, str(e)
 
 
 def _parse(ts):

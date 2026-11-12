@@ -1,11 +1,19 @@
 name: Reply 🙏 to comments
 
-# Every 10 minutes. Each comment gets a target time of comment + 10..50 min drawn once when
-# first seen (comment_reply.py), so the poll interval only decides the granularity, not the
-# delay. Most runs find nothing and commit nothing.
+# Hourly (changed 2026-11-12 from */10 — RULES.md G-1/I-1). Each comment gets a target time of
+# comment + 10..50 min drawn once when first seen (comment_reply.py), so the poll interval only
+# decides the granularity, not the delay — this reply was never meant to be instant. The old
+# */10 declaration bought nothing: GitHub throttles sub-hourly `schedule:` crons hard under load
+# (its own documented behavior, and measured here 2026-11-09 — 1000 runs/86 days, median gap 48
+# MIN not 10, worst 12.3h, cron_health.py's docstring), so it only ever delivered ~5-8 actual
+# runs a day. The 144 PER DAY it kept declaring still counted against this repo's share of
+# GitHub's shared scheduler — the same contention that was making daily-post.yml's two slots
+# land hours late. Declaring an achievable hourly rate instead should both poll more reliably
+# (above `schedule:` throttling's own hourly line) and leave more of that shared budget for the
+# two time-critical workflows. Most runs find nothing and commit nothing either way.
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "17 * * * *"
   workflow_dispatch:
 
 permissions:

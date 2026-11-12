@@ -61,6 +61,37 @@ class CarouselDoesNotFillTheDailySlot(unittest.TestCase):
         filled = self._with(rows, lambda: self.watch.slot_is_filled(19))
         self.assertFalse(filled, "감시자가 캐러셀을 저녁 릴로 셌다 — 그래서 조용했다")
 
+    def test_a_successful_empty_answer_does_not_fall_back_to_the_ledger(self):
+        """2026-11-11: Instagram answering "only a carousel recently" (API reachable, zero
+        REELS after the filter) used to be treated exactly like "API unreachable" — both fell
+        through to metrics.json. The day this account's own metrics.json first held a REELS row
+        stamped inside today's window, that fallback started silently overriding a correct
+        empty Instagram answer — this went unnoticed until the real evening post of 2026-11-11
+        landed in metrics.json and made test_watch_does_not_count_a_carousel itself go red.
+        published_times() must trust a successful-but-empty API answer and NOT reach for the
+        ledger — the ledger is for when the API call raises, not when it merely says "no REELS
+        here."""
+        import tempfile
+        import shutil
+        import json as _json
+        d = tempfile.mkdtemp()
+        try:
+            evening_slot_today = self.today.replace(hour=20, minute=0)
+            # A real local ledger entry that WOULD satisfy this exact slot if the fallback fired.
+            with open(os.path.join(d, "metrics.json"), "w") as f:
+                _json.dump({"시편 1:1": {"published": evening_slot_today.strftime(
+                    "%Y-%m-%dT%H:%M:%S")}}, f)
+            real_here, self.watch.HERE = self.watch.HERE, d
+            try:
+                rows = [_media(self.today, "FEED")]   # API reachable; zero REELS after filter
+                times = self._with(rows, self.watch.published_times)
+            finally:
+                self.watch.HERE = real_here
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+        self.assertEqual(times, [],
+                          "API가 정상 응답했는데(캐러셀만 있음) metrics.json의 진짜 릴 기록으로 넘어갔다")
+
     def test_watch_counts_a_real_reel(self):
         evening_reel = self.today.replace(hour=20, minute=30)
         rows = [_media(evening_reel, "REELS")]

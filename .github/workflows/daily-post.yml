@@ -27,6 +27,13 @@ on:
         description: "Publish immediately, ignoring the duplicate-slot check (use to fill a missed post)"
         type: boolean
         default: false
+      hour:
+        description: "Target slot (5 or 19). Leave blank to let the current time decide — set
+          this when filling a SPECIFIC past slot (e.g. watch.py's auto catch-up, RULES.md G-1),
+          where the current time may already belong to a different slot than the one being
+          retried."
+        type: string
+        default: ""
 
 # Cheap insurance against an overlapping manual dispatch, not a scheduling mechanism — with one
 # cron per slot there is no chain left to serialise. cancel-in-progress: false — never kill a
@@ -89,12 +96,26 @@ jobs:
       # post", which runs ON failure — an empty TARGET_HOUR there would title the alert
       # "missed post — :00 KST" and feed watch.py --post-failed an empty slot key.
       - name: Determine target hour
+        # An explicit `inputs.hour` (RULES.md G-1) wins over everything below it — it exists
+        # specifically for watch.py's auto catch-up dispatch, which names a PAST slot that may no
+        # longer be the one slots.owning_hour() would pick from the current wall clock. A
+        # structural review (2026-11-12) found the earlier version had no such input at all: two
+        # slots missed at once dispatched two identical, hour-less catch-ups that both resolved
+        # to whatever slot owned the clock when they ran, so at most one was ever really fixed.
+        # Validated against SLOTS (not trusted blindly) since this value can come from outside
+        # this repo's own code path.
         run: |
-          if [ "${{ github.event.schedule }}" = "0 10 * * *" ]; then
+          hour="${{ github.event.inputs.hour }}"
+          if [ "$hour" = "5" ] || [ "$hour" = "19" ]; then
+            echo "TARGET_HOUR=$hour" >> "$GITHUB_ENV"
+          elif [ "${{ github.event.schedule }}" = "0 10 * * *" ]; then
             echo "TARGET_HOUR=19" >> "$GITHUB_ENV"
           elif [ "${{ github.event.schedule }}" = "0 20 * * *" ]; then
             echo "TARGET_HOUR=5" >> "$GITHUB_ENV"
           else
+            if [ -n "$hour" ]; then
+              echo "::warning::inputs.hour='$hour' is not 5 or 19 — ignoring it, falling back"
+            fi
             hour=$(python3 -c 'import slots; print(slots.owning_hour())') || {
               echo "::warning::slots.owning_hour() failed — falling back to hour 5, loudly"
               hour=5

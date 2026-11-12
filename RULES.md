@@ -1000,6 +1000,41 @@ D-3가 세운 `OURS_REPLACES_KEYS`는 `ours.items()`를 돌면서 적용됩니�
   워크플로가 *아예 안 도는* 경우는 실패 알림도 안 옵니다 (8/27에 실제로 그랬습니다).
   판단은 **인스타그램에 직접 물어서** 합니다 — 원장 저장이 실패한 게시를 "안 올라왔다"고
   보고하면 알림 자체의 신뢰가 무너집니다
+
+  **2026-11-12부터 — 알리는 것에서 멈추지 않고, 그 자리에서 채웁니다.** 05:00 슬롯이 비면 사람이
+  알림을 읽고 `gh workflow run ... -f force=true`를 손으로 쳐야 했고, 그날 실제로 ~6시간이
+  걸렸다. 그런데 같은 날 실측: GitHub의 `schedule:` 트리거는 단일 크론 설계(C2) 이후에도
+  daily-post.yml에서 **270~453분** 늦었고, 반면 **API로 쏘는 `workflow_dispatch`는 ~2초 안에
+  실행이 시작됐다**(같은 날 라이브로 확인). `schedule:`이 느린 건 플랫폼 쪽 문제라 고칠 수
+  없지만(위 단락), `workflow_dispatch`는 빠르다 — 그래서 watch.yml이 이미 매 ~4시간마다 깨어나
+  놓친 슬롯을 "찾는" 그 순간에, `cron_health.dispatch_workflow("daily-post.yml")`로
+  **daily-post.yml에 직접 workflow_dispatch를 쏩니다.** 새 스케줄 크론을 추가하지 않았다 —
+  이미 도는 watch.yml의 깨어남을 재사용할 뿐이다(크론을 더 추가하면 이 저장소의 다른 모든
+  워크플로와 GitHub의 공용 스케줄러 자원을 더 다툴 뿐이라는 게 바로 I-1의 교훈이다).
+  슬롯당 **단 한 번만** 시도한다(`watch.RETRIED_PREFIX`로 상태 기록, `resolve_retries()`가
+  `resolve_failures()`/`FAILED_PREFIX`와 같은 모양으로 그 자리를 정리한다) — 실패해도 재시도
+  폭탄을 만들지 않지만, **실패는 그 자리에서 사람에게도 보낸다**(`notify.send`) — 이 자동
+  수정이 못 고치는 유일한 경우(`actions: write` 자체가 막힌 403 같은)를 CI 로그에만 남기면
+  아무도 모른다. 중복 게시 위험은 없다 — `workflow_dispatch`는 `force` 없이 쏘아
+  daily_post.py의 기존 `slot_already_filled()` 재확인(C2c)을 그대로 거치고,
+  `concurrency: group: daily-post`가 모든 트리거(schedule·workflow_dispatch 가리지 않고)를
+  한 번에 하나씩만 돌게 직렬화한다. `watch.yml`의 `actions: read` → **`actions: write`로
+  변경**(GITHUB_TOKEN은 `workflow_dispatch`/`repository_dispatch` 두 이벤트만은 쏠 수 있다는
+  것이 GitHub 자신의 문서에 적힌 예외다 — 그 외 이벤트는 재귀 방지로 막혀 있다).
+
+  **같은 날 구조 검수(K-4)가 배포 전에 실제 버그 두 개를 잡았다.** ① 첫 구현은 `hour` 없이
+  `dispatch("daily-post.yml")`만 쏘았다 — daily-post.yml은 `inputs.hour`가 없으면
+  `slots.owning_hour()`(현재 시각 기준)로 떨어지는데, **두 슬롯이 동시에 밀리면**(이 저장소의
+  08-27 전례처럼 GitHub가 하루 종일 스케줄을 안 돌린 경우) 두 디스패치가 똑같이 "현재 시각이
+  속한 슬롯"으로만 가서 **최대 한 슬롯만** 고쳐지는데도 **둘 다** `retried-`로 영구 소진됐다.
+  고침: `missed-{day}-{hour}` 키에서 **hour를 파싱해 `inputs.hour`로 명시 전달**, daily-post.yml의
+  「Determine target hour」가 그 값을 (5/19로 검증한 뒤) 최우선으로 쓴다. ② `dispatch_workflow`가
+  `urllib.error.HTTPError`만 잡고 있어서, 순수 네트워크 예외(타임아웃·DNS)가 그대로
+  `watch.py main()`까지 뚫고 올라가 **그날 알림 장부 전체(쿨다운·해결 기록 전부)가 저장 전에
+  날아갈 뻔**했다 — 고침: `except Exception`으로 넓히고, `auto_retry_missed_slots`도 `dispatch`가
+  예외를 던져도 한 슬롯의 실패로만 끝나게 감쌌다. `watch.yml`의 원장 저장 단계에도
+  `if: always()`를 추가(다른 워크플로가 이미 쓰는 "앞 단계가 뭘로 실패하든 이번 실행이 만든
+  진행분은 저장한다" 원칙).
 - 그리고 게시 **실패** 시 실행 링크 — **단, 실패한 것은 실행이지 슬롯이 아닙니다.**
   알림을 보내기 전에 **인스타그램에 슬롯이 비었는지 묻고**, 이미 채워졌으면 **아무 말도 하지
   않습니다.** 체인은 원래 재시도하고 물러섭니다. 한 슬롯당 **최대 한 번**만 말합니다.

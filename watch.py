@@ -125,9 +125,16 @@ def published_times():
             if stamp:
                 out.append(datetime.datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%S")
                            .replace(tzinfo=datetime.timezone.utc).astimezone(KST))
-        if out:
-            return out
-        print("instagram returned nothing — falling back to metrics.json")
+        # A successful call that legitimately found zero REELS (e.g. the only recent post is a
+        # weekly carousel, or nothing has posted yet today) is a real, trustworthy answer — not
+        # a reason to fall back. Falling back here used to be unconditional on `out` being empty
+        # (2026-11-11): the day this account's own metrics.json first held a REELS row stamped
+        # inside "today"'s window, that fallback started silently overriding a correct empty
+        # Instagram answer with a stale ledger hit, every single day from then on — caught by
+        # test_slot_media.py going red the moment today's real evening post landed in
+        # metrics.json. The docstring above has always said the ledger is for when the API is
+        # UNREACHABLE; only an exception means that.
+        return out
     except Exception as e:
         print(f"instagram unreachable ({e}) — falling back to metrics.json")
     out = []
@@ -242,7 +249,7 @@ def findings(prev=None):
             if slot_is_filled(hour, now=slot, times=published):
                 continue
             late = (now - slot).total_seconds() / 3600
-            found.append((f"missed-{day}-{hour}",
+            found.append((f"{MISSED_PREFIX}{day}-{hour}",
                           f"⚠️ {day:%m/%d} {hour:02d}:00 게시가 안 올라왔습니다 ({late:.0f}시간 경과)\n"
                           f"워크플로가 아예 안 돌았을 수 있습니다 — Actions 확인 필요"))
 
@@ -292,7 +299,87 @@ def findings(prev=None):
     return found
 
 
+MISSED_PREFIX = "missed-"        # one key per (day, hour) slot found late past GRACE_H
 FAILED_PREFIX = "failed-"        # one key per slot that has alerted as failed
+RETRIED_PREFIX = "retried-"      # one key per slot a catch-up dispatch has already been tried for
+
+
+def auto_retry_missed_slots(found, state, dispatch=None):
+    """For every still-live `missed-...` finding, fire a daily-post.yml catch-up ONCE → [(key,
+    ok, detail)] for whatever was attempted this call.
+
+    2026-11-12: a missed 05:00 slot sat empty until a human read the alert and ran
+    `gh workflow run ... -f force=true` by hand six hours later — GitHub's own `schedule:`
+    trigger is the slow path here (measured 270-453min late on this exact workflow even after
+    the single-cron fix; RULES.md C2/I-1), but `workflow_dispatch` fired via the API starts in
+    ~2 seconds (measured live, same day). watch.yml already wakes up every ~4h specifically to
+    check for a miss (RULES.md G-1) — this makes that same wake-up fix it instead of just
+    reporting it, with no new scheduled trigger added anywhere.
+
+    The hour is parsed OUT of `key`, mirroring resolve_failures() parsing day+hour out of its own
+    FAILED_PREFIX key for the identical reason (RULES.md C2d) — a first version of this function
+    dispatched with no hour at all, trusting daily-post.yml's slots.owning_hour() fallback to
+    land on the right slot by current wall-clock alone. A structural review caught the actual
+    failure mode: two slots missed at once (this repo's own 08-27 precedent — a full day where
+    GitHub never started a single scheduled run) produce two identical dispatches that BOTH
+    resolve to whichever slot owns the clock when they execute, so at most one slot is ever
+    really fixed while both get permanently marked as retried. Passing `hour` explicitly as a
+    workflow_dispatch input and having daily-post.yml prefer it over slots.owning_hour() (RULES.md
+    C2e) closes that gap.
+
+    Any exception from `dispatch` — not just a clean (False, reason) return — is caught here and
+    treated as a failed attempt. The same review found that a bare network error (not an
+    HTTPError) used to propagate all the way out of main() uncaught, which, since watch.json is
+    only written at the very end of main(), would have discarded this run's ENTIRE alert
+    bookkeeping (cooldowns, resolved failures, everything) over one flaky POST — a single bad
+    network call degrading the whole watcher, not just this one feature.
+
+    A failed attempt is still marked retried (no retry storm; the one-shot guarantee holds either
+    way) but is returned with ok=False so main() can tell a human — unlike the first version,
+    which printed to a CI log nobody reads and left a permissions problem (the exact `actions:
+    write` 403 this feature depends on) silently unfixable forever.
+
+    Split out of main() so the one-shot-per-slot bookkeeping has a seam a test can drive without
+    faking wall-clock time inside findings() itself: `found` is the list main() already computed,
+    not recomputed here, and `dispatch` is dependency-injected so no test makes a real network
+    call. `state` is mutated (a RETRIED_PREFIX key per slot that has had its one attempt) exactly
+    like resolve_failures()/post_failed() mutate it for FAILED_PREFIX — same shape, same file."""
+    if dispatch is None:
+        import cron_health
+
+        def dispatch(workflow_file, hour):
+            return cron_health.dispatch_workflow(workflow_file, inputs={"hour": str(hour)})
+    attempts = []
+    for key, _ in found:
+        if not key.startswith(MISSED_PREFIX):
+            continue
+        tail = key[len(MISSED_PREFIX):]              # "YYYY-MM-DD-H"
+        retry_key = RETRIED_PREFIX + tail
+        if state.get(retry_key):
+            continue
+        _day_str, hour_str = tail.rsplit("-", 1)
+        try:
+            ok, detail = dispatch("daily-post.yml", int(hour_str))
+        except Exception as e:                        # noqa: BLE001 — see docstring
+            ok, detail = False, f"dispatch raised: {e}"
+        state[retry_key] = True
+        attempts.append((key, ok, detail))
+    return attempts
+
+
+def resolve_retries(state, live):
+    """Drop a RETRIED_PREFIX key once its own `missed-...` finding stops being live.
+
+    Mirrors resolve_failures()'s role for FAILED_PREFIX, and exists for the same reason: the
+    blanket "delete any key not in `live`" rule in main()'s cleanup loop cannot apply to this
+    prefix, because a RETRIED_PREFIX key is never itself a finding and so is never in `live` —
+    applying the blanket rule would delete the one-shot marker the very run it was set, and
+    dispatch the same catch-up again on every subsequent run forever. A first version inlined
+    this as an untestable special case in that loop; pulled out here so it has its own seam,
+    the same way FAILED_PREFIX's half of this symmetry (resolve_failures) already does."""
+    for key in list(state):
+        if key.startswith(RETRIED_PREFIX) and (MISSED_PREFIX + key[len(RETRIED_PREFIX):]) not in live:
+            del state[key]
 
 
 def _tail_run(field, bad):
@@ -447,7 +534,8 @@ def main():
                 sent.append(key)
             print(f"{key}: resolved")
         del state[key]
-    for key, message in findings(state):
+    found = findings(state)
+    for key, message in found:
         last = state.get(key)
         if last:
             try:
@@ -461,12 +549,34 @@ def main():
             state[key] = today.isoformat()
             sent.append(key)
         print(f"{key}: {message.splitlines()[0]}")
+    # A missed slot is also a thing to FIX, not just report — see auto_retry_missed_slots()'s
+    # docstring. This runs regardless of the cooldown above: a still-live missed-slot finding
+    # gets exactly one catch-up dispatch attempt even if its alert message is within cooldown.
+    for key, ok, detail in auto_retry_missed_slots(found, state):
+        print(f"{key}: auto catch-up dispatch {'sent' if ok else 'FAILED'} ({detail})")
+        if not ok:
+            # The one case this one-shot design cannot self-heal: tell a human now, rather than
+            # leave a permissions problem (the exact actions:write 403 this feature depends on)
+            # silently unfixable, discoverable only by reading a CI log nobody reads.
+            import notify
+            if notify.send(f"⚠️ {key} 자동 재시도 실패 — {detail}\n"
+                            f"수동으로 `gh workflow run daily-post.yml -f force=true` 필요"):
+                sent.append(f"{RETRIED_PREFIX}fail-{key}")
     # Clear an episode once it stops firing, so the next one alerts immediately. Keys starting
     # with "_" are not episodes — they are the watcher's own memory (the reply counters it
     # measures growth against), and wiping them every run would silence that check forever.
-    live = {k for k, _ in findings(state)}
+    # `live` reuses `found` rather than calling findings() a second time (changed 2026-11-12): a
+    # structural review found that published_times() makes a fresh, uncached Instagram API call
+    # every findings() call, unlike _cron_health_findings()'s cache — so the two calls main() used
+    # to make could disagree on a transient API flap, with the SECOND call's "live" set silently
+    # dropping a key the FIRST call just dispatched for, deleting its retried- marker a run early
+    # (resolve_retries(), just below) and dispatching the same catch-up again next run. findings()
+    # does not mutate `state` (its own docstring's contract), so reusing `found` here instead of
+    # recomputing is strictly more consistent, not a behavior change for anything else.
+    live = {k for k, _ in found}
+    resolve_retries(state, live)
     for key in list(state):
-        if key not in live and not key.startswith(("_", FAILED_PREFIX)):
+        if key not in live and not key.startswith(("_", FAILED_PREFIX, RETRIED_PREFIX)):
             del state[key]
     sent_n, answered_n = reply_counters()
     if sent_n is not None:
