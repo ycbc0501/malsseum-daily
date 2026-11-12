@@ -103,14 +103,24 @@ jobs:
         # slots missed at once dispatched two identical, hour-less catch-ups that both resolved
         # to whatever slot owned the clock when they ran, so at most one was ever really fixed.
         # Validated against SLOTS (not trusted blindly) since this value can come from outside
-        # this repo's own code path.
+        # this repo's own code path. Routed through `env:` rather than spliced straight into the
+        # script body (`hour="${{ ... }}"`, the form this had until 2026-11-13) — the old form is
+        # the textbook GitHub Actions script-injection shape (untrusted `${{ }}` text pasted into
+        # bash before any quoting/validation runs), and `inputs.hour` is a free-text `type: string`
+        # with no server-side pattern, so anyone able to fire workflow_dispatch directly (not
+        # necessarily anyone able to push code — a token scoped to "Actions: write" only, not
+        # "Contents: write", can still dispatch) could have run arbitrary shell with this job's
+        # secrets. `env:` is GitHub's own documented mitigation for exactly this.
+        env:
+          INPUT_HOUR: ${{ github.event.inputs.hour }}
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
         run: |
-          hour="${{ github.event.inputs.hour }}"
+          hour="$INPUT_HOUR"
           if [ "$hour" = "5" ] || [ "$hour" = "19" ]; then
             echo "TARGET_HOUR=$hour" >> "$GITHUB_ENV"
-          elif [ "${{ github.event.schedule }}" = "0 10 * * *" ]; then
+          elif [ "$EVENT_SCHEDULE" = "0 10 * * *" ]; then
             echo "TARGET_HOUR=19" >> "$GITHUB_ENV"
-          elif [ "${{ github.event.schedule }}" = "0 20 * * *" ]; then
+          elif [ "$EVENT_SCHEDULE" = "0 20 * * *" ]; then
             echo "TARGET_HOUR=5" >> "$GITHUB_ENV"
           else
             if [ -n "$hour" ]; then
@@ -288,3 +298,15 @@ jobs:
           TARGET_HOUR="${TARGET_HOUR}" python watch.py --post-failed \
             "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
             || true
+
+      # watch.py --post-failed (just above) writes its FAILED_PREFIX marker straight to
+      # watch.json on disk (see post_failed()'s own docstring on why it alerts at most once per
+      # slot) — but this job never committed that file, so the write died with the runner and
+      # resolve_failures()'s ✅ "그 슬롯 채워졌습니다" message could never fire: watch.yml reads
+      # a watch.json that never saw the ❌ in the first place. Found 2026-11-13 reviewing why a
+      # missed-slot alert and the eventual catch-up post never visibly reconciled. Same ledger,
+      # same name watch.yml's own "Remember what was already reported" step already uses.
+      - name: Save watch alert state
+        if: always() && steps.build.outputs.skip != 'true'
+        run: >-
+          bash save_ledger.sh 'watch alert state' watch.json

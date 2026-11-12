@@ -24,11 +24,13 @@ file at all.
 
     python3 test_auto_retry.py
 """
+import datetime
 import sys
 
 import cron_health as ch
 import watch
 
+KST = watch.KST
 FAIL = []
 
 
@@ -107,12 +109,18 @@ def fake_dispatch_ok(workflow_file, hour):
     return True, "dispatched"
 
 
+# `now` pinned inside each slot's own still-open window (RULES.md G-1's 2026-11-13 follow-up —
+# see the dedicated "window already closed" tests below for the guard itself). Every test here
+# is about something OTHER than that guard, so it must not accidentally trip it.
+NOW_5 = datetime.datetime(2026, 11, 12, 10, 0, tzinfo=KST)       # inside [11-12 05:00, 11-12 19:00)
+NOW_12_19 = datetime.datetime(2026, 11, 12, 21, 0, tzinfo=KST)   # inside [11-12 19:00, 11-13 05:00)
+
 # A missed-slot finding gets exactly one dispatch attempt, and the HOUR is parsed out of the key
 # and passed through — not left to daily-post.yml's current-wall-clock fallback.
 calls = []
 state = {}
 found = [("missed-2026-11-12-5", "⚠️ 05:00 게시가 안 올라왔습니다")]
-attempts = watch.auto_retry_missed_slots(found, state, dispatch=fake_dispatch_ok)
+attempts = watch.auto_retry_missed_slots(found, state, dispatch=fake_dispatch_ok, now=NOW_5)
 check("one attempt is made", len(attempts) == 1)
 check("it targets daily-post.yml with the parsed hour (int 5, not the string '05')",
       calls == [("daily-post.yml", 5)])
@@ -123,7 +131,7 @@ check("state now remembers this slot was retried",
 
 # The SAME still-live finding on a later run must not dispatch again.
 calls = []
-attempts = watch.auto_retry_missed_slots(found, state, dispatch=fake_dispatch_ok)
+attempts = watch.auto_retry_missed_slots(found, state, dispatch=fake_dispatch_ok, now=NOW_5)
 check("a second call for the same slot does not dispatch again", calls == [])
 check("...and reports nothing attempted", attempts == [])
 
@@ -131,22 +139,57 @@ check("...and reports nothing attempted", attempts == [])
 calls = []
 state2 = {}
 other = [("likes-drop", "좋아요 급락"), ("dead-posts", "반응 없음")]
-attempts = watch.auto_retry_missed_slots(other, state2, dispatch=fake_dispatch_ok)
+attempts = watch.auto_retry_missed_slots(other, state2, dispatch=fake_dispatch_ok, now=NOW_5)
 check("non-slot findings never trigger a dispatch", calls == [] and attempts == [])
 
-# THE bug a structural review caught: two different slots missed at once (e.g. a multi-slot
-# GitHub outage, this repo's own 08-27 precedent) must each get dispatched with THEIR OWN hour,
-# not two identical hour-less calls that can only ever fix one of them.
+# THE bug a structural review caught (2026-11-12): two different slots missed at once (e.g. a
+# multi-slot GitHub outage, this repo's own 08-27 precedent) must each get dispatched with THEIR
+# OWN hour, not two identical hour-less calls that can only ever fix one of them. `now` sits
+# inside the LATER slot's own window; by construction (slots.window tiles the day with no
+# overlap) the EARLIER slot's window is therefore already closed by the time anyone notices both
+# are missed — which is exactly the second bug a LATER review (2026-11-13) caught in the first
+# version of this fix: dispatching the earlier slot anyway would build and publish into an
+# already-stale window (almost certainly still "empty"), landing a second reel minutes after the
+# current slot's own catch-up — the 08-26 double-post failure mode. So only the slot `now` is
+# still inside gets a real dispatch; the other gets reported as needing a human instead.
 calls = []
 state3 = {}
 two = [("missed-2026-11-11-5", "..."), ("missed-2026-11-12-19", "...")]
-attempts = watch.auto_retry_missed_slots(two, state3, dispatch=fake_dispatch_ok)
-check("two distinct missed slots both get a dispatch attempt", len(attempts) == 2)
-check("...and each dispatch names ITS OWN hour, not a shared/absent one",
-      sorted(calls) == [("daily-post.yml", 5), ("daily-post.yml", 19)])
-check("each has its own retry key",
-      state3.get(watch.RETRIED_PREFIX + "2026-11-11-5") is True and
-      state3.get(watch.RETRIED_PREFIX + "2026-11-12-19") is True)
+attempts = watch.auto_retry_missed_slots(two, state3, dispatch=fake_dispatch_ok, now=NOW_12_19)
+check("both findings produce SOME outcome (not silently dropped)", len(attempts) == 2)
+check("only the slot whose window `now` is still inside gets a real dispatch",
+      calls == [("daily-post.yml", 19)])
+outcomes = dict((k, ok) for k, ok, _ in attempts)
+check("the current slot's dispatch succeeds", outcomes["missed-2026-11-12-19"] is True)
+check("the stale slot's attempt is reported as failed (needs a human)",
+      outcomes["missed-2026-11-11-5"] is False)
+check("the current slot gets a retry key", state3.get(watch.RETRIED_PREFIX + "2026-11-12-19") is True)
+check("the stale slot does NOT get a retry key (so the alert keeps firing, not silently given up)",
+      watch.RETRIED_PREFIX + "2026-11-11-5" not in state3)
+
+
+print("watch.auto_retry_missed_slots() — window already closed (2026-11-13)")
+
+# The exact scenario above, isolated: a slot whose own [lo, hi) window has already elapsed by
+# `now` must never be auto-dispatched, no matter how it is discovered — doing so can only land
+# the post outside any slot's legitimate window, right next to whatever slot IS current.
+calls = []
+state_stale = {}
+stale = [("missed-2026-11-11-5", "...")]
+attempts = watch.auto_retry_missed_slots(stale, state_stale, dispatch=fake_dispatch_ok, now=NOW_12_19)
+check("no dispatch call is made at all", calls == [])
+check("one outcome is still reported, as a failure", attempts == [("missed-2026-11-11-5", False,
+      "window already closed — needs a human, not auto-dispatch")])
+check("no retry key is set — the ordinary alert must keep firing every cooldown period",
+      watch.RETRIED_PREFIX + "2026-11-11-5" not in state_stale)
+
+# A slot right at the edge of its own window (not yet closed) must still dispatch normally —
+# the guard is `now >= hi`, not an early cutoff inside the window.
+calls = []
+state_edge = {}
+edge_now = datetime.datetime(2026, 11, 12, 18, 59, 59, tzinfo=KST)   # one second before hi
+attempts = watch.auto_retry_missed_slots(found, state_edge, dispatch=fake_dispatch_ok, now=edge_now)
+check("a slot one second from closing still gets dispatched", calls == [("daily-post.yml", 5)])
 
 # A failed dispatch (e.g. token/permission problem) still only gets ONE attempt, not a retry
 # storm — the human alert is what covers a persistently broken path, not this.
@@ -157,12 +200,12 @@ def fake_dispatch_fail(workflow_file, hour):
 
 calls = []
 state4 = {}
-attempts = watch.auto_retry_missed_slots(found, state4, dispatch=fake_dispatch_fail)
+attempts = watch.auto_retry_missed_slots(found, state4, dispatch=fake_dispatch_fail, now=NOW_5)
 check("a failed attempt is still recorded as tried (no retry storm)",
       state4.get(watch.RETRIED_PREFIX + "2026-11-12-5") is True)
 check("...and is reported with ok=False so main() can tell a human",
       attempts and attempts[0][1] is False)
-attempts2 = watch.auto_retry_missed_slots(found, state4, dispatch=fake_dispatch_fail)
+attempts2 = watch.auto_retry_missed_slots(found, state4, dispatch=fake_dispatch_fail, now=NOW_5)
 check("...so a second run does not try again even though it failed", attempts2 == [])
 
 # A `dispatch` that RAISES (rather than returning (False, detail) cleanly) must not crash this
@@ -173,7 +216,7 @@ def fake_dispatch_raises(workflow_file, hour):
 
 state7 = {}
 try:
-    attempts7 = watch.auto_retry_missed_slots(found, state7, dispatch=fake_dispatch_raises)
+    attempts7 = watch.auto_retry_missed_slots(found, state7, dispatch=fake_dispatch_raises, now=NOW_5)
     raised = False
 except Exception:
     raised = True

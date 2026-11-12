@@ -1035,6 +1035,22 @@ D-3가 세운 `OURS_REPLACES_KEYS`는 `ours.items()`를 돌면서 적용됩니�
   예외를 던져도 한 슬롯의 실패로만 끝나게 감쌌다. `watch.yml`의 원장 저장 단계에도
   `if: always()`를 추가(다른 워크플로가 이미 쓰는 "앞 단계가 뭘로 실패하든 이번 실행이 만든
   진행분은 저장한다" 원칙).
+
+  **2026-11-13 — 구조 검수(K-4) 2단계(opus + code-review 각각 독립)가 배포 하루 뒤 production
+  데이터에서 세 번째 버그를 더 찾았다, 이번엔 merge를 통과한 뒤의 거동에서.** ③ `hour`를 명시
+  전달해도 **daily-post.yml이 어느 창에 발행하는지는** 고치지 못했다 — 두 슬롯이 동시에 밀렸고
+  watch가 다음 슬롯 창에 들어와서야 깨어나면, 오래된 슬롯의 디스패치는 `slots.current_day(hour,
+  now=빌드 시각)`이 **이미 닫힌 과거 창**으로 풀려 "비었다"로 읽히고 그 창에 그대로 발행한다 —
+  현재 슬롯의 catch-up이 막 올라간 지 10분 만에 릴이 하나 더, 08-26과 같은 모양. 고침:
+  `auto_retry_missed_slots()`가 디스패치 전에 `slots.window(day, hour)`로 그 슬롯 자신의 창이
+  **아직 안 닫혔는지**(`now < hi`) 확인하고, 닫혔으면 디스패치하지 않는다(`retried-` 도 찍지
+  않아 평소 알림이 계속 울린다 — 사람이 `force=true`로 직접 채워야 하는 진짜 간격이라서다).
+  ④ `watch.json["_scene_watch"]["fp"]`가 D-3와 똑같은 병이었다 — `fp`는 2원소 쌍인데
+  `ledger_merge`의 기본 리스트 규칙(합집합)이 매 실행 쌓아, production에 **22원소**가 커밋돼
+  있었다(`watched.get("fp") == fp`가 영원히 거짓 → D-3 감시가 한 번도 못 켜짐). `fp`를
+  `ledger_merge.OURS_REPLACES_KEYS`에 추가. ⑤ `watch.py --post-failed`가 `watch.json`에 직접
+  쓰는데 daily-post.yml은 그 파일을 커밋한 적이 없었다 — `resolve_failures()`의 `✅ 해결됐습니다`
+  경로가 구조적으로 발화 불가능했다. daily-post.yml에 `watch.json` 저장 단계 추가.
 - 그리고 게시 **실패** 시 실행 링크 — **단, 실패한 것은 실행이지 슬롯이 아닙니다.**
   알림을 보내기 전에 **인스타그램에 슬롯이 비었는지 묻고**, 이미 채워졌으면 **아무 말도 하지
   않습니다.** 체인은 원래 재시도하고 물러섭니다. 한 슬롯당 **최대 한 번**만 말합니다.

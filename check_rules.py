@@ -882,6 +882,26 @@ def checks():
     yield "G1 watch.yml saves its ledger even if a step earlier in the job failed", (
         "watch.json" in watch_yml and "if: always()" in watch_yml)
 
+    # 2026-11-13: a SECOND structural review, one day after G1 shipped, found the explicit-hour
+    # fix above (C2e) only decided WHICH slot daily-post.yml checks, not whether that slot's own
+    # window had already closed by the time the catch-up actually runs — dispatching into an
+    # already-closed window is the exact 08-26 double-post shape, just one layer further down.
+    yield "G1 a catch-up is refused once the slot's own window has already closed", (
+        "slots.window(day, hour)" in watch and "now >= hi" in watch)
+    yield "G1 the window-closed refusal is still reported, not silently dropped", (
+        "window already closed" in watch)
+    # And a slot-freeze detector (D-3) one nesting level down from scene_i/used_scene_cats had
+    # the identical disease: `fp` is a short pair, not a growing record, but OURS_REPLACES_KEYS
+    # is only consulted by name wherever merge() recurses — a nested list under an unlisted key
+    # still unions and grows forever. See ledger_merge.py's own comment on `fp`.
+    yield "D-3 the nested scene-watch fingerprint is OURS-wins too, not just scene_i", (
+        "fp" in _lm.OURS_REPLACES_KEYS)
+    # And post_failed()'s write to watch.json inside a daily-post.yml run died with the runner —
+    # that workflow never committed the file, so resolve_failures()'s ✅ resolution message was
+    # structurally unreachable no matter how correct its own logic was.
+    yield "G1 daily-post.yml commits watch.json too, not just state/metrics", (
+        "save_ledger.sh" in daily_post_wf and "watch.json" in daily_post_wf)
+
     # H0-6: pip and uv picked DIFFERENT "latest" kiwipiepy on the same day (2026-10-31, 0.24.1 vs
     # 0.23.2) and disagreed on where 시편 68:19 breaks. Unpinned, "it passed in CI" and "it fails
     # locally" can both be true at once because they are not running the same tagger.

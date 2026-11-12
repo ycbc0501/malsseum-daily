@@ -51,6 +51,62 @@ class SceneCounterWrapDoesNotStickForever(unittest.TestCase):
             ledger_merge.OURS_REPLACES_KEYS.update(with_old_rule)
 
 
+class SceneWatchFingerprintIsNotAUnion(unittest.TestCase):
+    """watch.json["_scene_watch"]["fp"] — same disease one nesting level down, RULES.md D-3
+    again (found 2026-11-13). fp is a short [scene_i, recent_4_categories] pair that watch.py
+    rewrites wholesale on every run its own `_scene_watch` dict is present at all (never a
+    growing record) — but OURS_REPLACES_KEYS is checked at every dict level merge() recurses
+    into, so a key name has to be special-cased there even when it lives inside a nested dict,
+    not just at the ledger's top level. Without it, each run's 2-element fp union-merges onto
+    every prior run's fp, and the production ledger actually committed 2026-11-13 carried 11
+    runs' worth — 22 elements — which means `watched.get("fp") == fp` could never be true and
+    D-3's own scene-freeze watchdog (built because D-1's no-repeat defense had already died
+    silently once before) could never fire either."""
+
+    def test_the_actual_growth_is_fixed(self):
+        ours = {"_scene_watch": {"fp": [59, ["mist_mountain", "wheat_field",
+                                            "folded_laundry", "archway"]],
+                                   "since": "2026-11-13T08:00:00+09:00"}}
+        theirs = {"_scene_watch": {"fp": [9, ["lighthouse", "rainy_street", "mist_mountain",
+                                               "reflection_lake"], 11, ["rainy_street"],
+                                          19, ["mist_mountain"], 55, ["doorway"]],
+                                    "since": "2026-11-12T14:48:55+09:00"}}
+        merged = ledger_merge.merge(ours, theirs)
+        self.assertEqual(merged["_scene_watch"]["fp"],
+                          [59, ["mist_mountain", "wheat_field", "folded_laundry", "archway"]],
+                          "fp가 여전히 원격의 과거 실행들과 합쳐져 있다 — D-3 감시가 못 켜진다")
+
+    def test_reverse_union_would_have_grown_it(self):
+        """역테스트: 리스트 합집합이 실제로 적용됐다면 길이가 2를 넘는다는 것을 먼저 확인."""
+        ours_fp = [59, ["mist_mountain", "wheat_field", "folded_laundry", "archway"]]
+        theirs_fp = [9, ["lighthouse"], 11, ["rainy_street"]]
+        self.assertGreater(len(ledger_merge.merge(ours_fp, theirs_fp)), 2,
+                            "이 가정이 깨지면 위 테스트가 애초에 아무것도 증명하지 못한다")
+
+    def test_fp_not_special_cased_would_fail(self):
+        """fp를 OURS_REPLACES_KEYS에서 빼면 이 테스트가 실패해야 한다 — 지금 이 테스트가 실제로
+        그 수정을 검사하고 있다는 증거."""
+        with_old_rule = set(ledger_merge.OURS_REPLACES_KEYS)
+        ledger_merge.OURS_REPLACES_KEYS.discard("fp")
+        try:
+            merged = ledger_merge.merge(
+                {"_scene_watch": {"fp": [2, ["a"]]}},
+                {"_scene_watch": {"fp": [1, ["b"]]}})
+            self.assertGreater(len(merged["_scene_watch"]["fp"]), 2,
+                                "fp를 빼도 여전히 2원소라면 이 테스트가 뭘 보는지 다시 봐야 한다")
+        finally:
+            ledger_merge.OURS_REPLACES_KEYS.clear()
+            ledger_merge.OURS_REPLACES_KEYS.update(with_old_rule)
+
+    def test_since_still_wins_as_ours_without_any_special_case(self):
+        """since는 문자열이라 애초에 merge()의 'ours가 이긴다' 기본 분기(dict/list/int/bool이
+        아닌 모든 값)를 타므로, OURS_REPLACES_KEYS에 넣을 필요가 없다는 것을 고정해둔다."""
+        merged = ledger_merge.merge(
+            {"_scene_watch": {"fp": [1, ["a"]], "since": "2026-11-13T09:00:00+09:00"}},
+            {"_scene_watch": {"fp": [1, ["a"]], "since": "2026-11-12T14:48:55+09:00"}})
+        self.assertEqual(merged["_scene_watch"]["since"], "2026-11-13T09:00:00+09:00")
+
+
 class UsedSceneCatsWindowIsNotAUnion(unittest.TestCase):
     """used_scene_cats: "최근 4개" 창이 합집합 중복 제거에 깨지는 production 사고를 재현한다."""
 

@@ -66,7 +66,17 @@ import sys
 # `errors` is here as well as in OURS_OMITS_DELETES below, and it needs both: present → replace
 # (a union would carry this morning's fixed rejection alongside tonight's real one), absent →
 # delete. "This run's outcome" is not something two runs can share.
-OURS_REPLACES_KEYS = {"scene_i", "used_scene_cats", "errors"}
+#
+# `fp` (watch.json["_scene_watch"]["fp"], RULES.md D-3) is the same disease one nesting level
+# down: this key check is applied at every dict level merge() recurses into, not just the top,
+# so it fires here too. watch.main() rewrites the WHOLE `_scene_watch` dict every run it loads
+# (see its own comment), so `fp` — a short list, not a growing record — is always "ours, fresh"
+# the same way scene_i is. Found 2026-11-13: without this, the committed fingerprint grew to 22
+# elements (12 runs' worth, union-merged) instead of staying a 2-element pair, so
+# `watched.get("fp") == fp` was never true and D-3's own "scene rotation frozen" watchdog —
+# built specifically because D-1's no-repeat defense had already silently died for four weeks
+# once before — could never fire. The watchdog for a dead ledger was itself dead the same way.
+OURS_REPLACES_KEYS = {"scene_i", "used_scene_cats", "errors", "fp"}
 
 # Keys whose ABSENCE from ours is itself the write. OURS_REPLACES_KEYS cannot express this:
 # that set is applied while walking `ours.items()`, so a key `ours` does not have is never

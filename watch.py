@@ -304,7 +304,7 @@ FAILED_PREFIX = "failed-"        # one key per slot that has alerted as failed
 RETRIED_PREFIX = "retried-"      # one key per slot a catch-up dispatch has already been tried for
 
 
-def auto_retry_missed_slots(found, state, dispatch=None):
+def auto_retry_missed_slots(found, state, dispatch=None, now=None):
     """For every still-live `missed-...` finding, fire a daily-post.yml catch-up ONCE → [(key,
     ok, detail)] for whatever was attempted this call.
 
@@ -349,6 +349,7 @@ def auto_retry_missed_slots(found, state, dispatch=None):
 
         def dispatch(workflow_file, hour):
             return cron_health.dispatch_workflow(workflow_file, inputs={"hour": str(hour)})
+    now = now or datetime.datetime.now(KST)
     attempts = []
     for key, _ in found:
         if not key.startswith(MISSED_PREFIX):
@@ -357,9 +358,27 @@ def auto_retry_missed_slots(found, state, dispatch=None):
         retry_key = RETRIED_PREFIX + tail
         if state.get(retry_key):
             continue
-        _day_str, hour_str = tail.rsplit("-", 1)
+        day_str, hour_str = tail.rsplit("-", 1)
+        day, hour = datetime.date.fromisoformat(day_str), int(hour_str)
+        # A structural review (2026-11-13) found a real double-publish path: if TWO slots are
+        # missed at once (this repo's 08-27 precedent — GitHub ran nothing for a full day) and
+        # watch.py does not wake up until well into the NEXT slot's window, dispatching the
+        # older one with an explicit `hour` fixes WHICH slot daily-post.yml checks (RULES.md
+        # C2e) but not WHEN it lands. slots.current_day(hour, now=<build time>) resolves to
+        # YESTERDAY for that slot (its own nominal hour has not happened yet today), so the
+        # build checks a window that already closed in the past — almost certainly still empty
+        # — and publishes into it anyway, 10ish minutes after a DIFFERENT, already-current
+        # slot's catch-up just posted. Two reels minutes apart is exactly the 08-26 failure mode
+        # (reach fell ~6x and stayed down). If the slot's own window has already closed by now,
+        # filling it is no longer "late" — it is impossible to fill without that collision, so
+        # this leaves it to the ordinary alert (still sent above, un-cooled-down) and a human's
+        # `-f force=true` rather than risk a second automatic post for the same half-day.
+        _lo, hi = slots.window(day, hour)
+        if now >= hi:
+            attempts.append((key, False, "window already closed — needs a human, not auto-dispatch"))
+            continue
         try:
-            ok, detail = dispatch("daily-post.yml", int(hour_str))
+            ok, detail = dispatch("daily-post.yml", hour)
         except Exception as e:                        # noqa: BLE001 — see docstring
             ok, detail = False, f"dispatch raised: {e}"
         state[retry_key] = True
@@ -552,7 +571,7 @@ def main():
     # A missed slot is also a thing to FIX, not just report — see auto_retry_missed_slots()'s
     # docstring. This runs regardless of the cooldown above: a still-live missed-slot finding
     # gets exactly one catch-up dispatch attempt even if its alert message is within cooldown.
-    for key, ok, detail in auto_retry_missed_slots(found, state):
+    for key, ok, detail in auto_retry_missed_slots(found, state, now=now):
         print(f"{key}: auto catch-up dispatch {'sent' if ok else 'FAILED'} ({detail})")
         if not ok:
             # The one case this one-shot design cannot self-heal: tell a human now, rather than
