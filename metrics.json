@@ -116,6 +116,35 @@
   "text_spread": 2.3,
   "theme": "평안"
  },
+ "17868716382675658": {
+  "clip_novelty": 1.49,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-11-14",
+  "duration": 15.37,
+  "format": "reel",
+  "gate_passed": true,
+  "gate_ran": 11,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 1.444,
+  "motion_attempts": 1,
+  "motion_sky": 1.377,
+  "published": "2026-11-14T02:34:03+09:00",
+  "ref": "잠언 12:20",
+  "scene": "wilderness",
+  "segments": 2,
+  "text_contrast": 4.73,
+  "text_spread": 4.0,
+  "theme": "평안",
+  "veo_attempts": [
+   1,
+   1
+  ],
+  "veo_calls": 2,
+  "veo_seconds": 16.0
+ },
  "17871131760650356": {
   "insights": {
    "comments": 1,
