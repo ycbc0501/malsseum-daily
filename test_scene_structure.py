@@ -111,9 +111,15 @@ check("the merged 'room' bucket is EXACTLY INTERIOR_CATS — no interior categor
       {c for c, s in hf.SCENE_STRUCTURE.items() if s == "room"} == hf.INTERIOR_CATS)
 
 
-def walk_with_structure(structure_map, avoid_structure=4, n=60):
-    """Like walk() above, but lets a reverse-test substitute the OLD (pre-fix) bucket map."""
-    scene_i, cats, interior_adjacent = 0, [], 0
+def walk_with_structure(start, avoid_structure=4, n=20):
+    """Like walk() above, but starts from a given scene_i so a reverse-test can sweep every
+    possible starting offset instead of trusting one fixed start=0 to land on a collision.
+    (2026-11-13: start=0/n=200 alone stopped reproducing the old-split collision after an
+    unrelated catalog edit — removing one category shifted every later index by one, which
+    happened to move the walk off the lucky offset. A reverse-test that only works for
+    TODAY's catalog size is not proving the fix; sweeping every start makes it catalog-size
+    independent.)"""
+    scene_i, cats, interior_adjacent = start, [], 0
     prev_was_interior = False
     for _ in range(n):
         scene_i, cat = hf.pick_scene(scene_i, cats, avoid_structure=avoid_structure)
@@ -125,6 +131,10 @@ def walk_with_structure(structure_map, avoid_structure=4, n=60):
         del cats[:-4]
         scene_i += 1
     return interior_adjacent
+
+
+def total_adjacent_over_all_starts():
+    return sum(walk_with_structure(s) for s in range(len(hf.SCENES)))
 
 
 # Reverse-test: pick_scene's avoid_structure logic is unchanged — it only ever looks at
@@ -140,17 +150,18 @@ for _n, _c in enumerate(_old_interior_split):
 _real_structure = hf.SCENE_STRUCTURE
 hf.SCENE_STRUCTURE = _OLD_STRUCTURE
 try:
-    old_interior_adjacent = walk_with_structure(_OLD_STRUCTURE, n=200)
+    old_interior_adjacent = total_adjacent_over_all_starts()
 finally:
     hf.SCENE_STRUCTURE = _real_structure
 
 check("reverse-test: splitting INTERIOR_CATS into two buckets (the pre-fix shape) lets two "
-      "interior scenes land back-to-back at least once in 200 picks — proves the next check is "
-      "exercising a real fix, not a pool that never clusters",
+      "interior scenes land back-to-back at least once, swept across every starting offset — "
+      "proves the next check is exercising a real fix, not a pool that never clusters",
       old_interior_adjacent > 0)
 
-new_interior_adjacent = walk_with_structure(hf.SCENE_STRUCTURE, n=200)
-check("fixed SCENE_STRUCTURE: two INTERIOR_CATS scenes never land back-to-back in 200 picks",
+new_interior_adjacent = total_adjacent_over_all_starts()
+check("fixed SCENE_STRUCTURE: two INTERIOR_CATS scenes never land back-to-back, "
+      "swept across every starting offset",
       new_interior_adjacent == 0)
 
 

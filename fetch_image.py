@@ -243,10 +243,16 @@ SCENE_GROUPS = {
         "a bare breakfast table by a window, one plate set and untouched",
         "an empty kitchen table with a single bowl, early light across it",
     ],
-    "folded_laundry": [
-        "a neat stack of folded white linen on a plain surface",
-        "clean folded cloth resting on the corner of a quiet table",
-    ],
+    # "folded_laundry" ("a neat stack of folded white linen on a plain surface") lived here from
+    # 2026-09-06 to 2026-11-13 and was REMOVED. It was never grounded in the @dailymayim reference
+    # this whole family cites above ("a dessert on a table at night, a window, a cup") — nothing in
+    # that description is a pile of linen/towels, it was invented. Against the shared INDOOR_TOP
+    # "room's own wall" backdrop every one of these 27 categories renders, a folded-white-cloth
+    # subject reads as exactly "white wall room with towels stacked" — the account owner's own words
+    # 2026-11-13, after three prior sessions (11-04/11-08/11-10/11-11) had already tried to fix "흰
+    # 벽의 방" by de-clustering (D-1/D-3) and diluting frequency (D-5) without ever checking whether
+    # each individual category was something the reference account actually shows. Do not re-add a
+    # "pile of folded cloth/linen" scene without a specific reference tile to point to.
     "doorway": [
         "a simple open doorway with a still room beyond it",
         "a plain door standing ajar, the room past it quiet and bare",
@@ -404,7 +410,7 @@ INTERIOR_CATS = {
     # same trap applies: tell a tea cup on a table that the upper half should be "a clear cloudless
     # sky" and the model puts a sky above the kitchen. Adding scenes without adding them here is
     # how the 에베소서 2:8 composite happened in the first place.
-    "tea_cup", "bread_table", "morning_table", "folded_laundry",
+    "tea_cup", "bread_table", "morning_table",
     "doorway", "candle_still", "coat_hook", "key_bowl", "small_dish", "cat_window",
     "hanging_lamp",
     "potted_plant", "wool_blanket", "bowl_of_fruit", "washed_dishes", "sewing", "shoes_by_door",
@@ -521,7 +527,7 @@ SCENE_STRUCTURE = {
     "bedroom": "room", "lamp_room": "room", "window_light": "room", "desk": "room",
     "cathedral": "room",
     "flowers_vase": "room", "tea_cup": "room",
-    "bread_table": "room", "morning_table": "room", "folded_laundry": "room",
+    "bread_table": "room", "morning_table": "room",
     "doorway": "room", "candle_still": "room", "coat_hook": "room",
     "key_bowl": "room", "small_dish": "room",
     "cat_window": "room", "hanging_lamp": "room", "potted_plant": "room",
