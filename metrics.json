@@ -7959,6 +7959,35 @@
   "ref": "골로새서 3:23",
   "theme": "인도"
  },
+ "18133698286800696": {
+  "clip_novelty": 3.24,
+  "clip_spoiled": false,
+  "cta_in_caption": false,
+  "date": "2026-11-14",
+  "duration": 7.7,
+  "format": "reel",
+  "gate_passed": false,
+  "gate_ran": 23,
+  "gate_skipped": 0,
+  "image_model": "gemini-3-pro-image",
+  "insights": {},
+  "motion": 0.777,
+  "motion_attempts": 2,
+  "motion_sky": 0.752,
+  "published": "2026-11-14T07:40:30+09:00",
+  "ref": "잠언 15:13",
+  "scene": "key_bowl",
+  "segments": 1,
+  "text_contrast": 1.3,
+  "text_spread": 41.8,
+  "theme": "평안",
+  "veo_attempts": [
+   2,
+   1
+  ],
+  "veo_calls": 3,
+  "veo_seconds": 24.0
+ },
  "18133934327484160": {
   "clip_novelty": 0.0,
   "clip_spoiled": false,
