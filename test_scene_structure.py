@@ -15,6 +15,7 @@ has exactly one bucket, so a new scene family can't be added and silently fall o
 clustering check), and that pick_scene() actually uses it to spread buckets apart — with a
 reverse-test (avoid_structure=0) proving the check is sensitive, not just always-true.
 """
+import inspect
 import sys
 from collections import Counter
 
@@ -263,6 +264,52 @@ check("fixed scene_variation(): indoor renders actually cycle through more than 
       len(_varied_tones) >= 2)
 check("INDOOR_TOP no longer poses the unresolved pale-or-shadow either/or itself",
       "either" not in hf.INDOOR_TOP.lower())
+
+
+# ---------------------------------------------------------------------------------------------
+# 2026-11-13 (structural review of D-5b): WALL_TONE used to be picked via `t % len(WALL_TONE)`
+# where t is the global post_i counter. A SPECIFIC scene recurs roughly every len(SCENES) posts
+# (post_i advances by ~1 per post, same as scene_i), so whenever len(SCENES) became an exact
+# multiple of len(WALL_TONE) — which D-5b's category removal that same morning actually did,
+# 308 -> 306 -- every recurrence of every indoor scene landed on the identical t % 3, locking
+# each scene onto ONE wall tone forever. Reverse-test: reconstruct the OLD naive-modulo
+# selection and show it locks at a multiple-of-3 recurrence interval; then show the ACTUAL
+# `_wall_tone_pick` (seeded random, not a direct modulo) does not, regardless of the interval.
+# ---------------------------------------------------------------------------------------------
+def _old_naive_pick(t):
+    return t % len(hf.WALL_TONE)
+
+_lock_interval = len(hf.WALL_TONE) * 7   # any multiple of len(WALL_TONE) reproduces the bug
+_old_tones_seen = {_old_naive_pick(k * _lock_interval) for k in range(20)}
+check("reverse-test: the old naive `t % len(WALL_TONE)` selection locks onto a single tone "
+      "when the scene's recurrence interval is a multiple of len(WALL_TONE) (proves the next "
+      "check is exercising a real fix, not a coincidence of today's catalog size)",
+      len(_old_tones_seen) == 1)
+
+_new_tones_seen = {hf._wall_tone_pick(k * _lock_interval) for k in range(20)}
+check("fixed `_wall_tone_pick`: the same multiple-of-3 recurrence interval that locked the old "
+      "selection does NOT lock the new one — all three tones still turn up",
+      len(_new_tones_seen) == len(hf.WALL_TONE))
+
+check("`_wall_tone_pick` is deterministic (same t always gives the same tone, so a render is "
+      "reproducible/debuggable, not flaky)",
+      all(hf._wall_tone_pick(t) == hf._wall_tone_pick(t) for t in range(10)))
+
+check("scene_variation() actually calls _wall_tone_pick (not a reintroduced direct modulo)",
+      "_wall_tone_pick" in inspect.getsource(hf.scene_variation)
+      and "% len(WALL_TONE)" not in inspect.getsource(hf.scene_variation))
+
+
+# ---------------------------------------------------------------------------------------------
+# 2026-11-13 (structural review of D-5b): `curtain`'s own scene text ("a long sheer curtain ...
+# at an open window") is a wall-and-window shot like `window_light`, but D-4 filed it under the
+# no-wall `still_life` bucket, so it was getting OUTDOOR_TOP's "open sky fills most of the
+# picture above it" — the 에베소서 2:8 sky-above-the-room composite. Moved into INTERIOR_CATS.
+# ---------------------------------------------------------------------------------------------
+check("curtain is INTERIOR (a window-against-a-wall shot, not a no-wall outdoor still life)",
+      "curtain" in hf.INTERIOR_CATS)
+check("curtain shares the 'room' structural bucket like every other INTERIOR_CATS category",
+      hf.SCENE_STRUCTURE.get("curtain") == "room")
 
 
 if __name__ == "__main__":

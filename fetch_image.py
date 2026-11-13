@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-Generate a fresh serene-nature background via the Higgsfield Cloud API (Flux Pro).
-Each call returns a unique image — so backgrounds never repeat, no licensing, no Pexels.
+Generate a fresh serene-nature background. Default model is Gemini (gemini-3-pro-image, see
+MODEL below) — each call returns a unique image, so backgrounds never repeat, no licensing,
+no Pexels. Higgsfield Cloud (Flux Pro / "soul") remains only as a rarely-used fallback path.
 
-Credentials: env HF_API_KEY + HF_API_SECRET, or a local higgsfield_key.txt with those lines.
+Credentials: GEMINI_API_KEY for the default path; HF_API_KEY + HF_API_SECRET (env, or a local
+higgsfield_key.txt with those lines) only if the Higgsfield fallback fires.
 """
 
 import base64
@@ -393,10 +395,11 @@ SCENE_GROUPS = {
 # were appended as one block: the sequence held FOURTEEN interiors in a row, which is a week of
 # nothing but rooms. The account owner saw it immediately — "다 무슨 방에서 우울한 벽만".
 #
-# So the order is woven instead of listed: OUTDOOR_PER_INDOOR outdoor scenes between every indoor
-# one. That fixes the run length and the balance in the same place. The reference account this
-# aesthetic came from is mostly sky, water and weather with the everyday as accent, and the pool
-# had drifted to 40% interiors.
+# So the order is woven instead of listed (see `_weave()` and INDOOR_RATIO_TARGET below, which
+# superseded this paragraph's original fixed-ratio design — kept only as the "why weave at all"
+# history, not a description of the current algorithm). The reference account this aesthetic came
+# from is mostly sky, water and weather with the everyday as accent, and the pool had drifted to
+# 40% interiors.
 # Scene families that happen INDOORS. They need different composition language: an interior has
 # no sky and no horizon, and asking for "a clear cloudless sky" in the upper half of a bedroom is
 # a contradiction the image model resolves by GRAFTING AN OUTDOOR SKY ABOVE THE ROOM — a
@@ -405,7 +408,14 @@ SCENE_GROUPS = {
 # cafe_table is deliberately NOT here — a terrace and a garden lawn are OUTDOORS, and telling
 # them "there is no sky" would break the one thing that scene needs.
 INTERIOR_CATS = {
-    "window_light", "bedroom", "lamp_room", "desk",
+    "window_light", "bedroom", "lamp_room", "desk", "curtain",
+    # curtain moved in here 2026-11-13 (structural review of D-5b): its own scene text is "a long
+    # sheer curtain ... at an open window" / "pale linen curtains ... across a tall window" — the
+    # same window-against-a-wall shot as window_light, which already lives here. D-4 (2026-11-10)
+    # filed curtain under `still_life` reasoning "no wall behind it" without checking the actual
+    # scene text, so it was getting OUTDOOR_TOP's "open sky fills most of the picture above it" —
+    # the exact 에베소서 2:8 sky-above-the-room composite this set exists to prevent, just reached
+    # through a wrong structure-bucket assignment instead of a missing INTERIOR_CATS entry.
     # Added with the 2026-09-06 everyday expansion. Every one of these sits INSIDE a room, so the
     # same trap applies: tell a tea cup on a table that the upper half should be "a clear cloudless
     # sky" and the model puts a sky above the kitchen. Adding scenes without adding them here is
@@ -441,7 +451,7 @@ INDOOR_RATIO_TARGET = 0.20
 
 def _weave():
     """Spread the indoor scenes evenly through the outdoor ones, AND hold their overall share
-    near INDOOR_RATIO_TARGET rather than their raw catalog share (56 of 140 scenes = 40%).
+    near INDOOR_RATIO_TARGET rather than their raw catalog share (56 of 138 scenes = 41%).
 
     A fixed ratio across a SINGLE pass does not work: with 90 outdoor and 60 indoor a 3:1 weave
     exhausts the outdoor queue and leaves thirty rooms piled at the end. So the outdoor round-robin
@@ -495,9 +505,9 @@ def _weave():
 SCENES, SCENE_CATS = _weave()
 
 # SCENE_STRUCTURE — a coarser grouping than SCENE_GROUPS, by what the picture READS AS to a
-# viewer rather than by what prompt wrote it. 70 category keys avoid repeating EACH OTHER
+# viewer rather than by what prompt wrote it. The category keys avoid repeating EACH OTHER
 # (pick_scene below), but many of them are compositionally the same shot: `sea`, `shore`,
-# `harbor`, `reflection_lake`, `river`, `waterfall`, `rain_pond`, `still_water` are nine distinct
+# `harbor`, `reflection_lake`, `river`, `waterfall`, `rain_pond`, `still_water` are eight distinct
 # dict keys that all render as "a wide body of water under open sky" — nothing stops them running
 # back-to-back. That is exactly what the account owner flagged on 2026-11-04 looking at the live
 # grid: "같은구조의 방 바다 들판 좀 따분한거같은데" (room/ocean/field, same structure, repeating) —
@@ -534,7 +544,7 @@ SCENE_STRUCTURE = {
     "wool_blanket": "room", "bowl_of_fruit": "room", "washed_dishes": "room",
     "sewing": "room", "shoes_by_door": "room", "umbrella_stand": "room",
     "linen_cloth": "room", "water_glass": "room", "basket": "room",
-    "candle": "room",
+    "candle": "room", "curtain": "room",
 
     # water — a body of water (sea/lake/river/harbor/falls) is the dominant subject.
     "sea": "water", "reflection_lake": "water", "river": "water", "harbor": "water",
@@ -563,7 +573,13 @@ SCENE_STRUCTURE = {
     # still_life — a close OUTDOOR object, no wall behind it (OUTDOOR_TOP, open sky above).
     # Everything that reads as "object in front of a wall" lives in `room` above instead, even
     # though some of these entries were added in the 2026-09-06 "still_life" expansion.
-    "curtain": "still_life", "sparrow": "still_life",
+    # `curtain` moved out to `room` 2026-11-13 (see INTERIOR_CATS comment) — it was a wall shot
+    # misfiled here, not a true no-wall outdoor still life. `sparrow` is now the only member;
+    # left as its own bucket rather than merged into `forest` because a bird on a branch is a
+    # closer, smaller-scale shot than forest's tree-filled frames, and a single-member bucket is
+    # harmless (it just never finds a sibling to avoid clustering against, same as any other
+    # one-of-a-kind motif would if added later).
+    "sparrow": "still_life",
 }
 
 # VARIATION — so even the SAME theme looks substantially different each time it recurs. LIGHT sets a
@@ -595,18 +611,30 @@ INDOOR_LIGHT_CUTOFF = 5
 # is the literal mechanism behind "또 흰 벽의 방........" repeating regardless of which of the 28
 # INTERIOR_CATS categories fired. Decided here instead, by code, same as LIGHT/VANTAGE — not left
 # as an unresolved "or" for the model to always answer the same way.
-# Picked via t % len(WALL_TONE) where t is the global post_i counter (code review, 2026-11-11):
-# a SPECIFIC scene recurs roughly every len(SCENES) posts, so if len(SCENES) ever became an exact
-# multiple of len(WALL_TONE) that scene would lock onto one tone forever — the same failure mode
-# this axis exists to kill, just relocated here from LIGHT (LIGHT's own comment reasons about the
-# identical risk for its 5-entry pool against an assumed 24-post cycle). Today len(SCENES)=308 and
-# 308 % 3 != 0, so this does cycle (verified by test_scene_structure.py against the live catalog);
-# re-check that test if INDOOR_RATIO_TARGET or the category counts change the total.
+# 2026-11-13 (structural review, D-5b): this used to be picked via `t % len(WALL_TONE)` where t
+# is the global post_i counter, with a comment promising to "re-check" if the category counts
+# ever changed len(SCENES). That promise was never kept by any code — only by a human re-reading
+# a comment — and D-5b's category removal that same morning took len(SCENES) from 308 to 306,
+# exactly a multiple of 3: every one of the 27 indoor scenes then locked onto ONE wall tone
+# forever (confirmed by simulating 4000 posts against the real pick_scene()/post_i advancement).
+# That is the identical failure this axis exists to prevent, just reintroduced by an unrelated
+# content edit six days later — proof that "re-check the test" is not a real safeguard.
+# Fixed properly instead of re-verified: `_wall_tone_pick(t)` below seeds `random.Random` per
+# post rather than taking t modulo the pool size. A linear `% k` repeats with period k by
+# construction, so ANY recurrence interval that happens to be a multiple of k reproduces the same
+# result forever; a PRNG seeded on t does not preserve that residue structure (empirically
+# verified in test_scene_structure.py: 20 simulated recurrences of the same scene at a 306-post
+# interval land on all 3 tones, not one). This is deterministic (same t always gives the same
+# tone, so re-running on the same post is reproducible/testable) but immune to this specific
+# category-count coincidence recurring — no future SCENE_GROUPS edit can silently re-trigger it.
 WALL_TONE = [
     "the wall pale and bright, catching the light directly",
     "the wall holding soft, warm shadow — dim but never flat or grey, lit only by what spills in",
     "the wall half in light and half in its own shadow, the two meeting gradually, not in a line",
 ]
+
+def _wall_tone_pick(t):
+    return random.Random(t).randrange(len(WALL_TONE))
 
 VANTAGE = [
     "from a wide, distant vantage with deep open space",
@@ -620,15 +648,6 @@ VANTAGE = [
 # reference carries almost no monumental imagery — it is windows, lamps, made beds, stems in a glass —
 # and that is exactly why the verse reads as the subject there. Grandeur is not a variation axis any
 # more; the everyday/intimate scene family in SCENE_GROUPS replaces it.
-
-# SCALE — the 웅장함 (grandeur) axis. The hard constraint: COMPOSE keeps the CENTRE soft and open for
-# the verse and pushes tall subjects low or to the sides, so we can NOT get grandeur the usual way (a
-# huge subject filling the middle) — the two instructions would fight and the render comes out
-# muddled. So every phrase below builds scale OUTSIDE the centre: receding depth, atmospheric
-# perspective, immensity at the frame edges, and a small element that reveals how big everything else
-# is. Each stays scene-agnostic ("whatever suits THIS scene") because this string is appended to all
-# 25 themes, from open sea to a candle-lit interior.
-
 
 def scene_variation(t, indoors=False):
     """A rotating light + vantage (+ wall-tone, indoors) phrase, so the same scene looks
@@ -645,7 +664,7 @@ def scene_variation(t, indoors=False):
     vi = (t // len(light_pool)) % len(VANTAGE)
     parts = [light, VANTAGE[vi]]
     if indoors:
-        parts.append(WALL_TONE[t % len(WALL_TONE)])
+        parts.append(WALL_TONE[_wall_tone_pick(t)])
     return ", ".join(parts)
 
 def pick_scene(start, recent_cats, avoid=2, avoid_structure=4):
@@ -786,7 +805,7 @@ def _credentials():
     return f"{key}:{sec}"
 
 
-def generate_background(dest, index=0, placement=("center", "middle"), full_scene=False,
+def generate_background(dest, index=0, placement=("center", "middle"),
                         model=MODEL, aspect="3:4", var_t=None):
     """Generate one background → save to `dest`. Clean natural-language prompt (Gemini follows
     prose); the text area is kept clear per `placement`. `aspect` = "3:4" (feed) or "9:16" (reel)."""
